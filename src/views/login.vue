@@ -59,6 +59,9 @@ export default defineComponent({
           this.username = ''
           this.password = ''
           this.$router.push('/')
+        } else if(data.requirePasswordChange) {
+          // TODO Check if this comes in success as we have API response
+          this.$router.push({ name: 'update-password', params: { username }})
         }
       }).catch((error: any) => {
         console.error("error", error);

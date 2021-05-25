@@ -22,6 +22,8 @@ const actions: ActionTree<UserState, RootState> = {
             commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
             dispatch('getProfile')
             return resp.data;
+        } else if (resp.data.requirePasswordChange) {
+          return resp.data;
         } else if (hasError(resp)) {
           showToast(translate('Sorry, your username or password is incorrect. Please try again.'));
           console.error("error", resp.data._ERROR_MESSAGE_);

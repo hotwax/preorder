@@ -31,10 +31,18 @@ const setUserTimeZone = async (payload: any): Promise <any>  => {
     data: payload
   });
 }
+const updatePassword = async (payload: any): Promise <any>  => {
+  return api({
+    url: "updatePassword",
+    method: "post",
+    data: payload
+  });
+}
 
 export const UserService = {
     login,
     getAvailableTimeZones,
     getProfile,
     setUserTimeZone,
+    updatePassword,
 }
