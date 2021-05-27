@@ -3,7 +3,7 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <div class="flex">
-        <form class="update-password-container" @keyup.enter="updatePassword()" @submit.prevent="updatePassword()">
+        <v-form :validation-schema="validationSchema" validateOnMount=true class="update-password-container" @keyup.enter="updatePassword()" @submit.prevent="updatePassword()" v-slot="{ errors }">
           <img src="../assets/images/hc.png"/>
           <ion-item lines="none">
               <ion-icon slot="start" :icon="eye" />
@@ -12,20 +12,26 @@
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("Old password") }}</ion-label>
-              <ion-input v-model="oldPassword" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              <v-field name="oldPassword" v-slot="{ field }" >
+                <ion-input name="oldPassword" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              </v-field>
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("New password") }}</ion-label>
-              <ion-input v-model="newPassword" id="password" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              <v-field name="newPassword" ref="newPassword" v-slot="{ field }" >
+                <ion-input name="newPassword" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              </v-field>
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("Confirm new password") }}</ion-label>
-              <ion-input v-model="newPasswordVerify" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              <v-field name="newPasswordVerify" v-slot="{ field }" >
+                <ion-input name="newPasswordVerify" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              </v-field>
           </ion-item>
           <div class="ion-padding">
-              <ion-button type="submit" color="primary" fill="outline" expand="block">{{ $t("Update password") }}</ion-button>
+              <ion-button :disabled="getLength(errors)" type="submit" color="primary" fill="outline" expand="block">{{ $t("Update password") }}</ion-button>
           </div>
-        </form>
+        </v-form>
       </div>
     </ion-content>
   </ion-page>
@@ -45,6 +51,37 @@ import { defineComponent } from "vue";
 import { eye } from "ionicons/icons";
 import { UserService } from '@/services/UserService'
 import { hasError, showToast } from '@/utils'
+import * as V from "vee-validate/dist/vee-validate";
+import { defineRule } from "vee-validate/dist/vee-validate";
+import { required, confirmed } from "@vee-validate/rules";
+import { configure } from 'vee-validate';
+
+
+// TODO move configure and rules to the App
+// Default values
+configure({
+  validateOnBlur: true, // controls if `blur` events should trigger validation with `handleChange` handler
+  validateOnChange: true, // controls if `change` events should trigger validation with `handleChange` handler
+  validateOnInput: false, // controls if `input` events should trigger validation with `handleChange` handler
+  validateOnModelUpdate: true, // controls if `update:modelValue` events should trigger validation with `handleChange` handler
+});
+defineRule('required', required);
+// TODO check issue with existing regex rule
+// Existing rule doesn't allows to pass long regex
+// thus always for current pattern
+defineRule('password', (value) => {
+    const passwordPattern = '^(?=.*[!@#$&*])(?=.*[0-9]).{8,}$';
+    // ^                         Start anchor
+    // (?=.*[!@#$&*])            Ensure string has one special case letter.
+    // (?=.*[0-9])               Ensure string has one digits.
+    // .{8,}                     Ensure string is of length 8 or more
+    // $
+   const regex = new RegExp(passwordPattern);
+   return regex.test(String(value));
+});
+
+// TODO check why this doesn't works when the confirm value changes
+defineRule('confirmed', confirmed);
 
 export default defineComponent({
   name: "update-password",
@@ -56,6 +93,13 @@ export default defineComponent({
           newPassword: '',
           newPasswordVerify: '',
       }
+  },
+  computed: {
+    getLength: function() {
+      return function (obj) {
+          return Object.keys(obj).length;
+      };
+    }
   },
   methods: {
     async updatePassword() {
@@ -92,14 +136,22 @@ export default defineComponent({
     IonIcon,
     IonInput,
     IonItem,
-    IonToggle
+    IonToggle,
+    VField: V.Field,
+    VForm: V.Form,
   },
   beforeMount() {
     this.username = this.$route.params.username;
   },
   setup() {
+    const validationSchema = {
+      'oldPassword': 'required',
+      'newPassword': 'required|password',
+      'newPasswordVerify': 'required|confirmed:@newPassword'
+    };
     return {
-      eye
+      validationSchema,
+      eye,
     };
   },
 });
@@ -121,6 +173,5 @@ img {
   align-items: center;
   height: 100%;
 }
-
 
 </style>
