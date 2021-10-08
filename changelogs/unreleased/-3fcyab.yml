@@ -1,0 +1,7 @@
+---
+title: Implemented logic to show/hide spinner that requires uncertain wait from API
+  calls
+ticket_id: "#3fcyab"
+merge_request: 132
+author: Aditya Sharma
+type: added

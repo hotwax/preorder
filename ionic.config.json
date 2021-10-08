@@ -1,0 +1,7 @@
+{
+  "name": "Preorder-Management",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}
