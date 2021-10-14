@@ -20,6 +20,12 @@ Here are the steps to deploy app on firebase hosting
 - Build the application using following command
   `ionic build`
 
+- Login into firebase
+  `firebase login`
+
+- Run following command to deploy to firebase hosting
+  `firebase deploy --only hosting:sm-dev`
+
 ## How to build application in different environment or modes(staging, production, qa, etc)?
 
 As there is a bug in Ionic cli due to which we cannot pass flag variables for commands (See [#4669](https://github.com/ionic-team/ionic-cli/issues/4642)). To build application in different modes we need to use vue-cli-service to build and then use the built app using capacitor copy command further.
@@ -35,3 +41,7 @@ Follow following instructions:
 3. Open the Android Studio / XCode project:
    ionic capacitor open android  
    ionic capacitor open ios
+
+### Contribution Guideline
+
+`Please do all changes and in your local systems branch and make a pull request to remote branch not in master branch of remote repo`
