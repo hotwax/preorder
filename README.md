@@ -9,13 +9,13 @@ HotWax Commerce - Pre-Order App
 
 1. Open a Terminal window
 2. Clone app using the command: `git clone https://github.com/hotwax/preorder.git <repository-name>`
-3. Go to <repository-name> directory using command: `cd <repository-name>`
+3. Go to the <repository-name> directory using command: `cd <repository-name>`
 4. Run following command to download dependencies 
     `npm i`
 
 ### Start App
     
-- If you don't have ionic CLI check the following link for the instructions: https://ionicframework.com/docs/intro/cli
+- If you don't have the ionic CLI installed check https://ionicframework.com/docs/intro/cli for the installation instructions.
 - To run the app in browser use the command: `ionic serve`
 
 
