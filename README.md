@@ -2,46 +2,42 @@
 
 HotWax Commerce - Pre-Order App
 
-## Firebase Hosting
 
-We are using firebase hosting for the Pre-order app deployment
-Here are the steps to deploy app on firebase hosting
+# Build Notes
 
-### Prerequisite
+### Clone the repository (code)
 
-- [Firebase Cli](https://firebase.google.com/docs/cli) should be installed
-- Firebase project should be created
-- You should have access to firebase project
+1. Open a Terminal window
+2. Clone app using the command: `git clone https://github.com/hotwax/preorder.git <repository-name>`
+3. Go to the <repository-name> directory using command: `cd <repository-name>`
+4. Run following command to download dependencies
+    `npm i`
 
-### Dev deployment
+### Start App
 
-- Update the DEV instance url at .env.production file
+- If you don't have the ionic CLI installed check https://ionicframework.com/docs/intro/cli for the installation instructions.
+- To run the app in browser use the command: `ionic serve`
 
-- Build the application using following command
-  `ionic build`
 
-- Login into firebase
-  `firebase login`
+# Contribution Guideline
 
-- Run following command to deploy to firebase hosting
-  `firebase deploy --only hosting:sm-dev`
+1. Fork the repository and clone it locally from the `hacktoberfest` branch. Before starting your work make sure it's up to date with current `hacktoberfest` branch.
+2. Pick an issue from [here](https://github.com/hotwax/preorder/issues). Write in the issue comment that you want to pick it, if you can't assign yourself. **Please stay assigned to one issue at a time to not block others**.
+3. Create a branch for your edits. Use the following branch naming conventions: **preorder/issue-number**.
+4. Please add issue number to your commit message.
+5. Propose a Pull Request to `hacktoberfest` branch containing issue number and issue title.
+6. Use [Pull Request template](https://github.com/hotwax/preorder/blob/main/.github/PULL_REQUEST_TEMPLATE.md) (it's automatically added to each PR) and fill as much fields as possible to describe your solution.
+7. Reference any relevant issues or other information in your PR.
+8. Wait for review and adjust your PR according to it.
+9. Congrats! Your PR should now me merged in!
 
-## How to build application in different environment or modes(staging, production, qa, etc)?
+If you can't handle some parts of the issue then please ask for help in the comment. If you have any problems during the implementation of some complex issue, feel free to implement just a part of it.
 
-As there is a bug in Ionic cli due to which we cannot pass flag variables for commands (See [#4669](https://github.com/ionic-team/ionic-cli/issues/4642)). To build application in different modes we need to use vue-cli-service to build and then use the built app using capacitor copy command further.
+## Report a bug or request a feature
 
-Follow following instructions:
+Always define the type of issue:
+* Bug report
+* Feature request
 
-1. Manually build the application using vue-cli-service:
-   npx vue-cli-service build --mode=sandbox
+While writing issues, please be as specific as possible. All requests regarding support with implementation or application setup should be sent to.
 
-2. Copy web assets to the native project without building the app:
-   ionic capacitor copy ios --no-build
-
-3. Open the Android Studio / XCode project:
-   ionic capacitor open android  
-   ionic capacitor open ios
-
-### Contribution Guideline
-
-`Please do all changes and in your local systems branch and make a pull request to remote branch not in master branch of remote repo`
