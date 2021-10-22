@@ -5,25 +5,58 @@
         <ion-buttons slot="start">
           <ion-menu-button></ion-menu-button>
         </ion-buttons>
-        <ion-title>{{ $t("Settings") }}</ion-title>
+        <ion-title style="font-family: Montserrat; font-weight: bold">{{
+          $t("Settings")
+        }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true">
-      <ion-item>
+      <ion-item style="font-family: Open Sans; font-weight: bold">
         <ion-label>{{ $t("Brand") }}</ion-label>
-        <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">
+        <ion-select
+          @ionChange="updateBrand($event)"
+          interface="popover"
+          :value="selectedBrand"
+        >
           <ion-select-option value="">{{ $t("All") }}</ion-select-option>
-          <ion-select-option v-bind:key="brand.id" v-for="brand in brands" :value="brand.id">{{ brand.name }}</ion-select-option>
+          <ion-select-option
+            v-bind:key="brand.id"
+            v-for="brand in brands"
+            :value="brand.id"
+            >{{ brand.name }}</ion-select-option
+          >
         </ion-select>
       </ion-item>
-      <ion-item>
-        <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-        <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
+      <ion-item style="font-family: Open Sans">
+        <ion-label>
+          {{
+            userProfile && userProfile.userTimeZone
+              ? userProfile.userTimeZone
+              : "-"
+          }}
+        </ion-label>
+        <ion-button
+          style="font-family: Open Sans; font-weight: bold"
+          @click="changeTimeZone()"
+          slot="end"
+          fill="outline"
+          color="dark"
+          >{{ $t("Change") }}</ion-button
+        >
       </ion-item>
-      <ion-item>
-        <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
-        <ion-button @click="logout" slot="end" fill="outline" color="dark">{{ $t("Logout") }}</ion-button>
+      <ion-item style="font-family: Open Sans">
+        <ion-label>
+          {{ userProfile !== null ? userProfile.partyName : "" }}
+        </ion-label>
+        <ion-button
+          style="font-family: Open Sans; font-weight: bold"
+          @click="logout"
+          slot="end"
+          fill="outline"
+          color="dark"
+          >{{ $t("Logout") }}</ion-button
+        >
       </ion-item>
     </ion-content>
   </ion-page>
@@ -31,7 +64,7 @@
 
 <script lang="ts">
 import { useStore } from "@/store";
-import { 
+import {
   IonButton,
   IonButtons,
   IonContent,
@@ -44,10 +77,11 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  modalController } from "@ionic/vue";
+  modalController,
+} from "@ionic/vue";
 import { defineComponent } from "vue";
-import { mapGetters } from 'vuex'
-import TimeZoneModal from '@/views/timezone-modal.vue'
+import { mapGetters } from "vuex";
+import TimeZoneModal from "@/views/timezone-modal.vue";
 
 export default defineComponent({
   name: "settings",
@@ -63,28 +97,28 @@ export default defineComponent({
     IonSelect,
     IonSelectOption,
     IonTitle,
-    IonToolbar
+    IonToolbar,
   },
   setup() {
     const store = useStore();
-    return { store }
+    return { store };
   },
   data() {
     return {
-      brands: JSON.parse(process.env.VUE_APP_BRANDS)
-    }
+      brands: JSON.parse(process.env.VUE_APP_BRANDS),
+    };
   },
   computed: {
     ...mapGetters({
-      userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand'
-    })
+      userProfile: "user/getUserProfile",
+      selectedBrand: "user/getSelectedBrand",
+    }),
   },
   methods: {
-    logout: function() {
+    logout: function () {
       this.store.dispatch("user/logout").then(() => {
-        this.$router.push('/login')
-      })
+        this.$router.push("/login");
+      });
     },
     async changeTimeZone() {
       const timeZoneModal = await modalController.create({
@@ -93,8 +127,10 @@ export default defineComponent({
       return timeZoneModal.present();
     },
     updateBrand(event: any) {
-      this.store.dispatch("user/setSelectedBrand", { selectedBrand: event.detail.value})
-    }
-  }
+      this.store.dispatch("user/setSelectedBrand", {
+        selectedBrand: event.detail.value,
+      });
+    },
+  },
 });
 </script>
