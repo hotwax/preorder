@@ -15,7 +15,7 @@
     </ion-header>
 
     <ion-content :fullscreen="true">
-      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search products')" v-model="queryString" v-on:keyup.enter="getProducts()"></ion-searchbar>
+      <ion-searchbar  id="searchbar" @ionFocus="selectSearchBarText($event) " :placeholder="$t('Search products')" v-model="queryString" v-on:keyup.enter="getProducts()"></ion-searchbar>
 
       <!-- Empty state -->
       <div class="empty-state" v-if="products.length === 0">
@@ -174,6 +174,10 @@ export default defineComponent({
 .empty-state {
   height: calc(100vh - 150px);
 }
+#searchbar:hover{
+  color: red;
+}
+
 
 .empty-state > img {
   width: 100%;
