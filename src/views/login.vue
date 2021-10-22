@@ -6,12 +6,10 @@
           <img src="../assets/images/hc.png"/>
 
           <ion-item lines="full">
-            <ion-label>{{ $t("Username") }}</ion-label>
-            <ion-input name="username" v-model="username" id="username"  type="text" required></ion-input>
+            <ion-input placeholder="Username" placehov-model="username" id="username"  type="text" required></ion-input>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Password") }}</ion-label>
-            <ion-input name="password" v-model="password" id="password" type="password" required></ion-input>
+            <ion-input placeholder="password" v-model="password" id="password" type="password" required></ion-input>
           </ion-item>
 
           <div class="ion-padding">
@@ -29,7 +27,7 @@ import {
   IonContent,
   IonInput,
   IonItem,
-  IonLabel,
+
   IonPage } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { useRouter } from "vue-router";
@@ -42,7 +40,7 @@ export default defineComponent({
     IonContent,
     IonInput,
     IonItem,
-    IonLabel,
+  
     IonPage
   },
   data() {
