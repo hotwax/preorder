@@ -40,4 +40,3 @@ Always define the type of issue:
 * Feature request
 
 While writing issues, please be as specific as possible. All requests regarding support with implementation or application setup should be sent to.
-
