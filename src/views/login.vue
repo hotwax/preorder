@@ -6,12 +6,10 @@
           <img src="../assets/images/hc.png"/>
 
           <ion-item lines="full">
-            <ion-label>{{ $t("Username") }}</ion-label>
-            <ion-input name="username" v-model="username" id="username"  type="text" required></ion-input>
+            <ion-input name="username" v-model="username" placeholder="Username" id="username"  type="text" required></ion-input>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Password") }}</ion-label>
-            <ion-input name="password" v-model="password" id="password" type="password" required></ion-input>
+            <ion-input name="password" v-model="password" placeholder="Password" id="password" type="password" required></ion-input>
           </ion-item>
 
           <div class="ion-padding">
@@ -42,7 +40,6 @@ export default defineComponent({
     IonContent,
     IonInput,
     IonItem,
-    IonLabel,
     IonPage
   },
   data() {
