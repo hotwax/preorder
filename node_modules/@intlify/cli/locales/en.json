@@ -1,0 +1,10 @@
+{
+  "Usage: $0 <command> [options]": "Usage: $0 <command> [options]",
+  "compile the i18n resources": "compile the i18n resources",
+  "the i18n resource source path": "the i18n resource source path",
+  "the compiled i18n resource output path": "the compiled i18n resource output path",
+  "Success compilation: {source} -> {output}": "Success compilation: {source} -> {output}",
+  "{source}: Ignore compilation due to not supported '{ext}'": "{source}: Ignore compilation due to not supported '{ext}'",
+  "Warning compilation: {source} -> {output}, {msg}": "Warning compilation: {source} -> {output}, {msg}",
+  "Error compilation: {source} -> {output}, {msg}": "Error compilation: {source} -> {output}, {msg}"
+}
