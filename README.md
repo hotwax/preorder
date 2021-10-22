@@ -41,3 +41,4 @@ Always define the type of issue:
 
 While writing issues, please be as specific as possible. All requests regarding support with implementation or application setup should be sent to.
 
+`Please do all changes and in your local systems branch and make a pull request to remote branch not in master branch of remote repo`
