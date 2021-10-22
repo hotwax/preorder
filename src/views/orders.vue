@@ -75,8 +75,8 @@
         </div>
 
          <div class="results">
-          <ion-badge color="success">{{ preorderCount }} {{ $t("items preordered")}}</ion-badge>
-          <ion-badge color="secondary">{{ ordersTotal }} {{ $t("orders")}}</ion-badge>
+          <ion-badge class="result-preorder" color="success">{{ preorderCount }} {{ $t("items preordered")}}</ion-badge>
+          <ion-badge class="result-order" color="secondary">{{ ordersTotal }} {{ $t("orders")}}</ion-badge>
         </div> 
       </div>
 
@@ -541,6 +541,22 @@ export default defineComponent({
   align-self: end;
 }
 
+.results .result-preorder {
+  padding-top: 15px;
+  padding-right: 15px;
+  padding-bottom: 15px;
+  padding-left: 15px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 5px 0px black;
+}
+.results .result-order {
+  padding-top: 15px;
+  padding-right: 15px;
+  padding-bottom: 15px;
+  padding-left: 15px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px 0px black;
+}
 
 /* ==============
  2. Desktop Order
