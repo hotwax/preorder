@@ -1,4 +1,4 @@
-# pre-order
+# Pre-order
 
 HotWax Commerce - Pre-Order App
 
