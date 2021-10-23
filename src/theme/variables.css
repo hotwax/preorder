@@ -76,7 +76,7 @@ http://ionicframework.com/docs/theming/ */
   --ion-color-light-tint: #f5f6f9;
 }
 
-/* 
+/*
 In order to disable dark theme renamed it to void.
 Kept the orignal styling for future use if any
 */
@@ -87,6 +87,8 @@ Kept the orignal styling for future use if any
    */
 
   body {
+    font-family: "Open Sans", sans-serif;
+
     --ion-color-primary: #428cff;
     --ion-color-primary-rgb: 66,140,255;
     --ion-color-primary-contrast: #ffffff;
@@ -239,6 +241,8 @@ Kept the orignal styling for future use if any
   }
 }
 
+h1, h2, h3, h4, h5, h6 {font-family: 'Montserrat';}
+
 ion-badge {
   margin-right: 8px;
 }
@@ -283,6 +287,8 @@ ion-select {
   text-align: center;
 }
 
+/* Custom theme file added */
+@import "./notnaked.theme.css";
 
 
 
