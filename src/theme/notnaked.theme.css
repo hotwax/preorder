@@ -1,8 +1,6 @@
 ion-tab-button {
-   --color-selected: var(--ion-color-secondary);
-}
-ion-list-header {
-   --color: var(--subdued-text-color);
-}
-
-
+    --color-selected: var(--ion-color-secondary);
+ }
+ ion-list-header {
+    --color: var(--subdued-text-color);
+ }
