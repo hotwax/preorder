@@ -1,4 +1,4 @@
-import api from '../api'
+import api, { client } from '../api'
 
 const login = async (username: string, password: string): Promise <any> => {
   return api({
@@ -32,10 +32,11 @@ const setUserTimeZone = async (payload: any): Promise <any>  => {
   });
 }
 const updatePassword = async (payload: any): Promise <any>  => {
-  return api({
+  return client({
     url: "updatePassword",
     method: "post",
-    data: payload
+    baseURL: process.env.VUE_APP_BASE_URL,
+    ...payload
   });
 }
 

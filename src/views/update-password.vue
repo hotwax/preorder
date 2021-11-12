@@ -3,7 +3,8 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <div class="flex">
-        <v-form :validation-schema="validationSchema" validateOnMount=true class="update-password-container" @keyup.enter="updatePassword()" @submit.prevent="updatePassword()" v-slot="{ errors }">
+        <!-- TODO Handle enter key and prevent form submission -->
+        <v-form :validation-schema="validationSchema" :initialValues="formData" validateOnMount=true class="update-password-container" @submit="updatePassword" v-slot="{ errors }">
           <img src="../assets/images/hc.png"/>
           <ion-item lines="none">
               <ion-icon slot="start" :icon="eye" />
@@ -12,20 +13,20 @@
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("Old password") }}</ion-label>
-              <v-field name="oldPassword" v-slot="{ field }" >
-                <ion-input name="oldPassword" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              <v-field name="currentPassword" v-slot="{ field }" >
+                <ion-input name="currentPassword" :value="field" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
               </v-field>
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("New password") }}</ion-label>
               <v-field name="newPassword" ref="newPassword" v-slot="{ field }" >
-                <ion-input name="newPassword" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+                <ion-input name="newPassword" :value="field" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
               </v-field>
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("Confirm new password") }}</ion-label>
               <v-field name="newPasswordVerify" v-slot="{ field }" >
-                <ion-input name="newPasswordVerify" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+                <ion-input name="newPasswordVerify" :value="field" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
               </v-field>
           </ion-item>
           <div class="ion-padding">
@@ -47,7 +48,7 @@ import {
   IonInput,
   IonItem,
   IonToggle } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import { eye } from "ionicons/icons";
 import { UserService } from '@/services/UserService'
 import { hasError, showToast } from '@/utils'
@@ -76,8 +77,8 @@ defineRule('password', (value) => {
     // (?=.*[0-9])               Ensure string has one digits.
     // .{8,}                     Ensure string is of length 8 or more
     // $
-   const regex = new RegExp(passwordPattern);
-   return regex.test(String(value));
+    const regex = new RegExp(passwordPattern);
+    return regex.test(String(value));
 });
 
 // TODO check why this doesn't works when the confirm value changes
@@ -87,11 +88,12 @@ export default defineComponent({
   name: "update-password",
   data() {
       return {
-          showPassword: false,
           username: '',
-          oldPassword: '',
+          showPassword: false,
+          currentPassword: '',
           newPassword: '',
           newPasswordVerify: '',
+          token: ''
       }
   },
   computed: {
@@ -102,20 +104,25 @@ export default defineComponent({
     }
   },
   methods: {
-    async updatePassword() {
-      const { username, oldPassword, newPassword, newPasswordVerify } = this;
-      const resp = await UserService.updatePassword({
-        username,
-        oldPassword,
-        newPassword,
-        newPasswordVerify
+    async updatePassword(form) {
+      const { currentPassword, newPassword, newPasswordVerify } = form;
+      const resp = await UserService.updatePassword({ 
+        data: {
+          username: this.username,
+          currentPassword,
+          newPassword,
+          newPasswordVerify
+        },
+        headers: {
+          Authorization:  'Bearer ' + this.token,
+          'Content-Type': 'application/json'
+        }
       });
       if (resp.status === 200 && resp.data) {
         if (!hasError(resp)) {
-          this.username = '';
-          this.oldPassword = '';
-          this.newPassword = '';
-          this.newPasswordVerify = '';
+          form.currentPassword = '';
+          form.newPassword = '';
+          form.newPasswordVerify = '';
           showToast(this.$t('Password updated successfully'));
           this.$router.push({ name: 'login' })
         } else {
@@ -142,16 +149,23 @@ export default defineComponent({
   },
   beforeMount() {
     this.username = this.$route.params.username;
+    this.token = this.$route.params.token;
   },
   setup() {
     const validationSchema = {
-      'oldPassword': 'required',
+      'currentPassword': 'required',
       'newPassword': 'required|password',
       'newPasswordVerify': 'required|confirmed:@newPassword'
     };
+    const formData = ref({
+      currentPassword: '',
+      newPassword: '',
+      newPasswordVerify: ''
+    });
     return {
       validationSchema,
       eye,
+      formData
     };
   },
 });

@@ -104,6 +104,7 @@
     "Username": "Username",
     "variant": "variant",
     "variants": "variants",
-    "Would you like to update your time zone to . Your profile is currently set to . This setting can always be changed from the settings menu.": "Would you like to update your time zone to {localTimeZone}. Your profile is currently set to {profileTimeZone}. This setting can always be changed from the settings menu."
+    "Would you like to update your time zone to . Your profile is currently set to . This setting can always be changed from the settings menu.": "Would you like to update your time zone to {localTimeZone}. Your profile is currently set to {profileTimeZone}. This setting can always be changed from the settings menu.",
+    "Your password expired. Please update your password.": "Your password expired. Please update your password."
 
 }
