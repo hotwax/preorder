@@ -1,0 +1,7 @@
+---
+title: 'Implemented: logic to navigate user to update password page when requirePasswordChange
+  flag is true'
+ticket_id: "#3bdgrp"
+merge_request: 130
+author: Aditya Sharma
+type: added
