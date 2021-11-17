@@ -125,7 +125,7 @@ export default defineComponent({
   },
   methods: {
     async updatePassword(form, resetForm, validate) {
-      const result = await validate()\
+      const result = await validate()
       if (!result.valid) {
            return;
       }
