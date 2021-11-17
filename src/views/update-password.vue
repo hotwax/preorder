@@ -4,7 +4,7 @@
     <ion-content :fullscreen="true">
       <div class="flex">
         <!-- TODO Handle enter key and prevent form submission -->
-        <v-form :validation-schema="validationSchema" :initialValues="formData" validateOnMount=true class="update-password-container" @submit="updatePassword" v-slot="{ errors }">
+        <v-form :validation-schema="validationSchema" :initialValues="formData"  class="update-password-container" v-slot="{ validate, errors, resetForm, values }">
           <img src="../assets/images/hc.png"/>
           <ion-item lines="none">
               <ion-icon slot="start" :icon="eye" />
@@ -13,24 +13,39 @@
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("Old password") }}</ion-label>
-              <v-field name="currentPassword" v-slot="{ field }" >
-                <ion-input name="currentPassword" :value="field" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              <v-field name="currentPassword" v-slot="{ field }" v-model="currentPassword">
+                <ion-input name="currentPassword" v-model="currentPassword" :value="field.value" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
               </v-field>
+          </ion-item>
+          <ion-item v-if="errors['currentPassword']" lines="none">
+            <ion-label class="ion-text-wrap" color="medium">
+              {{ $t(errors['currentPassword']) }}
+            </ion-label>
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("New password") }}</ion-label>
-              <v-field name="newPassword" ref="newPassword" v-slot="{ field }" >
-                <ion-input name="newPassword" :value="field" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              <v-field name="newPassword"  v-slot="{ field }" v-model="newPassword">
+                <ion-input name="newPassword"  v-model="newPassword" :value="newPassword" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
               </v-field>
+          </ion-item>
+          <ion-item v-if="errors['newPassword']" lines="none">
+            <ion-label class="ion-text-wrap" color="medium">
+              {{ $t(errors['newPassword']) }}
+            </ion-label>
           </ion-item>
           <ion-item lines="none">
               <ion-label>{{ $t("Confirm new password") }}</ion-label>
-              <v-field name="newPasswordVerify" v-slot="{ field }" >
-                <ion-input name="newPasswordVerify" :value="field" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
+              <v-field name="newPasswordVerify"  v-slot="{ field }" v-model="newPasswordVerify">
+                <ion-input name="newPasswordVerify" v-model="newPasswordVerify" :value="newPasswordVerify" v-bind="field" :type="showPassword ? 'text' : 'password'" required></ion-input>
               </v-field>
           </ion-item>
+          <ion-item v-if="errors['newPasswordVerify']" lines="none">
+            <ion-label class="ion-text-wrap" color="medium">
+              {{ $t(errors['newPasswordVerify']) }}
+            </ion-label>
+          </ion-item>
           <div class="ion-padding">
-              <ion-button :disabled="getLength(errors)" type="submit" color="primary" fill="outline" expand="block">{{ $t("Update password") }}</ion-button>
+              <ion-button @click="updatePassword(values, resetForm, validate, errors)" :disabled="getLength(errors)" color="primary" fill="outline" expand="block">{{ $t("Update password") }}</ion-button>
           </div>
         </v-form>
       </div>
@@ -58,6 +73,7 @@ import { required, confirmed } from "@vee-validate/rules";
 import { configure } from 'vee-validate';
 
 
+
 // TODO move configure and rules to the App
 // Default values
 configure({
@@ -66,7 +82,9 @@ configure({
   validateOnInput: false, // controls if `input` events should trigger validation with `handleChange` handler
   validateOnModelUpdate: true, // controls if `update:modelValue` events should trigger validation with `handleChange` handler
 });
-defineRule('required', required);
+defineRule('required', (value) => {
+  return required(value) ? true : 'Field is required';
+});
 // TODO check issue with existing regex rule
 // Existing rule doesn't allows to pass long regex
 // thus always for current pattern
@@ -78,11 +96,13 @@ defineRule('password', (value) => {
     // .{8,}                     Ensure string is of length 8 or more
     // $
     const regex = new RegExp(passwordPattern);
-    return regex.test(String(value));
+    return regex.test(String(value)) ? true : "Password must contain at least 8 characters including one digit and one special character";
 });
 
 // TODO check why this doesn't works when the confirm value changes
-defineRule('confirmed', confirmed);
+defineRule('confirmed', (value, params) => {
+  return confirmed(value, params) ? true : 'Password must match';
+});
 
 export default defineComponent({
   name: "update-password",
@@ -104,8 +124,14 @@ export default defineComponent({
     }
   },
   methods: {
-    async updatePassword(form) {
+    async updatePassword(form, resetForm, validate) {
+      const result = await validate()
+      console.log("result", result);
+      if (!result.valid) {
+           return;
+      }
       const { currentPassword, newPassword, newPasswordVerify } = form;
+      try {
       const resp = await UserService.updatePassword({ 
         data: {
           username: this.username,
@@ -120,9 +146,16 @@ export default defineComponent({
       });
       if (resp.status === 200 && resp.data) {
         if (!hasError(resp)) {
-          form.currentPassword = '';
-          form.newPassword = '';
-          form.newPasswordVerify = '';
+          this.showPassword = false
+          this.currentPassword =''
+          this.newPassword =''
+          this.newPasswordVerify =''
+          resetForm({
+              ...form,
+            currentPassword: '',
+            newPassword: '',
+            newPasswordVerify: ''
+          })
           showToast(this.$t('Password updated successfully'));
           this.$router.push({ name: 'login' })
         } else {
@@ -133,6 +166,23 @@ export default defineComponent({
         showToast(this.$t('Something went wrong'));
         console.error("error", resp.data._ERROR_MESSAGE_);
       }
+
+      } catch (err) {
+        this.showPassword = false
+        this.currentPassword =''
+        this.newPassword =''
+        this.newPasswordVerify =''
+        resetForm({
+            ...form,
+          currentPassword: '',
+          newPassword: '',
+          newPasswordVerify: ''
+        })
+        showToast(this.$t('Something went wrong'));
+        console.error("error", err);
+        return Promise.reject(new Error(err))
+      }
+      
     }
   },
   components: {
@@ -162,10 +212,11 @@ export default defineComponent({
       newPassword: '',
       newPasswordVerify: ''
     });
+
     return {
       validationSchema,
       eye,
-      formData
+      formData,
     };
   },
 });
