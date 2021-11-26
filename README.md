@@ -41,3 +41,5 @@ Always define the type of issue:
 
 While writing issues, please be as specific as possible. All requests regarding support with implementation or application setup should be sent to.
 
+## Figma Link
+https://www.figma.com/community/file/885791511781717756/Ionic-5-Material-UI-Kit-(Community)
