@@ -69,7 +69,9 @@ const api = async (customConfig: any) => {
         data: customConfig.data,
         params: customConfig.params
     }
-    const baseURL = process.env.VUE_APP_BASE_URL;
+    
+    let baseURL = store.getters['user/getInstanceUrl'];
+    baseURL = baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
     if (baseURL) config.baseURL = baseURL;
 
     if(customConfig.cache) config.adapter = axiosCache.adapter;

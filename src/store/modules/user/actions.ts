@@ -84,6 +84,13 @@ const actions: ActionTree<UserState, RootState> = {
       // Reset all the current queries
       this.dispatch("product/resetProductList")
       this.dispatch("order/resetOrderQuery")
+    },
+
+  /**
+    * Set User Instance Url
+    */
+     setUserInstanceUrl ({ state, commit }, payload){
+      commit(types.USER_INSTANCE_URL_UPDATED, payload)
     }
 }
 export default actions;
