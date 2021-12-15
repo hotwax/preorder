@@ -17,6 +17,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getSelectedBrand (state) {
         return state.selectedBrand
+    },
+    getInstanceUrl (state) {
+        return state.instanceUrl;
     }
 }
 export default getters;
