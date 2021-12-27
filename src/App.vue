@@ -79,6 +79,7 @@ export default defineComponent({
     }
   },
   async mounted() {
+    emitter.on('timeZoneDifferent', this.timeZoneDifferentAlert);
     this.loader = await loadingController
       .create({
         message: this.$t("Click the backdrop to dismiss."),
@@ -89,6 +90,7 @@ export default defineComponent({
     emitter.on('dismissLoader', this.dismissLoader);
   },
   unmounted() {
+    emitter.off('timeZoneDifferent', this.timeZoneDifferentAlert);
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
   },
