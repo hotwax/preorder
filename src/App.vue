@@ -61,27 +61,34 @@ export default defineComponent({
 
     },
     async presentLoader() {
-      this.loader = await loadingController
-        .create({
-          message: this.$t("Click the backdrop to dismiss."),
-          translucent: true,
-          backdropDismiss: true
-        });
-      await this.loader.present();
+      if (!this.loader) {
+        this.loader = await loadingController
+          .create({
+            message: this.$t("Click the backdrop to dismiss."),
+            translucent: true,
+            backdropDismiss: true
+          });
+      }
+      this.loader.present();
     },
     dismissLoader() {
       if (this.loader) {
         this.loader.dismiss();
+        this.loader = null as any;
       }
     }
   },
-  mounted() {
-    emitter.on('timeZoneDifferent', this.timeZoneDifferentAlert);
+  async mounted() {
+    this.loader = await loadingController
+      .create({
+        message: this.$t("Click the backdrop to dismiss."),
+        translucent: true,
+        backdropDismiss: true
+      });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
   },
   unmounted() {
-    emitter.off('timeZoneDifferent', this.timeZoneDifferentAlert);
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
   },
