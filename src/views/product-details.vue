@@ -136,7 +136,7 @@
           <div class="order-select">
             <ion-item>
               <ion-label position="floating">{{ $t("Pieces") }}</ion-label>
-              <ion-input type="number" min="1" @ionChange="selectVariant(item.groupValue, $event.target.value)" clear-input="true"  v-model="item.inputValue" ></ion-input>
+              <ion-input type="number" min="1" @ionChange="selectVariant(item.groupValue, $event.target.value)" clear-input="true"  v-model="item.inputValue"></ion-input>
             </ion-item>
           </div>
         </ion-card>
@@ -482,7 +482,6 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    
     return {
       informationCircle,
       send,
