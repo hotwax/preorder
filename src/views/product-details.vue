@@ -252,7 +252,7 @@ export default defineComponent({
       selectedVariants: {} as any,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
-      hasPromisedDate: true,
+      hasPromisedDate: true
     }
   },
   computed: {
@@ -266,9 +266,7 @@ export default defineComponent({
       selectedBrand: 'user/getSelectedBrand'
     })
   },
-  
   methods: {
-  
   inputPieces(item: any){
     item.inputValue = item.doclist.numFound;
   },
