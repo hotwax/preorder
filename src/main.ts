@@ -69,12 +69,32 @@ app.config.globalProperties.$filters = {
     }
     return featureValue;
   },
+  groupFeatures(featureHierarchy: any) {
+     let features =[] as any;
+     const featuresList = {} as any;
+    if (featureHierarchy) {
+      featureHierarchy.forEach((feature: any) => {
+        const featureSplit = feature ? feature.split('/') : [];
+        features.push(featureSplit[1]);
+        features = [...new Set(features)];
+        // console.log(features);
+        features.forEach((x: any)=>{
+          // console.log(x);
+          if(featureSplit.includes(x))
+          featuresList.x = featureSplit;
+        })
+        console.log(featuresList);
+      
+      })
+    }
+  },
   getFeatures(featureHierarchy: any, featureKey: string) {
     let  featuresValue = ''
     if (featureHierarchy) {
       featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).forEach((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
         const featureValue = featureSplit[2] ? featureSplit[2] : '';
+        // console.log(featureSplit[1]);
         featuresValue += ", " + featureValue;
         featuresValue = featuresValue.slice(1);
       })
