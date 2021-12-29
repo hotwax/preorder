@@ -75,7 +75,8 @@ app.config.globalProperties.$filters = {
       featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).forEach((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
         const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        featuresValue +=  " " + featureValue;
+        featuresValue += ", " + featureValue;
+        featuresValue = featuresValue.slice(1);
       })
     }
     // trim removes extra white space from beginning for the first feature
