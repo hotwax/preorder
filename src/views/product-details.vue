@@ -116,7 +116,7 @@
 
       <!-- Variant -->
       <div v-else>
-        <ion-card  v-bind:key="item.groupValue" v-for="(item, index) in current.list.items">
+        <ion-card  v-bind:key="item.groupValue" v-for="item in current.list.items">
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
@@ -130,13 +130,13 @@
             </ion-item>
           </div>
           <div class="order-info">
-            <ion-badge color="success" @click="inputPieces(item.doclist.numFound, index)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
+            <ion-badge color="success" @click="inputPieces(item)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
             <ion-badge color="medium"> {{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
           </div>
           <div class="order-select">
             <ion-item>
               <ion-label position="floating">{{ $t("Pieces") }}</ion-label>
-              <ion-input type="number" min="1" @ionChange="selectVariant(item.groupValue, $event.target.value)" clear-input="true" :ref="setItemRef" v-model="inputPieces" value=""></ion-input>
+              <ion-input type="number" min="1" @ionChange="selectVariant(item.groupValue, $event.target.value)" clear-input="true"  v-model="item.inputValue" ></ion-input>
             </ion-item>
           </div>
         </ion-card>
@@ -189,7 +189,7 @@ import {
   alertController,
   modalController,
 } from "@ionic/vue";
-import { reactive, defineComponent } from "vue";
+import { defineComponent } from "vue";
 import {
   informationCircle,
   send,
@@ -208,7 +208,6 @@ import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
 import moment from 'moment';
 import Image from '@/components/Image.vue';
-import {onUpdated} from 'vue';
 export default defineComponent({
   name: "product-details",
   components: {
@@ -270,6 +269,9 @@ export default defineComponent({
   
   methods: {
   
+  inputPieces(item: any){
+    item.inputValue = item.doclist.numFound;
+  },
     async getVariantProducts() {
       const payload = {
         groupByField: 'productId',
@@ -481,22 +483,6 @@ export default defineComponent({
     },
   },
   setup() {
-    const itemRefs = reactive([]) as any
-    const setItemRef = (el: any) => {
-      if (el) {
-        itemRefs.push(el)
-      }
-    }
-    function inputPieces(pieces: any, index: any){
-        itemRefs[index].value = pieces;
-        console.log(index);
-        console.log(itemRefs[index].value );
-         return itemRefs[index].value ;
-    }
-    onUpdated(() => {
-      console.log(itemRefs)
-    })
-   
     const store = useStore();
     
     return {
@@ -509,11 +495,7 @@ export default defineComponent({
       close,
       list,
       ribbon,
-      store,
-      itemRefs,
-      setItemRef,
-      inputPieces
-      
+      store
     };
   },
 });
