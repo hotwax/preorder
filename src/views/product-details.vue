@@ -33,7 +33,7 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filterColor(colorFeature)"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -41,7 +41,7 @@
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filterSize(sizeFeature)"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -253,7 +253,8 @@ export default defineComponent({
       selectedVariants: {} as any,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
-      hasPromisedDate: true
+      hasPromisedDate: true,
+      allVariants: this.current
     }
   },
   computed: {
@@ -268,6 +269,54 @@ export default defineComponent({
     })
   },
   methods: {
+    filterSize(size: any){
+      let products = [] as any;
+      this.current.list.items.forEach((x: any)=>{
+       products.push(this.getProduct(x.groupValue));
+      })
+      const FilteredProducts =[] as any;
+      
+      products = products.filter((product: any)=>{
+        return product.productFeatures.includes("Size/" + size);
+         
+        })
+        console.log(products);
+        this.current.list.items.forEach((x: any)=>{
+          products.forEach((product: any)=>{
+          
+          if(x.groupValue == product.productId)
+          FilteredProducts.push(x);
+        })
+          
+        })
+      this.current.list.items = FilteredProducts;
+
+    },
+    filterColor(color: any){
+      console.log(this.current.list.items)
+      let products = [] as any;
+      this.current.list.items.forEach((x: any)=>{
+       products.push(this.getProduct(x.groupValue));
+      })
+      const FilteredProducts =[] as any;
+      
+      products = products.filter((product: any)=>{
+        return product.productFeatures.includes("Color/" + color);
+         
+        })
+        console.log(products);
+        this.current.list.items.forEach((x: any)=>{
+          products.forEach((product: any)=>{
+          
+          if(x.groupValue == product.productId)
+          FilteredProducts.push(x);
+        })
+          
+        })
+      this.current.list.items = FilteredProducts;
+     console.log(FilteredProducts);
+     console.log(this.current.list.items);
+    },
     async getVariantProducts() {
       const payload = {
         groupByField: 'productId',
