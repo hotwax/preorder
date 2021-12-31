@@ -33,7 +33,7 @@
           </ion-thumbnail>
           <ion-label>
             <h2>{{ getProduct(product.groupValue).productName}}</h2>
-            <p v-for="(attribute, index) in ($filters.groupFeatures(getProduct(product.groupValue).featureHierarchy))" :key="attribute" >{{ index }} :{{ attribute }}</p>
+            <p v-for="(attribute, index) in ($filters.groupFeatures(getProduct(product.groupValue).featureHierarchy))" :key="attribute" class="attribute" >{{ index }}: {{ attribute }}</p>
           </ion-label>
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
         </ion-item>
@@ -177,6 +177,13 @@ export default defineComponent({
 .empty-state > img {
   width: 100%;
   max-height: 450px;
+}
+
+.attribute{
+ text-transform: lowercase;
+}
+.attribute::first-line{
+  text-transform: capitalize ;
 }
 
 </style> 
