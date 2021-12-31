@@ -156,11 +156,6 @@ export default defineComponent({
       })
     }
   },
-  updated(){
-
-   console.log(this.products);
-   
-  },
   setup() {
     const router = useRouter();
     const store = useStore();
