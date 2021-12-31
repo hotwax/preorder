@@ -87,9 +87,6 @@ app.config.globalProperties.$filters = {
             })
             featuresValue = featuresValue.slice(1);
             featuresValue = featuresValue.trim();
-            // x = x.toLowerCase();
-            // const str = x;
-            // x = x.charAt(0).toUpperCase() + str.slice(1);
             featuresList[x]=featuresValue;
             featuresValue ="";
           }
