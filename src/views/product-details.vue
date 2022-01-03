@@ -267,7 +267,7 @@ export default defineComponent({
     })
   },
   methods: {
-    inputPieces(item: any){
+    inputPieces (item: any) {
       item.inputValue = item.doclist.numFound;
     },
     async getVariantProducts() {
