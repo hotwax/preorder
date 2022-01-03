@@ -92,10 +92,8 @@ app.config.globalProperties.$filters = {
           }
         })
       })
-      console.log(Object.keys(featuresList)[0]);
-      const keys = Object.keys(featuresList).sort();
       const sortedFeaturesList ={} as any;
-      keys.forEach(key => {
+      Object.keys(featuresList).sort().forEach(key => {
         sortedFeaturesList[key] = featuresList[key];
       });
       console.log(Object.keys(sortedFeaturesList));
