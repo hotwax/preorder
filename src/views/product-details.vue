@@ -33,7 +33,10 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"  @click="chipAnimate($event, current.product.featureHierarchy)" class="ion-chip">
+                      <ion-icon :icon="checkmark" id="ion-icon" class="ion-icon disabled"/>
+                      <ion-label>{{ colorFeature }}</ion-label>
+                    </ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -83,15 +86,15 @@
             <ion-chip slot="end">
               <ion-icon :icon="list" />
               <ion-label>none</ion-label>
-            </ion-chip>   
+            </ion-chip>
           </ion-item> -->
           <ion-item>
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
-            <ion-chip slot="end">  
+            <ion-chip slot="end">
               <ion-icon :icon="ribbon"  />
               <ion-select :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for=" (key, value) in cusotmerLoyaltyOptions" v-bind:key="key" :value="value">{{key}}</ion-select-option>
-              </ion-select> 
+              </ion-select>
               <ion-icon @click='cusotmerLoyalty = ""' v-if="cusotmerLoyalty" :icon="close"/>
            </ion-chip>
           </ion-item>
@@ -142,7 +145,7 @@
         </ion-card>
       </div>
     </ion-content>
-    
+
     <ion-footer>
       <ion-toolbar>
         <ion-buttons slot="end">
@@ -199,7 +202,8 @@ import {
   calendar,
   close,
   list,
-  ribbon
+  ribbon,
+  checkmark
 } from "ionicons/icons";
 import WarehouseModal from "./warehouse-modal.vue";
 import BackgroundJobModal from "./background-job-modal.vue";
@@ -208,6 +212,7 @@ import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
 import moment from 'moment';
 import Image from '@/components/Image.vue';
+import { createAnimation } from '@ionic/vue';
 
 export default defineComponent({
   name: "product-details",
@@ -253,7 +258,8 @@ export default defineComponent({
       selectedVariants: {} as any,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
-      hasPromisedDate: true
+      hasPromisedDate: true,
+      timesClicked: 0
     }
   },
   computed: {
@@ -328,7 +334,7 @@ export default defineComponent({
           {
             text:this.$t('Release'),
             handler: () => {
-              this.releaseItems();           
+              this.releaseItems();
             },
           },
         ],
@@ -477,6 +483,28 @@ export default defineComponent({
       });
       return Promise.all(variantRequests);
     },
+    async chipAnimate(event: any, item: any) {
+      event.target.childNodes[0].nodeName !== '#text' ?  event.target.childNodes[0].disabled = !event.target.childNodes[0].disabled : event.target.previousSibling.disabled = !event.target.previousSibling.disabled;
+
+      if (event.target.childNodes[0].disabled || event.target.previousSibling.disabled) {
+        const animation =  createAnimation()
+            .addElement(event.target.childNodes[0].nodeName !== '#text' ? event.target.childNodes[0] : event.target.previousSibling)
+            .duration(2000)
+            .easing('ease-in')
+            .fromTo('fontSize', '0', 'inherit')
+            .fromTo('transform',  'scale(0)', 'scale(1)');
+        animation.play();
+      } else {
+        const animation =  createAnimation()
+            .addElement(event.target.childNodes[0].nodeName !== '#text' ? event.target.childNodes[0] : event.target.previousSibling)
+            .duration(2000)
+            .easing('ease-in')
+            // .fromTo('width','0', 'auto')
+            .fromTo('fontSize', 'inherit', '0')
+            .fromTo('transform',  'scale(1)', 'scale(0)');
+        animation.play();
+      }
+    },
   },
   setup() {
     const store = useStore();
@@ -490,6 +518,7 @@ export default defineComponent({
       close,
       list,
       ribbon,
+      checkmark,
       store
     };
   },
@@ -504,18 +533,18 @@ export default defineComponent({
      - Product Info
      - Product Features
 
-  2. Desktop Results 
+  2. Desktop Results
      - Result Info
      - Result Card
 
   3. Mobile Header
-     - Product Image 
+     - Product Image
      - Product Info
      - Product Features
 
-  4. Mobile Results 
+  4. Mobile Results
      - Result Info
-     - Result Card 
+     - Result Card
 */
 
 /* ==============
@@ -549,7 +578,7 @@ export default defineComponent({
 }
 
 /* ==============
- 2. Desktop Results 
+ 2. Desktop Results
    ============== */
 
 hr {
@@ -572,6 +601,14 @@ ion-card {
 .order-info {
   display: flex;
   justify-content: center;
+}
+
+.ion-chip {
+}
+
+.ion-chip ion-icon.ion-icon {
+  transform: scale(0);
+  font-size: 0;
 }
 
 @media (max-width: 991px) {
@@ -608,7 +645,7 @@ ion-card {
   ion-item {
     --background: transparent;
   }
-  
+
   ion-list {
     background: transparent;
   }
@@ -633,6 +670,8 @@ ion-card {
  ion-chip {
   background: #E0E0E0;
 }
+
+
 
 }
 </style>
