@@ -116,7 +116,7 @@
 
       <!-- Variant -->
       <div v-else>
-        <ion-card  v-bind:key="item.groupValue" v-for="item in current.list.items">
+        <ion-card  v-bind:key="item.groupValue" v-for="item in filteredProducts.list.items">
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
@@ -161,7 +161,7 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script>
 import {
   IonBadge,
   IonButton,
@@ -249,12 +249,12 @@ export default defineComponent({
       orderedBefore: '',
       promisedAfter: '',
       promisedBefore: '',
-      selectedItems: [] as any,
-      selectedVariants: {} as any,
+      selectedItems: [],
+      selectedVariants: {},
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
       hasPromisedDate: true,
-      allVariants: this.current
+      filteredProducts:{}
     }
   },
   computed: {
@@ -265,74 +265,82 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand'
-    })
+      selectedBrand: 'user/getSelectedBrand',
+    }),
+  },
+  mounted(){
+    this.filteredProducts = Object.create(this.current);
+    console.log(this.filteredProducts);
   },
   methods: {
-    filterSize(size: any){
-      let products = [] as any;
-      this.current.list.items.forEach((x: any)=>{
+   
+    filterSize(size){
+      let click =0;
+      
+      let products = [];
+      this.current.list.items.forEach((x)=>{
        products.push(this.getProduct(x.groupValue));
       })
-      const FilteredProducts =[] as any;
       
-      products = products.filter((product: any)=>{
-        return product.productFeatures.includes("Size/" + size);
-         
+      products = products.filter((product)=>{
+        return product.productFeatures.includes("Size/" + size);  
+      })
+      console.log(products);
+      this.current.list.items.forEach((x)=>{
+        products.forEach((product)=>{
+        if(x.groupValue == product.productId){
+          if(click ==0){
+            this.filteredProducts.list.items = [];
+            click++;
+          }
+          this.filteredProducts.list.items.push(x);
+        }
         })
-        console.log(products);
-        this.current.list.items.forEach((x: any)=>{
-          products.forEach((product: any)=>{
-          
-          if(x.groupValue == product.productId)
-          FilteredProducts.push(x);
-        })
-          
-        })
-      this.current.list.items = FilteredProducts;
-
-    },
-    filterColor(color: any){
+      })
       console.log(this.current.list.items)
-      let products = [] as any;
-      this.current.list.items.forEach((x: any)=>{
-       products.push(this.getProduct(x.groupValue));
-      })
-      const FilteredProducts =[] as any;
-      
-      products = products.filter((product: any)=>{
-        return product.productFeatures.includes("Color/" + color);
-         
-        })
-        console.log(products);
-        this.current.list.items.forEach((x: any)=>{
-          products.forEach((product: any)=>{
-          
-          if(x.groupValue == product.productId)
-          FilteredProducts.push(x);
-        })
-          
-        })
-      this.current.list.items = FilteredProducts;
-     console.log(FilteredProducts);
-     console.log(this.current.list.items);
+       
     },
+    // filterColor(color: any){
+    //   console.log(this.current.list.items)
+    //   let products = [] as any;
+    //   this.current.list.items.forEach((x: any)=>{
+    //    products.push(this.getProduct(x.groupValue));
+    //   })
+    //   const FilteredProducts =[] as any;
+      
+    //   products = products.filter((product: any)=>{
+    //     return product.productFeatures.includes("Color/" + color);
+         
+    //     })
+    //     console.log(products);
+    //     this.current.list.items.forEach((x: any)=>{
+    //       products.forEach((product: any)=>{
+          
+    //       if(x.groupValue == product.productId)
+    //       FilteredProducts.push(x);
+    //     })
+          
+    //     })
+    //   this.current.list.items = FilteredProducts;
+    //  console.log(FilteredProducts);
+    //  console.log(this.current.list.items);
+    // },
     async getVariantProducts() {
       const payload = {
         groupByField: 'productId',
         groupLimit: 0,
-        filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any
+        filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ]
       }
       if (this.orderedBefore || this.orderedAfter) {
         const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
         const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
+        const dateQuery = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
         payload.filters.push(dateQuery);
       }
       if (this.promisedBefore || this.promisedAfter) {
         const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
         const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
+        const promisedDateQuery = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
         payload.filters.push(promisedDateQuery);
       }
       if (this.cusotmerLoyalty) {
@@ -358,7 +366,7 @@ export default defineComponent({
       return alert.present();
     },
     async releaseAlert() {
-      const itemCount = Object.keys(this.selectedVariants).reduce( (count: number, productId: any) => {
+      const itemCount = Object.keys(this.selectedVariants).reduce( (count, productId) => {
         return count + parseInt(this.selectedVariants[productId]);
       }, 0)
       const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
@@ -385,7 +393,7 @@ export default defineComponent({
       return alert.present();
     },
     async cancelAlert() {
-      const itemCount = Object.keys(this.selectedVariants).reduce( (count: number, productId: any) => {
+      const itemCount = Object.keys(this.selectedVariants).reduce( (count, productId) => {
         return count + parseInt(this.selectedVariants[productId]);
       }, 0);
       const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
@@ -429,7 +437,7 @@ export default defineComponent({
       });
       return bgjobmodal.present();
     },
-    selectVariant(productId: string, quantity: string) {
+    selectVariant(productId, quantity) {
       if (quantity) {
         this.selectedVariants[productId] = quantity;
       } else {
@@ -438,9 +446,9 @@ export default defineComponent({
     },
     async releaseItems() {
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate ASC");
-      let selectedItems = [] as any;
-      selectedItemsResponse.forEach((response: any) => {
-          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item: any) => {
+      let selectedItems = [];
+      selectedItemsResponse.forEach((response) => {
+          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item) => {
             return {
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId,
@@ -467,9 +475,9 @@ export default defineComponent({
     },
     async cancelItems() {
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate DESC");
-      let selectedItems = [] as any;
-      selectedItemsResponse.forEach((response: any) => {
-          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item: any) => {
+      let selectedItems = [];
+      selectedItemsResponse.forEach((response) => {
+          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item) => {
             return {
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId
@@ -492,25 +500,25 @@ export default defineComponent({
         this.store.dispatch("order/removeItems", { items: selectedItems });
       })
     },
-    async processSelectedVaiants(sortBy: string) {
-      const variantRequests: any = [];
-      Object.keys(this.selectedVariants).forEach((productId: any) => {
+    async processSelectedVaiants(sortBy) {
+      const variantRequests = [];
+      Object.keys(this.selectedVariants).forEach((productId) => {
         const payload = {
           groupByField: 'productId',
           groupLimit: this.selectedVariants[productId],
-          filters: [ "productId:" + productId, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any,
+          filters: [ "productId:" + productId, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ],
           sortBy: sortBy
         }
         if (this.orderedBefore || this.orderedAfter) {
           const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
           const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
+          const dateQuery = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
           payload.filters.push(dateQuery);
         }
         if (this.promisedBefore || this.promisedAfter) {
           const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
           const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
+          const promisedDateQuery = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
           payload.filters.push(promisedDateQuery);
         }
         if (this.cusotmerLoyalty) {
