@@ -259,7 +259,6 @@ export default defineComponent({
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
       hasPromisedDate: true,
-      timesClicked: 0
     }
   },
   computed: {
@@ -489,7 +488,7 @@ export default defineComponent({
       if (event.target.childNodes[0].disabled || event.target.previousSibling.disabled) {
         const animation =  createAnimation()
             .addElement(event.target.childNodes[0].nodeName !== '#text' ? event.target.childNodes[0] : event.target.previousSibling)
-            .duration(2000)
+            .duration(500)
             .easing('ease-in')
             .fromTo('fontSize', '0', 'inherit')
             .fromTo('transform',  'scale(0)', 'scale(1)');
@@ -497,9 +496,8 @@ export default defineComponent({
       } else {
         const animation =  createAnimation()
             .addElement(event.target.childNodes[0].nodeName !== '#text' ? event.target.childNodes[0] : event.target.previousSibling)
-            .duration(2000)
+            .duration(500)
             .easing('ease-in')
-            // .fromTo('width','0', 'auto')
             .fromTo('fontSize', 'inherit', '0')
             .fromTo('transform',  'scale(1)', 'scale(0)');
         animation.play();
@@ -601,9 +599,6 @@ ion-card {
 .order-info {
   display: flex;
   justify-content: center;
-}
-
-.ion-chip {
 }
 
 .ion-chip ion-icon.ion-icon {
