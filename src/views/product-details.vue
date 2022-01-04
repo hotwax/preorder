@@ -254,7 +254,10 @@ export default defineComponent({
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
       hasPromisedDate: true,
-      filteredProducts:{}
+      filter:{
+        color: [],
+        size: []
+      }
     }
   },
   computed: {
@@ -267,64 +270,36 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       selectedBrand: 'user/getSelectedBrand',
     }),
-  },
-  mounted(){
-    this.filteredProducts = Object.create(this.current);
-    console.log(this.filteredProducts);
+    filteredProducts () {
+      const filteredProducts = JSON.parse(JSON.stringify(this.current));
+      if(this.filter.size.length || this.filter.color.length){
+        filteredProducts.list.items = [];
+        filteredProducts.list.items = this.current.list.items.map((item)=>{
+          const product = this.getProduct(item.groupValue);
+          const hasSize = this.filter.size.some((sizeFeature) => {
+            return product.productFeatures.includes("Size/" + sizeFeature)
+          })
+          const hasColor = this.filter.color.some((colorFeature) => {
+            return product.productFeatures.includes("Color/" + colorFeature)
+          })
+          console.log("Has size", hasSize, "Has color", hasColor);
+          console.log("item", item)
+          if (hasSize || hasColor) return item;
+          else return null
+        }).filter(product => product);
+      }
+      return filteredProducts;
+    }
   },
   methods: {
-   
-    filterSize(size){
-      let click =0;
-      
-      let products = [];
-      this.current.list.items.forEach((x)=>{
-       products.push(this.getProduct(x.groupValue));
-      })
-      
-      products = products.filter((product)=>{
-        return product.productFeatures.includes("Size/" + size);  
-      })
-      console.log(products);
-      this.current.list.items.forEach((x)=>{
-        products.forEach((product)=>{
-        if(x.groupValue == product.productId){
-          if(click ==0){
-            this.filteredProducts.list.items = [];
-            click++;
-          }
-          this.filteredProducts.list.items.push(x);
-        }
-        })
-      })
-      console.log(this.current.list.items)
-       
+    filterSize (size) {
+      this.filter.size.push(size);
+      console.log(this.filteredProducts);
     },
-    // filterColor(color: any){
-    //   console.log(this.current.list.items)
-    //   let products = [] as any;
-    //   this.current.list.items.forEach((x: any)=>{
-    //    products.push(this.getProduct(x.groupValue));
-    //   })
-    //   const FilteredProducts =[] as any;
-      
-    //   products = products.filter((product: any)=>{
-    //     return product.productFeatures.includes("Color/" + color);
-         
-    //     })
-    //     console.log(products);
-    //     this.current.list.items.forEach((x: any)=>{
-    //       products.forEach((product: any)=>{
-          
-    //       if(x.groupValue == product.productId)
-    //       FilteredProducts.push(x);
-    //     })
-          
-    //     })
-    //   this.current.list.items = FilteredProducts;
-    //  console.log(FilteredProducts);
-    //  console.log(this.current.list.items);
-    // },
+    filterColor (color) {
+      this.filter.color.push(color);
+      console.log(this.filteredProducts);
+    },
     async getVariantProducts() {
       const payload = {
         groupByField: 'productId',
