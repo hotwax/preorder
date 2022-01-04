@@ -33,7 +33,7 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filterColor(colorFeature)"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filterVarients(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -41,7 +41,7 @@
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filterSize(sizeFeature)"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filterVarients(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -257,7 +257,7 @@ export default defineComponent({
       filter:{
         color: [] as any,
         size: [] as any
-      }
+      } as any
     }
   },
   computed: {
@@ -282,8 +282,6 @@ export default defineComponent({
           const hasColor = this.filter.color.some((colorFeature: any) => {
             return product.productFeatures.includes("Color/" + colorFeature)
           })
-          console.log("Has size", hasSize, "Has color", hasColor);
-          console.log("item", item)
           if (hasSize || hasColor) return item;
           else return null
         }).filter((product: any) => product);
@@ -292,13 +290,14 @@ export default defineComponent({
     }
   },
   methods: {
-    filterSize (size: any) {
-      this.filter.size.push(size);
-      console.log(this.filteredProducts);
-    },
-    filterColor (color: any) {
-      this.filter.color.push(color);
-      console.log(this.filteredProducts);
+    filterVarients (featureValue: any, type: any) {
+      if(this.filter[type].includes(featureValue)){
+        const index = this.filter[type].indexOf(featureValue);
+        this.filter[type].splice(index,1);
+      }
+      else{
+        this.filter[type].push(featureValue);
+      }
     },
     async getVariantProducts() {
       const payload = {
