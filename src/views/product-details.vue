@@ -258,7 +258,7 @@ export default defineComponent({
       selectedVariants: {} as any,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
-      hasPromisedDate: true,
+      hasPromisedDate: true
     }
   },
   computed: {
@@ -484,7 +484,6 @@ export default defineComponent({
     },
     async chipAnimate(event: any, item: any) {
       event.target.childNodes[0].nodeName !== '#text' ?  event.target.childNodes[0].disabled = !event.target.childNodes[0].disabled : event.target.previousSibling.disabled = !event.target.previousSibling.disabled;
-
       if (event.target.childNodes[0].disabled || event.target.previousSibling.disabled) {
         const animation =  createAnimation()
             .addElement(event.target.childNodes[0].nodeName !== '#text' ? event.target.childNodes[0] : event.target.previousSibling)
@@ -501,6 +500,7 @@ export default defineComponent({
             .fromTo('fontSize', 'inherit', '0')
             .fromTo('transform',  'scale(1)', 'scale(0)');
         animation.play();
+
       }
     },
   },
@@ -645,7 +645,6 @@ ion-card {
     background: transparent;
   }
 
-
   .product-title{
     margin-bottom: 16px;
   }
@@ -665,8 +664,5 @@ ion-card {
  ion-chip {
   background: #E0E0E0;
 }
-
-
-
 }
 </style>
