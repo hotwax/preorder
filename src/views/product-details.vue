@@ -451,7 +451,7 @@ export default defineComponent({
     async cancelItems() {
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate DESC");
       let selectedItems = [] as any;
-      selectedItemsResponse.forEach((response) => {
+      selectedItemsResponse.forEach((response: any) => {
           const items = response.data.grouped.productId.groups[0].doclist.docs.map((item: any) => {
             return {
               orderId: item.orderId,
@@ -476,8 +476,8 @@ export default defineComponent({
       })
     },
     async processSelectedVaiants(sortBy: string) {
-      const variantRequests = [] as any;
-      Object.keys(this.selectedVariants).forEach((productId) => {
+      const variantRequests: any = [];
+      Object.keys(this.selectedVariants).forEach((productId: any) => {
         const payload = {
           groupByField: 'productId',
           groupLimit: this.selectedVariants[productId],
