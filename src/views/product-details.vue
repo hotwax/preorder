@@ -161,7 +161,7 @@
   </ion-page>
 </template>
 
-<script>
+<script lang="ts">
 import {
   IonBadge,
   IonButton,
@@ -249,14 +249,14 @@ export default defineComponent({
       orderedBefore: '',
       promisedAfter: '',
       promisedBefore: '',
-      selectedItems: [],
-      selectedVariants: {},
+      selectedItems: [] as any,
+      selectedVariants: {} as any,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
       hasPromisedDate: true,
       filter:{
-        color: [],
-        size: []
+        color: [] as any,
+        size: [] as any
       }
     }
   },
@@ -274,29 +274,29 @@ export default defineComponent({
       const filteredProducts = JSON.parse(JSON.stringify(this.current));
       if(this.filter.size.length || this.filter.color.length){
         filteredProducts.list.items = [];
-        filteredProducts.list.items = this.current.list.items.map((item)=>{
+        filteredProducts.list.items = this.current.list.items.map((item: any)=>{
           const product = this.getProduct(item.groupValue);
-          const hasSize = this.filter.size.some((sizeFeature) => {
+          const hasSize = this.filter.size.some((sizeFeature: any) => {
             return product.productFeatures.includes("Size/" + sizeFeature)
           })
-          const hasColor = this.filter.color.some((colorFeature) => {
+          const hasColor = this.filter.color.some((colorFeature: any) => {
             return product.productFeatures.includes("Color/" + colorFeature)
           })
           console.log("Has size", hasSize, "Has color", hasColor);
           console.log("item", item)
           if (hasSize || hasColor) return item;
           else return null
-        }).filter(product => product);
+        }).filter((product: any) => product);
       }
       return filteredProducts;
     }
   },
   methods: {
-    filterSize (size) {
+    filterSize (size: any) {
       this.filter.size.push(size);
       console.log(this.filteredProducts);
     },
-    filterColor (color) {
+    filterColor (color: any) {
       this.filter.color.push(color);
       console.log(this.filteredProducts);
     },
@@ -304,18 +304,18 @@ export default defineComponent({
       const payload = {
         groupByField: 'productId',
         groupLimit: 0,
-        filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ]
+        filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any
       }
       if (this.orderedBefore || this.orderedAfter) {
         const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
         const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const dateQuery = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
+        const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
         payload.filters.push(dateQuery);
       }
       if (this.promisedBefore || this.promisedAfter) {
         const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
         const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const promisedDateQuery = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
+        const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
         payload.filters.push(promisedDateQuery);
       }
       if (this.cusotmerLoyalty) {
@@ -341,7 +341,7 @@ export default defineComponent({
       return alert.present();
     },
     async releaseAlert() {
-      const itemCount = Object.keys(this.selectedVariants).reduce( (count, productId) => {
+      const itemCount = Object.keys(this.selectedVariants).reduce( (count: number, productId: any) => {
         return count + parseInt(this.selectedVariants[productId]);
       }, 0)
       const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
@@ -368,7 +368,7 @@ export default defineComponent({
       return alert.present();
     },
     async cancelAlert() {
-      const itemCount = Object.keys(this.selectedVariants).reduce( (count, productId) => {
+      const itemCount = Object.keys(this.selectedVariants).reduce( (count: number, productId: any) => {
         return count + parseInt(this.selectedVariants[productId]);
       }, 0);
       const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
@@ -412,7 +412,7 @@ export default defineComponent({
       });
       return bgjobmodal.present();
     },
-    selectVariant(productId, quantity) {
+    selectVariant(productId: string, quantity: string) {
       if (quantity) {
         this.selectedVariants[productId] = quantity;
       } else {
@@ -421,9 +421,9 @@ export default defineComponent({
     },
     async releaseItems() {
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate ASC");
-      let selectedItems = [];
-      selectedItemsResponse.forEach((response) => {
-          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item) => {
+      let selectedItems = [] as any;
+      selectedItemsResponse.forEach((response: any) => {
+          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item: any) => {
             return {
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId,
@@ -450,9 +450,9 @@ export default defineComponent({
     },
     async cancelItems() {
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate DESC");
-      let selectedItems = [];
+      let selectedItems = [] as any;
       selectedItemsResponse.forEach((response) => {
-          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item) => {
+          const items = response.data.grouped.productId.groups[0].doclist.docs.map((item: any) => {
             return {
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId
@@ -475,25 +475,25 @@ export default defineComponent({
         this.store.dispatch("order/removeItems", { items: selectedItems });
       })
     },
-    async processSelectedVaiants(sortBy) {
-      const variantRequests = [];
+    async processSelectedVaiants(sortBy: string) {
+      const variantRequests = [] as any;
       Object.keys(this.selectedVariants).forEach((productId) => {
         const payload = {
           groupByField: 'productId',
           groupLimit: this.selectedVariants[productId],
-          filters: [ "productId:" + productId, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ],
+          filters: [ "productId:" + productId, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any,
           sortBy: sortBy
         }
         if (this.orderedBefore || this.orderedAfter) {
           const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
           const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const dateQuery = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
+          const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
           payload.filters.push(dateQuery);
         }
         if (this.promisedBefore || this.promisedAfter) {
           const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
           const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const promisedDateQuery = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
+          const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
           payload.filters.push(promisedDateQuery);
         }
         if (this.cusotmerLoyalty) {
