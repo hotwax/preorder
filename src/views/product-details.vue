@@ -33,7 +33,7 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filterVarients(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filter(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -41,7 +41,7 @@
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filterVarients(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filter(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -254,7 +254,7 @@ export default defineComponent({
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
       hasPromisedDate: true,
-      filter:{
+      filters:{
         color: [] as any,
         size: [] as any
       } as any
@@ -272,14 +272,13 @@ export default defineComponent({
     }),
     filteredProducts () {
       const filteredProducts = JSON.parse(JSON.stringify(this.current));
-      if(this.filter.size.length || this.filter.color.length){
-        filteredProducts.list.items = [];
+      if(this.filters.size.length || this.filters.color.length){
         filteredProducts.list.items = this.current.list.items.map((item: any)=>{
           const product = this.getProduct(item.groupValue);
-          const hasSize = this.filter.size.some((sizeFeature: any) => {
+          const hasSize = this.filters.size.some((sizeFeature: any) => {
             return product.productFeatures.includes("Size/" + sizeFeature)
           })
-          const hasColor = this.filter.color.some((colorFeature: any) => {
+          const hasColor = this.filters.color.some((colorFeature: any) => {
             return product.productFeatures.includes("Color/" + colorFeature)
           })
           if (hasSize || hasColor) return item;
@@ -290,13 +289,13 @@ export default defineComponent({
     }
   },
   methods: {
-    filterVarients (featureValue: any, type: any) {
-      if(this.filter[type].includes(featureValue)){
-        const index = this.filter[type].indexOf(featureValue);
-        this.filter[type].splice(index,1);
+    filter (featureValue: any, type: any) {
+      if (this.filters[type].includes(featureValue)) {
+        const index = this.filters[type].indexOf(featureValue);
+        this.filters[type].splice(index,1);
       }
-      else{
-        this.filter[type].push(featureValue);
+      else {
+        this.filters[type].push(featureValue);
       }
     },
     async getVariantProducts() {
