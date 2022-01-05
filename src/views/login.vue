@@ -68,7 +68,7 @@ export default defineComponent({
     this.store.dispatch("user/setUserToken", this.$route.redirectedFrom?.query.token );
     console.log(this.token);
     if(this.token){
-      this.$router.push('/');
+      this.$router.push('/product-details/10000');
     }
   },
   methods: {
