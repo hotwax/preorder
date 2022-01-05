@@ -180,11 +180,12 @@ export default defineComponent({
 }
 
 .features{
- text-transform: lowercase;
- display: inline-block;
+  text-transform: lowercase;
+  display: inline-block;
 }
+
 .features::first-letter{
- text-transform: capitalize;
+  text-transform: capitalize;
 }
 
 </style> 
