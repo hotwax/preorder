@@ -59,11 +59,17 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      currentInstanceUrl: 'user/getInstanceUrl'
-    })
+      currentInstanceUrl: 'user/getInstanceUrl',
+      token: 'user/getUserToken'
+    }),
   },
   mounted() {
     this.instanceUrl= this.currentInstanceUrl;
+    this.store.dispatch("user/setUserToken", this.$route.redirectedFrom?.query.token );
+    console.log(this.token);
+    if(this.token){
+      this.$router.push('/');
+    }
   },
   methods: {
     login: function () {

@@ -40,6 +40,13 @@ const actions: ActionTree<UserState, RootState> = {
     // return resp
   },
 
+  async setUserToken({ commit, dispatch }, token){
+    if(token){
+      commit(types.USER_TOKEN_CHANGED, { newToken: token })
+      dispatch('getProfile')
+    }
+  },
+
   /**
    * Logout user
    */
