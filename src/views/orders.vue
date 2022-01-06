@@ -94,19 +94,13 @@
             <div class="order-id">
               <ion-item lines="none">
                 <ion-label>
-                  <h1>{{ order.doclist.docs[0].orderId }}</h1>
+                  <h1>{{ order.doclist.docs[0].orderName ? order.doclist.docs[0].orderName : order.doclist.docs[0].orderId }}</h1>
                   <p>{{ order.doclist.docs[0].customerPartyName }}</p>
                 </ion-label>
               </ion-item>
             </div>
 
             <div class="order-tags">
-              <!-- TODO Fix this. We need to call same filter twice -->
-              <ion-chip @click="copyToClipboard($filters.getOrderIdentificationId(order.doclist.docs[0].orderIdentifications, orderIdentificationTypeId))"  outline v-if="$filters.getOrderIdentificationId(order.doclist.docs[0].orderIdentifications, orderIdentificationTypeId)">
-                <ion-icon :icon="pricetag" />
-                <ion-label>{{ $filters.getOrderIdentificationId(order.doclist.docs[0].orderIdentifications, orderIdentificationTypeId) }}</ion-label>
-              </ion-chip>
-            
               <ion-chip outline v-if="$filters.getCustomerLoyalty(order.doclist.docs[0].orderNotes, cusotmerLoyaltyOptions)">
                 <ion-icon :icon="ribbon" />
                 <ion-label>{{ $filters.getCustomerLoyalty(order.doclist.docs[0].orderNotes, cusotmerLoyaltyOptions) }}</ion-label>
@@ -264,7 +258,6 @@ export default defineComponent({
   },
   data() {
     return {
-      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
     }
   },
