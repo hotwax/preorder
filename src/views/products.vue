@@ -33,8 +33,8 @@
           </ion-thumbnail>
           <ion-label>
             <h2>{{ getProduct(product.groupValue).productName}}</h2>
-            <p>{{ $t("Colors") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/') }} </p>
-            <p>{{ $t("Sizes") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/') }} </p>
+            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Colors") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/') }} </p>
+            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Sizes") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/') }} </p>
           </ion-label>
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
         </ion-item>

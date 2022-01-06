@@ -29,7 +29,7 @@
             <h1>{{ current.product.productName }}</h1>
           </ion-item>
           <div class="product-features">
-            <ion-list>
+            <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
@@ -37,7 +37,7 @@
                   </ion-row>
               </ion-item>
             </ion-list>
-            <ion-list>
+            <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/').length">
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
@@ -124,8 +124,8 @@
               </ion-thumbnail>
               <ion-label>
                 <h2> {{ getProduct(item.groupValue).productName }}</h2>
-                <p>{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
-                <p>{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
+                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
+                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
               </ion-label>
             </ion-item>
           </div>
