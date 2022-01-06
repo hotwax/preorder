@@ -258,7 +258,6 @@ export default defineComponent({
   },
   data() {
     return {
-      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
     }
   },
