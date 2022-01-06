@@ -64,11 +64,17 @@ export default defineComponent({
     }),
   },
   mounted() {
-    this.instanceUrl= this.currentInstanceUrl;
-    this.store.dispatch("user/setUserToken", this.$route.redirectedFrom?.query.token );
-    console.log(this.token);
-    if(this.token){
-      this.$router.push('/product-details/10000');
+    this.instanceUrl = this.currentInstanceUrl;
+    console.log(this.$route);
+    if(this.$route.redirectedFrom?.query.info){
+      console.log(this.$route.redirectedFrom?.query.info)
+      const info = (this.$route.redirectedFrom?.query.info) as string;
+      const information = JSON.parse(info);
+      this.store.dispatch("user/setUserInstanceUrl", information.baseURL);
+      this.store.dispatch("user/setUserToken", information.token);
+      if(this.token){
+        this.$router.push('/'+information.slug+'/'+information.id);
+      }
     }
   },
   methods: {
