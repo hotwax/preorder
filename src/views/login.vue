@@ -63,17 +63,17 @@ export default defineComponent({
       token: 'user/getUserToken'
     }),
   },
-  mounted() {
+  async mounted() {
     this.instanceUrl = this.currentInstanceUrl;
     console.log(this.$route);
     if(this.$route.redirectedFrom?.query.info){
       console.log(this.$route.redirectedFrom?.query.info)
       const info = (this.$route.redirectedFrom?.query.info) as string;
       const information = JSON.parse(info);
-      this.store.dispatch("user/setUserInstanceUrl", information.baseURL);
-      this.store.dispatch("user/setUserToken", information.token);
+      await this.store.dispatch("user/setUserInstanceUrl", information.baseURL);
+      await this.store.dispatch("user/setUserToken", information.token);
       if(this.token){
-        this.$router.push('/'+information.slug+'/'+information.id);
+        this.$router.replace('/'+information.slug+'/'+information.id);
       }
     }
   },
