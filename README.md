@@ -1,6 +1,4 @@
-# pre-order
-
-HotWax Commerce - Pre-Order App
+![image](https://user-images.githubusercontent.com/15027245/148551077-087685a0-8800-4a54-9a51-d02726dee916.png)
 
 # Prerequisite
 Ionic CLI - If you don't have the ionic CLI installed refer [official documentation](https://ionicframework.com/docs/intro/cli) for the installation instructions.
