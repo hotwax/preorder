@@ -84,8 +84,7 @@ app.config.globalProperties.$filters = {
             const featureValue = featureSplit[2] ? featureSplit[2] : '';
             featuresValue += ", " + featureValue;
           })
-          featuresValue = featuresValue.slice(1).trim();
-          featuresList[x]=featuresValue;
+          featuresList[x]=featuresValue.slice(1).trim();
           featuresValue = "";
         })
       })
