@@ -79,24 +79,20 @@ app.config.globalProperties.$filters = {
         features.push(featureSplit[1]);
         features = [...new Set(features)];
         features.forEach((x: any)=>{
-          if(featureHierarchy){
-            featureHierarchy.filter((featureItem: any) => featureItem.includes(featureSplit[0] +"/" +x+"/")).forEach((feature: any) => {
-              const featureSplit = feature ? feature.split('/') : [];
-              const featureValue = featureSplit[2] ? featureSplit[2] : '';
-              featuresValue += ", " + featureValue;
-            })
-            featuresValue = featuresValue.slice(1);
-            featuresValue = featuresValue.trim();
-            featuresList[x]=featuresValue;
-            featuresValue ="";
-          }
+          featureHierarchy.filter((featureItem: any) => featureItem.includes(featureSplit[0] +"/" +x+"/")).forEach((feature: any) => {
+            const featureSplit = feature ? feature.split('/') : [];
+            const featureValue = featureSplit[2] ? featureSplit[2] : '';
+            featuresValue += ", " + featureValue;
+          })
+          featuresValue = featuresValue.slice(1).trim();
+          featuresList[x]=featuresValue;
+          featuresValue = "";
         })
       })
-      const sortedFeaturesList ={} as any;
+      const sortedFeaturesList = {} as any;
       Object.keys(featuresList).sort().forEach(key => {
         sortedFeaturesList[key] = featuresList[key];
       });
-      console.log(Object.keys(sortedFeaturesList));
       return sortedFeaturesList;
     }
   },
