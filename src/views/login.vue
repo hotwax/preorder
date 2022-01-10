@@ -65,14 +65,12 @@ export default defineComponent({
   },
   async mounted() {
     this.instanceUrl = this.currentInstanceUrl;
-    console.log(this.$route);
-    if(this.$route.redirectedFrom?.query.info){
-      console.log(this.$route.redirectedFrom?.query.info)
+    if (this.$route.redirectedFrom?.query.info) {
       const info = (this.$route.redirectedFrom?.query.info) as string;
       const information = JSON.parse(info);
       await this.store.dispatch("user/setUserInstanceUrl", information.baseURL);
       await this.store.dispatch("user/setUserToken", information.token);
-      if(this.token){
+      if (this.token) {
         this.$router.replace('/'+information.slug+'/'+information.id);
       }
     }
