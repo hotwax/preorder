@@ -33,7 +33,10 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"  @click="chipAnimate($event)" class="ion-chip">
+                      <ion-icon :icon="checkmark" class="ion-icon disabled"/>
+                      <ion-label>{{ colorFeature }}</ion-label>
+                    </ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -199,7 +202,8 @@ import {
   calendar,
   close,
   list,
-  ribbon
+  ribbon,
+  checkmark
 } from "ionicons/icons";
 import WarehouseModal from "./warehouse-modal.vue";
 import BackgroundJobModal from "./background-job-modal.vue";
@@ -208,6 +212,7 @@ import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
 import moment from 'moment';
 import Image from '@/components/Image.vue';
+import { createAnimation } from '@ionic/vue';
 
 export default defineComponent({
   name: "product-details",
@@ -477,6 +482,26 @@ export default defineComponent({
       });
       return Promise.all(variantRequests);
     },
+    async chipAnimate(event: any) {
+      event.target.childNodes[0].nodeName !== '#text' ?  event.target.childNodes[0].disabled = !event.target.childNodes[0].disabled : event.target.previousSibling.disabled = !event.target.previousSibling.disabled;
+      if (event.target.childNodes[0].disabled || event.target.previousSibling.disabled) {
+        const animation =  createAnimation()
+            .addElement(event.target.childNodes[0].nodeName !== '#text' ? event.target.childNodes[0] : event.target.previousSibling)
+            .duration(1500)
+            .easing('ease-in')
+            .fromTo('fontSize', '0', 'inherit')
+            .fromTo('transform',  'scale(0)', 'scale(1)');
+        animation.play();
+      } else {
+        const animation =  createAnimation()
+            .addElement(event.target.childNodes[0].nodeName !== '#text' ? event.target.childNodes[0] : event.target.previousSibling)
+            .duration(1500)
+            .easing('ease-in')
+            .fromTo('fontSize', 'inherit', '0')
+            .fromTo('transform',  'scale(1)', 'scale(0)');
+        animation.play();
+      }
+    },
   },
   setup() {
     const store = useStore();
@@ -490,7 +515,8 @@ export default defineComponent({
       close,
       list,
       ribbon,
-      store
+      store,
+      checkmark
     };
   },
 });
@@ -572,6 +598,11 @@ ion-card {
 .order-info {
   display: flex;
   justify-content: center;
+}
+
+.ion-chip ion-icon.ion-icon {
+  font-size: 0;
+  transform: scale(0);
 }
 
 @media (max-width: 991px) {
