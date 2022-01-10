@@ -33,7 +33,7 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"  @click="chipAnimate($event)" class="ion-chip">
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"  @click="chipAnimate($event)">
                       <ion-icon :icon="checkmark" class="ion-icon disabled"/>
                       <ion-label>{{ colorFeature }}</ion-label>
                     </ion-chip>
@@ -600,7 +600,7 @@ ion-card {
   justify-content: center;
 }
 
-.ion-chip ion-icon.ion-icon {
+ion-icon.disabled {
   font-size: 0;
   transform: scale(0);
 }
