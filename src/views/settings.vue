@@ -22,6 +22,11 @@
         <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
       </ion-item>
       <ion-item>
+        <ion-icon :icon="codeWorkingOutline" slot="start"/>
+        <ion-label>{{ $t("OMS") }}</ion-label>
+        <ion-note slot="end">{{ instanceUrl }}</ion-note>
+      </ion-item>
+      <ion-item>
         <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
         <ion-button @click="logout" slot="end" fill="outline" color="dark">{{ $t("Logout") }}</ion-button>
       </ion-item>
@@ -30,6 +35,7 @@
 </template>
 
 <script lang="ts">
+import { codeWorkingOutline } from 'ionicons/icons'
 import { useStore } from "@/store";
 import { 
   IonButton,
@@ -67,7 +73,7 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store }
+    return { store, codeWorkingOutline }
   },
   data() {
     return {
@@ -77,7 +83,8 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand'
+      selectedBrand: 'user/getSelectedBrand',
+      instanceUrl: 'user/getInstanceUrl'
     })
   },
   methods: {
