@@ -26,6 +26,7 @@
     "Enter an order ID, product name, style name, SKU, customer name, UPCA or external ID":"Enter an order ID, product name, style name, SKU, customer name, UPCA or external ID",
     "How are orders released?":"How are orders released?",
     "in stock": "in stock",
+    "Instance Url": "Instance Url",
     "Item cancelled successfully": "Item cancelled successfully",
     "items preordered": "items preordered",
     "Item promise date updated successfully": "Item promise date updated successfully",

@@ -1,0 +1,6 @@
+---
+title: Handle empty check for color and size for orders page
+ticket_id: "#1xx6u1f"
+merge_request: 38
+author: Bashu Tiwari
+type: performance
