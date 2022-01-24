@@ -56,6 +56,7 @@
     "Password cannot be updated. Please try again.": "Password cannot be updated. Please try again.",
     "Field is required":"Field is required",
     "Password must contain at least 8 characters including one digit and one special character":"Password must contain at least 8 characters including one digit and one special character",
+    "Password must match":"Password must match",
     "Password updated successfully": "Password updated successfully",
     "Pieces": "Pieces",
     "pieces preordered": "pieces preordered",
