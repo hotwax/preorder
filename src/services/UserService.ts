@@ -35,7 +35,6 @@ const updatePassword = async (payload: any): Promise <any>  => {
   return client({
     url: "updatePassword",
     method: "post",
-    baseURL: process.env.VUE_APP_BASE_URL,
     ...payload
   });
 }
