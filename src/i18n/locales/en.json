@@ -54,6 +54,8 @@
     "Orders are released from oldest to newest. Use the Date filter to identify orders taken before a certain date.":"Orders are released from oldest to newest. Use the Date filter to identify orders taken before a certain date.",
     "Password": "Password",
     "Password cannot be updated. Please try again.": "Password cannot be updated. Please try again.",
+    "Field is required":"Field is required",
+    "Password must contain at least 8 characters including one digit and one special character":"Password must contain at least 8 characters including one digit and one special character",
     "Password updated successfully": "Password updated successfully",
     "Pieces": "Pieces",
     "pieces preordered": "pieces preordered",
