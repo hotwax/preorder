@@ -107,11 +107,11 @@
 import {
   IonButton,
   IonContent,
-  IonLabel,
-  IonPage,
   IonIcon,
   IonInput,
   IonItem,
+  IonLabel,
+  IonPage,
   IonToggle,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
@@ -237,11 +237,11 @@ export default defineComponent({
   components: {
     IonButton,
     IonContent,
-    IonLabel,
-    IonPage,
     IonIcon,
     IonInput,
     IonItem,
+    IonLabel,
+    IonPage,
     IonToggle,
     VField: V.Field,
     VForm: V.Form,
