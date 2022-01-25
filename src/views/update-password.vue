@@ -28,14 +28,14 @@
               v-slot="{ field }"
               v-model="currentPassword"
             >
-              <ion-input
-                name="currentPassword"
+              <ion-input 
+              name="currentPassword"
                 v-model="currentPassword"
                 :value="field.value"
                 v-bind="field"
                 :type="showPassword ? 'text' : 'password'"
                 required
-              ></ion-input>
+              />
             </v-field>
           </ion-item>
           <ion-item v-if="errors['currentPassword']" lines="none">
