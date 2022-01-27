@@ -24,7 +24,7 @@
       <ion-item>
         <ion-icon :icon="codeWorkingOutline" slot="start"/>
         <ion-label>{{ $t("OMS") }}</ion-label>
-        <ion-note slot="end">{{ instanceUrl }}</ion-note>
+        <p slot="end">{{ instanceUrl }}</p>
       </ion-item>
       <ion-item>
         <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
