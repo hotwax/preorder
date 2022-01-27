@@ -24,7 +24,7 @@
       <ion-item>
         <ion-icon :icon="codeWorkingOutline" slot="start"/>
         <ion-label>{{ $t("OMS") }}</ion-label>
-        <ion-label slot="end">{{ instanceUrl }}</ion-label>
+        <p slot="end">{{ instanceUrl }}</p>
       </ion-item>
       <ion-item>
         <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
@@ -105,8 +105,3 @@ export default defineComponent({
   }
 });
 </script>
-<style scoped>
-ion-label[slot="end"] {
-  text-align: end;
-}
-</style>
