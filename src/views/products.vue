@@ -98,7 +98,6 @@ export default defineComponent({
   data() {
     return {
       queryString: '',
-      orderIdentificationTypeId: process.env.VUE_APP_ORD_IDENT_TYPE_ID,
       orderedAfter: '',
       orderedBefore: '',
       selectedItems: [] as any,
