@@ -75,7 +75,6 @@ app.config.globalProperties.$filters = {
       featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).forEach((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
         const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        console.log(featureValue);
         featuresValue += featuresValue.length > 0 ? ", " + featureValue : featureValue;
       })
     }
