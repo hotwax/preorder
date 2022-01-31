@@ -14,29 +14,29 @@
     <ion-radio-group>
       <ion-item lines="none">
         <ion-radio slot="start"></ion-radio>
-        <ion-label>Custom</ion-label>
+        <ion-label>{{ $t("Custom") }}</ion-label>
       </ion-item>
     </ion-radio-group>
 
     <ion-item>
-      <ion-label position="stacked">Ships from date</ion-label>
+      <ion-label position="stacked">{{ $t("Ships from date") }}</ion-label>
       <ion-input type="date"></ion-input>
     </ion-item>
 
     <ion-radio-group>
       <ion-item lines="none">
         <ion-radio slot="start"></ion-radio>
-        <ion-label>Auto</ion-label>
+        <ion-label>{{ $t("Auto") }}</ion-label>
       </ion-item>
     </ion-radio-group>
 
     <ion-list>
-      <ion-list-header>Purchase orders</ion-list-header>
+      <ion-list-header>{{ $t("Purchase orders") }}</ion-list-header>
 
       <ion-item>
         <ion-label>
           12345
-          <p>ATP: 30</p>
+          <p>{{ $t("ATP") }}: 30</p>
         </ion-label>
         <ion-note slot="end">12 Feb 2021</ion-note>
       </ion-item>
@@ -44,7 +44,7 @@
       <ion-item>
         <ion-label>
           67890
-          <p>ATP: 50</p>
+          <p>{{ $t("ATP") }}: 50</p>
         </ion-label>
         <ion-note slot="end">12 Feb 2021</ion-note>
       </ion-item>

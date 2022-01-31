@@ -27,13 +27,13 @@
           <div class="filter-chips">  
             <ion-chip>
               <ion-icon :icon="checkmarkOutline" />
-              <ion-label>All</ion-label>
+              <ion-label>{{ $t("All") }}</ion-label>
             </ion-chip>
             <ion-chip>
-              <ion-label>Pre-order</ion-label>
+              <ion-label>{{ $t("Pre-order") }}</ion-label>
             </ion-chip>
             <ion-chip>
-              <ion-label>Back-order</ion-label>
+              <ion-label>{{ $t("Back-order") }}</ion-label>
             </ion-chip>
           </div>
         </div>
@@ -41,7 +41,7 @@
         <div class="list-item">
           <ion-item lines="none">
             <ion-icon :icon="shirtOutline" slot="start" />
-            <ion-label>1 sku selected</ion-label>
+            <ion-label>1 {{ $t("sku selected") }}</ion-label>
           </ion-item>
 
           <ion-label class="tablet">
@@ -102,7 +102,7 @@
               <ion-icon :icon="sendOutline" />
               <ion-label>12 Jan 2021</ion-label>
             </ion-chip>
-            <ion-label>PO: #19222</ion-label>
+            <ion-label>{{ $t("PO") }}: #19222</ion-label>
           </div>
 
           <ion-label class="tablet">
@@ -126,17 +126,16 @@
       <div v-if="segment == 'purchase-orders'">
         <div class="search-filter">
           <ion-searchbar />
-
-          <div class="filter-chips">
+          <div class="filter-chips">  
             <ion-chip>
               <ion-icon :icon="checkmarkOutline" />
-              <ion-label>All</ion-label>
+              <ion-label>{{ $t("All") }}</ion-label>
             </ion-chip>
             <ion-chip>
-              <ion-label>Pre-order</ion-label>
+              <ion-label>{{ $t("Pre-order") }}</ion-label>
             </ion-chip>
             <ion-chip>
-              <ion-label>Back-order</ion-label>
+              <ion-label>{{ $t("Back-order") }}</ion-label>
             </ion-chip>
           </div>
         </div>
@@ -144,7 +143,7 @@
         <div class="list-item">
           <ion-item lines="none">
             <ion-icon :icon="shirtOutline" slot="start" />
-            <ion-label>1 sku selected</ion-label>
+            <ion-label>1 {{ $t("sku selected") }}</ion-label>
           </ion-item>
 
           <ion-label class="tablet">
@@ -230,16 +229,16 @@
         <div class="search-filter">
           <ion-searchbar />
 
-          <div class="filter-chips">
+          <div class="filter-chips">  
             <ion-chip>
               <ion-icon :icon="checkmarkOutline" />
-              <ion-label>All</ion-label>
+              <ion-label>{{ $t("All") }}</ion-label>
             </ion-chip>
             <ion-chip>
-              <ion-label>Pre-order</ion-label>
+              <ion-label>{{ $t("Pre-order") }}</ion-label>
             </ion-chip>
             <ion-chip>
-              <ion-label>Back-order</ion-label>
+              <ion-label>{{ $t("Back-order") }}</ion-label>
             </ion-chip>
           </div>
         </div>
@@ -247,7 +246,7 @@
         <div class="list-item">
           <ion-item lines="none">
             <ion-icon :icon="shirtOutline" slot="start" />
-            <ion-label>1 sku selected</ion-label>
+            <ion-label>1 {{ $t("sku selected") }}</ion-label>
           </ion-item>
 
           <ion-label class="tablet">
@@ -336,16 +335,21 @@
 import {
   IonButton,
   IonButtons,
+  IonChip,
   IonContent,
+  IonCheckbox,
   IonHeader,
   IonItem,
   IonLabel,
   IonIcon,
   IonMenuButton,
   IonPage,
+  IonSearchbar,
   IonSegment,
   IonSegmentButton,
   IonTitle,
+  IonThumbnail,
+  IonToggle,
   IonToolbar,
   popoverController,
 } from '@ionic/vue';
@@ -364,16 +368,21 @@ export default defineComponent({
   components: {
     IonButton,
     IonButtons,
+    IonChip,
     IonContent,
+    IonCheckbox,
     IonHeader,
     IonItem,
     IonLabel,
     IonIcon,
     IonMenuButton,
     IonPage,
+    IonSearchbar,
     IonSegment,
     IonSegmentButton,
     IonTitle,
+    IonThumbnail,
+    IonToggle,
     IonToolbar,
   },
   methods: {
