@@ -3,7 +3,7 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-menu-button></ion-menu-button>
+          <ion-menu-button />
         </ion-buttons>
         <ion-title slot="start">{{ $t("Catalog") }}</ion-title>
         <ion-segment @ionChange="segmentChanged($event)" v-model="segment">
