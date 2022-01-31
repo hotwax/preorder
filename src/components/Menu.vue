@@ -42,7 +42,7 @@ import {
 import { defineComponent, ref } from "vue";
 import { mapGetters } from "vuex";
 
-import { shirt, pricetags, settings } from "ionicons/icons";
+import { arrowBack ,shirt, pricetags, settings } from "ionicons/icons";
 import { useStore } from "@/store";
 
 export default defineComponent({
@@ -97,6 +97,12 @@ export default defineComponent({
         mdIcon: shirt,
       },
       {
+        title: "Pre-order catalog",
+        url: "/catalog",
+        iosIcon: arrowBack,
+        mdIcon: arrowBack,
+      },
+      {
         title: "Settings",
         url: "/settings",
         iosIcon: settings,
@@ -106,6 +112,7 @@ export default defineComponent({
     return {
       selectedIndex,
       appPages,
+      arrowBack,
       shirt,
       pricetags,
       settings,

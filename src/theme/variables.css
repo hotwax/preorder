@@ -239,6 +239,19 @@ Kept the orignal styling for future use if any
   }
 }
 
+.overline {
+  font-weight: 500 !important;
+  font-size: 10px !important;
+  line-height: 16px !important;
+  letter-spacing: 1.5px;
+  color: #666;
+  text-transform: uppercase !important;
+}
+
+ion-thumbnail > img {
+  object-fit: contain;
+}
+
 ion-badge {
   margin-right: 8px;
 }
@@ -283,6 +296,59 @@ ion-select {
   text-align: center;
 }
 
+.list-item {
+  --columns-mobile: 2;
+  --columns-tablet: 5;
+  --columns-desktop: 8;
+  --col-calc: var(--columns-mobile);
+  --implicit-columns: calc(var(--col-calc) - 1);
+  display: grid;
+  grid-template-columns: repeat(var(--implicit-columns), 1fr) max-content;
+  justify-items: center;
+  align-items: center;
+}
+
+.list-item > * {
+  display: none;
+}
+
+.list-item > *:last-child {
+  display: unset;
+  justify-self: end;
+}
+
+.list-item > ion-label {
+  text-align: center;
+}
+
+.list-item > *:first-child {
+  display: unset;
+  justify-self: start
+}
+
+@media (min-width: 700px) {
+  .list-item {
+    --col-calc: var(--columns-tablet);
+  }
+
+  .tablet {
+    display: unset;
+  }
+}
+
+@media (min-width: 991px) {
+  .list-item {
+    --col-calc: var(--columns-desktop);
+  }
+
+  .list-item > * {
+    display: unset;
+  }
+
+  .tablet {
+    display: unset;
+  }
+}
 
 
 
