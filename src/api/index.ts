@@ -95,6 +95,8 @@ const api = async (customConfig: any) => {
  * @return {Promise} Response from API as returned by Axios
  */
 const client = (config: any) => {
+    const baseURL = store.getters['user/getInstanceUrl'];
+    if (baseURL) config.baseURL = `https://${baseURL}.hotwax.io/api/`;
     return axios.request(config);
 }
 

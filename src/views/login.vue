@@ -70,11 +70,16 @@ export default defineComponent({
        this.store.dispatch("user/setUserInstanceUrl", this.instanceUrl)
       const { username, password } = this;
       this.store.dispatch("user/login", { username, password }).then((data: any) => {
-        if (data.token) {
+        if(data.requirePasswordChange && data.token) {
+          this.username = ''
+          this.password = ''
+          // TODO Check if this comes in success as we have API response
+          this.$router.push({ name: 'update-password', params: { username , token: data.token}})
+        } else if (data.token) {
           this.username = ''
           this.password = ''
           this.$router.push('/')
-        }
+        } 
       }).catch((error: any) => {
         console.error("error", error);
       })

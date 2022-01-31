@@ -1,4 +1,4 @@
-import api from '../api'
+import api, { client } from '../api'
 
 const login = async (username: string, password: string): Promise <any> => {
   return api({
@@ -31,10 +31,18 @@ const setUserTimeZone = async (payload: any): Promise <any>  => {
     data: payload
   });
 }
+const updatePassword = async (payload: any): Promise <any>  => {
+  return client({
+    url: "updatePassword",
+    method: "post",
+    ...payload
+  });
+}
 
 export const UserService = {
     login,
     getAvailableTimeZones,
     getProfile,
     setUserTimeZone,
+    updatePassword,
 }

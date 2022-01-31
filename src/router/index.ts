@@ -6,6 +6,7 @@ import Productdetails from '../views/product-details.vue'
 import Orders from '../views/orders.vue'
 import Settings from '../views/settings.vue'
 import store from '@/store'
+import UpdatePassword from '@/views/update-password.vue'
 
 
 const authGuard = (to: any, from: any, next: any) => {
@@ -29,6 +30,11 @@ const routes: Array<RouteRecordRaw> = [
    {
     path: '/',
     redirect: '/orders'
+  },
+  {
+    path: '/update-password',
+    name: 'update-password',
+    component: UpdatePassword
   },
   {
     path: '/login',
