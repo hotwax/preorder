@@ -29,19 +29,19 @@
             <h1>{{ current.product.productName }}</h1>
           </ion-item>
           <div class="product-features">
-            <ion-list>
+            <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filter(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
-            <ion-list>
+            <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/').length">
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filter(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -116,7 +116,7 @@
 
       <!-- Variant -->
       <div v-else>
-        <ion-card  v-bind:key="item.groupValue" v-for="item in current.list.items">
+        <ion-card  v-bind:key="item.groupValue" v-for="item in filteredProducts.list.items">
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
@@ -124,8 +124,8 @@
               </ion-thumbnail>
               <ion-label>
                 <h2> {{ getProduct(item.groupValue).productName }}</h2>
-                <p>{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
-                <p>{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
+                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
+                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
               </ion-label>
             </ion-item>
           </div>
@@ -252,7 +252,11 @@ export default defineComponent({
       selectedVariants: {} as any,
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
-      hasPromisedDate: true
+      hasPromisedDate: true,
+      filters:{
+        color: [] as any,
+        size: [] as any
+      } as any
     }
   },
   computed: {
@@ -263,12 +267,38 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand'
-    })
+      selectedBrand: 'user/getSelectedBrand',
+    }),
+    filteredProducts () {
+      const filteredProducts = JSON.parse(JSON.stringify(this.current));
+      if(this.filters.size.length || this.filters.color.length){
+        filteredProducts.list.items = this.current.list.items.map((item: any)=>{
+          const product = this.getProduct(item.groupValue);
+          const hasSize = this.filters.size.some((sizeFeature: any) => {
+            return product.productFeatures.includes("Size/" + sizeFeature)
+          })
+          const hasColor = this.filters.color.some((colorFeature: any) => {
+            return product.productFeatures.includes("Color/" + colorFeature)
+          })
+          if (hasSize || hasColor) return item;
+          else return null
+        }).filter((product: any) => product);
+      }
+      return filteredProducts;
+    }
   },
   methods: {
     inputPieces (item: any) {
       item.inputValue = item.doclist.numFound;
+    }, 
+    filter (featureValue: any, type: any) {
+      if (this.filters[type].includes(featureValue)) {
+        const index = this.filters[type].indexOf(featureValue);
+        this.filters[type].splice(index,1);
+      }
+      else {
+        this.filters[type].push(featureValue);
+      }
     },
     async getVariantProducts() {
       const payload = {
