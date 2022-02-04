@@ -326,6 +326,11 @@ ion-select {
   justify-self: start
 }
 
+hr {
+  border-width: 1px;
+  color: var(--ion-color-medium);
+}
+
 @media (min-width: 700px) {
   .list-item {
     --col-calc: var(--columns-tablet);

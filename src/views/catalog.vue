@@ -20,316 +20,107 @@
       </ion-toolbar>
     </ion-header>
 
-    <!-- Segments -->
-    <div v-if="segment == 'all'">
-        <div class="search-filter">
-          <ion-searchbar />
-          <div class="filter-chips">  
-            <ion-chip>
-              <ion-icon :icon="checkmarkOutline" />
-              <ion-label>{{ $t("All") }}</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-label>{{ $t("Pre-order") }}</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-label>{{ $t("Back-order") }}</ion-label>
-            </ion-chip>
-          </div>
-        </div>
-
-        <div class="list-item">
-          <ion-item lines="none">
-            <ion-icon :icon="shirtOutline" slot="start" />
-            <ion-label>1 {{ $t("sku selected") }}</ion-label>
-          </ion-item>
-
-          <ion-label class="tablet">
-            300
-            <p>{{ $t("on PO") }}</p>
-          </ion-label>
-
-          <ion-chip outline>
-            <ion-icon :icon="lockClosedOutline" />
-            <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-          </ion-chip>
-
-          <div />
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("back-order") }}</p>
-          </ion-label>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("pre-order") }}</p>
-          </ion-label>
-
-          <ion-checkbox />
-
-          <ion-button fill="clear" color="medium" @click="openPopover">
-            <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-          </ion-button>
-        </div>
-
-        <hr />
-
-        <div class="list-item">
-          <ion-item lines="none">
-            <ion-thumbnail slot="start">
-              <img src="https://cdn.shopify.com/s/files/1/0069/7384/9727/products/test-track.jpg?v=1626255137" />
-            </ion-thumbnail>
-            <ion-label>
-              <p class="overline">Brand</p>
-              Virtual
-              <p>Shopify SKU</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-label class="tablet">
-            300
-            <p>{{ $t("on PO") }}</p>
-          </ion-label>
-
-          <ion-chip outline>
-            <ion-icon :icon="lockClosedOutline" />
-            <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-          </ion-chip>
-
-          <div class="ion-text-center">
-            <ion-chip outline>
-              <ion-icon :icon="sendOutline" />
-              <ion-label>12 Jan 2021</ion-label>
-            </ion-chip>
-            <p>{{ $t("PO") }}: #19222</p>
-          </div>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("back-order") }}</p>
-          </ion-label>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("pre-order") }}</p>
-          </ion-label>
-
-          <ion-checkbox />
-
-          <ion-button fill="clear" color="medium" @click="openPopover">
-            <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-          </ion-button>
-        </div>
-      </div>
-
-      <div v-if="segment == 'purchase-orders'">
-        <div class="search-filter">
-          <ion-searchbar />
-          <div class="filter-chips">  
-            <ion-chip>
-              <ion-icon :icon="checkmarkOutline" />
-              <ion-label>{{ $t("All") }}</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-label>{{ $t("Pre-order") }}</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-label>{{ $t("Back-order") }}</ion-label>
-            </ion-chip>
-          </div>
-        </div>
-
-        <div class="list-item">
-          <ion-item lines="none">
-            <ion-icon :icon="shirtOutline" slot="start" />
-            <ion-label>1 {{ $t("sku selected") }}</ion-label>
-          </ion-item>
-
-          <ion-label class="tablet">
-            300
-            <p>{{ $t("on PO") }}</p>
-          </ion-label>
-
-          <ion-chip outline>
-            <ion-icon :icon="lockClosedOutline" />
-            <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-          </ion-chip>
-
-          <div />
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("back-order") }}</p>
-          </ion-label>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("pre-order") }}</p>
-          </ion-label>
-
-          <ion-checkbox />
-
-          <ion-button fill="clear" color="medium" @click="openPopover">
-            <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-          </ion-button>
-        </div>
-
-        <hr />
-
-        <div class="list-item">
-          <ion-item lines="none">
-            <ion-thumbnail slot="start">
-              <img src="https://cdn.shopify.com/s/files/1/0069/7384/9727/products/test-track.jpg?v=1626255137" />
-            </ion-thumbnail>
-            <ion-label>
-              <p class="overline">Brand</p>
-              Virtual
-              <p>Shopify SKU</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-label class="tablet">
-            300
-            <p>{{ $t("on PO") }}</p>
-          </ion-label>
-
-          <ion-chip outline>
-            <ion-icon :icon="lockClosedOutline" />
-            <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-          </ion-chip>
-
-          <div class="ion-text-center">
-            <ion-chip outline>
-              <ion-icon :icon="sendOutline" />
-              <ion-label>12 Jan 2021</ion-label>
-            </ion-chip>
-            <ion-label>PO: #19222</ion-label>
-          </div>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("back-order") }}</p>
-          </ion-label>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("pre-order") }}</p>
-          </ion-label>
-
-          <ion-checkbox />
-
-          <ion-button fill="clear" color="medium" @click="openPopover">
-            <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-          </ion-button>
-        </div>
-      </div>
-
-      <div v-if="segment == 'out-of-stock'">
-        <div class="search-filter">
-          <ion-searchbar />
-
-          <div class="filter-chips">  
-            <ion-chip>
-              <ion-icon :icon="checkmarkOutline" />
-              <ion-label>{{ $t("All") }}</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-label>{{ $t("Pre-order") }}</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-label>{{ $t("Back-order") }}</ion-label>
-            </ion-chip>
-          </div>
-        </div>
-
-        <div class="list-item">
-          <ion-item lines="none">
-            <ion-icon :icon="shirtOutline" slot="start" />
-            <ion-label>1 {{ $t("sku selected") }}</ion-label>
-          </ion-item>
-
-          <ion-label class="tablet">
-            300
-            <p>{{ $t("on PO") }}</p>
-          </ion-label>
-
-          <ion-chip outline>
-            <ion-icon :icon="lockClosedOutline" />
-            <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-          </ion-chip>
-
-          <div />
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("back-order") }}</p>
-          </ion-label>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("pre-order") }}</p>
-          </ion-label>
-
-          <ion-checkbox />
-
-          <ion-button fill="clear" color="medium" @click="openPopover">
-            <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-          </ion-button>
-        </div>
-
-        <hr />
-
-        <div class="list-item">
-          <ion-item lines="none">
-            <ion-thumbnail slot="start">
-              <img src="https://cdn.shopify.com/s/files/1/0069/7384/9727/products/test-track.jpg?v=1626255137" />
-            </ion-thumbnail>
-            <ion-label>
-              <p class="overline">Brand</p>
-              Virtual
-              <p>Shopify SKU</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-label class="tablet">
-            300
-            <p>{{ $t("on PO") }}</p>
-          </ion-label>
-
-          <ion-chip outline>
-            <ion-icon :icon="lockClosedOutline" />
-            <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-          </ion-chip>
-
-          <div class="ion-text-center">
-            <ion-chip outline>
-              <ion-icon :icon="sendOutline" />
-              <ion-label>12 Jan 2021</ion-label>
-            </ion-chip>
-            <ion-label>PO: #19222</ion-label>
-          </div>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("back-order") }}</p>
-          </ion-label>
-
-          <ion-label class="tablet">
-            <ion-toggle />
-            <p>{{ $t("pre-order") }}</p>
-          </ion-label>
-
-          <ion-checkbox />
-
-          <ion-button fill="clear" color="medium" @click="openPopover">
-            <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-          </ion-button>
-        </div>
-      </div>
-
     <ion-content :fullscreen="true">
-      
+      <!--Segment content -->
+      <div class="search-filter">
+        <ion-searchbar />
+        <div class="filter-chips">
+          <ion-chip>
+            <ion-icon :icon="checkmarkOutline" />
+            <ion-label>{{ $t("All") }}</ion-label>
+          </ion-chip>
+          <ion-chip>
+            <ion-label>{{ $t("Pre-order") }}</ion-label>
+          </ion-chip>
+          <ion-chip>
+            <ion-label>{{ $t("Back-order") }}</ion-label>
+          </ion-chip>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <ion-item lines="none">
+          <ion-icon :icon="shirtOutline" slot="start" />
+          <ion-label>1 {{ $t("sku selected") }}</ion-label>
+        </ion-item>
+
+        <ion-label class="tablet">
+          300
+          <p>{{ $t("on PO") }}</p>
+        </ion-label>
+
+        <ion-chip outline>
+          <ion-icon :icon="lockClosedOutline" />
+          <ion-label>200 {{ $t("PO ATP") }}</ion-label>
+        </ion-chip>
+
+        <div />
+
+        <ion-label class="tablet">
+          <ion-toggle />
+          <p>{{ $t("back-order") }}</p>
+        </ion-label>
+
+        <ion-label class="tablet">
+          <ion-toggle />
+          <p>{{ $t("pre-order") }}</p>
+        </ion-label>
+
+        <ion-checkbox />
+
+        <ion-button fill="clear" color="medium" @click="openPopover">
+          <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
+        </ion-button>
+      </div>
+
+      <hr />
+
+      <div class="list-item">
+        <ion-item lines="none">
+          <ion-thumbnail slot="start">
+            <img src="https://cdn.shopify.com/s/files/1/0069/7384/9727/products/test-track.jpg?v=1626255137" />
+          </ion-thumbnail>
+          <ion-label>
+            <p class="overline">Brand</p>
+            Virtual
+            <p>Shopify SKU</p>
+          </ion-label>
+        </ion-item>
+
+        <ion-label class="tablet">
+          300
+          <p>{{ $t("on PO") }}</p>
+        </ion-label>
+
+        <ion-chip outline>
+          <ion-icon :icon="lockClosedOutline" />
+          <ion-label>200 {{ $t("PO ATP") }}</ion-label>
+        </ion-chip>
+
+        <div class="ion-text-center">
+          <ion-chip outline>
+            <ion-icon :icon="sendOutline" />
+            <ion-label>12 Jan 2021</ion-label>
+          </ion-chip>
+          <p>{{ $t("PO") }}: #19222</p>
+        </div>
+
+        <ion-label class="tablet">
+          <ion-toggle />
+          <p>{{ $t("back-order") }}</p>
+        </ion-label>
+
+        <ion-label class="tablet">
+          <ion-toggle />
+          <p>{{ $t("pre-order") }}</p>
+        </ion-label>
+
+        <ion-checkbox />
+
+        <ion-button fill="clear" color="medium" @click="openPopover">
+          <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
+        </ion-button>
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -357,7 +148,7 @@ import {
   popoverController,
 } from '@ionic/vue';
 import { defineComponent, ref } from 'vue';
-import Popover from '../views/shipping-popover.vue';
+import Popover from '@/views/shipping-popover.vue';
 import {
   checkmarkOutline,
   ellipsisVerticalOutline,
