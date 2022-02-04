@@ -102,7 +102,7 @@
               <ion-icon :icon="sendOutline" />
               <ion-label>12 Jan 2021</ion-label>
             </ion-chip>
-            <ion-label>{{ $t("PO") }}: #19222</ion-label>
+            <p>{{ $t("PO") }}: #19222</p>
           </div>
 
           <ion-label class="tablet">
