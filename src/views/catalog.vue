@@ -20,8 +20,8 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
-      <div v-if="segment == 'all'">
+    <!-- Segments -->
+    <div v-if="segment == 'all'">
         <div class="search-filter">
           <ion-searchbar />
           <div class="filter-chips">  
@@ -327,6 +327,9 @@
           </ion-button>
         </div>
       </div>
+
+    <ion-content :fullscreen="true">
+      
     </ion-content>
   </ion-page>
 </template>
