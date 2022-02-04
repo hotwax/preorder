@@ -18,13 +18,13 @@
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-        <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
-      </ion-item>
-      <ion-item>
         <ion-icon :icon="codeWorkingOutline" slot="start"/>
         <ion-label>{{ $t("OMS") }}</ion-label>
         <p slot="end">{{ instanceUrl }}</p>
+      </ion-item>
+      <ion-item>
+        <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
+        <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
       </ion-item>
       <ion-item>
         <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
