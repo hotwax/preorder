@@ -130,7 +130,7 @@
             </ion-item>
           </div>
           <div class="order-info">
-            <ion-badge color="success" @click="inputPieces(item)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
+            <ion-badge color="success" @click="fillPieces(item)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
             <ion-badge color="medium"> {{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
           </div>
           <div class="order-select">
@@ -288,9 +288,11 @@ export default defineComponent({
     }
   },
   methods: {
-    inputPieces (item: any) {
+    fillPieces (item: any) {
       item.inputValue = item.doclist.numFound;
-    }, 
+      //Added forceUpdate because the value was not rendered in the input field as the dom was generated before the value was updated.
+      this.$forceUpdate();
+    },
     filter (featureValue: any, type: any) {
       if (this.filters[type].includes(featureValue)) {
         const index = this.filters[type].indexOf(featureValue);
