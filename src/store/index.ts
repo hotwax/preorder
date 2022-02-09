@@ -9,7 +9,6 @@ import orderModule from "./modules/order";
 import stockModule from "./modules/stock"
 import productModule from "./modules/product"
 import jobModule from "./modules/job"
-import SecureLS from "secure-ls";
 
 
 // TODO check how to register it from the components only
@@ -17,28 +16,13 @@ import SecureLS from "secure-ls";
 //store.registerModule('user', userModule);
 
 
-const ls = new SecureLS({ encodingType: 'aes' , isCompression: true , encryptionSecret: process.env.VUE_APP_SECURITY_KEY});
-
 const state: any = {
 
 }
 
 const persistState = createPersistedState({
     paths: ['user'],
-    fetchBeforeUse: true,
-    storage: {
-      getItem: key => {
-        try {
-          return ls.get(key)
-        } 
-        catch(err) {
-          ls.remove(key)
-            return ls.get(key)
-        }
-      },       
-      setItem: (key, value) => ls.set(key, value),
-      removeItem: key => ls.remove(key)
-    }
+    fetchBeforeUse: true
 })
 
 // Added modules here so that hydration takes place before routing
