@@ -1,0 +1,6 @@
+---
+title: Removed fullscreen=true from ion-content of all pages
+ticket_id: "#21aqct8"
+merge_request: 51
+author: azkyakhan
+type: changed

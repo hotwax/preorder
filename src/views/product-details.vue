@@ -17,7 +17,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content>
       <div class="header">
         <div class="product-image">
           <!-- TODO Create a separate component to handled default image -->

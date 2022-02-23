@@ -9,7 +9,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content>
       <ion-item>
         <ion-label>{{ $t("Brand") }}</ion-label>
         <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">

@@ -20,7 +20,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content>
       <!--Segment content -->
       <div class="search-filter">
         <ion-searchbar />
