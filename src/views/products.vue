@@ -33,8 +33,7 @@
           </ion-thumbnail>
           <ion-label>
             <h2>{{ getProduct(product.groupValue).productName}}</h2>
-            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Colors") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/') }} </p>
-            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Sizes") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/') }} </p>
+            <p v-for="(attribute, index) in ($filters.groupFeatures(getProduct(product.groupValue).featureHierarchy))" :key="attribute" ><span class="features">{{ index }}</span>: {{ attribute }}</p>
           </ion-label>
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
         </ion-item>
@@ -177,6 +176,15 @@ export default defineComponent({
 .empty-state > img {
   width: 100%;
   max-height: 450px;
+}
+
+.features{
+  text-transform: lowercase;
+  display: inline-block;
+}
+
+.features::first-letter{
+  text-transform: capitalize;
 }
 
 </style> 
