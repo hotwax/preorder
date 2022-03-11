@@ -3,7 +3,7 @@
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal">
-          <ion-icon :icon="close" />
+          <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Edit shipping date") }}</ion-title>
@@ -80,7 +80,7 @@ import {
   modalController,
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { close, saveOutline } from 'ionicons/icons';
+import { closeOutline, saveOutline } from 'ionicons/icons';
 
 export default defineComponent({
   name: 'EditShippingModal',
@@ -110,7 +110,7 @@ export default defineComponent({
   },
   setup() {
     return {
-      close,
+      closeOutline,
       saveOutline,
     };
   },

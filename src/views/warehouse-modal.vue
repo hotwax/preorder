@@ -3,7 +3,7 @@
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal"> 
-          <ion-icon :icon="close" />
+          <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Release preorder to a warehouse") }}</ion-title>
@@ -59,7 +59,7 @@ import {
   modalController,
   alertController } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { close, send } from "ionicons/icons";
+import { closeOutline, send } from "ionicons/icons";
 import { FacilityService } from '@/services/FacilityService'
 import { useStore } from "@/store";
 import { ProductService } from '@/services/ProductService'
@@ -205,7 +205,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
     return {
-      close,
+      closeOutline,
       send,
       store
     };
