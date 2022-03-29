@@ -1,17 +1,30 @@
 {
-    "hosting": {
-      "target": "commerce-hub-dev",
+  "hosting": [
+    {
+      "target": "dev-hotwax-preorder",
       "public": "dist",
       "ignore": [
         "firebase.json",
         "**/.*",
         "**/node_modules/**"
       ],
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
+      "rewrites": [ {
+        "source": "**",
+        "destination": "/index.html"
+      } ]
+    },
+    {
+      "target": "hotwax-preorder",
+      "public": "dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [ {
+        "source": "**",
+        "destination": "/index.html"
+      } ]
     }
-  }
+  ]
+}
