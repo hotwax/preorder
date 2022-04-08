@@ -23,6 +23,7 @@
         <p slot="end">{{ instanceUrl }}</p>
       </ion-item>
       <ion-item>
+        <ion-icon :icon="timeOutline" slot="start"/>
         <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
         <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
       </ion-item>
@@ -35,7 +36,7 @@
 </template>
 
 <script lang="ts">
-import { codeWorkingOutline } from 'ionicons/icons'
+import { codeWorkingOutline, timeOutline } from 'ionicons/icons'
 import { useStore } from "@/store";
 import { 
   IonButton,
@@ -73,7 +74,7 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline }
+    return { store, codeWorkingOutline, timeOutline }
   },
   data() {
     return {
