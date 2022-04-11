@@ -59,11 +59,21 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      currentInstanceUrl: 'user/getInstanceUrl'
-    })
+      currentInstanceUrl: 'user/getInstanceUrl',
+      token: 'user/getUserToken'
+    }),
   },
-  mounted() {
-    this.instanceUrl= this.currentInstanceUrl;
+  async mounted() {
+    this.instanceUrl = this.currentInstanceUrl;
+    if (this.$route.redirectedFrom?.query.info) {
+      const info = (this.$route.redirectedFrom?.query.info) as string;
+      const information = JSON.parse(info);
+      await this.store.dispatch("user/setUserInstanceUrl", information.baseURL);
+      await this.store.dispatch("user/setUserToken", information.token);
+      if (this.token) {
+        this.$router.replace('/'+information.slug+'/'+information.id);
+      }
+    }
   },
   methods: {
     login: function () {
