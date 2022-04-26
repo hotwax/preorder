@@ -29,9 +29,9 @@
         <ion-item lines="none">
           <ion-label class="ion-text-wrap">
             <p class="overline">{{ instanceUrl }}</p>
-            {{ brand.name }}
+            {{ brandName }}
           </ion-label>
-          <ion-note slot="end">{{ userProfile.userTimeZone }}</ion-note>
+          <ion-note slot="end">{{ userProfile?.userTimeZone }}</ion-note>
         </ion-item>
       </ion-toolbar>
     </ion-footer>
@@ -82,13 +82,22 @@ export default defineComponent({
       return page.url === this.$router.currentRoute.value.path;
     })
   },
+  data() {
+    return {
+      brands : JSON.parse(process.env?.VUE_APP_BRANDS),
+    }
+  },
   computed: {
     ...mapGetters({
       isUserAuthenticated: 'user/isUserAuthenticated',
       userProfile: 'user/getUserProfile',
       instanceUrl: 'user/getInstanceUrl',
       selectedBrand: 'user/getSelectedBrand'
-    })
+    }), 
+    brandName() {
+      return (this as any).brands.find((brand: any) => 
+         brand.id === (this as any).selectedBrand)?.name
+    }
   },
   watch:{
     $route (to) {
