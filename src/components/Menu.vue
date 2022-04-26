@@ -29,7 +29,7 @@
         <ion-item lines="none">
           <ion-label class="ion-text-wrap">
             <p class="overline">{{ instanceUrl }}</p>
-            Shop
+            {{ brand.name }}
           </ion-label>
           <ion-note slot="end">{{ userProfile.userTimeZone }}</ion-note>
         </ion-item>
@@ -41,15 +41,17 @@
 <script lang="ts">
 import {
   IonContent,
+  IonFooter,
   IonIcon,
   IonHeader,
   IonItem,
   IonLabel,
   IonList,
-  IonTitle,
-  IonToolbar,
   IonMenu,
   IonMenuToggle,
+  IonNote,
+  IonTitle,
+  IonToolbar
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import { mapGetters } from "vuex";
@@ -61,15 +63,17 @@ export default defineComponent({
   name: "Menu",
   components: {
     IonContent,
+    IonFooter,
     IonHeader,
     IonIcon,
     IonItem,
     IonTitle,
     IonLabel,
     IonList,
-    IonToolbar,
     IonMenu,
     IonMenuToggle,
+    IonNote,
+    IonToolbar,
   },
   created() {
     // When open any specific page it should show that page selected
@@ -82,7 +86,8 @@ export default defineComponent({
     ...mapGetters({
       isUserAuthenticated: 'user/isUserAuthenticated',
       userProfile: 'user/getUserProfile',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      selectedBrand: 'user/getSelectedBrand'
     })
   },
   watch:{
