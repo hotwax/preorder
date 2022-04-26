@@ -1,41 +1,41 @@
 <template>
     <ion-menu content-id="main-content" type="overlay" :disabled="!isUserAuthenticated">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>{{ $t("Preorder Management")}}</ion-title>
-        </ion-toolbar>
-      </ion-header>
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>{{ $t("Preorder Management")}}</ion-title>
+          </ion-toolbar>
+        </ion-header>
 
-      <ion-content>
-        <ion-list id="preorder-list">
-          <ion-menu-toggle auto-hide="false" v-for="(p, i) in appPages" :key="i">
-            <ion-item
-              button
-              @click="selectedIndex = i"
-              router-direction="root"
-              :router-link="p.url"
-              class="hydrated"
-              :class="{ selected: selectedIndex === i }"
-            >
-              <ion-icon slot="start" :ios="p.iosIcon" :md="p.mdIcon"></ion-icon>
-              <ion-label>{{ p.title }}</ion-label>
+        <ion-content>
+          <ion-list id="preorder-list">
+            <ion-menu-toggle auto-hide="false" v-for="(p, i) in appPages" :key="i">
+              <ion-item
+                button
+                @click="selectedIndex = i"
+                router-direction="root"
+                :router-link="p.url"
+                class="hydrated"
+                :class="{ selected: selectedIndex === i }"
+              >
+                <ion-icon slot="start" :ios="p.iosIcon" :md="p.mdIcon"></ion-icon>
+                <ion-label>{{ p.title }}</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+          </ion-list>
+        </ion-content>
+
+        <ion-footer>
+          <ion-toolbar>
+            <ion-item lines="none">
+              <ion-label class="ion-text-wrap">
+                <p class="overline">{{ instanceUrl }}</p>
+                {{ brandName }}
+              </ion-label>
+              <ion-note slot="end">{{ userProfile?.userTimeZone }}</ion-note>
             </ion-item>
-          </ion-menu-toggle>
-        </ion-list>
-      </ion-content>
-
-      <ion-footer>
-        <ion-toolbar>
-          <ion-item lines="none">
-            <ion-label class="ion-text-wrap">
-              <p class="overline">{{ instanceUrl }}</p>
-              {{ brandName }}
-            </ion-label>
-            <ion-note slot="end">{{ userProfile?.userTimeZone }}</ion-note>
-          </ion-item>
-        </ion-toolbar>
-      </ion-footer>
-    </ion-menu>
+          </ion-toolbar>
+        </ion-footer>
+      </ion-menu>
 </template>
 
 <script lang="ts">
