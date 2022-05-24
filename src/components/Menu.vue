@@ -23,21 +23,35 @@
             </ion-menu-toggle>
           </ion-list>
         </ion-content>
+
+        <ion-footer>
+          <ion-toolbar>
+            <ion-item lines="none">
+              <ion-label class="ion-text-wrap">
+                <p class="overline">{{ instanceUrl }}</p>
+                {{ brandName }}
+              </ion-label>
+              <ion-note slot="end">{{ userProfile?.userTimeZone }}</ion-note>
+            </ion-item>
+          </ion-toolbar>
+        </ion-footer>
       </ion-menu>
 </template>
 
 <script lang="ts">
 import {
   IonContent,
+  IonFooter,
   IonIcon,
   IonHeader,
   IonItem,
   IonLabel,
   IonList,
-  IonTitle,
-  IonToolbar,
   IonMenu,
   IonMenuToggle,
+  IonNote,
+  IonTitle,
+  IonToolbar
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import { mapGetters } from "vuex";
@@ -49,15 +63,17 @@ export default defineComponent({
   name: "Menu",
   components: {
     IonContent,
+    IonFooter,
     IonHeader,
     IonIcon,
     IonItem,
     IonTitle,
     IonLabel,
     IonList,
-    IonToolbar,
     IonMenu,
     IonMenuToggle,
+    IonNote,
+    IonToolbar,
   },
   created() {
     // When open any specific page it should show that page selected
@@ -66,10 +82,21 @@ export default defineComponent({
       return page.url === this.$router.currentRoute.value.path;
     })
   },
+  data() {
+    return {
+      brands : JSON.parse(process.env?.VUE_APP_BRANDS),
+    }
+  },
   computed: {
     ...mapGetters({
-      isUserAuthenticated: 'user/isUserAuthenticated'
-    })
+      isUserAuthenticated: 'user/isUserAuthenticated',
+      userProfile: 'user/getUserProfile',
+      instanceUrl: 'user/getInstanceUrl',
+      selectedBrand: 'user/getSelectedBrand'
+    }), 
+    brandName() {
+      return (this as any).brands.find((brand: any) => brand.id === (this as any).selectedBrand)?.name;
+    }
   },
   watch:{
     $route (to) {
