@@ -95,8 +95,7 @@ export default defineComponent({
       selectedBrand: 'user/getSelectedBrand'
     }), 
     brandName() {
-      return (this as any).brands.find((brand: any) => 
-         brand.id === (this as any).selectedBrand)?.name
+      return (this as any).brands.find((brand: any) => brand.id === (this as any).selectedBrand)?.name;
     }
   },
   watch:{
