@@ -29,7 +29,10 @@
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
                 <p class="overline">{{ instanceUrl }}</p>
-                {{ brandName }}
+                <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">
+                  <ion-select-option value="">{{ $t("All") }}</ion-select-option>
+                  <ion-select-option v-bind:key="brand.id" v-for="brand in brands" :value="brand.id">{{ brand.name }}</ion-select-option>
+                </ion-select>
               </ion-label>
               <ion-note slot="end">{{ userProfile?.userTimeZone }}</ion-note>
             </ion-item>
@@ -50,12 +53,14 @@ import {
   IonMenu,
   IonMenuToggle,
   IonNote,
+  IonSelect,
+  IonSelectOption,
   IonTitle,
   IonToolbar
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
 import { mapGetters } from "vuex";
-
+import emitter from "@/event-bus"
 import { albums ,shirt, pricetags, settings } from "ionicons/icons";
 import { useStore } from "@/store";
 
@@ -73,6 +78,8 @@ export default defineComponent({
     IonMenu,
     IonMenuToggle,
     IonNote,
+    IonSelect,
+    IonSelectOption,
     IonToolbar,
   },
   created() {
@@ -96,6 +103,12 @@ export default defineComponent({
     }), 
     brandName() {
       return (this as any).brands.find((brand: any) => brand.id === (this as any).selectedBrand)?.name;
+    },
+  },
+  methods: {
+    updateBrand(event: any) {
+      this.store.dispatch("user/setSelectedBrand", { selectedBrand: event.detail.value})
+      emitter.emit("productStoreChanged")
     }
   },
   watch:{
@@ -158,4 +171,7 @@ ion-menu.ios ion-item.selected ion-icon {
   color: var(--ion-color-secondary);
 }
 
+ion-select {
+  padding-inline-start: 0;
+}
 </style>

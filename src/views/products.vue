@@ -74,6 +74,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import Image from '@/components/Image.vue';
+import emitter from "@/event-bus"
 
 export default defineComponent({
   name: "settings",
@@ -155,6 +156,12 @@ export default defineComponent({
         element.select();
       })
     }
+  },
+  mounted() {
+    emitter.on("productStoreChanged", this.getProducts);
+  },
+  unmounted() {
+    emitter.off("productStoreChanged", this.getProducts);
   },
   setup() {
     const router = useRouter();

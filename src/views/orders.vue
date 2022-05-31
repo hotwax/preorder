@@ -223,6 +223,7 @@ import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import Image from '@/components/Image.vue';
+import emitter from "@/event-bus"
 
 const { Clipboard } = Plugins;
 
@@ -278,6 +279,12 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
     }),
+  },
+  mounted() {
+    emitter.on("productStoreChanged", this.updateQuery);
+  },
+  unmounted() {
+    emitter.off("productStoreChanged", this.updateQuery);
   },
   methods: {
     updateQuery() {
