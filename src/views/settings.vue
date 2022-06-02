@@ -56,6 +56,7 @@ import {
 import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
 import TimeZoneModal from '@/views/timezone-modal.vue'
+import emitter from "@/event-bus"
 
 export default defineComponent({
   name: "settings",
@@ -103,7 +104,9 @@ export default defineComponent({
       return timeZoneModal.present();
     },
     updateBrand(event: any) {
-      this.store.dispatch("user/setSelectedBrand", { selectedBrand: event.detail.value})
+      this.store.dispatch("user/setSelectedBrand", { selectedBrand: event['detail'].value} )
+      emitter.emit("productStoreChanged")
+
     }
   }
 });
