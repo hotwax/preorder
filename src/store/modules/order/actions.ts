@@ -7,7 +7,7 @@ import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import moment from 'moment';
 import emitter from '@/event-bus'
-
+import { Order, OrderItem } from '@/types'
 const actions: ActionTree<OrderState, RootState> = {
 
   /**
@@ -63,15 +63,46 @@ const actions: ActionTree<OrderState, RootState> = {
     try {
       resp = await OrderService.findOrder(payload)
       if (resp && resp.status === 200 && !hasError(resp)) {
-        const orders = resp.data.grouped.orderId;
+        let group = resp.data.grouped.orderId.groups
+        const orders: Order = group.map((order: any) => ({
+          id: order.doclist.docs[0].orderId,
+          name: order.doclist.docs[0].orderName,
+          customer: {
+            emailId: order.doclist.docs[0].customerEmailId,
+            partyId: order.doclist.docs[0].customerPartyId,
+            partyName: order.doclist.docs[0].customerPartyName
+          },
+          /** An array containing the items purchased in this order */
+          items : order.doclist.docs.map((item: any)=> ({
+            orderItemGroupId: item.groupId,
+            id: item.orderId,
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.unitPrice,
+            amount: item.unitListPrice,
+            statusId: item.orderStatusId
+          })) as OrderItem[],
+          /** An array containing the groups of items purchased in this order */
+          //ToDo sequence id is not available 
+          //itemGroup: {
+          //  id: order.doclist.docs[0].groupId,
+          //  shippingMethod: order.doclist.docs[0].shippingMethod,
+          //  carrier: order.doclist.docs[0].carrierPartyI,
+          //  identifications: order.doclist.docs[0].identifier
+          //},
+          statusId: order.doclist.docs[0].statusSeqId,
+          total: order.doclist.docs[0].unitListPrice,
+          identifications: order.doclist.docs[0].orderIdentifications,
+          orderDate: order.doclist.docs[0].orderDate
+        }) as Order)
         // Add stock information to Stock module to show on UI
-        dispatch('getProductInformation', { orders });
+        dispatch('getProductInformation', { orders: orders });
         // Handled case for infinite scroll
-        if (payload.viewIndex && payload.viewIndex > 0) orders.groups = state.list.items.concat(orders.groups)
+        if (payload.viewIndex && payload.viewIndex > 0) group = state.list.items.concat(orders)
         commit(types.ORDER_LIST_UPDATED, {
-          items: orders.groups,
-          total: orders.ngroups,
-          preorderCount: orders.matches
+          items: orders,
+          total: orders,
+          preorderCount: resp.data.grouped.orderId.matches
         });
       } else {
         showToast(translate("Something went wrong"));
@@ -221,12 +252,10 @@ const actions: ActionTree<OrderState, RootState> = {
   async getProductInformation  ( context , { orders }) {
     // To remove redundant value Set is used
     let productIds: any = new Set();
-    orders.groups.forEach((order: any) => {
-      order.doclist.docs.forEach((item: any) => {
+    orders.forEach((order: any) => {
         // Getting item.internalName null for some item
-        if (item.productId) productIds.add(item.productId);
+        if (order.items.productId) productIds.add(order.items.productId);
         // this.dispatch('stock/addProduct', { sku: item.internalName});
-      });
     });
     // Converted to list as methods like reduce not supported
     productIds = [...productIds]
