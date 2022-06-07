@@ -65,8 +65,8 @@ const actions: ActionTree<OrderState, RootState> = {
       if (resp && resp.status === 200 && !hasError(resp)) {
         let group = resp.data.grouped.orderId.groups
         const orders: Order = group.map((order: any) => ({
-          id: order.doclist.docs[0].orderId,
-          name: order.doclist.docs[0].orderName,
+          orderId: order.doclist.docs[0].orderId,
+          orderName: order.doclist.docs[0].orderName,
           customer: {
             emailId: order.doclist.docs[0].customerEmailId,
             partyId: order.doclist.docs[0].customerPartyId,
@@ -74,26 +74,19 @@ const actions: ActionTree<OrderState, RootState> = {
           },
           /** An array containing the items purchased in this order */
           items : order.doclist.docs.map((item: any)=> ({
-            orderItemGroupId: item.groupId,
-            id: item.orderId,
+            orderPartSeqId: item.groupId,
+            orderItemSeqId: item.orderId,
             productId: item.productId,
             quantity: item.quantity,
-            price: item.unitPrice,
-            amount: item.unitListPrice,
+            unitListPrice: item.unitPrice,
+            unitAmount: item.unitListPrice,
             statusId: item.orderStatusId
           })) as OrderItem[],
-          /** An array containing the groups of items purchased in this order */
-          //ToDo sequence id is not available 
-          //itemGroup: {
-          //  id: order.doclist.docs[0].groupId,
-          //  shippingMethod: order.doclist.docs[0].shippingMethod,
-          //  carrier: order.doclist.docs[0].carrierPartyI,
-          //  identifications: order.doclist.docs[0].identifier
-          //},
-          statusId: order.doclist.docs[0].statusSeqId,
-          total: order.doclist.docs[0].unitListPrice,
+          //orderPart is not created beacues ship group sequence id is not available
+          grandTotal: order.doclist.docs[0].unitListPrice,
+          status: order.doclist.docs[0].statusSeqId,
           identifications: order.doclist.docs[0].orderIdentifications,
-          orderDate: order.doclist.docs[0].orderDate
+          placedDate: order.doclist.docs[0].orderDate
         }) as Order)
         // Add stock information to Stock module to show on UI
         dispatch('getProductInformation', { orders: orders });
