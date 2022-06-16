@@ -76,12 +76,12 @@
 
          <div class="results">
           <ion-badge color="success">{{ preorderCount }} {{ $t("items preordered")}}</ion-badge>
-          <ion-badge color="secondary">{{ ordersTotal }} {{ $t("orders")}}</ion-badge>
+          <ion-badge color="secondary">{{ ordersTotal.length }} {{ $t("orders")}}</ion-badge>
         </div> 
       </div>
 
       <!-- Empty state -->
-      <div class="empty-state" v-if="orders.length === 0">
+      <div class="empty-state" v-if="orders === 0">
         <!-- No result -->
         <p v-if="query.hasUpdated">{{ $t("No results found")}}</p>
         <p>{{ $t("Enter an order ID, product name, style name, SKU, customer name, UPCA or external ID")}}</p>
@@ -89,54 +89,54 @@
 
       <!-- Orders -->
       <div v-else>
-        <div class="order" v-bind:key="order.orderId" v-for="order in orders">
+        <div class="order" v-bind:key="order.id" v-for="order in orders">
           <div class="order-header">
             <div class="order-id">
               <ion-item lines="none">
                 <ion-label>
-                  <h1>{{ order.doclist.docs[0].orderName ? order.doclist.docs[0].orderName : order.doclist.docs[0].orderId }}</h1>
-                  <p>{{ order.doclist.docs[0].customerPartyName }}</p>
+                  <h1>{{ order.name ? order.name : order.id }}</h1>
+                  <p>{{ order.customer.partyName }}</p>
                 </ion-label>
               </ion-item>
             </div>
 
             <div class="order-tags">
-              <ion-chip outline v-if="$filters.getCustomerLoyalty(order.doclist.docs[0].orderNotes, cusotmerLoyaltyOptions)">
+              <ion-chip outline v-if="$filters.getCustomerLoyalty(order.orderNotes, cusotmerLoyaltyOptions)">
                 <ion-icon :icon="ribbon" />
-                <ion-label>{{ $filters.getCustomerLoyalty(order.doclist.docs[0].orderNotes, cusotmerLoyaltyOptions) }}</ion-label>
+                <ion-label>{{ $filters.getCustomerLoyalty(order.orderNotes, cusotmerLoyaltyOptions) }}</ion-label>
               </ion-chip>
             </div>
 
             <div class="order-metadata">
-              <ion-note>{{ $t("Order placed on") }} {{ $filters.formatUtcDate(order.doclist.docs[0].orderDate, 'YYYY-MM-DDTHH:mm:ssZ') }}</ion-note>
+              <ion-note>{{ $t("Order placed on") }} {{ $filters.formatUtcDate(order.orderDate, 'YYYY-MM-DDTHH:mm:ssZ') }}</ion-note>
             </div>
           </div> 
 
           <div class="order-items">
-            <ion-card v-bind:key="item.orderItemSeqId" v-for="item in order.doclist.docs">
+            <ion-card v-bind:key="order.items.orderItemSeqId" v-for="order in orders">
               <ion-item lines="none">
                 <ion-thumbnail slot="start">
                   <!-- TODO Create a separate component that handles default image -->
-                  <Image :src="getProduct(item.productId).mainImageUrl"></Image>
+                  <Image :src="getProduct(order.items.productId).mainImageUrl"></Image>
                 </ion-thumbnail>
                 <ion-label>
-                  <h2>{{ item.parentProductName ? item.parentProductName :item.productName }}</h2>
-                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+                  <h2>{{ order.items.parentProductName ? order.items.parentProductName :order.items.productName }}</h2>
+                  <p v-if="$filters.getFeature(getProduct(order.items.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(order.items.productId).featureHierarchy, '1/COLOR/') }}</p>
+                  <p v-if="$filters.getFeature(getProduct(order.items.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(order.items.productId).featureHierarchy, '1/SIZE/') }}</p>
                 </ion-label>
               </ion-item>
               <ion-item lines="none">
                 <ion-label>{{ $t ("Available to promise") }}</ion-label>
-                <p slot="end">{{ getProductStock(item.productId) }}</p>
+                <p slot="end">{{ getProductStock(order.items.productId) }}</p>
               </ion-item>
               <ion-item lines="full">
                 <ion-label>{{ $t("Promised date") }}</ion-label>
-                <p slot="end"> {{ item.promisedDatetime ? $filters.formatUtcDate(item.promisedDatetime, 'YYYY-MM-DDTHH:mm:ssZ') : '-'  }}</p>
+                <p slot="end"> {{ order.items.promisedDatetime ? $filters.formatUtcDate(order.items.promisedDatetime, 'YYYY-MM-DDTHH:mm:ssZ') : '-'  }}</p>
               </ion-item>
-              <ion-item button @click="item.isChecked = !item.isChecked" lines="none">
-                <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" slot="start"></ion-checkbox>
+              <ion-item button @click="order.items.isChecked = !order.items.isChecked" lines="none">
+                <ion-checkbox :modelValue="order.items.isChecked" @ionChange="selectItem($event, order.items)" slot="start"></ion-checkbox>
                 <ion-label>{{$t("Select item")}}</ion-label>
-                <ion-button fill="clear" color="medium" @click.stop="openPopover($event, item)">
+                <ion-button fill="clear" color="medium" @click.stop="openPopover($event, order.items)">
                   <ion-icon slot="icon-only" :icon="ellipsisVertical" />
                 </ion-button>
               </ion-item>
