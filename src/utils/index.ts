@@ -17,4 +17,29 @@ const showToast = async (message: string) => {
       return toast.present();
 }
 
-export { showToast, hasError }
+const getFeatures = (featureList: any, featureKey: string) => {
+  let  featuresValue = ''
+  if (featureList) {
+    featureList.filter((featureItem: any) => {
+      if (featureItem.feature.productFeatureTypeEnumId === featureKey) {
+        featuresValue += `${featuresValue ? ', ' : ''}` + featureItem.feature.description
+      }
+    })
+  }
+  // trim removes extra white space from beginning for the first feature
+  return featuresValue.trim();
+}
+
+const getFeaturesList = (featureHierarchy: any, featureKey: string) => {
+  const featuresList = [] as Array<string>
+  if (featureHierarchy) {
+    featureHierarchy.filter((featureItem: any) => {
+      if (featureItem.feature.productFeatureTypeEnumId === featureKey) {
+        featuresList.push(featureItem.feature.description)
+      }
+    })
+  }
+  return featuresList;
+}
+
+export { showToast, hasError, getFeatures, getFeaturesList }

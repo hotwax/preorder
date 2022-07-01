@@ -6,6 +6,8 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import emitter from '@/event-bus'
+import { fetchProducts } from '@hotwax/oms-api/src/product/index'
+import { Product, Response } from '@hotwax/oms-api/src/types'
 
 
 const actions: ActionTree<ProductState, RootState> = {
@@ -15,28 +17,24 @@ const actions: ActionTree<ProductState, RootState> = {
    */
   async fetchProducts ( { commit, state }, { productIds }) {
     const cachedProductIds = Object.keys(state.cached);
-    const productIdFilter= productIds.reduce((filter: string, productId: any) => {
-      // If product already exist in cached products skip
-      if (cachedProductIds.includes(productId)) {
-        return filter;
-      } else {
-        // checking condition that if the filter is not empty then adding 'OR' to the filter
-        if (filter !== '') filter += ' OR '
-        return filter += productId;
+
+    const productIdFilter= productIds.reduce((filter: Array<any>, productId: any) => {
+      // If product does not exist in cached products then add the id
+      if (!cachedProductIds.includes(productId) && productId) {
+        filter.push(productId);
       }
-    }, '');
+      return filter;
+    }, []);
 
     // If there are no products skip the API call
-    if (productIdFilter === '') return;
+    if (productIdFilter.length <= 0) return;
 
-    const resp = await ProductService.fetchProducts({
-      "filters": ['productId: (' + productIdFilter + ')'],
-      "viewSize": productIds.length
-    })
-    if (resp.status === 200 && !hasError(resp)) {
-      const products = resp.data.response.docs;
-      // Handled empty response in case of failed query
-      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
+    const resp: Product[] | Response = await fetchProducts(productIdFilter)
+    if (resp && (resp as Response).code !== 'error') {
+      const products = resp;
+      commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
+    } else {
+      console.error('Failed to fetch the products', resp)
     }
     // TODO Handle specific error
     return resp;
@@ -47,13 +45,10 @@ const actions: ActionTree<ProductState, RootState> = {
    */
    async fetchProduct ( { commit }, { productId }) {
     // TODO Skip if already exist
-    const resp = await ProductService.fetchProducts({
-      "filters": ['productId: ' + productId ]
-    })
-    if (resp.status === 200 && !hasError(resp)) {
-      const product = resp.data.response.docs[0];
-      // Handled empty response in case of failed query
-      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED, { product });
+    const resp: Product[] | Response = await fetchProducts([productId])
+    if ((resp as Response).code !== 'error') {
+      const product = (resp as Product[])[0];
+      commit(types.PRODUCT_ADD_TO_CACHED, { product });
     }
     // TODO Handle specific error
     return resp;

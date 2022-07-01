@@ -29,12 +29,12 @@
       <div v-else>
         <ion-item  v-bind:key="product.groupValue" v-for="product in products" lines="none" @click="() => router.push({ name: 'Product-details', params: { id: product.groupValue }})">
           <ion-thumbnail slot="start">
-            <Image :src="getProduct(product.groupValue).mainImageUrl"></Image>
+            <Image :src="getProduct(product.groupValue).contents ? getProduct(product.groupValue).contents[0].contentLocation : ''"></Image>
           </ion-thumbnail>
           <ion-label>
             <h2>{{ getProduct(product.groupValue).productName}}</h2>
-            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Colors") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/') }} </p>
-            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Sizes") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/') }} </p>
+            <p v-if="getFeatures(getProduct(product.groupValue).features, 'COLOR')">{{ $t("Colors") }} : {{ getFeatures(getProduct(product.groupValue).features, 'COLOR') }} </p>
+            <p v-if="getFeatures(getProduct(product.groupValue).features, 'SIZE')">{{ $t("Sizes") }} : {{ getFeatures(getProduct(product.groupValue).features, 'SIZE') }} </p>
           </ion-label>
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
         </ion-item>
@@ -74,6 +74,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import Image from '@/components/Image.vue';
+import { getFeatures } from '@/utils'
 
 export default defineComponent({
   name: "settings",
@@ -163,6 +164,7 @@ export default defineComponent({
       router,
       store,
       hourglass,
+      getFeatures
     };
   },
 });
