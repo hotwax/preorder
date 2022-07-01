@@ -21,7 +21,7 @@
       <div class="header">
         <div class="product-image">
           <!-- TODO Create a separate component to handled default image -->
-          <Image :src="current.product.mainImageUrl"></Image>
+          <Image :src="current.product?.contents ? current.product?.contents[0].contentLocation : ''"></Image>
         </div>
 
         <div class="product-info">
@@ -29,19 +29,19 @@
             <h1>{{ current.product.productName }}</h1>
           </ion-item>
           <div class="product-features">
-            <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
+            <ion-list v-if="getFeaturesList(current.product.features, 'COLOR').length">
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filter(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in getFeaturesList(current.product.features, 'COLOR')" @click="filter(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
-            <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/').length">
+            <ion-list v-if="getFeaturesList(current.product.features, 'SIZE').length">
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filter(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
+                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in getFeaturesList(current.product.features, 'SIZE')" @click="filter(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -120,12 +120,12 @@
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
-                <Image :src="getProduct(item.groupValue).mainImageUrl" ></Image>
+                <Image :src="getProduct(item.groupValue).contents ? getProduct(item.groupValue).contents[0].contentLocation : ''" ></Image>
               </ion-thumbnail>
               <ion-label>
                 <h2> {{ getProduct(item.groupValue).productName }}</h2>
-                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
-                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
+                <p v-if="getFeature(getProduct(item.groupValue).features, 'COLOR')">{{ $t("Color") }}: {{ getFeature(getProduct(item.groupValue).features, 'COLOR') }}</p>
+                <p v-if="getFeature(getProduct(item.groupValue).features, 'SIZE')">{{ $t("Size") }}: {{ getFeature(getProduct(item.groupValue).features, 'SIZE') }}</p>
               </ion-label>
             </ion-item>
           </div>
@@ -208,6 +208,7 @@ import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
 import moment from 'moment';
 import Image from '@/components/Image.vue';
+import { getFeature, getFeatures, getFeaturesList } from '@/utils'
 
 export default defineComponent({
   name: "product-details",
@@ -521,7 +522,10 @@ export default defineComponent({
       close,
       list,
       ribbon,
-      store
+      store,
+      getFeature,
+      getFeatures,
+      getFeaturesList
     };
   },
 });

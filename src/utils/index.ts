@@ -42,4 +42,10 @@ const getFeaturesList = (featureHierarchy: any, featureKey: string) => {
   return featuresList;
 }
 
-export { showToast, hasError, getFeatures, getFeaturesList }
+const getFeature = (featureHierarchy: any, featureKey: string) => {
+  if (featureHierarchy) {
+    return featureHierarchy.find((featureItem: any) => featureItem.feature.productFeatureTypeEnumId === featureKey)?.feature.description
+  }
+}
+
+export { showToast, hasError, getFeature, getFeatures, getFeaturesList }
