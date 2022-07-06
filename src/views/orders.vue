@@ -115,14 +115,14 @@
           <div class="order-items">
             <ion-card v-bind:key="item.orderItemSeqId" v-for="item in order.doclist.docs">
               <ion-item lines="none">
-                <ion-thumbnail slot="start">
+                <ion-thumbnail v-if="getProduct(item.productId).contents" slot="start">
                   <!-- TODO Create a separate component that handles default image -->
-                  <Image :src="getProduct(item.productId).mainImageUrl"></Image>
+                  <Image :src="getProduct(item.productId).contents[0].contentLocation"></Image>
                 </ion-thumbnail>
                 <ion-label>
                   <h2>{{ item.parentProductName ? item.parentProductName :item.productName }}</h2>
-                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+                  <p v-if="getFeature(getProduct(item.productId).features, 'COLOR')">{{ $t("Color") }} : {{ getFeature(getProduct(item.productId).features, 'COLOR') }}</p>
+                  <p v-if="getFeature(getProduct(item.productId).features, 'SIZE')">{{ $t("Size") }} : {{ getFeature(getProduct(item.productId).features, 'SIZE') }}</p>
                 </ion-label>
               </ion-item>
               <ion-item lines="none">
@@ -223,6 +223,7 @@ import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import Image from '@/components/Image.vue';
+import { getFeature } from '@/utils'
 
 const { Clipboard } = Plugins;
 
@@ -483,6 +484,7 @@ export default defineComponent({
       closeCircle,
       hourglass,
       close,
+      getFeature
     };
   },
 });

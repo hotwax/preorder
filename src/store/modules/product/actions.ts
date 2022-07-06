@@ -6,7 +6,7 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import emitter from '@/event-bus'
-import { fetchProducts } from '@hotwax/oms-api/src/product/index'
+import { fetchProducts, findProductFeatureTypeDetails } from '@hotwax/oms-api/src/product/index'
 import { Product, Response } from '@hotwax/oms-api/src/types'
 
 
@@ -32,6 +32,7 @@ const actions: ActionTree<ProductState, RootState> = {
     const resp: Product[] | Response = await fetchProducts(productIdFilter)
     if (resp && (resp as Response).code !== 'error') {
       const products = resp;
+      this.dispatch('util/findProductFeatureTypeDetails', products)
       commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
     } else {
       console.error('Failed to fetch the products', resp)

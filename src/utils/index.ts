@@ -1,3 +1,4 @@
+import store from '@/store';
 import { toastController } from '@ionic/vue';
 
 // TODO Use separate files for specific utilities
@@ -18,11 +19,12 @@ const showToast = async (message: string) => {
 }
 
 const getFeatures = (featureList: any, featureKey: string) => {
-  let  featuresValue = ''
+  let featuresValue = ''
   if (featureList) {
     featureList.filter((featureItem: any) => {
-      if (featureItem.feature.productFeatureTypeEnumId === featureKey) {
-        featuresValue += `${featuresValue ? ', ' : ''}` + featureItem.feature.description
+      const feature = store.getters['util/getFeature'](featureItem.productFeatureId)
+      if (feature.productFeatureTypeId === featureKey) {
+        featuresValue += `${featuresValue ? ', ' : ''}` + feature.description
       }
     })
   }
@@ -34,8 +36,9 @@ const getFeaturesList = (featureHierarchy: any, featureKey: string) => {
   const featuresList = [] as Array<string>
   if (featureHierarchy) {
     featureHierarchy.filter((featureItem: any) => {
-      if (featureItem.feature.productFeatureTypeEnumId === featureKey) {
-        featuresList.push(featureItem.feature.description)
+      const feature = store.getters['util/getFeature'](featureItem.productFeatureId)
+      if (feature.productFeatureTypeId === featureKey) {
+        featuresList.push(feature.description)
       }
     })
   }
@@ -43,9 +46,16 @@ const getFeaturesList = (featureHierarchy: any, featureKey: string) => {
 }
 
 const getFeature = (featureHierarchy: any, featureKey: string) => {
+  let featureValue = ''
   if (featureHierarchy) {
-    return featureHierarchy.find((featureItem: any) => featureItem.feature.productFeatureTypeEnumId === featureKey)?.feature.description
+    featureHierarchy.find((featureItem: any) => {
+      const feature = store.getters['util/getFeature'](featureItem.productFeatureId)
+      if (feature.productFeatureTypeId === featureKey) {
+        featureValue = feature.description
+      }
+    })
   }
+  return featureValue
 }
 
 export { showToast, hasError, getFeature, getFeatures, getFeaturesList }

@@ -277,10 +277,10 @@ export default defineComponent({
         filteredProducts.list.items = this.current.list.items.map((item: any)=>{
           const product = this.getProduct(item.groupValue);
           const hasSize = this.filters.size.some((sizeFeature: any) => {
-            return product.productFeatures.includes("Size/" + sizeFeature)
+            return this.getFeature(product.features, 'SIZE') === sizeFeature
           })
           const hasColor = this.filters.color.some((colorFeature: any) => {
-            return product.productFeatures.includes("Color/" + colorFeature)
+            return this.getFeature(product.features, 'COLOR') === colorFeature
           })
           if (hasSize || hasColor) return item;
           else return null
