@@ -1,3 +1,3 @@
 export default interface UtilState {
-    productFeatureTypes: object | null;
+    cachedFeatures: object | null;
 }

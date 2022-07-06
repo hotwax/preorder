@@ -8,7 +8,7 @@ import RootState from '../../RootState'
 const utilModule: Module<UtilState, RootState> = {
     namespaced: true,
     state: {
-      productFeatureTypes: {},
+      cachedFeatures: {},
     },
     getters,
     actions,
