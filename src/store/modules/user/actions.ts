@@ -23,7 +23,7 @@ const actions: ActionTree<UserState, RootState> = {
           if (permissionId) {
             const checkPermissionResponse = await UserService.checkPermission({
               data: {
-                permissionId : permissionId
+                permissionId
               },
               headers: {
                 Authorization:  'Bearer ' + resp.data.token,
@@ -40,10 +40,10 @@ const actions: ActionTree<UserState, RootState> = {
               }
               return resp.data;
             } else {
-                const permissionError = 'You do not have permission to access the app.';
-                showToast(translate(permissionError));
-                console.error("error", permissionError);
-                return Promise.reject(new Error(permissionError));
+              const permissionError = 'You do not have permission to access the app.';
+              showToast(translate(permissionError));
+              console.error("error", permissionError);
+              return Promise.reject(new Error(permissionError));
             }
           }
         } else if (hasError(resp)) {
