@@ -6,9 +6,7 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { Settings } from 'luxon'
-import moment from 'moment';
 import emitter from '@/event-bus'
-import "moment-timezone";
 
 const actions: ActionTree<UserState, RootState> = {
 

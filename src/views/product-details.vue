@@ -206,8 +206,8 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import moment from 'moment';
 import Image from '@/components/Image.vue';
+import { DateTime } from 'luxon'
 
 export default defineComponent({
   name: "product-details",
@@ -306,14 +306,14 @@ export default defineComponent({
         filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any
       }
       if (this.orderedBefore || this.orderedAfter) {
-        const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+        const orderedBefore = (this.orderedBefore ? DateTime.fromFormat(this.orderedBefore, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
+        const orderedAfter = (this.orderedAfter ? DateTime.fromFormat(this.orderedAfter, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
         const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
         payload.filters.push(dateQuery);
       }
       if (this.promisedBefore || this.promisedAfter) {
-        const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+        const promisedBefore = (this.promisedBefore ? DateTime.fromFormat(this.promisedBefore, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
+        const promisedAfter = (this.promisedAfter ? DateTime.fromFormat(this.promisedAfter, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
         const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
         payload.filters.push(promisedDateQuery);
       }
@@ -484,14 +484,14 @@ export default defineComponent({
           sortBy: sortBy
         }
         if (this.orderedBefore || this.orderedAfter) {
-          const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+          const orderedBefore = (this.orderedBefore ? DateTime.fromFormat(this.orderedBefore, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
+          const orderedAfter = (this.orderedAfter ? DateTime.fromFormat(this.orderedAfter, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
           const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
           payload.filters.push(dateQuery);
         }
         if (this.promisedBefore || this.promisedAfter) {
-          const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+          const promisedBefore = (this.promisedBefore ? DateTime.fromFormat(this.promisedBefore, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
+          const promisedAfter = (this.promisedAfter ? DateTime.fromFormat(this.promisedAfter, 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'YYYY-MM-DD').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
           const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
           payload.filters.push(promisedDateQuery);
         }
