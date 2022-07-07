@@ -63,8 +63,7 @@ import { closeOutline, save } from "ionicons/icons";
 import { useStore } from "@/store";
 import { UserService } from "@/services/UserService";
 import { hasError } from '@/utils'
-import moment from 'moment';
-import "moment-timezone";
+import { DateTime } from 'luxon'
 
 export default defineComponent({
   name: "TimeZoneModal",
@@ -117,11 +116,11 @@ export default defineComponent({
       UserService.getAvailableTimeZones().then((resp: any) => {
         if (resp.status === 200 && !hasError(resp)) {
           // TODO FIx this as fixed on backend
-          // Currently backend API returns some of the legacy timezones which are not found in moment list
+          // Currently backend API returns some of the legacy timezones which are not found in luxon list
           // Due to which if we set them we get an error
           // Filtered them out till it is fixed at backend
           this.timeZones = resp.data.filter((timeZone: any) => {
-            return moment.tz.zone(timeZone.id);
+            return DateTime.local().setZone(timeZone.id).isValid;
           });
           this.findTimeZone();
         }

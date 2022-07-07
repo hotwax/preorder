@@ -20,7 +20,9 @@ import { useI18n } from 'vue-i18n'
 import TaskQueue from './task-queue';
 import OfflineHelper from "./offline-helper"
 import { useStore } from "./store";
+import { mapGetters } from 'vuex';
 import emitter from "@/event-bus"
+import { Settings } from 'luxon'
 import { loadingController } from '@ionic/vue';
 
 export default defineComponent({
@@ -35,6 +37,11 @@ export default defineComponent({
     return {
       loader: null as any
     }
+  },
+  computed: {
+    ...mapGetters({
+      userProfile: 'user/getUserProfile',
+    })
   },
   methods: {
     async presentLoader() {
@@ -64,6 +71,11 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
+    // Handles case when user resumes or reloads the app
+    // Luxon timezzone should be set with the user's selected timezone
+    if (this.userProfile && this.userProfile.userTimeZone) {
+      Settings.defaultZone = this.userProfile.userTimeZone;
+    }
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
