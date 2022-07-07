@@ -98,8 +98,36 @@ const api = async (customConfig: any) => {
  * @param {any}  config - API configuration
  * @return {Promise} Response from API as returned by Axios
  */
-const client = (config: any) => {
-    return axios.request(config);
+const client = async (customConfig: any) => {
+    const config: any = {
+        url: customConfig.url,
+        method: customConfig.method,
+        baseUrl: customConfig.baseUrl,
+        data: customConfig.data,
+        headers: customConfig.headers,
+        params: customConfig.params
+    }
+
+    let baseURL = process.env.VUE_APP_BASE_URL;
+    if(!baseURL) {
+        baseURL = store.getters['user/getInstanceUrl'];
+        baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
+    }
+    if(baseURL) config.baseURL = baseURL;
+
+    if(customConfig.cache) config.adapter = axiosCache.adapter;
+
+    const networkStatus =  await OfflineHelper.getNetworkStatus();
+    if (customConfig.queue && !networkStatus.connected) {
+        if (!config.headers) config.headers = { ...axios.defaults.headers.common, ...config.headers };
+
+        emitter.emit("queueTask", {
+            callbackEvent: customConfig.callbackEvent,
+            payload: config
+        });
+    } else {
+        return axios(config);
+    }
 }
 
 export { api as default, client, axios };
