@@ -3,4 +3,5 @@ export default interface UserState {
     current: object | null;
     selectedBrand: string;
     instanceUrl: string;
+    expirationTime: number;
 }

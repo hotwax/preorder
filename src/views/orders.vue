@@ -277,6 +277,7 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
+      expirationTime: 'user/expirationTime'
     }),
   },
   methods: {

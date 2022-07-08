@@ -12,6 +12,7 @@ const userModule: Module<UserState, RootState> = {
       current: null,
       selectedBrand: '',
       instanceUrl: '',
+      expirationTime: 0,
     },
     getters,
     actions,

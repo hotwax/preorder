@@ -17,7 +17,11 @@ const actions: ActionTree<UserState, RootState> = {
   async login ({ commit, dispatch }, { username, password }) {
     try {
       const resp = await UserService.login(username, password)
+      
       if (resp.status === 200 && resp.data) {
+        const expirationTime = resp.data.expirationTime;
+        commit(types.USER_EXPIRATION_TIME_UPDATED, expirationTime);
+
         if (resp.data.token) {
             commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
             dispatch('getProfile')

@@ -20,6 +20,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getInstanceUrl (state) {
         return state.instanceUrl;
+    },
+    getExpirationTime(state) {
+        return state.expirationTime
     }
 }
 export default getters;
