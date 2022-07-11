@@ -277,9 +277,15 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
-      expirationTime: 'user/expirationTime'
+      expirationTime: 'user/getExpirationTime'
     }),
   },
+  // mounted() {
+  //   const currentTime = new Date().getTime();
+  //   if(this.expirationTime <= currentTime) {
+      
+  //   }
+  // },
   methods: {
     updateQuery() {
       this.query.viewSize = parseInt(process.env.VUE_APP_VIEW_SIZE);
