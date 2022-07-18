@@ -18,6 +18,7 @@
     "@capacitor/ios": "^2.4.6",
     "@ionic/vue": "^5.4.0",
     "@ionic/vue-router": "^5.4.0",
+    "@vee-validate/rules": "^4.6.2",
     "axios": "^0.21.1",
     "axios-cache-adapter": "^2.7.0",
     "core-js": "^3.6.5",
@@ -26,6 +27,7 @@
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.33",
     "register-service-worker": "^1.7.1",
+    "vee-validate": "^4.6.2",
     "vue": "^3.0.0-0",
     "vue-i18n": "^9.0.0",
     "vue-router": "^4.0.0-0",
@@ -53,6 +55,7 @@
     "eslint-plugin-vue": "^7.0.0-0",
     "typescript": "~3.9.3",
     "vue-cli-plugin-i18n": "^1.0.1",
-    "vue-jest": "^5.0.0-0"
+    "vue-jest": "^5.0.0-0",
+    "vue-loader-v16": "^16.0.0-beta.5.4"
   }
 }

@@ -18,10 +18,17 @@ const actions: ActionTree<UserState, RootState> = {
     try {
       const resp = await UserService.login(username, password)
       if (resp.status === 200 && resp.data) {
-        if (resp.data.token) {
-            commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
-            dispatch('getProfile')
-            return resp.data;
+        if (resp.data.requirePasswordChange && resp.data.token) {
+          showToast(translate('Your password expired. Please update your password.'));          
+          return resp.data;
+        } else if (resp.data.token) {
+          commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
+          dispatch('getProfile')
+          if (resp.data._EVENT_MESSAGE_ && resp.data._EVENT_MESSAGE_.startsWith("Alert:")) {
+            // TODO Internationalise text
+            showToast(translate(resp.data._EVENT_MESSAGE_));
+          }
+          return resp.data;
         } else if (hasError(resp)) {
           showToast(translate('Sorry, your username or password is incorrect. Please try again.'));
           console.error("error", resp.data._ERROR_MESSAGE_);
