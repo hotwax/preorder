@@ -259,6 +259,7 @@ export default defineComponent({
   data() {
     return {
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
+      isTokenExpired: false as boolean,
     }
   },
   computed: {
@@ -277,7 +278,19 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
+      expirationTime: 'user/getExpirationTime'
     }),
+  },
+  created() {
+    const currentTime = new Date().getTime();
+    if(this.expirationTime <= currentTime) {
+      this.isTokenExpired = true;
+    }
+  },
+  mounted() {
+    if(this.isTokenExpired) {
+      this.tokenExpired();
+    }
   },
   methods: {
     updateQuery() {
@@ -431,6 +444,24 @@ export default defineComponent({
         this.deselectSelectedItems();
       })
       return datemodal.present();
+    },
+    async tokenExpired() {
+      const reloginAlert = await alertController
+        .create({
+          backdropDismiss: false,
+          message: this.$t("Token expired. Please relogin"),
+          buttons: [
+            {
+              text: this.$t("Login"),
+              handler: async () => {
+                this.store.dispatch("user/logout").then(() => {
+                  this.$router.push('/login')
+                })
+              },
+            },
+          ],
+        });
+      return reloginAlert.present();
     },
     selectItem: function(event: any, item: any) {
       const existingItemIndex = this.selectedItems.findIndex((element: any) => element.orderId === item.orderId && element.orderItemSeqId === item.orderItemSeqId)
