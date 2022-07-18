@@ -28,6 +28,7 @@ import '@ionic/vue/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import { init } from '@hotwax/oms-api/api/index';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -104,6 +105,8 @@ app.config.globalProperties.$filters = {
     return customerLoyalty;
   },
 }
+
+init(store.getters['user/getUserToken'], store.getters['user/getInstanceUrl'], 3000)
 
 router.isReady().then(() => {
   app.mount('#app');

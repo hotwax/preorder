@@ -22,6 +22,8 @@ import OfflineHelper from "./offline-helper"
 import { useStore } from "./store";
 import emitter from "@/event-bus"
 import { loadingController } from '@ionic/vue';
+import { updateToken, updateInstanceUrl } from "@hotwax/oms-api/api/index";
+import { mapGetters } from "vuex";
 
 export default defineComponent({
   name: "App",
@@ -30,6 +32,12 @@ export default defineComponent({
     IonRouterOutlet,
     IonSplitPane,
     Menu
+  },
+  computed: {
+    ...mapGetters({
+      userToken: 'user/getUserToken',
+      instanceUrl: 'user/getInstanceUrl'
+    })
   },
   data() {
     return {
@@ -64,10 +72,14 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
+    updateToken(this.userToken)
+    updateInstanceUrl(this.instanceUrl)
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
+    updateToken('')
+    updateInstanceUrl('')
   },
   setup() {
     const store = useStore();
