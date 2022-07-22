@@ -170,7 +170,7 @@ export default defineComponent({
         this.newPassword =''
         this.newPasswordVerify =''
         resetForm({
-            ...form,
+          ...form,
           currentPassword: '',
           newPassword: '',
           newPasswordVerify: ''

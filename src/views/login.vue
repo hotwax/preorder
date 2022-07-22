@@ -80,7 +80,7 @@ export default defineComponent({
           this.username = ''
           this.password = ''
           this.$router.push('/')
-        } 
+        }
       }).catch((error: any) => {
         console.error("error", error);
       })
