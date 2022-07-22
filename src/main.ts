@@ -44,7 +44,7 @@ app.config.globalProperties.$filters = {
     // TODO Make default format configurable and from environment variables
     return moment(value, inFormat).format(outFormat ? outFormat : 'MM-DD-YYYY');
   },
-  formatUtcDate(value: any, inFormat?: string, outFormat?: string, utc?: boolean) {
+  formatUtcDate(value: any, inFormat?: string, outFormat?: string) {
     // TODO Use Loxon instead
     // TODO Make default format configurable and from environment variables
     const userProfile = store.getters['user/getUserProfile'];

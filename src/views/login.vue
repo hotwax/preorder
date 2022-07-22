@@ -72,7 +72,11 @@ export default defineComponent({
       
       const { username, password } = this;
       this.store.dispatch("user/login", { username: username.trim(), password }).then((data: any) => {
-        if (data.token) {
+        if(data.requirePasswordChange && data.token) {
+          this.username = ''
+          this.password = ''
+          this.$router.push({ name: 'update-password', params: { username , token: data.token}})
+        } else if (data.token) {
           this.username = ''
           this.password = ''
           this.$router.push('/')
