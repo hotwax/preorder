@@ -11,7 +11,7 @@
 
     <ion-content>
       <ion-item>
-        <ion-label>{{ $t("Brand") }}</ion-label>
+        <ion-label>{{ $t("eCom Store") }}</ion-label>
         <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">
           <ion-select-option value="">{{ $t("All") }}</ion-select-option>
           <ion-select-option v-bind:key="brand.id" v-for="brand in brands" :value="brand.id">{{ brand.name }}</ion-select-option>
