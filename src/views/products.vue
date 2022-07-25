@@ -65,6 +65,7 @@ import {
   IonTitle,
   IonSearchbar,
   IonToolbar,
+  alertController,
   modalController,
 } from "@ionic/vue";
 import { defineComponent } from "vue";
@@ -112,8 +113,14 @@ export default defineComponent({
       getProductStock: 'stock/getProductStock',
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
-      selectedBrand: 'user/getSelectedBrand'
+      selectedBrand: 'user/getSelectedBrand',
+      isTokenExpired: 'user/isTokenExpired'
     })
+  },
+  mounted() {
+    if(this.isTokenExpired) {
+      this.tokenExpired();
+    }
   },
   methods: {
     async loadMoreProducts(event: any) {
@@ -149,6 +156,24 @@ export default defineComponent({
         cssClass: "my-custom-class",
       });
       return bgjobmodal.present();
+    },
+    async tokenExpired() {
+      const reloginAlert = await alertController
+        .create({
+          backdropDismiss: false,
+          message: this.$t("Token expired. Please relogin"),
+          buttons: [
+            {
+              text: this.$t("Login"),
+              handler: async () => {
+                this.store.dispatch("user/logout").then(() => {
+                  this.$router.push('/login')
+                })
+              },
+            },
+          ],
+        });
+      return reloginAlert.present();
     },
     selectSearchBarText(event: any) {
       event.target.getInputElement().then((element: any) => {

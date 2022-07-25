@@ -145,10 +145,13 @@ import {
   IonThumbnail,
   IonToggle,
   IonToolbar,
+  alertController,
   popoverController,
 } from '@ionic/vue';
 import { defineComponent, ref } from 'vue';
 import Popover from '@/views/shipping-popover.vue';
+import { mapGetters } from "vuex";
+import { useStore } from "@/store";
 import {
   checkmarkOutline,
   ellipsisVerticalOutline,
@@ -179,6 +182,16 @@ export default defineComponent({
     IonToggle,
     IonToolbar,
   },
+  computed: {
+    ...mapGetters({
+      isTokenExpired: 'user/isTokenExpired'
+    }),
+  },
+  mounted() {
+    if(this.isTokenExpired) {
+      this.tokenExpired();
+    }
+  },
   methods: {
     segmentChanged(ev: CustomEvent) {
       this.segment = ev.detail.value;
@@ -192,9 +205,28 @@ export default defineComponent({
       });
       return popover.present();
     },
+    async tokenExpired() {
+      const reloginAlert = await alertController
+        .create({
+          backdropDismiss: false,
+          message: this.$t("Token expired. Please relogin"),
+          buttons: [
+            {
+              text: this.$t("Login"),
+              handler: async () => {
+                this.store.dispatch("user/logout").then(() => {
+                  this.$router.push('/login')
+                })
+              },
+            },
+          ],
+        });
+      return reloginAlert.present();
+    },
   },
   setup() {
     const segment = ref("all");
+    const store = useStore();
     return {
       checkmarkOutline,
       ellipsisVerticalOutline,
@@ -202,6 +234,7 @@ export default defineComponent({
       sendOutline,
       shirtOutline,
       segment,
+      store
     };
   },
 });

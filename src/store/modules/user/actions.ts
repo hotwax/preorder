@@ -20,7 +20,7 @@ const actions: ActionTree<UserState, RootState> = {
       
       if (resp.status === 200 && resp.data) {
         if (resp.data.token) {
-          commit(types.USER_EXPIRATION_TIME_UPDATED, resp.data.expirationTime);
+          commit(types.USER_TOKEN_EXPIRATION_TIME_UPDATED, resp.data.expirationTime);
           commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
           dispatch('getProfile')
           return resp.data;

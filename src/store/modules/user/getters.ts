@@ -21,8 +21,13 @@ const getters: GetterTree <UserState, RootState> = {
     getInstanceUrl (state) {
         return state.instanceUrl;
     },
-    getExpirationTime(state) {
-        return state.expirationTime
+    isTokenExpired(state, getters) {
+        const currentTime = new Date().getTime();
+        const tokenExpirationTime = getters.getTokenExpirationTime;
+        return tokenExpirationTime <= currentTime ? !!state.tokenExpirationTime : !state.tokenExpirationTime
+    },
+    getTokenExpirationTime(state) {
+        return state.tokenExpirationTime
     }
 }
 export default getters;

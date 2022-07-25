@@ -278,14 +278,9 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
-      expirationTime: 'user/getExpirationTime'
+      tokenExpirationTime: 'user/getTokenExpirationTime',
+      isTokenExpired: 'user/isTokenExpired'
     }),
-  },
-  created() {
-    const currentTime = new Date().getTime();
-    if(this.expirationTime <= currentTime) {
-      this.isTokenExpired = true;
-    }
   },
   mounted() {
     if(this.isTokenExpired) {
