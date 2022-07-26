@@ -1,4 +1,5 @@
 import api, { client } from '../api'
+import store from '@/store'
 
 const login = async (username: string, password: string): Promise <any> => {
   return api({
@@ -35,7 +36,7 @@ const updatePassword = async (payload: any): Promise <any>  => {
   return client({
     url: "updatePassword",
     method: "post",
-    baseURL: process.env.VUE_APP_BASE_URL,
+    baseURL: process.env.VUE_APP_BASE_URL ? process.env.VUE_APP_BASE_URL : store.getters['user/getInstanceUrl'],
     ...payload
   });
 }
