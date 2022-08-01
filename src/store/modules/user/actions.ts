@@ -31,7 +31,7 @@ const actions: ActionTree<UserState, RootState> = {
               }
             });
 
-            if (checkPermissionResponse.status === 200 && checkPermissionResponse.data && checkPermissionResponse.data.hasPermission) {
+            if (checkPermissionResponse.status === 200 && checkPermissionResponse.data && checkPermissionResponse.data.hasPermission && !hasError(checkPermissionResponse)) {
               commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
               dispatch('getProfile')
               if (resp.data._EVENT_MESSAGE_ && resp.data._EVENT_MESSAGE_.startsWith("Alert:")) {
