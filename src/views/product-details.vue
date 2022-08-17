@@ -17,7 +17,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content>
       <div class="header">
         <div class="product-image">
           <!-- TODO Create a separate component to handled default image -->
@@ -300,6 +300,7 @@ export default defineComponent({
     },
     async getVariantProducts() {
       const payload = {
+        viewSize: 50,
         groupByField: 'productId',
         groupLimit: 0,
         filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any

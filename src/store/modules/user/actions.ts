@@ -55,10 +55,12 @@ const actions: ActionTree<UserState, RootState> = {
   async getProfile ( { commit }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
-      const localTimeZone = moment.tz.guess();
-      if (resp.data.userTimeZone !== localTimeZone) {
-        emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
-      }
+      const userPref =  await UserService.getUserPreference({
+        'userPrefTypeId': 'SELECTED_BRAND'
+      });
+      const brands = JSON.parse(process.env.VUE_APP_BRANDS)
+      const userPrefBrand = brands.find((brand: any) => brand.id == userPref.data.userPrefValue)
+      commit(types.USER_BRAND_UPDATED, userPrefBrand ? userPrefBrand.id: brands ? brands[0].id : {})
       commit(types.USER_INFO_UPDATED, resp.data);
     }
   },
@@ -84,6 +86,10 @@ const actions: ActionTree<UserState, RootState> = {
       // Reset all the current queries
       this.dispatch("product/resetProductList")
       this.dispatch("order/resetOrderQuery")
+      await UserService.setUserPreference({
+        'userPrefTypeId': 'SELECTED_BRAND',
+        'userPrefValue': payload.selectedBrand
+      });
     },
 
   /**
