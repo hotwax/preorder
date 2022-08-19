@@ -70,29 +70,17 @@ app.config.globalProperties.$filters = {
     return featureValue;
   },
   groupFeatures(featureHierarchy: any) {
-    let features =[] as any;
-    let  featuresValue = '';
-    const featuresList = {} as any;
     if (featureHierarchy) {
-      featureHierarchy.forEach((feature: any) => {
-        const featureSplit = feature ? feature.split('/') : [];
-        features.push(featureSplit[1]);
-        features = [...new Set(features)];
-        features.forEach((x: any)=>{
-          featureHierarchy.filter((featureItem: any) => featureItem.includes(featureSplit[0] +"/" +x+"/")).forEach((feature: any) => {
-            const featureSplit = feature ? feature.split('/') : [];
-            const featureValue = featureSplit[2] ? featureSplit[2] : '';
-            featuresValue += featuresValue.length > 0 ? ", " + featureValue : featureValue;
-          })
-          featuresList[x] = featuresValue.trim();
-          featuresValue = "";
-        })
-      })
-      const sortedFeaturesList = {} as any;
-      Object.keys(featuresList).sort().forEach(key => {
-        sortedFeaturesList[key] = featuresList[key];
-      });
-      return sortedFeaturesList;
+      const features = featureHierarchy.reduce((filteredFeatures: any, feature: any) => {
+        const featureSplit = feature.split('/');
+        if (featureSplit[1] && featureSplit[2]) {
+          filteredFeatures[featureSplit[1]] ? filteredFeatures[featureSplit[1]].push(featureSplit[2]) : filteredFeatures[featureSplit[1]] = [featureSplit[2]]
+        }  
+        return filteredFeatures;
+      }, {});
+      const sortedFeatures = {} as any;
+      Object.keys(features).sort().map((key) => sortedFeatures[key] = features[key].join(', '))
+      return sortedFeatures;
     }
   },
   getFeatures(featureHierarchy: any, featureKey: string) {
