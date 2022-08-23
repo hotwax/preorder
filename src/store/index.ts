@@ -9,7 +9,6 @@ import orderModule from "./modules/order";
 import stockModule from "./modules/stock"
 import productModule from "./modules/product"
 import jobModule from "./modules/job"
-import utilModule from "./modules/util"
 
 
 // TODO check how to register it from the components only
@@ -22,7 +21,7 @@ const state: any = {
 }
 
 const persistState = createPersistedState({
-    paths: ['user', 'util'],
+    paths: ['user'],
     fetchBeforeUse: true
 })
 
@@ -38,8 +37,7 @@ const store = createStore<RootState>({
         'order': orderModule,
         'stock': stockModule,
         'product': productModule,
-        'job': jobModule,
-        'util': utilModule
+        'job': jobModule
     },
 })
 

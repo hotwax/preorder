@@ -113,8 +113,7 @@ export default defineComponent({
       getProductStock: 'stock/getProductStock',
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
-      selectedBrand: 'user/getSelectedBrand',
-      getFeature: 'util/getFeature'
+      selectedBrand: 'user/getSelectedBrand'
     })
   },
   methods: {
