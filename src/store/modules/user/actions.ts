@@ -80,7 +80,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ( { commit, dispatch }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
       const payload = {
@@ -107,11 +107,17 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const stores = resp.data.stores
-      const userPrefResponse =  await UserService.getUserPreference({
-        'userPrefTypeId': 'SELECTED_BRAND'
-      });
-      const userPrefStore = stores.find((store: any) => store.productStoreId === userPrefResponse.data.userPrefValue)
-      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, userPrefStore ? userPrefStore : stores ? stores[0]: {});
+      let userPrefStore = ''
+
+      try {
+        const userPref =  await UserService.getUserPreference({
+          'userPrefTypeId': 'SELECTED_BRAND'
+        });
+        userPrefStore = stores.find((store: any) => store.productStoreId == userPref.data.userPrefValue)
+      } catch (err) {
+        console.log(err)
+      }
+      dispatch('setEcomStore', { eComStore: userPrefStore ? userPrefStore : stores.length > 0 ? stores[0] : {} });
       commit(types.USER_INFO_UPDATED, resp.data);
     }
   },
