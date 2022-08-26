@@ -41,15 +41,15 @@ app.config.globalProperties.$filters = {
   formatDate(value: any, inFormat?: string, outFormat?: string) {
     // TODO Make default format configurable and from environment variables
     if(inFormat){
-      return DateTime.fromFormat(value, inFormat).toFormat(outFormat ? outFormat : 'MM-DD-YYYY');
+      return DateTime.fromFormat(value, inFormat).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
     }
-    return DateTime.fromISO(value).toFormat(outFormat ? outFormat : 'MM-DD-YYYY');
+    return DateTime.fromISO(value).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
   },
   formatUtcDate(value: any, inFormat?: any, outFormat?: string) {
     // TODO Make default format configurable and from environment variables
     const userProfile = store.getters['user/getUserProfile'];
     // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz
-    return DateTime.utc(value, inFormat).setZone(userProfile.userTimeZone).toFormat(outFormat ? outFormat : 'MM-DD-YYYY');
+    return DateTime.utc(value, inFormat).setZone(userProfile.userTimeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
   },
   getOrderIdentificationId(identifications: any, id: string) {
     let  externalId = ''

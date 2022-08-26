@@ -26,15 +26,15 @@ const actions: ActionTree<OrderState, RootState> = {
       filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
     }
     if (query.orderedBefore || query.orderedAfter) {
-      const orderedBefore = (query.orderedBefore ? DateTime.fromFormat(query.orderedBefore, 'YYYY-MM-DD').setZone(userProfile.userTimeZone) : DateTime.now().setZone(userProfile.userTimeZone)).endOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
-      const orderedAfter = (query.orderedAfter ? DateTime.fromFormat(query.orderedAfter, 'YYYY-MM-DD').setZone(userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'YYYY-MM-DD').setZone(userProfile.userTimeZone)).startOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
+      const orderedBefore = (query.orderedBefore ? DateTime.fromFormat(query.orderedBefore, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.now().setZone(userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
+      const orderedAfter = (query.orderedAfter ? DateTime.fromFormat(query.orderedAfter, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
       const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
       payload.filters.push(dateQuery);
     }
 
     if (query.promisedBefore || query.promisedAfter) {
-      const promisedBefore = (query.promisedBefore ? DateTime.fromFormat(query.promisedBefore, 'YYYY-MM-DD').setZone(userProfile.userTimeZone) : DateTime.now().setZone(userProfile.userTimeZone)).endOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
-      const promisedAfter = (query.promisedAfter ? DateTime.fromFormat(query.promisedAfter, 'YYYY-MM-DD').setZone(userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'YYYY-MM-DD').setZone(userProfile.userTimeZone)).startOf('day').toUTC().toFormat('YYYY-MM-DDTHH:mm:ss[Z]');
+      const promisedBefore = (query.promisedBefore ? DateTime.fromFormat(query.promisedBefore, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.now().setZone(userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
+      const promisedAfter = (query.promisedAfter ? DateTime.fromFormat(query.promisedAfter, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
       const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
       payload.filters.push(promisedDateQuery);
     }
@@ -204,7 +204,7 @@ const actions: ActionTree<OrderState, RootState> = {
         if (order) {
           const item = order.doclist.docs.find((orderItem: any) => orderItem.orderItemSeqId === payload.orderItemSeqId);
           // TODO Check if we can use the value from the response
-          item.promisedDatetime = DateTime.fromFormat(payload.promisedDatetime, "YYYY-MM-DD hh:mm:ss.SSS").toFormat("YYYY-MM-DD[T]hh:mm:ss[Z]");
+          item.promisedDatetime = DateTime.fromFormat(payload.promisedDatetime, "yyyy-MM-dd hh:mm:ss.SSS").toFormat("YYYY-MM-DD'T'hh:mm:ss'Z'");
         }
         commit(types.ORDER_LIST_UPDATED, state.list );
         showToast(translate("Item promise date updated successfully"));

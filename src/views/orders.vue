@@ -131,7 +131,7 @@
               </ion-item>
               <ion-item lines="full">
                 <ion-label>{{ $t("Promised date") }}</ion-label>
-                <p slot="end"> {{ item.promisedDatetime ? $filters.formatUtcDate(item.promisedDatetime, 'YYYY-MM-DDTHH:mm:ssZ') : '-'  }}</p>
+                <p slot="end"> {{ item.promisedDatetime ? $filters.formatUtcDate(item.promisedDatetime, "yyyy-MM-dd'T'HH:mm:ss'Z'") : '-'  }}</p>
               </ion-item>
               <ion-item button @click="item.isChecked = !item.isChecked" lines="none">
                 <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" slot="start"></ion-checkbox>

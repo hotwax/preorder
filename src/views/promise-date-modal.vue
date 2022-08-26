@@ -57,7 +57,7 @@ export default defineComponent({
       getSelectedItemsToUpdatePromiseDate: 'order/getSelectedItemsToUpdatePromiseDate',
     }),
     disableUpdate(): boolean {
-      return this.promisedDatetime === '' || (this.item && this.item.promisedDatetime && DateTime.fromFormat(this.item.promisedDatetime, "YYYY-MM-DD hh:mm:ss.SSS").toFormat("YYYY-MM-DD") === this.promisedDatetime) ;
+      return this.promisedDatetime === '' || (this.item && this.item.promisedDatetime && DateTime.fromFormat(this.item.promisedDatetime, "yyyy-MM-dd hh:mm:ss.SSS").toFormat("yyyy-MM-dd") === this.promisedDatetime) ;
     }
   },
   methods: {
@@ -88,7 +88,7 @@ export default defineComponent({
     },
     async updatePromiseDateItems() {
       // TODO Handle timezone
-      const promisedDatetime = DateTime.fromFormat(this.promisedDatetime, "YYYY-MM-DD").endOf("day").toFormat("YYYY-MM-DD HH:mm:ss.SSS")
+      const promisedDatetime = DateTime.fromFormat(this.promisedDatetime, "yyyy-MM-dd").endOf("day").toFormat("yyyy-MM-dd HH:mm:ss.SSS")
       const items = this.getSelectedItemsToUpdatePromiseDate(promisedDatetime);
       const json = JSON.stringify(items);
       const blob = new Blob([json], { type: 'application/json'});
@@ -104,7 +104,7 @@ export default defineComponent({
       })
     },
     async updatePromisedDateItem () {
-      const promisedDatetime = DateTime.fromFormat(this.promisedDatetime, "YYYY-MM-DD").endOf("day").toFormat("YYYY-MM-DD HH:mm:ss.SSS")
+      const promisedDatetime = DateTime.fromFormat(this.promisedDatetime, "yyyy-MM-dd").endOf("day").toFormat("yyyy-MM-dd HH:mm:ss.SSS")
       return this.store.dispatch("order/updatePromiseDateItem", {
           orderId: this.item.orderId,
           orderItemSeqId: this.item.orderItemSeqId,
@@ -115,7 +115,7 @@ export default defineComponent({
   },
   beforeMount() {
     // TODO Set current date
-    if (this.item && this.item.promisedDatetime) this.promisedDatetime = DateTime.fromISO(this.item.promisedDatetime).toFormat("YYYY-MM-DD")
+    if (this.item && this.item.promisedDatetime) this.promisedDatetime = DateTime.fromISO(this.item.promisedDatetime).toFormat("yyyy-MM-dd")
   },
   setup() {
    const store = useStore();
