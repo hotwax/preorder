@@ -11,10 +11,10 @@
 
     <ion-content>
       <ion-item>
+        <ion-icon :icon="globeOutline" slot="start" />
         <ion-label>{{ $t("eCom Store") }}</ion-label>
-        <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">
-          <ion-select-option value="">{{ $t("All") }}</ion-select-option>
-          <ion-select-option v-bind:key="brand.id" v-for="brand in brands" :value="brand.id">{{ brand.name }}</ion-select-option>
+        <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="setEComStore($event)">
+          <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts">
-import { codeWorkingOutline, timeOutline } from 'ionicons/icons'
+import { codeWorkingOutline, globeOutline, timeOutline } from 'ionicons/icons'
 import { useStore } from "@/store";
 import { 
   IonButton,
@@ -76,11 +76,10 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline, timeOutline }
+    return { store, codeWorkingOutline, globeOutline, timeOutline }
   },
   data() {
     return {
-      brands: JSON.parse(process.env.VUE_APP_BRANDS),
       baseURL: process.env.VUE_APP_BASE_URL
     }
   },
@@ -88,7 +87,8 @@ export default defineComponent({
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       selectedBrand: 'user/getSelectedBrand',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore',
     })
   },
   methods: {
@@ -105,7 +105,14 @@ export default defineComponent({
     },
     updateBrand(event: any) {
       this.store.dispatch("user/setSelectedBrand", { selectedBrand: event.detail.value})
-    }
+    },
+    setEComStore(store: any) {
+      if(this.userProfile) {
+        this.store.dispatch('user/setEcomStore', {
+          'eComStore': this.userProfile.stores.find((str: any) => str.productStoreId == store['detail'].value)
+        })
+      }
+    },
   }
 });
 </script>

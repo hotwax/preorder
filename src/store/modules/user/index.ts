@@ -12,6 +12,10 @@ const userModule: Module<UserState, RootState> = {
       current: null,
       selectedBrand: '',
       instanceUrl: '',
+      currentEComStore: {
+        productStoreId: "",
+        storeName: "None"
+      },
     },
     getters,
     actions,

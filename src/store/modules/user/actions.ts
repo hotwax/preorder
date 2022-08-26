@@ -80,15 +80,44 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ( { commit, dispatch }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
-      const userPref =  await UserService.getUserPreference({
-        'userPrefTypeId': 'SELECTED_BRAND'
-      });
-      const brands = JSON.parse(process.env.VUE_APP_BRANDS)
-      const userPrefBrand = brands.find((brand: any) => brand.id == userPref.data.userPrefValue)
-      commit(types.USER_BRAND_UPDATED, userPrefBrand ? userPrefBrand.id: brands ? brands[0].id : {})
+      const payload = {
+        "inputFields": {
+          "storeName_op": "not-empty"
+        },
+        "fieldList": ["productStoreId", "storeName"],
+        "entityName": "ProductStore",
+        "distinct": "Y",
+        "noConditionFind": "Y"
+      }
+
+      const storeResp = await UserService.getEComStores(payload);
+      if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
+        const stores = storeResp.data.docs;
+
+        resp.data.stores = [
+          ...(stores ? stores : []),
+          {
+            productStoreId: "",
+            storeName: "None"
+          }
+        ]
+      }
+
+      const stores = resp.data.stores
+      let userPrefStore = ''
+
+      try {
+        const userPref =  await UserService.getUserPreference({
+          'userPrefTypeId': 'SELECTED_BRAND'
+        });
+        userPrefStore = stores.find((store: any) => store.productStoreId == userPref.data.userPrefValue)
+      } catch (err) {
+        console.log(err)
+      }
+      dispatch('setEcomStore', { eComStore: userPrefStore ? userPrefStore : stores.length > 0 ? stores[0] : {} });
       commit(types.USER_INFO_UPDATED, resp.data);
     }
   },
@@ -125,6 +154,17 @@ const actions: ActionTree<UserState, RootState> = {
     */
      setUserInstanceUrl ({ state, commit }, payload){
       commit(types.USER_INSTANCE_URL_UPDATED, payload)
-    }
+    },
+
+  /**
+   * Set Ecom store
+   */
+    async setEcomStore({ commit, dispatch }, payload) {
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
+      await UserService.setUserPreference({
+        'userPrefTypeId': 'SELECTED_BRAND',
+        'userPrefValue': payload.eComStore.productStoreId
+      });
+    },
 }
 export default actions;
