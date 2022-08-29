@@ -1,7 +1,6 @@
 export default interface UserState {
     token: string;
     current: object | null;
-    selectedBrand: string;
     instanceUrl: string;
     currentEComStore: object;
 }

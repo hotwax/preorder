@@ -268,7 +268,7 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand',
+      currentEComStore: 'user/getCurrentEComStore'
     }),
     filteredProducts () {
       const filteredProducts = JSON.parse(JSON.stringify(this.current));
@@ -323,8 +323,8 @@ export default defineComponent({
       if (!this.hasPromisedDate) {
         payload.filters.push("-promisedDatetime: *");
       }
-      if (this.selectedBrand) {
-        payload.filters.push('productStoreId: ' + this.selectedBrand);
+      if (this.currentEComStore) {
+        payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
       }
       return this.store.dispatch("product/fetchCurrentList", payload)
     },
@@ -501,8 +501,8 @@ export default defineComponent({
         if (!this.hasPromisedDate) {
           payload.filters.push("-promisedDatetime: *");
         }
-        if (this.selectedBrand) {
-          payload.filters.push('productStoreId: ' +this.selectedBrand);
+        if (this.currentEComStore) {
+          payload.filters.push('productStoreId: ' +this.currentEComStore.productStoreId);
         }
         variantRequests.push(ProductService.fetchCurrentList(payload));
       });

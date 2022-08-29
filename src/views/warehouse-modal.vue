@@ -80,7 +80,7 @@ export default defineComponent({
     ...mapGetters({
       jobTotal: 'job/getTotal',
       getSelectedItemsToRelease: 'order/getSelectedItemsToRelease',
-      selectedBrand: 'user/getSelectedBrand'
+      currentEComStore: 'user/getCurrentEComStore'
     }),
   },
   methods: {
@@ -172,8 +172,8 @@ export default defineComponent({
           filters: [ "productId: " + productId , ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any,
           sortBy: "orderDate ASC"
         }
-        if (this.selectedBrand) {
-          payload.filters.push('productStoreId: ' + this.selectedBrand);
+        if (this.currentEComStore) {
+          payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
         }
         variantRequests.push(ProductService.fetchCurrentList(payload));
       });

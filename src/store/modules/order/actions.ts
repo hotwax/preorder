@@ -44,8 +44,8 @@ const actions: ActionTree<OrderState, RootState> = {
     if (!query.hasPromisedDate) {
       payload.filters.push("-promisedDatetime: *");
     }
-    if (rootState.user.selectedBrand) {
-      payload.filters.push('productStoreId: ' + rootState.user.selectedBrand);
+    if (rootState.user.currentEComStore) {
+      payload.filters.push('productStoreId: ' + rootState.user.currentEComStore.productStoreId);
     }
     return dispatch("findOrder", payload).finally(() => {
       query.hasUpdated = true;

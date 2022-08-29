@@ -13,7 +13,7 @@
       <ion-item>
         <ion-icon :icon="globeOutline" slot="start" />
         <ion-label>{{ $t("eCom Store") }}</ion-label>
-        <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="setEComStore($event)">
+        <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
           <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
         </ion-select>
       </ion-item>
@@ -86,7 +86,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand',
       instanceUrl: 'user/getInstanceUrl',
       currentEComStore: 'user/getCurrentEComStore',
     })
@@ -103,10 +102,7 @@ export default defineComponent({
       });
       return timeZoneModal.present();
     },
-    updateBrand(event: any) {
-      this.store.dispatch("user/setSelectedBrand", { selectedBrand: event.detail.value})
-    },
-    setEComStore(store: any) {
+    updateBrand(store: any) {
       if(this.userProfile) {
         this.store.dispatch('user/setEcomStore', {
           'eComStore': this.userProfile.stores.find((str: any) => str.productStoreId == store['detail'].value)

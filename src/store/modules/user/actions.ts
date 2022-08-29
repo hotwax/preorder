@@ -136,20 +136,6 @@ const actions: ActionTree<UserState, RootState> = {
     },
 
   /**
-   * Set user's selected brand
-   */
-     async setSelectedBrand ( { commit }, payload) {
-      commit(types.USER_BRAND_UPDATED, payload.selectedBrand);
-      // Reset all the current queries
-      this.dispatch("product/resetProductList")
-      this.dispatch("order/resetOrderQuery")
-      await UserService.setUserPreference({
-        'userPrefTypeId': 'SELECTED_BRAND',
-        'userPrefValue': payload.selectedBrand
-      });
-    },
-
-  /**
     * Set User Instance Url
     */
      setUserInstanceUrl ({ state, commit }, payload){
@@ -157,10 +143,13 @@ const actions: ActionTree<UserState, RootState> = {
     },
 
   /**
-   * Set Ecom store
+   * Set user's selected Ecom store
    */
     async setEcomStore({ commit, dispatch }, payload) {
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
+      // Reset all the current queries
+      this.dispatch("product/resetProductList")
+      this.dispatch("order/resetOrderQuery")
       await UserService.setUserPreference({
         'userPrefTypeId': 'SELECTED_BRAND',
         'userPrefValue': payload.eComStore.productStoreId
