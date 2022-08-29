@@ -9,22 +9,23 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content>
       <ion-item>
-        <ion-label>{{ $t("Brand") }}</ion-label>
+        <ion-label>{{ $t("eCom Store") }}</ion-label>
         <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">
           <ion-select-option value="">{{ $t("All") }}</ion-select-option>
           <ion-select-option v-bind:key="brand.id" v-for="brand in brands" :value="brand.id">{{ brand.name }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-        <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
-      </ion-item>
-      <ion-item>
         <ion-icon :icon="codeWorkingOutline" slot="start"/>
         <ion-label>{{ $t("OMS") }}</ion-label>
-        <ion-note slot="end">{{ instanceUrl }}</ion-note>
+        <p slot="end">{{ baseURL ? baseURL : instanceUrl }}</p>
+      </ion-item>
+      <ion-item>
+        <ion-icon :icon="timeOutline" slot="start"/>
+        <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
+        <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
       </ion-item>
       <ion-item>
         <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
@@ -35,13 +36,14 @@
 </template>
 
 <script lang="ts">
-import { codeWorkingOutline } from 'ionicons/icons'
+import { codeWorkingOutline, timeOutline } from 'ionicons/icons'
 import { useStore } from "@/store";
 import { 
   IonButton,
   IonButtons,
   IonContent,
   IonHeader,
+  IonIcon,
   IonItem,
   IonLabel,
   IonMenuButton,
@@ -62,6 +64,7 @@ export default defineComponent({
     IonButtons,
     IonContent,
     IonHeader,
+    IonIcon,
     IonItem,
     IonLabel,
     IonMenuButton,
@@ -73,11 +76,12 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline }
+    return { store, codeWorkingOutline, timeOutline }
   },
   data() {
     return {
-      brands: JSON.parse(process.env.VUE_APP_BRANDS)
+      brands: JSON.parse(process.env.VUE_APP_BRANDS),
+      baseURL: process.env.VUE_APP_BASE_URL
     }
   },
   computed: {

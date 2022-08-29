@@ -3,7 +3,7 @@
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal"> 
-          <ion-icon :icon="close" />
+          <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Select time zone") }}</ion-title>
@@ -59,7 +59,7 @@ import {
   modalController,
   alertController } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { close, save } from "ionicons/icons";
+import { closeOutline, save } from "ionicons/icons";
 import { useStore } from "@/store";
 import { UserService } from "@/services/UserService";
 import { hasError } from '@/utils'
@@ -146,7 +146,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
     return {
-      close,
+      closeOutline,
       save,
       store
     };

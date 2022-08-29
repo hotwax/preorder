@@ -25,6 +25,7 @@ const actions: ActionTree<StockState, RootState> = {
     // but as we will always fetch data for the fetched records which will be as per the viewSize
     // assuming that the value will never be 100 to show
     const resp: any = await StockService.checkInventory({
+      "viewSize": productIds.length,
       "filters": {
         "productId": productIds,
         "productId_op": "in",
