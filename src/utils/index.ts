@@ -23,9 +23,9 @@ const handleDateTimeInput = (dateTimeValue: any, inputType: string) => {
   // Remove timezone and then convert to timestamp
   // Current date time picker picks browser timezone and there is no supprt to change it
   let dateTime;
-  if(inputType === 'orderedBefore' || inputType === 'promisedBefore'){
+  if (inputType === 'orderedBefore' || inputType === 'promisedBefore') {
     dateTime = (dateTimeValue ? DateTime.fromFormat(dateTimeValue, 'yyyy-MM-dd').setZone(store.state.user.current.userTimeZone) : DateTime.now().setZone(store.state.user.current.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-  } else{
+  } else {
     dateTime = (dateTimeValue ? DateTime.fromFormat(dateTimeValue, 'yyyy-MM-dd').setZone(store.state.user.current.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(store.state.user.current.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
   }
   return dateTime;
