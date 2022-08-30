@@ -208,6 +208,7 @@ import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon'
+import { handleDateTimeInput } from "@/utils";
 
 export default defineComponent({
   name: "product-details",
@@ -306,14 +307,14 @@ export default defineComponent({
         filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any
       }
       if (this.orderedBefore || this.orderedAfter) {
-        const orderedBefore = (this.orderedBefore ? DateTime.fromFormat(this.orderedBefore, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        const orderedAfter = (this.orderedAfter ? DateTime.fromFormat(this.orderedAfter, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        const orderedBefore = handleDateTimeInput(this.orderedBefore, "orderedBefore");
+        const orderedAfter = handleDateTimeInput(this.orderedAfter, "orderedAfter");
         const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
         payload.filters.push(dateQuery);
       }
       if (this.promisedBefore || this.promisedAfter) {
-        const promisedBefore = (this.promisedBefore ? DateTime.fromFormat(this.promisedBefore, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        const promisedAfter = (this.promisedAfter ? DateTime.fromFormat(this.promisedAfter, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        const promisedBefore = handleDateTimeInput(this.promisedBefore, "promisedBefore");
+        const promisedAfter = handleDateTimeInput(this.promisedAfter, "promisedAfter");
         const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
         payload.filters.push(promisedDateQuery);
       }
@@ -484,14 +485,14 @@ export default defineComponent({
           sortBy: sortBy
         }
         if (this.orderedBefore || this.orderedAfter) {
-          const orderedBefore = (this.orderedBefore ? DateTime.fromFormat(this.orderedBefore, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-          const orderedAfter = (this.orderedAfter ? DateTime.fromFormat(this.orderedAfter, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+          const orderedBefore = handleDateTimeInput(this.orderedBefore, "orderedBefore");
+          const orderedAfter = handleDateTimeInput(this.orderedAfter, "orderedAfter");
           const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
           payload.filters.push(dateQuery);
         }
         if (this.promisedBefore || this.promisedAfter) {
-          const promisedBefore = (this.promisedBefore ? DateTime.fromFormat(this.promisedBefore, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-          const promisedAfter = (this.promisedAfter ? DateTime.fromFormat(this.promisedAfter, 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+          const promisedBefore = handleDateTimeInput(this.promisedBefore, "promisedBefore");
+          const promisedAfter = handleDateTimeInput(this.promisedAfter, "promisedAfter");
           const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
           payload.filters.push(promisedDateQuery);
         }

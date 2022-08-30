@@ -3,7 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { hasError, showToast } from '@/utils'
+import { handleDateTimeInput, hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { DateTime } from 'luxon';
 import emitter from '@/event-bus'
@@ -26,15 +26,15 @@ const actions: ActionTree<OrderState, RootState> = {
       filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
     }
     if (query.orderedBefore || query.orderedAfter) {
-      const orderedBefore = (query.orderedBefore ? DateTime.fromFormat(query.orderedBefore, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.now().setZone(userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
-      const orderedAfter = (query.orderedAfter ? DateTime.fromFormat(query.orderedAfter, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
+      const orderedBefore = handleDateTimeInput(query.orderedBefore, "orderedBefore");
+      const orderedAfter = handleDateTimeInput(query.orderedAfter, "orderedAfter")
       const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
       payload.filters.push(dateQuery);
     }
 
     if (query.promisedBefore || query.promisedAfter) {
-      const promisedBefore = (query.promisedBefore ? DateTime.fromFormat(query.promisedBefore, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.now().setZone(userProfile.userTimeZone)).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
-      const promisedAfter = (query.promisedAfter ? DateTime.fromFormat(query.promisedAfter, 'yyyy-MM-dd').setZone(userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(userProfile.userTimeZone)).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'z'");
+      const promisedBefore = handleDateTimeInput(query.promisedBefore, "promisedBefore");
+      const promisedAfter = handleDateTimeInput(query.promisedAfter, "promisedAfter");
       const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
       payload.filters.push(promisedDateQuery);
     }
