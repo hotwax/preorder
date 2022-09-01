@@ -18,7 +18,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content>
       <div class="header">
         <div class="search">
           <ion-searchbar @ionFocus="selectSearchBarText($event)" @ionClear="query.queryString = ''; updateQuery()" :value="query.queryString" v-on:keyup.enter="query.queryString = $event.target.value; updateQuery()"> </ion-searchbar>

@@ -3,7 +3,7 @@
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button @click="closeModal"> 
-          <ion-icon :icon="close" />
+          <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Background jobs") }}</ion-title>
@@ -47,7 +47,7 @@ import {
   IonToolbar,
   modalController } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { cloudUpload, cloudDownload, build, close } from "ionicons/icons";
+import { cloudUpload, cloudDownload, build, closeOutline } from "ionicons/icons";
 import { JobService } from '@/services/JobService'
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
@@ -93,7 +93,7 @@ export default defineComponent({
       cloudUpload,
       cloudDownload,
       build,
-      close,
+      closeOutline,
       store
     };
   },

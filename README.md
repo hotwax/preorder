@@ -74,7 +74,7 @@ Follow following instructions:
 6. Use [Pull Request template](https://github.com/hotwax/preorder/blob/main/.github/PULL_REQUEST_TEMPLATE.md) (it's automatically added to each PR) and fill as much fields as possible to describe your solution.
 7. Reference any relevant issues or other information in your PR.
 8. Wait for review and adjust your PR according to it.
-9. Congrats! Your PR should now me merged in!
+9. Congrats! Your PR should now be merged in!
 
 If you can't handle some parts of the issue then please ask for help in the comment. If you have any problems during the implementation of some complex issue, feel free to implement just a part of it.
 

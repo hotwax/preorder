@@ -2,7 +2,7 @@
   <ion-header>
     <ion-toolbar>
       <ion-buttons slot="start">
-        <ion-button @click="closeModal"> <ion-icon :icon="close" /></ion-button>
+        <ion-button @click="closeModal"> <ion-icon slot="icon-only" :icon="closeOutline" /></ion-button>
       </ion-buttons>
       <ion-title>{{ $t("Edit promise date") }}</ion-title>
     </ion-toolbar>
@@ -43,7 +43,7 @@ import {
   modalController,
   alertController } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { close, calendar, save} from "ionicons/icons";
+import { closeOutline, calendar, save} from "ionicons/icons";
 import { useStore } from "@/store";
 import moment from "moment";
 import { mapGetters } from "vuex";
@@ -120,7 +120,7 @@ export default defineComponent({
   setup() {
    const store = useStore();
     return {
-      close,
+      closeOutline,
       calendar,
       save,
       store
