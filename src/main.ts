@@ -69,6 +69,20 @@ app.config.globalProperties.$filters = {
     }
     return featureValue;
   },
+  groupFeatures(featureHierarchy: any) {
+    if (featureHierarchy) {
+      const features = featureHierarchy.reduce((filteredFeatures: any, feature: any) => {
+        const featureSplit = feature.split('/');
+        if (featureSplit[1] && featureSplit[2]) {
+          filteredFeatures[featureSplit[1]] ? filteredFeatures[featureSplit[1]].push(featureSplit[2]) : filteredFeatures[featureSplit[1]] = [featureSplit[2]]
+        }  
+        return filteredFeatures;
+      }, {});
+      const sortedFeatures = {} as any;
+      Object.keys(features).sort().map((key) => sortedFeatures[key] = features[key].join(', '))
+      return sortedFeatures;
+    }
+  },
   getFeatures(featureHierarchy: any, featureKey: string) {
     let  featuresValue = ''
     if (featureHierarchy) {

@@ -331,6 +331,15 @@ hr {
   color: var(--ion-color-medium);
 }
 
+.sentence-case {
+  text-transform: lowercase;
+  display: inline-block;
+}
+
+.sentence-case::first-letter {
+  text-transform: capitalize;
+}
+
 @media (min-width: 700px) {
   .list-item {
     --col-calc: var(--columns-tablet);
