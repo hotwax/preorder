@@ -1,3 +1,14 @@
+# Release 1.0.2
+
+## What's Changed
+* Updated: pull request build check(#20k1511) by @disha1202 in https://github.com/hotwax/preorder/pull/76
+* Displayed the product attributes dynamically #1xc2ecd by @disha1202 in https://github.com/hotwax/preorder/pull/33
+* Upgraded preorder from ionic 5 to ionic 6(#1yky3t5) by @disha1202 in https://github.com/hotwax/preorder/pull/45
+
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.0.1...v1.0.2
+
+
 # Release 1.0.1
 
 ## What's Changed
