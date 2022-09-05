@@ -94,19 +94,13 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const storeResp = await UserService.getEComStores(payload);
+      let stores = storeResp.data.docs
       if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
-        const stores = storeResp.data.docs;
-
-        resp.data.stores = [
-          ...(stores ? stores : []),
-          {
-            productStoreId: "",
-            storeName: ""
-          }
+        stores = [
+          ...(stores ? stores : [])
         ]
       }
 
-      const stores = resp.data.stores
       let userPrefStore = ''
 
       try {
@@ -115,11 +109,18 @@ const actions: ActionTree<UserState, RootState> = {
         });
         userPrefStore = stores.find((store: any) => store.productStoreId == userPref.data.userPrefValue)
       } catch (err) {
-        console.log(err)
+        console.error(err)
       }
       dispatch('setEcomStore', { eComStore: userPrefStore ? userPrefStore : stores.length > 0 ? stores[0] : {} });
       commit(types.USER_INFO_UPDATED, resp.data);
     }
+  },
+
+  /**
+   * Set User Instance Url
+   */
+  setUserInstanceUrl ({ state, commit }, payload){
+    commit(types.USER_INSTANCE_URL_UPDATED, payload)
   },
 
   /**
@@ -133,13 +134,6 @@ const actions: ActionTree<UserState, RootState> = {
         commit(types.USER_INFO_UPDATED, current);
         showToast(translate("Time zone updated successfully"));
       }
-    },
-
-  /**
-    * Set User Instance Url
-    */
-     setUserInstanceUrl ({ state, commit }, payload){
-      commit(types.USER_INSTANCE_URL_UPDATED, payload)
     },
 
   /**
