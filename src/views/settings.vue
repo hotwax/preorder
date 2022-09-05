@@ -102,10 +102,10 @@ export default defineComponent({
       });
       return timeZoneModal.present();
     },
-    updateBrand(store: any) {
+    updateBrand(event: any) {
       if(this.userProfile) {
         this.store.dispatch('user/setEcomStore', {
-          'eComStore': this.userProfile.stores.find((str: any) => str.productStoreId == store['detail'].value)
+          'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event['detail'].value)
         })
       }
     },

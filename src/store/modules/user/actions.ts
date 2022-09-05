@@ -101,7 +101,7 @@ const actions: ActionTree<UserState, RootState> = {
           ...(stores ? stores : []),
           {
             productStoreId: "",
-            storeName: "None"
+            storeName: ""
           }
         ]
       }
