@@ -5,8 +5,6 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
-import moment from 'moment';
-import emitter from '@/event-bus'
 import "moment-timezone";
 
 const actions: ActionTree<UserState, RootState> = {
@@ -94,11 +92,9 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       const storeResp = await UserService.getEComStores(payload);
-      let stores = storeResp.data.docs
+      let stores = [] as any;
       if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
-        stores = [
-          ...(stores ? stores : [])
-        ]
+        stores = [...storeResp.data.docs]
       }
 
       let userPrefStore = ''
@@ -116,10 +112,12 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
+
+
   /**
    * Set User Instance Url
    */
-  setUserInstanceUrl ({ state, commit }, payload){
+  setUserInstanceUrl ({ commit }, payload){
     commit(types.USER_INSTANCE_URL_UPDATED, payload)
   },
 
@@ -139,7 +137,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Set user's selected Ecom store
    */
-    async setEcomStore({ commit, dispatch }, payload) {
+    async setEcomStore({ commit }, payload) {
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
       // Reset all the current queries
       this.dispatch("product/resetProductList")
