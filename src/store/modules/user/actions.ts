@@ -112,15 +112,6 @@ const actions: ActionTree<UserState, RootState> = {
     }
   },
 
-
-
-  /**
-   * Set User Instance Url
-   */
-  setUserInstanceUrl ({ commit }, payload){
-    commit(types.USER_INSTANCE_URL_UPDATED, payload)
-  },
-
   /**
    * Update user timeZone
    */
@@ -146,6 +137,13 @@ const actions: ActionTree<UserState, RootState> = {
         'userPrefTypeId': 'SELECTED_BRAND',
         'userPrefValue': payload.eComStore.productStoreId
       });
+    },
+
+  /**
+   * Set User Instance Url
+   */
+    setUserInstanceUrl ({ commit }, payload){
+      commit(types.USER_INSTANCE_URL_UPDATED, payload)
     },
 }
 export default actions;
