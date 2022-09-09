@@ -38,18 +38,18 @@ const app = createApp(App)
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
 app.config.globalProperties.$filters = {
-  formatDate(value: any, inFormat?: string, outFormat?: string) {
+  formatDate(value: any, inFormat?: string, outFormat = 'MM-dd-yyyy') {
     // TODO Make default format configurable and from environment variables
     if(inFormat){
-      return DateTime.fromFormat(value, inFormat).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
+      return DateTime.fromFormat(value, inFormat).toFormat(outFormat);
     }
-    return DateTime.fromISO(value).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
+    return DateTime.fromISO(value).toFormat(outFormat);
   },
-  formatUtcDate(value: any, inFormat?: any, outFormat?: string) {
+  formatUtcDate(value: any, inFormat?: any, outFormat = 'MM-dd-yyyy') {
     // TODO Make default format configurable and from environment variables
     const userProfile = store.getters['user/getUserProfile'];
     // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz
-    return DateTime.utc(value, inFormat).setZone(userProfile.userTimeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy');
+    return DateTime.utc(value, inFormat).setZone(userProfile.userTimeZone).toFormat(outFormat);
   },
   getOrderIdentificationId(identifications: any, id: string) {
     let  externalId = ''
