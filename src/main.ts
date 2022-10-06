@@ -8,7 +8,7 @@ import i18n from './i18n'
 import store from './store'
 import moment from 'moment'
 import "moment-timezone";
-
+import { sortSizes } from "@/apparel-sorter"
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css';
@@ -84,24 +84,25 @@ app.config.globalProperties.$filters = {
     }
   },
   getFeatures(featureHierarchy: any, featureKey: string) {
-    let  featuresValue = ''
+    let featuresValue = ''
     if (featureHierarchy) {
-      featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).forEach((feature: any) => {
+      let featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
         const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        featuresValue += featuresValue.length > 0 ? ", " + featureValue : featureValue;
+        return featureValue;
       })
+      featuresList = featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList
+      featuresValue = featuresList.join(" ");
     }
-    // trim removes extra white space from beginning for the first feature
-    return featuresValue.trim();
+    return featuresValue;
   },
   getFeaturesList(featureHierarchy: any, featureKey: string) {
-    let  featuresList = []
+    let featuresList = [] as any;
     if (featureHierarchy) {
       featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
         const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        return featureValue;
+        return featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList;
       })
     }
     return featuresList;

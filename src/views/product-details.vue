@@ -116,7 +116,9 @@
 
       <!-- Variant -->
       <div v-else>
-        <ion-card  v-bind:key="item.groupValue" v-for="item in filteredProducts.list.items">
+        =========={{ sortedList(current.list.items) }}-----------
+        <!-- <ion-card  v-bind:key="item.groupValue" v-for="item in current.list.items"> -->
+        <ion-card  v-bind:key="item.groupValue" v-for="item in sortedList(current.list.items)">
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
@@ -208,6 +210,7 @@ import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
 import moment from 'moment';
 import Image from '@/components/Image.vue';
+import { sizeIndex } from "@/apparel-sorter"
 
 export default defineComponent({
   name: "product-details",
@@ -508,6 +511,34 @@ export default defineComponent({
       });
       return Promise.all(variantRequests);
     },
+    sortedList(list: any) {
+      const sortableList = list.map((item: any) => {
+        const featureHierarchy = this.getProduct(item.groupValue).featureHierarchy;
+        
+        if (featureHierarchy) {
+          const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith('1/SIZE/'))
+          const featureSplit = feature ? feature.split('/') : [];
+          console.log("featureSplit", featureSplit)
+          // TODO Find a better way
+          item.size = featureSplit[2] ? featureSplit[2] : '';
+        }
+        return item;
+      })
+      console.log("sortableList", sortableList)
+      // Considered if any of the item has size it should be sorted
+      const isSortable = sortableList.some((item: any) => item.size);
+      console.log("isSortable", isSortable)
+      function compare(a: any, b: any) {
+        if (sizeIndex(a.size) < sizeIndex(b.size))
+          return -1;
+        if (sizeIndex(a.size) > sizeIndex(b.size))
+          return 1;
+        return 0;
+      }
+      // console.log("sortableList.sort(compare)", sortableList.sort(compare))
+    // Only sort when there is size
+    return isSortable ? sortableList.sort(compare) : list;
+    }
   },
   setup() {
     const store = useStore();
