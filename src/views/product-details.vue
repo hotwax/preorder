@@ -524,7 +524,6 @@ export default defineComponent({
       })
       // Considered if any of the item has size it should be sorted
       const isSortable = sortableList.some((item: any) => item.size);
-      console.log("isSortable", isSortable)
       function compare(a: any, b: any) {
         if (sizeIndex(a.size) < sizeIndex(b.size))
           return -1;
