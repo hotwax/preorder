@@ -116,8 +116,6 @@
 
       <!-- Variant -->
       <div v-else>
-        =========={{ sortedList(current.list.items) }}-----------
-        <!-- <ion-card  v-bind:key="item.groupValue" v-for="item in current.list.items"> -->
         <ion-card  v-bind:key="item.groupValue" v-for="item in sortedList(current.list.items)">
           <div class="variant-info">
             <ion-item lines="none">
