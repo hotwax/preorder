@@ -102,7 +102,7 @@ app.config.globalProperties.$filters = {
       featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
         const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        return featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList;
+        return featuresValue;
       })
     }
     return featuresList;
