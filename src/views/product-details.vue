@@ -525,9 +525,12 @@ export default defineComponent({
       // Considered if any of the item has size it should be sorted
       const isSortable = sortableList.some((item: any) => item.size);
       function compare(a: any, b: any) {
-        if (sizeIndex(a.size) < sizeIndex(b.size))
+        const isNumber = isNumeric(a.size) && isNumeric(b.size)
+        const aSizeIndex = a.size ? sizeIndex(a.size) : 1000;
+        const bSizeIndex = b.size ? sizeIndex(b.size) : 1000;
+        if ( (isNumber && parseFloat(a.size) < parseFloat(b.size)) || aSizeIndex < bSizeIndex)
           return -1;
-        if (sizeIndex(a.size) > sizeIndex(b.size))
+        if ((isNumber && parseFloat(a.size) > parseFloat(b.size)) || aSizeIndex > bSizeIndex)
           return 1;
         return 0;
       }
