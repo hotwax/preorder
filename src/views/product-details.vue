@@ -516,7 +516,9 @@ export default defineComponent({
         if (featureHierarchy) {
           const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith('1/SIZE/'))
           const featureSplit = feature ? feature.split('/') : [];
-          console.log("featureSplit", featureSplit)
+      function isNumeric(num: any) {
+        return !isNaN(num)
+      }
           // TODO Find a better way
           item.size = featureSplit[2] ? featureSplit[2] : '';
         }
