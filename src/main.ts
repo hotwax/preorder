@@ -105,7 +105,7 @@ app.config.globalProperties.$filters = {
         return featuresValue;
       })
     }
-    return featuresList;
+    return featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList;
   },
   getCustomerLoyalty(orderNotes: any, cusotmerLoyaltyOptions: any) {
     let  customerLoyalty = '' as any
