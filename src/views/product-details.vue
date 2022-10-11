@@ -516,9 +516,6 @@ export default defineComponent({
         if (featureHierarchy) {
           const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith('1/SIZE/'))
           const featureSplit = feature ? feature.split('/') : [];
-      function isNumeric(num: any) {
-        return !isNaN(num)
-      }
           // TODO Find a better way
           item.size = featureSplit[2] ? featureSplit[2] : '';
         }
@@ -526,6 +523,9 @@ export default defineComponent({
       })
       // Considered if any of the item has size it should be sorted
       const isSortable = sortableList.some((item: any) => item.size);
+      function isNumeric(num: any) {
+        return !isNaN(num)
+      }
       function compare(a: any, b: any) {
         const isNumber = isNumeric(a.size) && isNumeric(b.size)
         const aSizeIndex = a.size ? sizeIndex(a.size) : 1000;
