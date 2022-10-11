@@ -105,7 +105,6 @@ const regexes = [
 });
 
 function findRegexMatch(patterns: any, iteration: any, size: any): any {
-  console.log("size", size, typeof size)
   if (patterns.length - 1 >= iteration) {
     if (size.search(patterns[iteration].regex) >= 0) {
       return { regex: patterns[iteration].regex, index: patterns[iteration].index, size: size, sizeVal: parseInt(size) || 0 };
