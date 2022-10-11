@@ -532,7 +532,6 @@ export default defineComponent({
           return 1;
         return 0;
       }
-      // console.log("sortableList.sort(compare)", sortableList.sort(compare))
     // Only sort when there is size
     return isSortable ? sortableList.sort(compare) : list;
     }
