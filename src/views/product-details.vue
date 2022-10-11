@@ -116,7 +116,7 @@
 
       <!-- Variant -->
       <div v-else>
-        <ion-card  v-bind:key="item.groupValue" v-for="item in filteredProducts.list.items">
+        <ion-card  v-bind:key="item.groupValue" v-for="item in sortedList(current.list.items)">
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
@@ -208,6 +208,7 @@ import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
 import moment from 'moment';
 import Image from '@/components/Image.vue';
+import { sizeIndex } from "@/apparel-sorter"
 
 export default defineComponent({
   name: "product-details",
@@ -508,6 +509,36 @@ export default defineComponent({
       });
       return Promise.all(variantRequests);
     },
+    sortedList(list: any) {
+      const sortableList = list.map((item: any) => {
+        const featureHierarchy = this.getProduct(item.groupValue).featureHierarchy;
+        
+        if (featureHierarchy) {
+          const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith('1/SIZE/'))
+          const featureSplit = feature ? feature.split('/') : [];
+          // TODO Find a better way
+          item.size = featureSplit[2] ? featureSplit[2] : '';
+        }
+        return item;
+      })
+      // Considered if any of the item has size it should be sorted
+      const isSortable = sortableList.some((item: any) => item.size);
+      function isNumeric(num: any) {
+        return !isNaN(num)
+      }
+      function compare(a: any, b: any) {
+        const isNumber = isNumeric(a.size) && isNumeric(b.size)
+        const aSizeIndex = a.size ? sizeIndex(a.size) : 1000;
+        const bSizeIndex = b.size ? sizeIndex(b.size) : 1000;
+        if ( (isNumber && parseFloat(a.size) < parseFloat(b.size)) || aSizeIndex < bSizeIndex)
+          return -1;
+        if ((isNumber && parseFloat(a.size) > parseFloat(b.size)) || aSizeIndex > bSizeIndex)
+          return 1;
+        return 0;
+      }
+    // Only sort when there is size
+    return isSortable ? sortableList.sort(compare) : list;
+    }
   },
   setup() {
     const store = useStore();
