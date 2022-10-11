@@ -522,7 +522,6 @@ export default defineComponent({
         }
         return item;
       })
-      console.log("sortableList", sortableList)
       // Considered if any of the item has size it should be sorted
       const isSortable = sortableList.some((item: any) => item.size);
       console.log("isSortable", isSortable)
