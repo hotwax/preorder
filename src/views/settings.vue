@@ -11,6 +11,7 @@
 
     <ion-content>
       <ion-item>
+        <ion-icon :icon="globeOutline" slot="start"/>
         <ion-label>{{ $t("eCom Store") }}</ion-label>
         <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">
           <ion-select-option value="">{{ $t("All") }}</ion-select-option>
@@ -28,6 +29,7 @@
         <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
       </ion-item>
       <ion-item>
+         <ion-icon :icon="personCircleOutline" slot="start"/>
         <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
         <ion-button @click="logout" slot="end" fill="outline" color="dark">{{ $t("Logout") }}</ion-button>
       </ion-item>
@@ -36,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { codeWorkingOutline, timeOutline } from 'ionicons/icons'
+import { codeWorkingOutline, timeOutline, globeOutline, personCircleOutline} from 'ionicons/icons'
 import { useStore } from "@/store";
 import { 
   IonButton,
@@ -76,7 +78,7 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline, timeOutline }
+    return { store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline }
   },
   data() {
     return {
