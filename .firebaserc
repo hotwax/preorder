@@ -6,14 +6,17 @@
   "targets": {
     "hotwax-digital-commerce": {
       "hosting": {
-        "dev-hotwax-preorder": [
+        "dev": [
           "dev-hotwax-preorder"
+        ],
+        "uat": [
+          "preorder-uat"
         ]
       }
     },
     "digital-commerce-71eb8": {
       "hosting": {
-        "hotwax-preorder": [
+        "prod": [
           "hotwax-preorder"
         ]
       }
