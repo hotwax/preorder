@@ -1,3 +1,18 @@
+# Release 1.1.0
+
+## What's Changed
+* Sort features (color, size etc) using apparel sorter (#2kbv95j) by @k2maan in https://github.com/hotwax/preorder/pull/78
+* Upgraded ionic to 6.1.15(#2uaz29u) by @disha1202 in https://github.com/hotwax/preorder/pull/79
+* Added icons for eCom Store and user profile on settings page by @tusharparakh in https://github.com/hotwax/preorder/pull/81
+* Added support to alias specific instance URL with environment configuration(#30dkjp1) by @disha1202 in https://github.com/hotwax/preorder/pull/90
+* Upgraded to ionic 6.2(#2w9wz26) by @disha1202 in https://github.com/hotwax/preorder/pull/88
+
+## New Contributors
+* @k2maan made their first contribution in https://github.com/hotwax/preorder/pull/78
+* @tusharparakh made their first contribution in https://github.com/hotwax/preorder/pull/81
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.0.2...v1.1.0
+
 # Release 1.0.2
 
 ## What's Changed
