@@ -111,7 +111,7 @@ export default defineComponent({
       getProductStock: 'stock/getProductStock',
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
-      selectedBrand: 'user/getSelectedBrand'
+      currentEComStore: 'user/getCurrentEComStore',
     })
   },
   methods: {
@@ -134,8 +134,8 @@ export default defineComponent({
         groupLimit: 0,
         filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
       }
-      if (this.selectedBrand) {
-        payload.filters.push('productStoreId: ' + this.selectedBrand);
+      if (this.currentEComStore) {
+        payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
       }
       return this.store.dispatch("product/findProducts", payload).finally(() => {
         this.hasQuery = true;

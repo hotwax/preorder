@@ -13,9 +13,8 @@
       <ion-item>
         <ion-icon :icon="globeOutline" slot="start"/>
         <ion-label>{{ $t("eCom Store") }}</ion-label>
-        <ion-select @ionChange="updateBrand($event)" interface="popover" :value="selectedBrand">
-          <ion-select-option value="">{{ $t("All") }}</ion-select-option>
-          <ion-select-option v-bind:key="brand.id" v-for="brand in brands" :value="brand.id">{{ brand.name }}</ion-select-option>
+        <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
+          <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
@@ -82,15 +81,14 @@ export default defineComponent({
   },
   data() {
     return {
-      brands: JSON.parse(process.env.VUE_APP_BRANDS),
       baseURL: process.env.VUE_APP_BASE_URL
     }
   },
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore',
     })
   },
   methods: {
@@ -106,8 +104,12 @@ export default defineComponent({
       return timeZoneModal.present();
     },
     updateBrand(event: any) {
-      this.store.dispatch("user/setSelectedBrand", { selectedBrand: event.detail.value})
-    }
+      if(this.userProfile) {
+        this.store.dispatch('user/setEcomStore', {
+          'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event['detail'].value)
+        })
+      }
+    },
   }
 });
 </script>

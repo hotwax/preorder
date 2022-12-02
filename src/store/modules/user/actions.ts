@@ -5,8 +5,6 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
-import moment from 'moment';
-import emitter from '@/event-bus'
 import "moment-timezone";
 
 const actions: ActionTree<UserState, RootState> = {
@@ -80,15 +78,36 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ( { commit, dispatch }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
-      const userPref =  await UserService.getUserPreference({
-        'userPrefTypeId': 'SELECTED_BRAND'
-      });
-      const brands = JSON.parse(process.env.VUE_APP_BRANDS)
-      const userPrefBrand = brands.find((brand: any) => brand.id == userPref.data.userPrefValue)
-      commit(types.USER_BRAND_UPDATED, userPrefBrand ? userPrefBrand.id: brands ? brands[0].id : {})
+      const payload = {
+        "inputFields": {
+          "storeName_op": "not-empty"
+        },
+        "fieldList": ["productStoreId", "storeName"],
+        "entityName": "ProductStore",
+        "distinct": "Y",
+        "noConditionFind": "Y"
+      }
+
+      const storeResp = await UserService.getEComStores(payload);
+      let stores = [] as any;
+      if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
+        stores = [...storeResp.data.docs]
+      }
+
+      let userPrefStore = ''
+
+      try {
+        const userPref =  await UserService.getUserPreference({
+          'userPrefTypeId': 'SELECTED_BRAND'
+        });
+        userPrefStore = stores.find((store: any) => store.productStoreId == userPref.data.userPrefValue)
+      } catch (err) {
+        console.error(err)
+      }
+      dispatch('setEcomStore', { eComStore: userPrefStore ? userPrefStore : stores.length > 0 ? stores[0] : {} });
       commit(types.USER_INFO_UPDATED, resp.data);
     }
   },
@@ -107,24 +126,24 @@ const actions: ActionTree<UserState, RootState> = {
     },
 
   /**
-   * Set user's selected brand
+   * Set user's selected Ecom store
    */
-     async setSelectedBrand ( { commit }, payload) {
-      commit(types.USER_BRAND_UPDATED, payload.selectedBrand);
+    async setEcomStore({ commit }, payload) {
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
       // Reset all the current queries
       this.dispatch("product/resetProductList")
       this.dispatch("order/resetOrderQuery")
       await UserService.setUserPreference({
         'userPrefTypeId': 'SELECTED_BRAND',
-        'userPrefValue': payload.selectedBrand
+        'userPrefValue': payload.eComStore.productStoreId
       });
     },
 
   /**
-    * Set User Instance Url
-    */
-     setUserInstanceUrl ({ state, commit }, payload){
+   * Set User Instance Url
+   */
+    setUserInstanceUrl ({ commit }, payload){
       commit(types.USER_INSTANCE_URL_UPDATED, payload)
-    }
+    },
 }
 export default actions;
