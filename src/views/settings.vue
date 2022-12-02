@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts">
-import { codeWorkingOutline, globeOutline, timeOutline } from 'ionicons/icons'
+import { codeWorkingOutline, timeOutline, globeOutline, personCircleOutline} from 'ionicons/icons'
 import { useStore } from "@/store";
 import { 
   IonButton,
@@ -76,7 +76,7 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline, globeOutline, timeOutline }
+    return { store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline }
   },
   data() {
     return {
