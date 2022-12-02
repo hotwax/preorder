@@ -11,7 +11,7 @@
 
     <ion-content>
       <ion-item>
-        <ion-icon :icon="globeOutline" slot="start" />
+        <ion-icon :icon="globeOutline" slot="start"/>
         <ion-label>{{ $t("eCom Store") }}</ion-label>
         <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
           <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
@@ -28,6 +28,7 @@
         <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
       </ion-item>
       <ion-item>
+         <ion-icon :icon="personCircleOutline" slot="start"/>
         <ion-label> {{ userProfile !== null ? userProfile.partyName : '' }} </ion-label>
         <ion-button @click="logout" slot="end" fill="outline" color="dark">{{ $t("Logout") }}</ion-button>
       </ion-item>
