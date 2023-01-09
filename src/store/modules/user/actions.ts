@@ -95,6 +95,14 @@ const actions: ActionTree<UserState, RootState> = {
       let stores = [] as any;
       if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
         stores = [...storeResp.data.docs]
+        
+        resp.data.stores = [
+          ...(stores ? stores : []),
+          {
+            productStoreId: "",
+            storeName: "None"
+          }
+        ]
       }
 
       let userPrefStore = ''
