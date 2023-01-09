@@ -80,6 +80,8 @@ const actions: ActionTree<UserState, RootState> = {
    */
   async getProfile ( { commit, dispatch }) {
     const resp = await UserService.getProfile()
+    const userProfile = JSON.parse(JSON.stringify(resp.data));
+
     if (resp.status === 200) {
       const payload = {
         "inputFields": {
@@ -95,6 +97,17 @@ const actions: ActionTree<UserState, RootState> = {
       let stores = [] as any;
       if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
         stores = [...storeResp.data.docs]
+        
+        userProfile.stores = [
+          ...stores,
+          {
+            // With the preorder app's use case, the user will get data specific to the product store
+            // or all the data, for instance, on the products page. either products belonging to the 
+            // selected store are fetched or all the products are fetched.
+            productStoreId: "",
+            storeName: "All"
+          }
+        ]
       }
 
       let userPrefStore = ''
@@ -108,7 +121,7 @@ const actions: ActionTree<UserState, RootState> = {
         console.error(err)
       }
       dispatch('setEcomStore', { eComStore: userPrefStore ? userPrefStore : stores.length > 0 ? stores[0] : {} });
-      commit(types.USER_INFO_UPDATED, resp.data);
+      commit(types.USER_INFO_UPDATED, userProfile);
     }
   },
 
