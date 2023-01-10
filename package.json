@@ -13,9 +13,9 @@
     "ionic:serve": "vue-cli-service serve"
   },
   "dependencies": {
-    "@capacitor/android": "^2.4.6",
-    "@capacitor/core": "2.4.6",
-    "@capacitor/ios": "^2.4.6",
+    "@capacitor/android": "^2.5.0",
+    "@capacitor/core": "^2.4.7",
+    "@capacitor/ios": "^2.5.0",
     "@ionic/core": "6.2.9",
     "@ionic/vue": "6.2.9",
     "@ionic/vue-router": "6.2.9",
