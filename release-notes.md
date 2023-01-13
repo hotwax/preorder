@@ -6,6 +6,10 @@
 * Added icons for eCom Store and user profile on settings page by @tusharparakh in https://github.com/hotwax/preorder/pull/81
 * Added support to alias specific instance URL with environment configuration(#30dkjp1) by @disha1202 in https://github.com/hotwax/preorder/pull/90
 * Upgraded to ionic 6.2(#2w9wz26) by @disha1202 in https://github.com/hotwax/preorder/pull/88
+* Implemented: Support to fetch brands from backend on settings page#2r69y7g by @shashwatbangar in https://github.com/hotwax/preorder/pull/74
+* Implemented: Updated UI of settings page(#32j3r6t) by @shashwatbangar in https://github.com/hotwax/preorder/pull/93
+* Fixed eCommerce options are not visible on settings page (#85zrhj216) by @k2maan in https://github.com/hotwax/preorder/pull/96
+* Fixed build issue due to eslint version mismatch in dependencies (#85zrhpak3) by @k2maan in https://github.com/hotwax/preorder/pull/97
 
 ## New Contributors
 * @k2maan made their first contribution in https://github.com/hotwax/preorder/pull/78
