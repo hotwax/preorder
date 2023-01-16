@@ -16,6 +16,7 @@
     "@capacitor/android": "^2.4.6",
     "@capacitor/core": "2.4.6",
     "@capacitor/ios": "^2.4.6",
+    "@hotwax/app-version-info": "^1.0.0",
     "@ionic/core": "6.2.9",
     "@ionic/vue": "6.2.9",
     "@ionic/vue-router": "6.2.9",
