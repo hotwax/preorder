@@ -239,19 +239,6 @@ Kept the orignal styling for future use if any
   }
 }
 
-.overline {
-  font-weight: 500 !important;
-  font-size: 10px !important;
-  line-height: 16px !important;
-  letter-spacing: 1.5px;
-  color: #666;
-  text-transform: uppercase !important;
-}
-
-ion-thumbnail > img {
-  object-fit: contain;
-}
-
 ion-badge {
   margin-right: 8px;
 }
@@ -363,6 +350,3 @@ hr {
     display: unset;
   }
 }
-
-
-
