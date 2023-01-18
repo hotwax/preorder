@@ -11,6 +11,7 @@ import { sortSizes } from "@/apparel-sorter"
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css';
+import '@hotwax/apps-theme';
 
 /* Basic CSS for apps built with Ionic */
 import '@ionic/vue/css/normalize.css';

@@ -13,9 +13,10 @@
     "ionic:serve": "vue-cli-service serve"
   },
   "dependencies": {
-    "@capacitor/android": "^2.4.6",
-    "@capacitor/core": "2.4.6",
-    "@capacitor/ios": "^2.4.6",
+    "@capacitor/android": "^2.5.0",
+    "@capacitor/core": "^2.4.7",
+    "@capacitor/ios": "^2.5.0",
+    "@hotwax/apps-theme": "^1.1.0",
     "@ionic/core": "6.2.9",
     "@ionic/vue": "6.2.9",
     "@ionic/vue-router": "6.2.9",
@@ -30,7 +31,7 @@
     "moment-timezone": "^0.5.33",
     "register-service-worker": "^1.7.1",
     "vue": "^3.2.26",
-    "vue-i18n": "^9.0.0",
+    "vue-i18n": "~9.1.6",
     "vue-router": "^4.0.12",
     "vuex": "^4.0.0",
     "vuex-persistedstate": "^4.0.0-beta.3"
@@ -38,12 +39,12 @@
   "devDependencies": {
     "@capacitor/cli": "2.4.6",
     "@intlify/vue-i18n-loader": "^2.0.0-rc.3",
-    "@types/jest": "^24.0.19",
-    "@typescript-eslint/eslint-plugin": "^5.4.0",
-    "@typescript-eslint/parser": "^5.4.0",
+    "@types/jest": "^27.5.0",
+    "@typescript-eslint/eslint-plugin": "~5.26.0",
+    "@typescript-eslint/parser": "~5.26.0",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-e2e-cypress": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~5.0.8",
     "@vue/cli-plugin-pwa": "^4.5.11",
     "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-plugin-typescript": "~4.5.0",
@@ -55,10 +56,10 @@
     "cypress": "^8.3.0",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
-    "jest": "^27.1.0",
-    "ts-jest": "^27.0.4",
-    "typescript": "~4.1.5",
+    "jest": "^28.1.0",
+    "ts-jest": "^28.0.8",
+    "typescript": "~4.7.4",
     "vue-cli-plugin-i18n": "^1.0.1",
-    "vue-jest": "^5.0.0-0"
+    "@vue/vue3-jest": "^28.0.0"
   }
 }
