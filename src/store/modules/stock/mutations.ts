@@ -1,6 +1,7 @@
 import { MutationTree } from 'vuex'
 import StockState from './StockState'
 import * as types from './mutation-types'
+import { Stock } from '@/adapter'
 
 const mutations: MutationTree <StockState> = {
     [types.STOCK_ADD_PRODUCT] (state, payload) {
@@ -8,8 +9,8 @@ const mutations: MutationTree <StockState> = {
     },
     [types.STOCK_ADD_PRODUCTS] (state, payload) {
         // TODO
-        payload.products.forEach((product: any) => {
-            state.products[product.productId] = product.atp
+        payload.forEach((productStock: Stock) => {
+            state.products[productStock.productId] = productStock.availableToPromiseTotal
         });
     }
 }
