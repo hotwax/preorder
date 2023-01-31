@@ -45,7 +45,7 @@ app.config.globalProperties.$filters = {
     }
     return DateTime.fromISO(value).toFormat(outFormat);
   },
-  formatUtcDate(value: any, inFormat?: any, outFormat = 'MM-dd-yyyy', utc?: boolean) {
+  formatUtcDate(value: any, inFormat?: any, outFormat = 'MM-dd-yyyy') {
     // TODO Use Loxon instead
     // TODO Make default format configurable and from environment variables
     const userProfile = store.getters['user/getUserProfile'];
