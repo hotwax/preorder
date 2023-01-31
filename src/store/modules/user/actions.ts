@@ -5,7 +5,7 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
-import "moment-timezone";
+import { Settings } from 'luxon'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -83,6 +83,9 @@ const actions: ActionTree<UserState, RootState> = {
     const userProfile = JSON.parse(JSON.stringify(resp.data));
 
     if (resp.status === 200) {
+      if(resp.data.userTimeZone) {
+        Settings.defaultZone = resp.data.userTimeZone;
+      }
       const payload = {
         "inputFields": {
           "storeName_op": "not-empty"
@@ -132,8 +135,9 @@ const actions: ActionTree<UserState, RootState> = {
       const resp = await UserService.setUserTimeZone(payload)
       if (resp.status === 200 && !hasError(resp)) {
         const current: any = state.current;
-        current.userTimeZone = payload.tzId;
+        current.userTimeZone = payload.timeZoneId;
         commit(types.USER_INFO_UPDATED, current);
+        Settings.defaultZone = current.userTimeZone;
         showToast(translate("Time zone updated successfully"));
       }
     },
