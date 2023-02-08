@@ -1,4 +1,4 @@
-import api from '../api'
+import { api } from '@/adapter';
 
 const findFacility = async (payload: any): Promise <any>  => {
     return api({

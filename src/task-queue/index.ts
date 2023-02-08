@@ -1,6 +1,6 @@
 import StorageManager from '../storage-manager';
 import emitter from "../event-bus"
-import { client } from "../api"
+import { client } from '@/adapter';
 
 const prepareTask = () => {
     const task: any = {};
@@ -30,10 +30,10 @@ const removeTask = async (task: any) => {
 
 const processTask = async (task: any) => {
     // TODO Handle case for expired token and new logged in user
-    client(task.payload).then((data) => {
+    client(task.payload).then((data: any) => {
         // Add to response as required for callbackEvent
         task.response = data;
-    }).catch((error) => {
+    }).catch((error: any) => {
         task.error = error;
         // TODO Add error information to Task or remove it after showing message
         console.error("error", error);
