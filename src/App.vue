@@ -70,6 +70,9 @@ export default defineComponent({
       this.router.push("/login")
     }
   },
+  created() {
+    init(this.userToken, this.instanceUrl, this.maxAge)
+  },
   async mounted() {
     this.loader = await loadingController
       .create({
@@ -80,7 +83,6 @@ export default defineComponent({
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
     emitter.on('unauthorized', this.unauthorized);
-    init(this.userToken, this.instanceUrl, this.maxAge)
     // Handles case when user resumes or reloads the app
     // Luxon timezzone should be set with the user's selected timezone
     if (this.userProfile && this.userProfile.userTimeZone) {
