@@ -1,4 +1,4 @@
-import api from '../api'
+import { api } from '@/adapter';
 
 const checkInventory = async (query: any): Promise <any>  => {
     return api({

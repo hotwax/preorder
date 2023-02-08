@@ -19,11 +19,12 @@ import { defineComponent } from "vue";
 import { useI18n } from 'vue-i18n'
 import TaskQueue from './task-queue';
 import OfflineHelper from "./offline-helper"
-import { useStore } from "./store";
 import emitter from "@/event-bus"
 import { loadingController } from '@ionic/vue';
-import { mapGetters } from 'vuex';
+import { mapGetters, useStore } from 'vuex';
 import { Settings } from 'luxon'
+import { init, resetConfig } from '@/adapter'
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: "App",
@@ -35,12 +36,15 @@ export default defineComponent({
   },
   data() {
     return {
-      loader: null as any
+      loader: null as any,
+      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0
     }
   },
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
+      userToken: 'user/getUserToken',
+      instanceUrl: 'user/getInstanceUrl'
     })
   },
   methods: {
@@ -60,6 +64,10 @@ export default defineComponent({
         this.loader.dismiss();
         this.loader = null as any;
       }
+    },
+    async unauthorized() {
+      this.store.dispatch("user/logout");
+      this.router.push("/login")
     }
   },
   async mounted() {
@@ -71,6 +79,8 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
+    emitter.on('unauthorized', this.unauthorized);
+    init(this.userToken, this.instanceUrl, this.maxAge)
     // Handles case when user resumes or reloads the app
     // Luxon timezzone should be set with the user's selected timezone
     if (this.userProfile && this.userProfile.userTimeZone) {
@@ -80,13 +90,17 @@ export default defineComponent({
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
+    emitter.off('unauthorized', this.unauthorized);
+    resetConfig()
   },
   setup() {
     const store = useStore();
     TaskQueue.init();
     OfflineHelper.register();
     const { t, locale } = useI18n();
+    const router = useRouter();
     return {
+      router,
       TaskQueue,
       OfflineHelper,
       t,
