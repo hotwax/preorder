@@ -5,7 +5,7 @@ import OrderState from './OrderState'
 import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
-import moment from 'moment';
+import { DateTime } from 'luxon';
 import emitter from '@/event-bus'
 
 const actions: ActionTree<OrderState, RootState> = {
@@ -26,15 +26,15 @@ const actions: ActionTree<OrderState, RootState> = {
       filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
     }
     if (query.orderedBefore || query.orderedAfter) {
-      const orderedBefore = (query.orderedBefore ? moment.tz(query.orderedBefore, 'YYYY-MM-DD', userProfile.userTimeZone) : moment.tz(moment(), userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-      const orderedAfter = (query.orderedAfter ? moment.tz(query.orderedAfter, 'YYYY-MM-DD', userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+      const orderedBefore = query.orderedBefore ? DateTime.fromFormat(query.orderedBefore, "yyyy-MM-dd").setZone(userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.now().setZone(userProfile.userTimeZone).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+      const orderedAfter = query.orderedAfter ? DateTime.fromFormat(query.orderedAfter, "yyyy-MM-dd").setZone(userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.fromFormat("0001-01-01", "yyyy-MM-dd").setZone(userProfile.userTimeZone).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
       const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
       payload.filters.push(dateQuery);
     }
 
     if (query.promisedBefore || query.promisedAfter) {
-      const promisedBefore = (query.promisedBefore ? moment.tz(query.promisedBefore, 'YYYY-MM-DD', userProfile.userTimeZone) : moment.tz(moment(), userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-      const promisedAfter = (query.promisedAfter ? moment.tz(query.promisedAfter, 'YYYY-MM-DD', userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+      const promisedBefore = query.promisedBefore ? DateTime.fromFormat(query.promisedBefore, "yyyy-MM-dd").setZone(userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.now().setZone(userProfile.userTimeZone).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+      const promisedAfter = query.promisedAfter ? DateTime.fromFormat(query.promisedAfter, "yyyy-MM-dd").setZone(userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.fromFormat("0001-01-01", "yyyy-MM-dd").setZone(userProfile.userTimeZone).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
       const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
       payload.filters.push(promisedDateQuery);
     }
@@ -44,8 +44,8 @@ const actions: ActionTree<OrderState, RootState> = {
     if (!query.hasPromisedDate) {
       payload.filters.push("-promisedDatetime: *");
     }
-    if (rootState.user.selectedBrand) {
-      payload.filters.push('productStoreId: ' + rootState.user.selectedBrand);
+    if (rootState.user.currentEComStore) {
+      payload.filters.push('productStoreId: ' + rootState.user.currentEComStore.productStoreId);
     }
     return dispatch("findOrder", payload).finally(() => {
       query.hasUpdated = true;
@@ -204,7 +204,7 @@ const actions: ActionTree<OrderState, RootState> = {
         if (order) {
           const item = order.doclist.docs.find((orderItem: any) => orderItem.orderItemSeqId === payload.orderItemSeqId);
           // TODO Check if we can use the value from the response
-          item.promisedDatetime = moment(payload.promisedDatetime, "YYYY-MM-DD hh:mm:ss.SSS").format("YYYY-MM-DD[T]hh:mm:ss[Z]");
+          item.promisedDatetime = DateTime.fromFormat(payload.promisedDatetime, "yyyy-MM-dd hh:mm:ss.SSS").toFormat("YYYY-MM-DD'T'hh:mm:ss'Z'");
         }
         commit(types.ORDER_LIST_UPDATED, state.list );
         showToast(translate("Item promise date updated successfully"));

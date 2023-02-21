@@ -6,12 +6,12 @@ import './registerServiceWorker'
 import { IonicVue } from '@ionic/vue';
 import i18n from './i18n'
 import store from './store'
-import moment from 'moment'
-import "moment-timezone";
-
+import { DateTime } from 'luxon';
+import { sortSizes } from "@/apparel-sorter"
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css';
+import '@hotwax/apps-theme';
 
 /* Basic CSS for apps built with Ionic */
 import '@ionic/vue/css/normalize.css';
@@ -39,17 +39,18 @@ const app = createApp(App)
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
 app.config.globalProperties.$filters = {
-  formatDate(value: any, inFormat?: string, outFormat?: string) {
-    // TODO Use Loxon instead
-    // TODO Make default format configurable and from environment variables
-    return moment(value, inFormat).format(outFormat ? outFormat : 'MM-DD-YYYY');
+  formatDate(value: any, inFormat?: string, outFormat = 'MM-dd-yyyy') {
+    if(inFormat){
+      return DateTime.fromFormat(value, inFormat).toFormat(outFormat);
+    }
+    return DateTime.fromISO(value).toFormat(outFormat);
   },
-  formatUtcDate(value: any, inFormat?: string, outFormat?: string, utc?: boolean) {
+  formatUtcDate(value: any, inFormat?: any, outFormat = 'MM-dd-yyyy') {
     // TODO Use Loxon instead
     // TODO Make default format configurable and from environment variables
     const userProfile = store.getters['user/getUserProfile'];
     // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz
-    return moment.utc(value, inFormat).tz(userProfile.userTimeZone).format(outFormat ? outFormat : 'MM-DD-YYYY');
+    return DateTime.fromISO(value, { zone: 'utc' }).setZone(userProfile.userTimeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy')
   },
   getOrderIdentificationId(identifications: any, id: string) {
     let  externalId = ''
@@ -69,20 +70,35 @@ app.config.globalProperties.$filters = {
     }
     return featureValue;
   },
-  getFeatures(featureHierarchy: any, featureKey: string) {
-    let  featuresValue = ''
+  groupFeatures(featureHierarchy: any) {
     if (featureHierarchy) {
-      featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).forEach((feature: any) => {
+      const features = featureHierarchy.reduce((filteredFeatures: any, feature: any) => {
+        const featureSplit = feature.split('/');
+        if (featureSplit[1] && featureSplit[2]) {
+          filteredFeatures[featureSplit[1]] ? filteredFeatures[featureSplit[1]].push(featureSplit[2]) : filteredFeatures[featureSplit[1]] = [featureSplit[2]]
+        }  
+        return filteredFeatures;
+      }, {});
+      const sortedFeatures = {} as any;
+      Object.keys(features).sort().map((key) => sortedFeatures[key] = features[key].join(', '))
+      return sortedFeatures;
+    }
+  },
+  getFeatures(featureHierarchy: any, featureKey: string) {
+    let featuresValue = ''
+    if (featureHierarchy) {
+      let featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
         const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        featuresValue += featuresValue.length > 0 ? ", " + featureValue : featureValue;
+        return featureValue;
       })
+      featuresList = featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList
+      featuresValue = featuresList.join(" ");
     }
-    // trim removes extra white space from beginning for the first feature
-    return featuresValue.trim();
+    return featuresValue;
   },
   getFeaturesList(featureHierarchy: any, featureKey: string) {
-    let  featuresList = []
+    let featuresList = [] as any;
     if (featureHierarchy) {
       featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
         const featureSplit = feature ? feature.split('/') : [];
@@ -90,7 +106,7 @@ app.config.globalProperties.$filters = {
         return featureValue;
       })
     }
-    return featuresList;
+    return featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList;
   },
   getCustomerLoyalty(orderNotes: any, cusotmerLoyaltyOptions: any) {
     let  customerLoyalty = '' as any

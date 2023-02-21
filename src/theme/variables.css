@@ -239,19 +239,6 @@ Kept the orignal styling for future use if any
   }
 }
 
-.overline {
-  font-weight: 500 !important;
-  font-size: 10px !important;
-  line-height: 16px !important;
-  letter-spacing: 1.5px;
-  color: #666;
-  text-transform: uppercase !important;
-}
-
-ion-thumbnail > img {
-  object-fit: contain;
-}
-
 ion-badge {
   margin-right: 8px;
 }
@@ -331,6 +318,15 @@ hr {
   color: var(--ion-color-medium);
 }
 
+.sentence-case {
+  text-transform: lowercase;
+  display: inline-block;
+}
+
+.sentence-case::first-letter {
+  text-transform: capitalize;
+}
+
 @media (min-width: 700px) {
   .list-item {
     --col-calc: var(--columns-tablet);
@@ -354,6 +350,3 @@ hr {
     display: unset;
   }
 }
-
-
-

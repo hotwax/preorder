@@ -116,7 +116,7 @@
 
       <!-- Variant -->
       <div v-else>
-        <ion-card  v-bind:key="item.groupValue" v-for="item in filteredProducts.list.items">
+        <ion-card  v-bind:key="item.groupValue" v-for="item in sortedList(current.list.items)">
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
@@ -206,8 +206,10 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import moment from 'moment';
 import Image from '@/components/Image.vue';
+import { sizeIndex } from "@/apparel-sorter"
+import { DateTime } from 'luxon';
+
 export default defineComponent({
   name: "product-details",
   components: {
@@ -267,7 +269,7 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      selectedBrand: 'user/getSelectedBrand',
+      currentEComStore: 'user/getCurrentEComStore'
     }),
     filteredProducts () {
       const filteredProducts = JSON.parse(JSON.stringify(this.current));
@@ -310,14 +312,14 @@ export default defineComponent({
         filters: [ "parentProductId: " + this.$route.params.id, ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any
       }
       if (this.orderedBefore || this.orderedAfter) {
-        const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+        const orderedBefore = this.orderedBefore ? DateTime.fromFormat(this.orderedBefore, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.now().setZone(this.userProfile.userTimeZone).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        const orderedAfter = this.orderedAfter ? DateTime.fromFormat(this.orderedAfter, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.fromFormat("0001-01-01", "yyyy-MM-dd").setZone(this.userProfile.userTimeZone).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
         payload.filters.push(dateQuery);
       }
       if (this.promisedBefore || this.promisedAfter) {
-        const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-        const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+        const promisedBefore = this.promisedBefore ? DateTime.fromFormat(this.promisedBefore, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.now().setZone(this.userProfile.userTimeZone).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        const promisedAfter = this.promisedAfter ? DateTime.fromFormat(this.promisedAfter, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone).toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") : DateTime.fromFormat("0001-01-01", "yyyy-MM-dd").setZone(this.userProfile.userTimeZone).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
         payload.filters.push(promisedDateQuery);
       }
@@ -327,8 +329,8 @@ export default defineComponent({
       if (!this.hasPromisedDate) {
         payload.filters.push("-promisedDatetime: *");
       }
-      if (this.selectedBrand) {
-        payload.filters.push('productStoreId: ' + this.selectedBrand);
+      if (this.currentEComStore) {
+        payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
       }
       return this.store.dispatch("product/fetchCurrentList", payload)
     },
@@ -488,14 +490,14 @@ export default defineComponent({
           sortBy: sortBy
         }
         if (this.orderedBefore || this.orderedAfter) {
-          const orderedBefore = (this.orderedBefore ? moment.tz(this.orderedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const orderedAfter = (this.orderedAfter ? moment.tz(this.orderedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+          const orderedBefore = this.orderedBefore ? DateTime.fromFormat(this.orderedBefore, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+          const orderedAfter = this.orderedAfter ? DateTime.fromFormat(this.orderedAfter, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
           const dateQuery: any = 'orderDate: [' + orderedAfter + ' TO ' + orderedBefore + ']';
           payload.filters.push(dateQuery);
         }
         if (this.promisedBefore || this.promisedAfter) {
-          const promisedBefore = (this.promisedBefore ? moment.tz(this.promisedBefore, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz(moment(), this.userProfile.userTimeZone)).endOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          const promisedAfter = (this.promisedAfter ? moment.tz(this.promisedAfter, 'YYYY-MM-DD', this.userProfile.userTimeZone) : moment.tz("0001-01-01", 'YYYY-MM-DD', this.userProfile.userTimeZone)).startOf('day').utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+          const promisedBefore = this.promisedBefore ? DateTime.fromFormat(this.promisedBefore, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone) : DateTime.now().setZone(this.userProfile.userTimeZone).endOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+          const promisedAfter = this.promisedAfter ? DateTime.fromFormat(this.promisedAfter, "yyyy-MM-dd").setZone(this.userProfile.userTimeZone) : DateTime.fromFormat("0001-01-01", 'yyyy-MM-dd').setZone(this.userProfile.userTimeZone).startOf('day').toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
           const promisedDateQuery: any = 'promisedDatetime: [' + promisedAfter + ' TO ' + promisedBefore + ']';
           payload.filters.push(promisedDateQuery);
         }
@@ -505,13 +507,43 @@ export default defineComponent({
         if (!this.hasPromisedDate) {
           payload.filters.push("-promisedDatetime: *");
         }
-        if (this.selectedBrand) {
-          payload.filters.push('productStoreId: ' +this.selectedBrand);
+        if (this.currentEComStore) {
+          payload.filters.push('productStoreId: ' +this.currentEComStore.productStoreId);
         }
         variantRequests.push(ProductService.fetchCurrentList(payload));
       });
       return Promise.all(variantRequests);
     },
+    sortedList(list: any) {
+      const sortableList = list.map((item: any) => {
+        const featureHierarchy = this.getProduct(item.groupValue).featureHierarchy;
+        
+        if (featureHierarchy) {
+          const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith('1/SIZE/'))
+          const featureSplit = feature ? feature.split('/') : [];
+          // TODO Find a better way
+          item.size = featureSplit[2] ? featureSplit[2] : '';
+        }
+        return item;
+      })
+      // Considered if any of the item has size it should be sorted
+      const isSortable = sortableList.some((item: any) => item.size);
+      function isNumeric(num: any) {
+        return !isNaN(num)
+      }
+      function compare(a: any, b: any) {
+        const isNumber = isNumeric(a.size) && isNumeric(b.size)
+        const aSizeIndex = a.size ? sizeIndex(a.size) : 1000;
+        const bSizeIndex = b.size ? sizeIndex(b.size) : 1000;
+        if ( (isNumber && parseFloat(a.size) < parseFloat(b.size)) || aSizeIndex < bSizeIndex)
+          return -1;
+        if ((isNumber && parseFloat(a.size) > parseFloat(b.size)) || aSizeIndex > bSizeIndex)
+          return 1;
+        return 0;
+      }
+    // Only sort when there is size
+    return isSortable ? sortableList.sort(compare) : list;
+    }
   },
   setup() {
     const store = useStore();

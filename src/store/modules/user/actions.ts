@@ -5,9 +5,8 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
-import moment from 'moment';
-import emitter from '@/event-bus'
-import "moment-timezone";
+import { Settings } from 'luxon'
+import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -33,6 +32,7 @@ const actions: ActionTree<UserState, RootState> = {
 
             if (checkPermissionResponse.status === 200 && !hasError(checkPermissionResponse) && checkPermissionResponse.data && checkPermissionResponse.data.hasPermission) {
               commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
+              updateToken(resp.data.token)
               dispatch('getProfile')
               if (resp.data._EVENT_MESSAGE_ && resp.data._EVENT_MESSAGE_.startsWith("Alert:")) {
                 // TODO Internationalise text
@@ -47,6 +47,7 @@ const actions: ActionTree<UserState, RootState> = {
             }
           } else {
             commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
+            updateToken(resp.data.token)
             dispatch('getProfile')
             return resp.data;
           }
@@ -60,7 +61,7 @@ const actions: ActionTree<UserState, RootState> = {
         console.error("error", resp.data._ERROR_MESSAGE_);
         return Promise.reject(new Error(resp.data._ERROR_MESSAGE_));
       }
-    } catch (err) {
+    } catch (err: any) {
       showToast(translate('Something went wrong'));
       console.error("error", err);
       return Promise.reject(new Error(err))
@@ -74,22 +75,59 @@ const actions: ActionTree<UserState, RootState> = {
   async logout ({ commit }) {
     // TODO add any other tasks if need
     commit(types.USER_END_SESSION)
-    
+    resetConfig();
   },
 
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ( { commit, dispatch }) {
     const resp = await UserService.getProfile()
+    const userProfile = JSON.parse(JSON.stringify(resp.data));
+
     if (resp.status === 200) {
-      const userPref =  await UserService.getUserPreference({
-        'userPrefTypeId': 'SELECTED_BRAND'
-      });
-      const brands = JSON.parse(process.env.VUE_APP_BRANDS)
-      const userPrefBrand = brands.find((brand: any) => brand.id == userPref.data.userPrefValue)
-      commit(types.USER_BRAND_UPDATED, userPrefBrand ? userPrefBrand.id: brands ? brands[0].id : {})
-      commit(types.USER_INFO_UPDATED, resp.data);
+      if(resp.data.userTimeZone) {
+        Settings.defaultZone = resp.data.userTimeZone;
+      }
+      const payload = {
+        "inputFields": {
+          "storeName_op": "not-empty"
+        },
+        "fieldList": ["productStoreId", "storeName"],
+        "entityName": "ProductStore",
+        "distinct": "Y",
+        "noConditionFind": "Y"
+      }
+
+      const storeResp = await UserService.getEComStores(payload);
+      let stores = [] as any;
+      if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
+        stores = [...storeResp.data.docs]
+        
+        userProfile.stores = [
+          ...stores,
+          {
+            // With the preorder app's use case, the user will get data specific to the product store
+            // or all the data, for instance, on the products page. either products belonging to the 
+            // selected store are fetched or all the products are fetched.
+            productStoreId: "",
+            storeName: "All"
+          }
+        ]
+      }
+
+      let userPrefStore = ''
+
+      try {
+        const userPref =  await UserService.getUserPreference({
+          'userPrefTypeId': 'SELECTED_BRAND'
+        });
+        userPrefStore = stores.find((store: any) => store.productStoreId == userPref.data.userPrefValue)
+      } catch (err) {
+        console.error(err)
+      }
+      dispatch('setEcomStore', { eComStore: userPrefStore ? userPrefStore : stores.length > 0 ? stores[0] : {} });
+      commit(types.USER_INFO_UPDATED, userProfile);
     }
   },
 
@@ -100,31 +138,33 @@ const actions: ActionTree<UserState, RootState> = {
       const resp = await UserService.setUserTimeZone(payload)
       if (resp.status === 200 && !hasError(resp)) {
         const current: any = state.current;
-        current.userTimeZone = payload.tzId;
+        current.userTimeZone = payload.timeZoneId;
         commit(types.USER_INFO_UPDATED, current);
+        Settings.defaultZone = current.userTimeZone;
         showToast(translate("Time zone updated successfully"));
       }
     },
 
   /**
-   * Set user's selected brand
+   * Set user's selected Ecom store
    */
-     async setSelectedBrand ( { commit }, payload) {
-      commit(types.USER_BRAND_UPDATED, payload.selectedBrand);
+    async setEcomStore({ commit }, payload) {
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
       // Reset all the current queries
       this.dispatch("product/resetProductList")
       this.dispatch("order/resetOrderQuery")
       await UserService.setUserPreference({
         'userPrefTypeId': 'SELECTED_BRAND',
-        'userPrefValue': payload.selectedBrand
+        'userPrefValue': payload.eComStore.productStoreId
       });
     },
 
   /**
-    * Set User Instance Url
-    */
-     setUserInstanceUrl ({ state, commit }, payload){
+   * Set User Instance Url
+   */
+    setUserInstanceUrl ({ commit }, payload){
       commit(types.USER_INSTANCE_URL_UPDATED, payload)
-    }
+      updateInstanceUrl(payload)
+    },
 }
 export default actions;

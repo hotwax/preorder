@@ -1,4 +1,4 @@
-import api, {client} from '../api'
+import { api, client } from '@/adapter';
 import store from '@/store';
 
 const login = async (username: string, password: string): Promise <any> => {
@@ -60,6 +60,14 @@ const getUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
+const getEComStores = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UserService = {
     login,
     getAvailableTimeZones,
@@ -67,5 +75,6 @@ export const UserService = {
     setUserTimeZone,
     checkPermission,
     setUserPreference,
-    getUserPreference
+    getUserPreference,
+    getEComStores
 }

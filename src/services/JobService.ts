@@ -1,4 +1,4 @@
-import api from '../api'
+import { api } from '@/adapter';
 import store from '@/store'
 
 const fetchJobs = async (payload: any): Promise <any>  => {

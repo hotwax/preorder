@@ -33,8 +33,7 @@
           </ion-thumbnail>
           <ion-label>
             <h2>{{ getProduct(product.groupValue).productName}}</h2>
-            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Colors") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/COLOR/') }} </p>
-            <p v-if="$filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Sizes") }} : {{ $filters.getFeatures(getProduct(product.groupValue).featureHierarchy, '1/SIZE/') }} </p>
+            <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(product.groupValue).featureHierarchy))" :key="attribute" ><span class="sentence-case">{{ feature }}</span>: {{ attribute }}</p>
           </ion-label>
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
         </ion-item>
@@ -112,7 +111,7 @@ export default defineComponent({
       getProductStock: 'stock/getProductStock',
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
-      selectedBrand: 'user/getSelectedBrand'
+      currentEComStore: 'user/getCurrentEComStore',
     })
   },
   methods: {
@@ -135,8 +134,8 @@ export default defineComponent({
         groupLimit: 0,
         filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
       }
-      if (this.selectedBrand) {
-        payload.filters.push('productStoreId: ' + this.selectedBrand);
+      if (this.currentEComStore) {
+        payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
       }
       return this.store.dispatch("product/findProducts", payload).finally(() => {
         this.hasQuery = true;
