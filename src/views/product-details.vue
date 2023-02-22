@@ -130,13 +130,13 @@
             </ion-item>
           </div>
           <div class="order-info">
-            <ion-badge color="success" @click="fillPieces(item)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
+            <ion-badge color="success" @click="autoFillQuantity(item)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
             <ion-badge color="medium"> {{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
           </div>
           <div class="order-select">
             <ion-item>
               <ion-label position="floating">{{ $t("Pieces") }}</ion-label>
-              <ion-input type="number" min="1" @ionChange="selectVariant(item.groupValue, $event.target.value)" clear-input="true" v-model="item.inputValue"></ion-input>
+              <ion-input type="number" min="1" @ionChange="selectVariant(item.groupValue, $event.target.value)" clear-input="true" v-model="item.quantity"></ion-input>
             </ion-item>
           </div>
         </ion-card>
@@ -290,10 +290,8 @@ export default defineComponent({
     }
   },
   methods: {
-    fillPieces (item: any) {
-      item.inputValue = item.doclist.numFound;
-      //Added forceUpdate because the value was not rendered in the input field as the dom was generated before the value was updated.
-      this.$forceUpdate();
+    autoFillQuantity (item: any) {
+      item.quantity = item.doclist.numFound;
     },
     filter (featureValue: any, type: any) {
       if (this.filters[type].includes(featureValue)) {
