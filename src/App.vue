@@ -11,8 +11,7 @@
 import {
   IonApp,
   IonRouterOutlet,
-  IonSplitPane,
-  alertController
+  IonSplitPane
 } from "@ionic/vue";
 import Menu from '@/components/Menu.vue';
 import { defineComponent } from "vue";
@@ -23,7 +22,7 @@ import emitter from "@/event-bus"
 import { loadingController } from '@ionic/vue';
 import { mapGetters, useStore } from 'vuex';
 import { Settings } from 'luxon'
-import { init, resetConfig } from '@/adapter'
+import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
 
 export default defineComponent({
@@ -71,7 +70,20 @@ export default defineComponent({
     }
   },
   created() {
-    init(this.userToken, this.instanceUrl, this.maxAge)
+    initialise({
+      token: this.userToken,
+      instanceUrl: this.instanceUrl,
+      cacheMaxAge: this.maxAge,
+      events: {
+        unauthorised: this.unauthorized,
+        responseErrror: () => {
+          setTimeout(() => this.dismissLoader(), 100);
+        },
+        queueTask: (payload: any) => {
+          emitter.emit("queueTask", payload);
+        }
+      }
+    })
   },
   async mounted() {
     this.loader = await loadingController
@@ -82,7 +94,6 @@ export default defineComponent({
       });
     emitter.on('presentLoader', this.presentLoader);
     emitter.on('dismissLoader', this.dismissLoader);
-    emitter.on('unauthorized', this.unauthorized);
     // Handles case when user resumes or reloads the app
     // Luxon timezzone should be set with the user's selected timezone
     if (this.userProfile && this.userProfile.userTimeZone) {
@@ -92,7 +103,6 @@ export default defineComponent({
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
-    emitter.off('unauthorized', this.unauthorized);
     resetConfig()
   },
   setup() {
