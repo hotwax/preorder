@@ -1,3 +1,19 @@
+# Release 1.2.0
+
+## What's Changed
+* Added hotwax-theme-apps package(#85zrj08rb) by @disha1202 in https://github.com/hotwax/preorder/pull/100
+* Added support for setting timezone and migrate from moment to luxon (#25k8h53) by @k2maan in https://github.com/hotwax/preorder/pull/103
+* Implemented: Migrated from moment timezone to luxon(#25k8h53) by @shashwatbangar in https://github.com/hotwax/preorder/pull/98
+* Implemented: Code to show app version & build information on Settings page(#85zrhn8w8) by @k2maan in https://github.com/hotwax/preorder/pull/104 and @shashwatbangar in https://github.com/hotwax/preorder/pull/99
+* Implemented: support for using api and client methods from OMS api package (#85zrm1ktj) by @k2maan in https://github.com/hotwax/preorder/pull/106
+* Implemented logic to auto fill input field on the click of a badge(#2hfv0u) by @disha1202 in https://github.com/hotwax/preorder/pull/31
+
+## New Contributors
+* @adityasharma7 made their first contribution in https://github.com/hotwax/preorder/pull/107
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.1.0...v1.2.0
+
+
 # Release 1.1.0
 
 ## What's Changed
