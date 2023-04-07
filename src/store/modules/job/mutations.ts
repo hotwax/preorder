@@ -7,6 +7,10 @@ const mutations: MutationTree <JobState> = {
         state.list.items = payload.items
         state.list.total = payload.total
     },
+    [types.JOB_LOGS_UPDATED] (state, payload) {
+        state.logs.items = payload.items
+        state.logs.total = payload.total
+    },
     [types.JOB_POLLING_UPDATED] (state, payload) {
         state.polling = payload.polling
     },

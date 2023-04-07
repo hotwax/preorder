@@ -12,6 +12,10 @@ const getters: GetterTree <OrderState, RootState> = {
     getListPreorders (state) {
         return state.list.preorderCount
     },
+    getBrokeringCountByProduct: (state) => (productId: string) => {
+        const brokeringCount = state.brokeringCountByProduct[productId];
+        return brokeringCount ? brokeringCount : 0;
+    },
     getQuery (state) {
         return state.query
     },

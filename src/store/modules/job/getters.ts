@@ -6,14 +6,17 @@ const getters: GetterTree <JobState, RootState> = {
     getList (state) {
         return state.list.items
     },
+    getLogs (state) {
+        return state.logs.items
+    },
     getTotal(state) {
-        return state.list.total
+        return state.list.total + state.logs.total
     },
     isPolling(state) {
         return state.polling;
     },
     isJobPending(state) {
-        return state.list.total > 0;
+        return (state.list.total + state.logs.total) > 0;
     }
 }
 export default getters;
