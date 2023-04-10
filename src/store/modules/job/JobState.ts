@@ -3,5 +3,9 @@ export default interface JobState {
         total: number;
         items: any[];
     },
+    logs: {
+        total: number;
+        items: any[];
+    },
     polling: boolean
 }

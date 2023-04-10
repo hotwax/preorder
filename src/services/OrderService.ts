@@ -7,6 +7,15 @@ const findOrder = async (payload: any): Promise <any>  => {
             data: payload
           });
 }
+
+const fetchBrokeringCountByProducts = async (payload: any): Promise <any>  => {
+  return api({
+          url: "searchOrders",
+          method: "post",
+          data: payload
+        });
+}
+
 const releaseItems = async (payload: any): Promise <any>  => {
     return api({
             url: "uploadJsonFile",
@@ -57,7 +66,9 @@ const updatePromiseDateItem = async (payload: any): Promise <any>  => {
             data: payload
           });
 }
+
 export const OrderService = {
+    fetchBrokeringCountByProducts,
     findOrder,
     releaseItem,
     cancelItem,

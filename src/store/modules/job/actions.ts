@@ -4,6 +4,7 @@ import JobState from './JobState'
 import * as types from './mutation-types'
 import { hasError } from '@/utils'
 import { JobService } from '@/services/JobService'
+import emitter from "@/event-bus"
 
 const actions: ActionTree<JobState, RootState> = {
 
@@ -19,32 +20,57 @@ const actions: ActionTree<JobState, RootState> = {
     // TODO Handle specific error
     return resp;
   },
-  async fetchPolledJobs ( { commit }, payload) {
-    const resp = await JobService.fetchJobs(payload);
+  async fetchJobLogs ( { commit }, payload) {
+    const resp = await JobService.fetchJobLogs(payload)
     if (resp.status === 200 && !hasError(resp)) {
-      if(resp.data.count) {
-        JobService.pollJobs();
-        commit(types.JOB_UPDATED, {
-          items: resp.data.docs,
-          total: resp.data.count,
-          polling: true
-         });
-      } else {
-        commit(types.JOB_UPDATED, {
-          items: resp.data.docs ? resp.data.docs : [], // TODO Handled error & docs undefined when no record
-          total: resp.data.count ? resp.data.count : 0 , //  TODO Handled error & count undefined when no record
-          polling: false
-         });
-      }
+      commit(types.JOB_LOGS_UPDATED, {
+        items: resp.data.docs ? resp.data.docs : [], // TODO Handled error & docs undefined when no record
+        total: resp.data.count ? resp.data.count : 0 , //  TODO Handled error & count undefined when no record
+       });
     }
     // TODO Handle specific error
     return resp;
   },
-  async initiatePollingJobs ( { commit, state, dispatch }) {
+  async fetchPolledJobs({ commit }) {
+    const { jobResponse, logResponse } = await JobService.fetchBackgroundJobs();
+    let backgroundJobCount = 0;
+    if (jobResponse && jobResponse.status === 200 && !hasError(jobResponse)) {
+      backgroundJobCount += jobResponse.data.count
+    }
+    if (logResponse && logResponse.status === 200 && !hasError(logResponse)) {
+      backgroundJobCount += logResponse.data.count
+    }
+    // If we have any job or log in response then only go for polling
+    if (backgroundJobCount) {
+      commit(types.JOB_POLLING_UPDATED, {
+        polling: true
+      });
+      JobService.pollJobs();
+    } else {
+      commit(types.JOB_POLLING_UPDATED, {
+        polling: false
+      });
+      // Show user status that all background jobs are finished and product details page needs to be refreshed
+      // TODO Try using polling in state to achieve the same
+      emitter.emit("backgroundJobsFinished");
+    }
+    // TODO Handle specific error
+    return { jobResponse, logResponse };
+  },
+  async initiatePollingJobs({ commit, state }) {
     if (!state.polling) {
-      const resp = await dispatch("fetchJobs", JobService.prepareFetchJobsQuery());
-      if(resp.data.count) {
-        commit(types.JOB_POLLING_UPDATED, { 
+      const { jobResponse, logResponse } = await JobService.fetchBackgroundJobs();
+      let backgroundJobCount = 0;
+      if (jobResponse && jobResponse.status === 200 && !hasError(jobResponse) && jobResponse.data.count) {
+        backgroundJobCount += jobResponse.data.count
+      }
+      if (logResponse && logResponse.status === 200 && !hasError(logResponse) && logResponse.data.count) {
+        backgroundJobCount += logResponse.data.count
+      }
+
+      // If we have any job or log in response then only go for polling
+      if (backgroundJobCount) {
+        commit(types.JOB_POLLING_UPDATED, {
           polling: true
         });
         JobService.pollJobs();
@@ -54,7 +80,7 @@ const actions: ActionTree<JobState, RootState> = {
         });
       }
       // TODO Handle specific error
-      return resp;
+      return { jobResponse, logResponse };
     }
   },
 

@@ -164,7 +164,7 @@ const actions: ActionTree<ProductState, RootState> = {
       showToast(translate("Something went wrong"));
     }
     // TODO Handle specific error
-    return resp;
+    return state.current;
   }
 }
 export default actions;
