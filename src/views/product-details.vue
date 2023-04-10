@@ -33,7 +33,7 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filter(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
+                    <ion-chip :outline="filters['color'] !== colorFeature" :key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filter(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -41,7 +41,7 @@
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
-                    <ion-chip v-bind:key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filter(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
+                    <ion-chip :outline="filters['size'] !== sizeFeature"  :key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filter(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
                   </ion-row>
               </ion-item>
             </ion-list>
@@ -90,7 +90,7 @@
             <ion-chip slot="end">  
               <ion-icon :icon="ribbon"  />
               <ion-select :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
-                <ion-select-option v-for=" (key, value) in cusotmerLoyaltyOptions" v-bind:key="key" :value="value">{{key}}</ion-select-option>
+                <ion-select-option v-for="(key, value) in cusotmerLoyaltyOptions" :key="key" :value="value">{{key}}</ion-select-option>
               </ion-select> 
               <ion-icon @click='cusotmerLoyalty = ""' v-if="cusotmerLoyalty" :icon="close"/>
            </ion-chip>
@@ -114,13 +114,13 @@
       </div>
 
       <!-- Empty state -->
-      <div class="empty-state" v-if="current.list.items.length === 0">
+      <div class="empty-state" v-if="!filteredProducts(current.list.items).length">
         <p>{{ $t("There are no preorders for the filters you have applied and variants you have selected.")}}</p>
       </div>
 
       <!-- Variant -->
       <div v-else>
-        <ion-card  v-bind:key="item.groupValue" v-for="item in sortedList(current.list.items)">
+        <ion-card :key="item.groupValue" v-for="item in sortedList(filteredProducts(current.list.items))">
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
@@ -269,7 +269,7 @@ export default defineComponent({
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
       cusotmerLoyalty: '',
       hasPromisedDate: true,
-      filters:{
+      filters: {
         color: '',
         size: ''
       } as any
@@ -285,24 +285,7 @@ export default defineComponent({
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
       currentEComStore: 'user/getCurrentEComStore'
-    }),
-    filteredProducts () {
-      const filteredProducts = JSON.parse(JSON.stringify(this.current));
-      if(this.filters.size.length || this.filters.color.length){
-        filteredProducts.list.items = this.current.list.items.map((item: any)=>{
-          const product = this.getProduct(item.groupValue);
-          const hasSize = this.filters.size.some((sizeFeature: any) => {
-            return product.productFeatures.includes("Size/" + sizeFeature)
-          })
-          const hasColor = this.filters.color.some((colorFeature: any) => {
-            return product.productFeatures.includes("Color/" + colorFeature)
-          })
-          if (hasSize || hasColor) return item;
-          else return null
-        }).filter((product: any) => product);
-      }
-      return filteredProducts;
-    }
+    })
   },
   methods: {
     onBackgroundJobsFinished() {
@@ -317,13 +300,11 @@ export default defineComponent({
     autoFillQuantity (item: any) {
       item.quantity = item.doclist.numFound;
     },
-    filter (featureValue: any, type: any) {
-      if (this.filters[type].includes(featureValue)) {
-        const index = this.filters[type].indexOf(featureValue);
-        this.filters[type].splice(index,1);
-      }
-      else {
-        this.filters[type].push(featureValue);
+    filter (featureValue: any, type: string) {
+      if (this.filters[type] === featureValue) {
+        this.filters[type] = ''
+      } else {
+        this.filters[type] = featureValue;
       }
     },
     async getVariantProducts() {
@@ -561,7 +542,7 @@ export default defineComponent({
         const isNumber = isNumeric(a.size) && isNumeric(b.size)
         const aSizeIndex = a.size ? sizeIndex(a.size) : 1000;
         const bSizeIndex = b.size ? sizeIndex(b.size) : 1000;
-        if ( (isNumber && parseFloat(a.size) < parseFloat(b.size)) || aSizeIndex < bSizeIndex)
+        if ((isNumber && parseFloat(a.size) < parseFloat(b.size)) || aSizeIndex < bSizeIndex)
           return -1;
         if ((isNumber && parseFloat(a.size) > parseFloat(b.size)) || aSizeIndex > bSizeIndex)
           return 1;
@@ -574,7 +555,20 @@ export default defineComponent({
       const selectedVariantIds = Object.keys(this.selectedVariants);
       // When using the v-model quantity is empty if reset
       return selectedVariantIds.length && selectedVariantIds.some((productId: any) => this.selectedVariants[productId]);
-    }
+    },
+    filteredProducts (items: any) {
+      const filteredProducts = JSON.parse(JSON.stringify(this.current));
+      if(this.filters.size || this.filters.color){
+        filteredProducts.list.items = items.filter((item: any)=>{
+          const product = this.getProduct(item.groupValue);
+          const hasSize = product.productFeatures.includes("Size/" + this.filters.size)
+          const hasColor = product.productFeatures.includes("Color/" + this.filters.color)
+          // only do ANDing if both the filters are avaialable to apply
+          return (this.filters.size && this.filters.color) ? hasSize && hasColor : hasSize || hasColor;
+        })
+      }
+      return filteredProducts.list.items;
+    },
   },
   setup() {
     const store = useStore();
