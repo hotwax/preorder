@@ -19,7 +19,7 @@ const actions: ActionTree<OrderState, RootState> = {
     const payload = {
       viewSize: query.viewSize,
       viewIndex: query.viewIndex,
-      queryString: '*' + query.queryString + '*',
+      queryString: query.queryString,
       queryFields: 'parentProductId productId parentProductName productName goodIdentifications orderId search_orderIdentifications customerPartyName',
       groupByField: 'orderId',
       groupLimit: 10000,
