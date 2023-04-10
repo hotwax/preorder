@@ -129,7 +129,7 @@ export default defineComponent({
       const payload = {
         viewSize,
         viewIndex,
-        queryString: '*' + this.queryString + '*',
+        queryString: this.queryString,
         groupByField: 'parentProductId',
         groupLimit: 0,
         filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
