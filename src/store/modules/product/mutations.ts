@@ -14,9 +14,12 @@ const mutations: MutationTree <ProductState> = {
             });
         }
     },
+    [types.PRODUCT_CACHED_UPDATED] (state, payload) {
+        state.cached = payload.cached
+    },
     [types.PRODUCT_LIST_UPDATED] (state, payload) {
-        state.list.items = payload.products.groups
-        state.list.total = payload.products.ngroups
+        state.list.items = payload.items
+        state.list.total = payload.total
     },
     [types.PRODUCT_CURRENT_UPDATED] (state, payload) {
         state.current = payload.current

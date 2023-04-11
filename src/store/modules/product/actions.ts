@@ -14,6 +14,7 @@ const actions: ActionTree<ProductState, RootState> = {
    * Fetch cached products
    */
   async fetchProducts ( { commit, state }, { productIds }) {
+    const cachedProducts = JSON.parse(JSON.stringify(state.cached));
     const cachedProductIds = Object.keys(state.cached);
     const productIdFilter= productIds.reduce((filter: string, productId: any) => {
       // If product already exist in cached products skip
@@ -27,7 +28,7 @@ const actions: ActionTree<ProductState, RootState> = {
     }, '');
 
     // If there are no products skip the API call
-    if (productIdFilter === '') return;
+    if (productIdFilter === '') return cachedProducts;
 
     const resp = await ProductService.fetchProducts({
       "filters": ['productId: (' + productIdFilter + ')'],
@@ -36,10 +37,14 @@ const actions: ActionTree<ProductState, RootState> = {
     if (resp.status === 200 && !hasError(resp)) {
       const products = resp.data.response.docs;
       // Handled empty response in case of failed query
-      if (resp.data) commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products });
+      if (resp.data) {
+        products.forEach((product: any) => {
+          cachedProducts[product.productId] = product
+        });
+      }
+      commit(types.PRODUCT_CACHED_UPDATED, { cached: cachedProducts });
     }
-    // TODO Handle specific error
-    return resp;
+    return cachedProducts;
   },
 
   /**
@@ -60,9 +65,16 @@ const actions: ActionTree<ProductState, RootState> = {
   },
 
   /**
-   * Find Order
+   * Find Products in Orders
    */
-   async findProducts ( { commit, state, dispatch }, payload) {
+   async findProducts ( { rootState, commit, state, dispatch }, payload) {
+    // If there is not current product store setup query should not be allowed
+    // TODO  
+    // Need a permanent fix through login action
+    // Will be done as per the GitHub app changes once done
+    if (!rootState.user.currentEComStore?.productStoreId) {
+      return;
+    }
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
@@ -71,10 +83,14 @@ const actions: ActionTree<ProductState, RootState> = {
       if (resp.status === 200 && !hasError(resp)) {
         const products = resp.data.grouped.parentProductId;
         // Add stock information to Stock module to show on UI
-        dispatch('getProductsInformation', { products });
+        const productsInformation = await dispatch('getProductsInformation', { products });
+        let items = products.groups.map((group: any) => {
+          // Merge current list item and product information
+          return {...group, ...productsInformation[group.groupValue]}
+        })
         // Handled case for infinite scroll
-        if (payload.viewIndex && payload.viewIndex > 0) products.groups = state.list.items.concat(products.groups)
-        commit(types.PRODUCT_LIST_UPDATED, { products });
+        if (payload.viewIndex && payload.viewIndex > 0) items = state.list.items.concat(items)
+        commit(types.PRODUCT_LIST_UPDATED, { items, total:  products.ngroups });
       } else {
         showToast(translate("Something went wrong"));
       }
@@ -92,10 +108,8 @@ const actions: ActionTree<ProductState, RootState> = {
    */
    resetProductList ( { commit }) {
     commit(types.PRODUCT_LIST_UPDATED, {
-      products: {
-        groups: [],
-        ngroups: 0
-      }
+      items: [],
+      total: 0
     });
   },
   /**
@@ -110,12 +124,19 @@ const actions: ActionTree<ProductState, RootState> = {
     // Converted to list as methods like reduce not supported
     productIds = [...productIds]
     if (productIds.length) {
-      this.dispatch('product/fetchProducts', { productIds })
       this.dispatch('stock/addProducts', { productIds })
+      return this.dispatch('product/fetchProducts', { productIds })
     }
   },
 
-  async loadCurrent ({ dispatch, commit} , { productId }) {
+  async loadCurrent ({ rootState, dispatch, commit} , { productId }) {
+    // If there is not current product store setup query should not be allowed
+    // TODO  
+    // Need a permanent fix through login action
+    // Will be done as per the GitHub app changes once done
+    if (!rootState.user.currentEComStore?.productStoreId) {
+      return;
+    }
     const current = {
       product: {},
       list: {
@@ -151,7 +172,11 @@ const actions: ActionTree<ProductState, RootState> = {
         current.list.total = products.ngroups
         current.totalPreOrders = resp.data.grouped.productId.matches
         // Add stock information to Stock module to show on UI
-        dispatch('getProductsInformation', { products });
+        const productsInformation = await dispatch('getProductsInformation', { products });
+        current.list.items = current.list.items.map((item: any) => {
+          // Merge current list item and product information
+          return {...item, ...productsInformation[item.groupValue]}
+        })
         // Handled case for infinite scroll
         // if (payload.viewIndex && payload.viewIndex > 0) products.groups = state.current.list.items.concat(products.groups)
         commit(types.PRODUCT_CURRENT_UPDATED, { current });
