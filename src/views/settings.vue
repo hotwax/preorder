@@ -17,7 +17,7 @@
               <Image :src="userProfile.partyImageUrl"/>
             </ion-avatar>
             <ion-card-header>
-              <ion-card-subtitle>{{ userProfile.userLoginId }}</ion-card-subtitle>
+              <ion-card-subtitle>{{ userProfile?.userLoginId }}</ion-card-subtitle>
               <ion-card-title>{{ userProfile.partyName }}</ion-card-title>
             </ion-card-header>
           </ion-item>
@@ -191,9 +191,9 @@ export default defineComponent({
       return timeZoneModal.present();
     },
     updateBrand(event: any) {
-      if(this.userProfile) {
+      if(event.detail.value && this.userProfile && this.currentEComStore?.productStoreId !== event.detail.value) {
         this.store.dispatch('user/setEcomStore', {
-          'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event['detail'].value)
+          'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event.detail.value)
         })
       }
     },

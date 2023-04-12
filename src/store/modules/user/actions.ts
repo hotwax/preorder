@@ -33,7 +33,7 @@ const actions: ActionTree<UserState, RootState> = {
             if (checkPermissionResponse.status === 200 && !hasError(checkPermissionResponse) && checkPermissionResponse.data && checkPermissionResponse.data.hasPermission) {
               commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
               updateToken(resp.data.token)
-              dispatch('getProfile')
+              await dispatch('getProfile')
               if (resp.data._EVENT_MESSAGE_ && resp.data._EVENT_MESSAGE_.startsWith("Alert:")) {
                 // TODO Internationalise text
                 showToast(translate(resp.data._EVENT_MESSAGE_));
@@ -48,7 +48,7 @@ const actions: ActionTree<UserState, RootState> = {
           } else {
             commit(types.USER_TOKEN_CHANGED, { newToken: resp.data.token })
             updateToken(resp.data.token)
-            dispatch('getProfile')
+            await dispatch('getProfile')
             return resp.data;
           }
         } else if (hasError(resp)) {
@@ -76,6 +76,8 @@ const actions: ActionTree<UserState, RootState> = {
     // TODO add any other tasks if need
     commit(types.USER_END_SESSION)
     resetConfig();
+    this.dispatch("product/resetProductList")
+    this.dispatch("order/resetOrderQuery")
   },
 
   /**
@@ -86,47 +88,41 @@ const actions: ActionTree<UserState, RootState> = {
     const userProfile = JSON.parse(JSON.stringify(resp.data));
 
     if (resp.status === 200) {
-      if(resp.data.userTimeZone) {
-        Settings.defaultZone = resp.data.userTimeZone;
+      if(userProfile.userTimeZone) {
+        Settings.defaultZone = userProfile.userTimeZone;
       }
       const payload = {
         "inputFields": {
-          "storeName_op": "not-empty"
+          "storeName_op": "not-empty",
+          "partyId": userProfile.partyId
         },
         "fieldList": ["productStoreId", "storeName"],
-        "entityName": "ProductStore",
+        "entityName": "ProductStoreAndRole",
         "distinct": "Y",
         "noConditionFind": "Y"
       }
 
       const storeResp = await UserService.getEComStores(payload);
       let stores = [] as any;
-      if(storeResp.status === 200 && !hasError(storeResp) && storeResp.data.docs?.length > 0) {
-        stores = [...storeResp.data.docs]
-        
-        userProfile.stores = [
-          ...stores,
-          {
-            // With the preorder app's use case, the user will get data specific to the product store
-            // or all the data, for instance, on the products page. either products belonging to the 
-            // selected store are fetched or all the products are fetched.
-            productStoreId: "",
-            storeName: "All"
-          }
-        ]
+      if(!hasError(storeResp) ) {
+        stores = storeResp.data.docs
       }
+      userProfile.stores = stores;
 
-      let userPrefStore = ''
+      let userPrefStore = {}
 
-      try {
-        const userPref =  await UserService.getUserPreference({
-          'userPrefTypeId': 'SELECTED_BRAND'
-        });
-        userPrefStore = stores.find((store: any) => store.productStoreId == userPref.data.userPrefValue)
-      } catch (err) {
-        console.error(err)
+      if (stores.length > 0) {
+        userPrefStore = stores[0];
+        try {
+          const userPrefResponse =  await UserService.getUserPreference({
+            'userPrefTypeId': 'SELECTED_BRAND'
+          });
+          userPrefResponse.data.userPrefValue && (userPrefStore = stores.find((store: any) => store.productStoreId == userPrefResponse.data.userPrefValue))
+        } catch (err) {
+          console.error(err)
+        }
       }
-      dispatch('setEcomStore', { eComStore: userPrefStore ? userPrefStore : stores.length > 0 ? stores[0] : {} });
+      commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  userPrefStore);
       commit(types.USER_INFO_UPDATED, userProfile);
     }
   },
