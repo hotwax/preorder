@@ -56,7 +56,15 @@ const actions: ActionTree<OrderState, RootState> = {
   /**
    * Find Order
    */
-  async findOrder ( { commit, state, dispatch }, payload) {
+  async findOrder ( { rootState, commit, state, dispatch }, payload) {
+    // If there is not current product store setup query should not be allowed
+    // TODO  
+    // Need a permanent fix through login action
+    // Will be done as per the GitHub app changes once done
+    if (!rootState.user.currentEComStore?.productStoreId) {
+      return;
+    }
+
     // Show loader only when new query and not the infinite scroll
     if (payload.viewIndex === 0) emitter.emit("presentLoader");
     let resp;
