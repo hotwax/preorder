@@ -1,3 +1,14 @@
+# Release 1.3.0
+
+## What's Changed
+* Fixed: filtering on product details for product variants (#85zrvxuxk) by @k2maan in https://github.com/hotwax/preorder/pull/111
+* Fixed: query string to search only query fields by @adityasharma7 in https://github.com/hotwax/preorder/pull/112
+* Implemented: Quantities should disappear once released (#295hmq6) by @k2maan in https://github.com/hotwax/preorder/pull/109 and by @adityasharma7 in https://github.com/hotwax/preorder/pull/113
+* Improved: App should be accessed only by users with having role with product store (#115) by @adityasharma7 in https://github.com/hotwax/preorder/pull/116
+
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.2.0...v1.3.0
+
 # Release 1.2.0
 
 ## What's Changed
