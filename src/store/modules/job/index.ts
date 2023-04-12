@@ -12,6 +12,10 @@ const jobModule: Module<JobState, RootState> = {
         items: [],
         total: 0
       },
+      logs: {
+        items: [],
+        total: 0
+      },
       polling: false
     },
     getters,

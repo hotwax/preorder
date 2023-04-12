@@ -14,5 +14,11 @@ const mutations: MutationTree <OrderState> = {
     [types.ORDER_QUERY_UPDATED] (state, payload) {
         state.query = payload.query
     },
+    [types.ORDER_LST_ACTN_TIMESTAMP_UPDATED] (state, payload) {
+        state.lastActionTimestamp = payload.lastActionTimestamp
+    },
+    [types.ORDER_BRKRNG_CNT_BY_PRDCT_UPDATED] (state, payload) {
+        state.brokeringCountByProduct = { ...state.brokeringCountByProduct, ...payload }
+    },
 }
 export default mutations;

@@ -64,6 +64,7 @@ import { FacilityService } from '@/services/FacilityService'
 import { useStore } from "@/store";
 import { ProductService } from '@/services/ProductService'
 import { mapGetters } from "vuex";
+import emitter from "@/event-bus";
 
 export default defineComponent({
   name: "WarehouseModal",
@@ -138,6 +139,7 @@ export default defineComponent({
         item.changeReasonEnumId = "BROKERED";
         return item;
       }) : this.getSelectedItemsToRelease(this.facilityId, "BROKERED");
+      this.selectedVariants && emitter.emit('backgroundJobsInProgress');
       const json = JSON.stringify(items);
       const blob = new Blob([json], { type: 'application/json'});
       const formData = new FormData();
@@ -166,6 +168,11 @@ export default defineComponent({
     async processSelectedVariants() {
       const variantRequests: any = [];
       Object.keys(this.selectedVariants).forEach((productId: any) => {
+        //TODO Find a better way
+        // When using clear input the value is reset to empty string, skip the values if empty
+        if (!this.selectedVariants[productId]) {
+          return;
+        }
         const payload = {
           groupByField: 'productId',
           groupLimit: this.selectedVariants[productId],

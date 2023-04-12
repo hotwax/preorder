@@ -114,9 +114,11 @@ const actions: ActionTree<OrderState, RootState> = {
   /**
    * Release items
    */
-    async releaseItems ( context, payload) {
+  async releaseItems({ commit }, payload) {
     const resp = await OrderService.releaseItems(payload)
     if (resp.status === 200 && !hasError(resp)) {
+      // Storing current time stamp to fetch jobs for polling till 10 mins
+      commit(types.ORDER_LST_ACTN_TIMESTAMP_UPDATED, { lastActionTimestamp: DateTime.now().toMillis()})
       this.dispatch("job/initiatePollingJobs");
       showToast(translate("Items queued for release successfully"));
       // TODO Clear axios cache 
@@ -288,7 +290,54 @@ const actions: ActionTree<OrderState, RootState> = {
         item.isChecked = false;
     })
       commit(types.ORDER_SELECTED_ITEMS_UPDATED, { selectedItems: [] } );
+    },
+
+  /**
+ * Fetch brokering count based upon product
+ */
+  async fetchBrokeringCountByProducts({ state, commit, rootState }, { productIds }) {
+    const brokeringCountByProduct = JSON.parse(JSON.stringify(state.brokeringCountByProduct));
+    // If product Ids are not provided, return
+    if (!productIds || productIds.length === 0) {
+      console.warn('Empty productId list, skipped fetching brokering orders')
+      return brokeringCountByProduct;
     }
 
+    const payload = {
+      viewSize: productIds.length,
+      groupByField: 'productId',
+      groupLimit: 0,
+      filters: ["productId: " + productIds.join(" OR "), ...JSON.parse(process.env.VUE_APP_ORDER_IN_BRKRNG_FILTERS)] as any
+    }
+    if (rootState.user.selectedBrand) {
+      payload.filters.push('productStoreId: ' + rootState.user.selectedBrand);
+    }
+
+    try {
+      const resp = await OrderService.fetchBrokeringCountByProducts(payload)
+      if (resp && resp.status === 200 && !hasError(resp)) {
+        // Initially reseting the count and as API doesn't returns any results when no orders in brokering
+        // Also, if orders for some of the products are cleared, response will not have any such information
+        productIds.reduce((brokeringCountByProduct: any, productId: any) => {
+          brokeringCountByProduct[productId] = 0;
+          return brokeringCountByProduct;
+        }, brokeringCountByProduct)
+
+        // If there are no records in response, reset the count
+        if (resp.data.grouped.productId.matches === 0) {
+          commit(types.ORDER_BRKRNG_CNT_BY_PRDCT_UPDATED, brokeringCountByProduct)
+          return brokeringCountByProduct;
+        }
+        resp.data.grouped.productId.groups.reduce((brokeringCountByProduct: any, group: any) => {
+          brokeringCountByProduct[group.groupValue] = group.doclist.numFound
+          return brokeringCountByProduct;
+        }, brokeringCountByProduct)
+        commit(types.ORDER_BRKRNG_CNT_BY_PRDCT_UPDATED, brokeringCountByProduct)
+      }
+    } catch (err) {
+      console.error('Something went wrong while fetching brokering count for products: ', err)
+    }
+    return brokeringCountByProduct;
+  }
 }
 export default actions;

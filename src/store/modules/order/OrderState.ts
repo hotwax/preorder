@@ -16,5 +16,7 @@ export default interface OrderState {
         viewSize: number;
         hasUpdated: boolean;
     },
-    selectedItems: any[]
+    selectedItems: any[],
+    brokeringCountByProduct: any,
+    lastActionTimestamp: string
 }

@@ -107,6 +107,10 @@
       <div class="results">
         <ion-badge color="success"> {{ current.totalPreOrders }} {{ $t("pieces preordered") }}</ion-badge>
         <ion-badge color="secondary"> {{ current.list.items.length ? current.list.items.length : 0 }} {{ current.list.items.length > 1 ? $t("variants") : $t("variant") }}</ion-badge>
+        <ion-button :disabled="isRefreshing" @click="isRefreshing = true; refreshProducts()" fill="outline" size="small" :color="isJobPending ? 'warning' : ''">
+          <ion-icon v-if="!isRefreshing" slot="icon-only" :icon="refresh" />
+          <ion-spinner v-if="isRefreshing" name="crescent" />
+        </ion-button>
       </div>
 
       <!-- Empty state -->
@@ -132,11 +136,12 @@
           <div class="order-info">
             <ion-badge color="success" @click="autoFillQuantity(item)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
             <ion-badge color="medium"> {{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
+            <ion-badge color="medium"> {{ getBrokeringCountByProduct(item.groupValue) }} {{ $t("in brokering") }}</ion-badge>
           </div>
           <div class="order-select">
             <ion-item>
               <ion-label position="floating">{{ $t("Pieces") }}</ion-label>
-              <ion-input type="number" min="1" @ionChange="selectVariant(item.groupValue, $event.target.value)" clear-input="true" v-model="item.quantity"></ion-input>
+              <ion-input type="number" min="1" clear-input="true" v-model="selectedVariants[item.productId]"></ion-input>
             </ion-item>
           </div>
         </ion-card>
@@ -146,13 +151,13 @@
     <ion-footer>
       <ion-toolbar>
         <ion-buttons slot="end">
-          <ion-button :disabled="!Object.keys(selectedVariants).length" @click="releaseAlert" fill="outline" color="primary" size="small">
+          <ion-button :disabled="!isAnyVariantSelected()" @click="releaseAlert" fill="outline" color="primary" size="small">
             <ion-icon slot="start" :icon="send" />{{ $t("Release") }}
           </ion-button>
-          <ion-button :disabled="!Object.keys(selectedVariants).length" @click="openWarehouseList" fill="outline" color="dark" size="small">
+          <ion-button :disabled="!isAnyVariantSelected()" @click="openWarehouseList" fill="outline" color="dark" size="small">
             <ion-icon slot="start" :icon="business" />{{ $t("Release to a warehouse") }}
           </ion-button>
-          <ion-button :disabled="!Object.keys(selectedVariants).length" @click="cancelAlert" fill="outline" color="danger" size="small">
+          <ion-button :disabled="!isAnyVariantSelected()" @click="cancelAlert" fill="outline" color="danger" size="small">
             <ion-icon slot="start" :icon="closeCircle" />{{ $t("Cancel") }}
           </ion-button>
         </ion-buttons>
@@ -185,6 +190,7 @@ import {
   IonToggle,
   IonSelect,
   IonSelectOption,
+  IonSpinner,
   IonToolbar,
   alertController,
   modalController,
@@ -199,6 +205,7 @@ import {
   calendar,
   close,
   list,
+  refresh,
   ribbon
 } from "ionicons/icons";
 import WarehouseModal from "./warehouse-modal.vue";
@@ -209,6 +216,7 @@ import { ProductService } from '@/services/ProductService'
 import Image from '@/components/Image.vue';
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
+import emitter from "@/event-bus";
 
 export default defineComponent({
   name: "product-details",
@@ -232,6 +240,7 @@ export default defineComponent({
     IonRow,
     IonSelect,
     IonSelectOption,
+    IonSpinner,
     IonThumbnail,
     IonTitle,
     IonToggle,
@@ -244,8 +253,15 @@ export default defineComponent({
       this.getVariantProducts();
     })
   },
+  ionViewDidEnter () {
+    emitter.on('backgroundJobsFinished', this.onBackgroundJobsFinished);
+  },
+  ionViewDidLeave () {
+    emitter.off('backgroundJobsFinished', this.onBackgroundJobsFinished);
+  },
   data() {
     return {
+      isRefreshing: false,
       orderedAfter: '',
       orderedBefore: '',
       promisedAfter: '',
@@ -264,6 +280,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       getProductStock: 'stock/getProductStock',
+      getBrokeringCountByProduct: 'order/getBrokeringCountByProduct',
       current: 'product/getCurrent',
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
@@ -273,6 +290,15 @@ export default defineComponent({
     })
   },
   methods: {
+    onBackgroundJobsFinished() {
+      this.refreshProducts();
+      // Reset quantity when the background job is finished
+      this.selectedVariants = {};
+    },
+    async refreshProducts() {
+      await this.getVariantProducts();
+      this.isRefreshing = false;
+    },
     autoFillQuantity (item: any) {
       item.quantity = item.doclist.numFound;
     },
@@ -311,7 +337,9 @@ export default defineComponent({
       if (this.currentEComStore) {
         payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
       }
-      return this.store.dispatch("product/fetchCurrentList", payload)
+      const current = await this.store.dispatch("product/fetchCurrentList", payload);
+      this.store.dispatch('order/fetchBrokeringCountByProducts', { productIds: current.list.items.map((item: any) => item.productId) })
+      return current;
     },
     async infoAlert() {
       const alert = await alertController.create({
@@ -326,7 +354,9 @@ export default defineComponent({
     },
     async releaseAlert() {
       const itemCount = Object.keys(this.selectedVariants).reduce( (count: number, productId: any) => {
-        return count + parseInt(this.selectedVariants[productId]);
+        const selectedVariantsCount = this.selectedVariants[productId]
+        // When using clear input the value is reset to '' and results to NaN when added without check
+        return selectedVariantsCount ? count + parseInt(selectedVariantsCount) : count;
       }, 0)
       const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
           'preorders will be automatically brokered and assigned for fulfillment.',{ count: itemCount }
@@ -344,7 +374,7 @@ export default defineComponent({
           {
             text:this.$t('Release'),
             handler: () => {
-              this.releaseItems();           
+              this.releaseItems();
             },
           },
         ],
@@ -353,8 +383,10 @@ export default defineComponent({
     },
     async cancelAlert() {
       const itemCount = Object.keys(this.selectedVariants).reduce( (count: number, productId: any) => {
-        return count + parseInt(this.selectedVariants[productId]);
-      }, 0);
+        const selectedVariantsCount = this.selectedVariants[productId]
+        // When using clear input the value is reset to '' and results to NaN when added without check
+        return selectedVariantsCount ? count + parseInt(selectedVariantsCount) : count;
+      }, 0)
       const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
           'preorders will be cancelled. This action cannot be undone.',{ count: itemCount }
         )
@@ -395,13 +427,6 @@ export default defineComponent({
         cssClass: "my-custom-class",
       });
       return bgjobmodal.present();
-    },
-    selectVariant(productId: string, quantity: string) {
-      if (quantity) {
-        this.selectedVariants[productId] = quantity;
-      } else {
-        delete this.selectedVariants[productId]
-      }
     },
     async releaseItems() {
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate ASC");
@@ -462,6 +487,11 @@ export default defineComponent({
     async processSelectedVaiants(sortBy: string) {
       const variantRequests: any = [];
       Object.keys(this.selectedVariants).forEach((productId: any) => {
+        //TODO Find a better way
+        // When using clear input the value is reset to empty string, skip the values if empty
+        if (!this.selectedVariants[productId]) {
+          return;
+        }
         const payload = {
           groupByField: 'productId',
           groupLimit: this.selectedVariants[productId],
@@ -523,6 +553,11 @@ export default defineComponent({
       // Only sort when there is size
       return isSortable ? sortableList.sort(compare) : list;
     },
+    isAnyVariantSelected() {
+      const selectedVariantIds = Object.keys(this.selectedVariants);
+      // When using the v-model quantity is empty if reset
+      return selectedVariantIds.length && selectedVariantIds.some((productId: any) => this.selectedVariants[productId]);
+    },
     filteredProducts (items: any) {
       const filteredProducts = JSON.parse(JSON.stringify(this.current));
       if(this.filters.size || this.filters.color){
@@ -549,6 +584,7 @@ export default defineComponent({
       close,
       list,
       ribbon,
+      refresh,
       store
     };
   },
@@ -619,6 +655,7 @@ hr {
 .results {
   display: flex;
   padding: 8px 16px 24px;
+  align-items: center;
 }
 
 ion-card {

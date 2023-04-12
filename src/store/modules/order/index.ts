@@ -25,7 +25,9 @@ const orderModule: Module<OrderState, RootState> = {
         viewIndex: 0,
         viewSize: process.env.VUE_APP_VIEW_SIZE ? process.env.VUE_APP_VIEW_SIZE : 10 // To make sure the code doesn't breaks when there is not configuration set
       },
-      selectedItems: []
+      selectedItems: [],
+      brokeringCountByProduct: {},
+      lastActionTimestamp: ''
     },
     getters,
     actions,
