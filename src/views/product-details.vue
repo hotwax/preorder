@@ -300,7 +300,7 @@ export default defineComponent({
       this.isRefreshing = false;
     },
     autoFillQuantity (item: any) {
-      item.quantity = item.doclist.numFound;
+      this.selectedVariants[item.productId] = item.doclist.numFound;
     },
     filter (featureValue: any, type: string) {
       if (this.filters[type] === featureValue) {
