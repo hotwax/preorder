@@ -6,149 +6,137 @@
           <ion-menu-button />
         </ion-buttons>
         <ion-title slot="start">{{ $t("Catalog") }}</ion-title>
-        <ion-segment @ionChange="segmentChanged($event)" v-model="segment">
-          <ion-segment-button value="all">
-            <ion-label>{{ $t("All") }}</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="purchase-orders">
-            <ion-label>{{ $t("Purchase orders") }}</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="out-of-stock">
-            <ion-label>{{ $t("Out of stock") }}</ion-label>
-          </ion-segment-button>
-        </ion-segment>
       </ion-toolbar>
     </ion-header>
 
     <ion-content>
-      <!--Segment content -->
-      <div class="search-filter">
-        <ion-searchbar />
-        <div class="filter-chips">
-          <ion-chip>
-            <ion-icon :icon="checkmarkOutline" />
-            <ion-label>{{ $t("All") }}</ion-label>
-          </ion-chip>
-          <ion-chip>
-            <ion-label>{{ $t("Pre-order") }}</ion-label>
-          </ion-chip>
-          <ion-chip>
-            <ion-label>{{ $t("Back-order") }}</ion-label>
-          </ion-chip>
+      <div class="header">
+        <div class="filters">
+          <ion-toolbar>
+            <ion-searchbar />
+            <ion-item lines="none">
+              <ion-chip v-for="filter in filters" :key="filter.value" @click="updateFilters(filter.value)">
+                <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
+                <ion-icon v-show="selectedFilter === filter.value" :icon="checkmarkOutline" />
+                <ion-label>{{ $t(filter.name) }}</ion-label>
+              </ion-chip>
+            </ion-item>
+          </ion-toolbar>
         </div>
-      </div>
 
-      <div class="list-item">
-        <ion-item lines="none">
-          <ion-icon :icon="shirtOutline" slot="start" />
-          <ion-label>1 {{ $t("sku selected") }}</ion-label>
-        </ion-item>
-
-        <ion-label class="tablet">
-          300
-          <p>{{ $t("on PO") }}</p>
-        </ion-label>
-
-        <ion-chip outline>
-          <ion-icon :icon="lockClosedOutline" />
-          <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-        </ion-chip>
-
-        <div />
-
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("back-order") }}</p>
-        </ion-label>
-
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("pre-order") }}</p>
-        </ion-label>
-
-        <ion-checkbox />
-
-        <ion-button fill="clear" color="medium" @click="openPopover">
-          <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-        </ion-button>
+        <div class="jobs">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>{{ $t('Jobs') }}</ion-card-title>
+            </ion-card-header>
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                <h5>Preorder computation</h5>
+                <p>13 minutes ago</p>
+              </ion-label>
+              <ion-label slot="end">
+                <p>in 3 mins</p>
+              </ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                <h5>Backorder computation</h5>
+                <p>12 minutes ago</p>
+              </ion-label>
+              <ion-label slot="end">
+                <p>in 3 mins</p>
+              </ion-label>
+            </ion-item>
+          </ion-card>
+        </div>
       </div>
 
       <hr />
 
       <div class="list-item">
-        <ion-item lines="none">
+        <ion-item lines="none" class="tablet">
           <ion-thumbnail slot="start">
-            <img src="https://cdn.shopify.com/s/files/1/0069/7384/9727/products/test-track.jpg?v=1626255137" />
+            <Image />
           </ion-thumbnail>
           <ion-label>
-            <p class="overline">Brand</p>
-            Virtual
-            <p>Shopify SKU</p>
+            <h5>Product name</h5>
+            <p>SKU</p>
           </ion-label>
         </ion-item>
 
-        <ion-label class="tablet">
-          300
-          <p>{{ $t("on PO") }}</p>
-        </ion-label>
-
-        <ion-chip outline>
-          <ion-icon :icon="lockClosedOutline" />
-          <ion-label>200 {{ $t("PO ATP") }}</ion-label>
+        <ion-chip class="tablet" outline>
+          <ion-label>Removed from preorder category</ion-label>
         </ion-chip>
 
-        <div class="ion-text-center">
-          <ion-chip outline>
-            <ion-icon :icon="sendOutline" />
-            <ion-label>12 Jan 2021</ion-label>
-          </ion-chip>
-          <p>{{ $t("PO") }}: #19222</p>
-        </div>
+        <ion-item lines="none" class="tablet">
+          <ion-label class="ion-text-center">
+            <h5>12-01-2023</h5>
+            <p>from date</p>
+          </ion-label>
+        </ion-item>
+        
+        <ion-item lines="none" class="tablet">
+          <ion-label class="ion-text-center">
+            <h5>12-01-2023</h5>
+            <p>thru date</p>
+          </ion-label>
+        </ion-item>
+      </div>
+      <div class="list-item">
+        <ion-item lines="none" class="tablet">
+          <ion-thumbnail slot="start">
+            <Image />
+          </ion-thumbnail>
+          <ion-label>
+            <h5>Product name</h5>
+            <p>SKU</p>
+          </ion-label>
+        </ion-item>
 
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("back-order") }}</p>
-        </ion-label>
+        <ion-chip class="tablet" outline>
+          <ion-label>Removed from preorder category</ion-label>
+        </ion-chip>
 
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("pre-order") }}</p>
-        </ion-label>
-
-        <ion-checkbox />
-
-        <ion-button fill="clear" color="medium" @click="openPopover">
-          <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-        </ion-button>
+        <ion-item lines="none" class="tablet">
+          <ion-label class="ion-text-center">
+            <h5>12-01-2023</h5>
+            <p>from date</p>
+          </ion-label>
+        </ion-item>
+        
+        <ion-item lines="none" class="tablet">
+          <ion-label class="ion-text-center">
+            <h5>12-01-2023</h5>
+            <p>thru date</p>
+          </ion-label>
+        </ion-item>
       </div>
     </ion-content>
+
   </ion-page>
 </template>
 
 <script lang="ts">
 import {
-  IonButton,
   IonButtons,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
   IonChip,
   IonContent,
-  IonCheckbox,
   IonHeader,
+  IonIcon,
   IonItem,
   IonLabel,
-  IonIcon,
   IonMenuButton,
   IonPage,
   IonSearchbar,
-  IonSegment,
-  IonSegmentButton,
-  IonTitle,
   IonThumbnail,
-  IonToggle,
+  IonTitle,
   IonToolbar,
-  popoverController,
 } from '@ionic/vue';
-import { defineComponent, ref } from 'vue';
-import Popover from '@/views/shipping-popover.vue';
+import { defineComponent } from 'vue';
+import { mapGetters } from "vuex";
 import {
   checkmarkOutline,
   ellipsisVerticalOutline,
@@ -156,65 +144,99 @@ import {
   sendOutline,
   shirtOutline,
 } from 'ionicons/icons';
+import Image from '@/components/Image.vue';
 
 export default defineComponent({
   name: 'Catalog',
   components: {
-    IonButton,
+    Image,
     IonButtons,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
     IonChip,
     IonContent,
-    IonCheckbox,
     IonHeader,
+    IonIcon,
     IonItem,
     IonLabel,
-    IonIcon,
     IonMenuButton,
     IonPage,
     IonSearchbar,
-    IonSegment,
-    IonSegmentButton,
-    IonTitle,
     IonThumbnail,
-    IonToggle,
+    IonTitle,
     IonToolbar,
   },
+  data() {
+    return {
+      selectedFilter: 'PRE_ORDER',
+      filters: [{
+        name: 'Pre-order',
+        value: 'PRE_ORDER'
+      }, {
+        name: 'Back-order',
+        value: 'BACK_ORDER'
+      }, {
+        name: 'Never in any category',
+        value: 'NEVER'
+      }, {
+        name: 'Removed from category',
+        value: 'REMOVED'
+      }]
+    }
+  },
   methods: {
-    segmentChanged(ev: CustomEvent) {
-      this.segment = ev.detail.value;
-    },
-    async openPopover(ev: Event) {
-      const popover = await popoverController.create({
-        component: Popover,
-        event: ev,
-        translucent: true,
-        showBackdrop: false,
-      });
-      return popover.present();
-    },
+    updateFilters(value: string) {
+      if(this.selectedFilter === value) return
+      this.selectedFilter = value
+    }
   },
   setup() {
-    const segment = ref("all");
     return {
       checkmarkOutline,
       ellipsisVerticalOutline,
       lockClosedOutline,
       sendOutline,
-      shirtOutline,
-      segment,
+      shirtOutline
     };
   },
 });
 </script>
 
 <style scoped>
-.search-filter {
+
+.header {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  align-items: center;
+  grid: "filters jobs"
+        /3fr 2fr;
 }
 
-.filter-chips {
-  justify-self: end;
+.filters {
+  grid-area: filters;
+  padding: 8px 0;
+}
+
+.jobs {
+  grid-area: jobs;
+}
+
+.list-item {
+  --columns-tablet: 4;
+  --columns-desktop: 4;
+  border-bottom: 1px solid var(--ion-color-medium);
+}
+
+@media (max-width: 991px) {
+
+  /* ==============
+   3. Mobile Header
+     ============== */
+
+  .header {
+    grid: "filters"
+          "jobs"
+          / auto;
+    padding: 0;
+}
 }
 </style>
