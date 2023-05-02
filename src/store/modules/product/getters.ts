@@ -22,5 +22,11 @@ const getters: GetterTree <ProductState, RootState> = {
     getCurrent: (state) => {
         return state.current;
     },
+    getCatalogProducts: (state) => {
+        return state.catalogProducts.items
+    },
+    isCatalogScrolleable(state) {
+        return state.catalogProducts.items.length > 0 && state.catalogProducts.items.length < state.catalogProducts.total
+    },
 }
 export default getters;

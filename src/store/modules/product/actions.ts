@@ -190,6 +190,26 @@ const actions: ActionTree<ProductState, RootState> = {
     }
     // TODO Handle specific error
     return state.current;
+  },
+
+  /**
+   * Fetch catalog products
+   */
+  async getCatalogProducts({ commit, state }, payload) {
+    let resp, items = []
+    try {
+      resp = await ProductService.getCatalogProducts(payload)
+      console.log(resp)
+      if (!hasError(resp) && resp.data.response.numFound) {
+        items = resp.data.response.docs
+        if (payload.json.params.start > 0) items = state.catalogProducts.items.concat(items);
+      }
+    } catch (error) {
+      console.error(error)
+      showToast(translate("Something went wrong"));
+    } finally {
+      commit(types.PRODUCT_CATALOG_UPDATED, { items, total: resp.data.response.numFound ? resp.data.response.numFound : 0 });
+    }
   }
 }
 export default actions;

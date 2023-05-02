@@ -15,9 +15,9 @@
           <ion-toolbar>
             <ion-searchbar />
             <ion-item lines="none">
-              <ion-chip v-for="filter in filters" :key="filter.value" @click="updateFilters(filter.value)">
+              <ion-chip v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
                 <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
-                <ion-icon v-show="selectedFilter === filter.value" :icon="checkmarkOutline" />
+                <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
                 <ion-label>{{ $t(filter.name) }}</ion-label>
               </ion-chip>
             </ion-item>
@@ -31,7 +31,7 @@
             </ion-card-header>
             <ion-item>
               <ion-label class="ion-text-wrap">
-                <h5>Preorder computation</h5>
+                <h5>Pre-order computation</h5>
                 <p>13 minutes ago</p>
               </ion-label>
               <ion-label slot="end">
@@ -40,7 +40,7 @@
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">
-                <h5>Backorder computation</h5>
+                <h5>Back-order computation</h5>
                 <p>12 minutes ago</p>
               </ion-label>
               <ion-label slot="end">
@@ -53,63 +53,43 @@
 
       <hr />
 
-      <div class="list-item">
-        <ion-item lines="none" class="tablet">
-          <ion-thumbnail slot="start">
-            <Image />
-          </ion-thumbnail>
-          <ion-label>
-            <h5>Product name</h5>
-            <p>SKU</p>
-          </ion-label>
-        </ion-item>
-
-        <ion-chip class="tablet" outline>
-          <ion-label>Removed from preorder category</ion-label>
-        </ion-chip>
-
-        <ion-item lines="none" class="tablet">
-          <ion-label class="ion-text-center">
-            <h5>12-01-2023</h5>
-            <p>from date</p>
-          </ion-label>
-        </ion-item>
-        
-        <ion-item lines="none" class="tablet">
-          <ion-label class="ion-text-center">
-            <h5>12-01-2023</h5>
-            <p>thru date</p>
-          </ion-label>
-        </ion-item>
+      <div class="ion-text-center ion-padding" v-if="!products.length">
+        {{ $t('No products found') }}
       </div>
-      <div class="list-item">
-        <ion-item lines="none" class="tablet">
-          <ion-thumbnail slot="start">
-            <Image />
-          </ion-thumbnail>
-          <ion-label>
-            <h5>Product name</h5>
-            <p>SKU</p>
-          </ion-label>
-        </ion-item>
+      <div v-else>
+        <div class="list-item" v-for="product in products" :key="product.productId">
+          <ion-item lines="none" class="tablet">
+            <ion-thumbnail slot="start">
+              <Image :src="product.mainImageUrl" />
+            </ion-thumbnail>
+            <ion-label class="ion-text-wrap">
+              <h5>{{ product.productName }}</h5>
+              <p>{{ product.sku }}</p>
+            </ion-label>
+          </ion-item>
 
-        <ion-chip class="tablet" outline>
-          <ion-label>Removed from preorder category</ion-label>
-        </ion-chip>
+          <ion-chip class="tablet" outline>
+            <ion-label>{{ prodCatalogCategoryTypeId === 'PCCT_PREORDR' ? $t('Pre-order') : $t('Back-order') }}</ion-label>
+          </ion-chip>
 
-        <ion-item lines="none" class="tablet">
-          <ion-label class="ion-text-center">
-            <h5>12-01-2023</h5>
-            <p>from date</p>
-          </ion-label>
-        </ion-item>
-        
-        <ion-item lines="none" class="tablet">
-          <ion-label class="ion-text-center">
-            <h5>12-01-2023</h5>
-            <p>thru date</p>
-          </ion-label>
-        </ion-item>
+          <ion-item lines="none" class="tablet">
+            <ion-label class="ion-text-center">
+              <h5>{{ product.fromDate ? getTime(product.fromDate) : '-' }}</h5>
+              <p>from date</p>
+            </ion-label>
+          </ion-item>
+
+          <ion-item lines="none" class="tablet">
+            <ion-label class="ion-text-center">
+              <h5>{{ product.thruDate ? getTime(product.thruDate) : '-' }}</h5>
+              <p>thru date</p>
+            </ion-label>
+          </ion-item>
+        </div>
+
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isCatalogScrolleable">
+          <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
+        </ion-infinite-scroll>
       </div>
     </ion-content>
 
@@ -126,6 +106,8 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   IonItem,
   IonLabel,
   IonMenuButton,
@@ -136,7 +118,8 @@ import {
   IonToolbar,
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { mapGetters } from "vuex";
+import { useRouter } from "vue-router";
+import { useStore } from "@/store";
 import {
   checkmarkOutline,
   ellipsisVerticalOutline,
@@ -145,6 +128,8 @@ import {
   shirtOutline,
 } from 'ionicons/icons';
 import Image from '@/components/Image.vue';
+import { mapGetters } from 'vuex';
+import { DateTime } from 'luxon';
 
 export default defineComponent({
   name: 'Catalog',
@@ -158,6 +143,8 @@ export default defineComponent({
     IonContent,
     IonHeader,
     IonIcon,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     IonItem,
     IonLabel,
     IonMenuButton,
@@ -169,35 +156,81 @@ export default defineComponent({
   },
   data() {
     return {
-      selectedFilter: 'PRE_ORDER',
+      prodCatalogCategoryTypeId: 'PCCT_PREORDR', // selected filter
       filters: [{
         name: 'Pre-order',
-        value: 'PRE_ORDER'
+        value: 'PCCT_PREORDR'
       }, {
         name: 'Back-order',
-        value: 'BACK_ORDER'
-      }, {
+        value: 'PCCT_BACKORDER'
+      }, /*{
         name: 'Never in any category',
         value: 'NEVER'
       }, {
         name: 'Removed from category',
         value: 'REMOVED'
-      }]
+      }*/]
     }
   },
+  computed: {
+    ...mapGetters({
+      currentEComStore: 'user/getCurrentEComStore',
+      products: 'product/getCatalogProducts',
+      getProduct: 'product/getProduct',
+      isCatalogScrolleable: 'product/isCatalogScrolleable'
+    })
+  },
+  mounted() {
+    this.getCatalogProducts()
+  },
   methods: {
-    updateFilters(value: string) {
-      if(this.selectedFilter === value) return
-      this.selectedFilter = value
+    async getCatalogProducts(vSize?: any, vIndex?: any) {
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+
+      const payload = {
+        "json": {
+          "params": {
+            "rows": viewSize,
+            "start": viewIndex * viewSize,
+          } as any,
+          "query": "*:*",
+          "filter": `docType: PRODUCT
+                    AND productStoreIds: ${this.currentEComStore.productStoreId}
+                    AND isVariant: true
+                    AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
+        }
+      }
+      this.store.dispatch("product/getCatalogProducts", payload);
+    },
+    async loadMoreProducts(event: any){
+      this.getCatalogProducts(
+        undefined,
+        Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
+      ).then(() => {
+        event.target.complete();
+      })
+    },
+    async applyFilter(value: string) {
+      this.prodCatalogCategoryTypeId = value
+      this.getCatalogProducts()
+    },
+    getTime(time: number) {
+      return DateTime.fromMillis(time).toLocaleString()
     }
   },
   setup() {
+    const router = useRouter();
+    const store = useStore();
+
     return {
       checkmarkOutline,
       ellipsisVerticalOutline,
       lockClosedOutline,
       sendOutline,
-      shirtOutline
+      shirtOutline,
+      router,
+      store,
     };
   },
 });

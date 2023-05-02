@@ -20,6 +20,10 @@ const productModule: Module<ProductState, RootState> = {
             items: []
         },
         totalPreOrders: 0
+      },
+      catalogProducts: {
+        items: [],
+        total: 0
       }
     },
     getters,
