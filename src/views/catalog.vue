@@ -13,6 +13,7 @@
       <div class="header">
         <div class="filters">
           <ion-toolbar>
+            <!-- TODO - make searchbar functional -->
             <ion-searchbar />
             <ion-item lines="none">
               <ion-chip v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">

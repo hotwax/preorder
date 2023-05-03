@@ -199,7 +199,7 @@ const actions: ActionTree<ProductState, RootState> = {
     let resp, items = []
     try {
       resp = await ProductService.getCatalogProducts(payload)
-      console.log(resp)
+
       if (!hasError(resp) && resp.data.response.numFound) {
         items = resp.data.response.docs
         if (payload.json.params.start > 0) items = state.catalogProducts.items.concat(items);
