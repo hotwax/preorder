@@ -6,149 +6,89 @@
           <ion-menu-button />
         </ion-buttons>
         <ion-title slot="start">{{ $t("Catalog") }}</ion-title>
-        <ion-segment @ionChange="segmentChanged($event)" v-model="segment">
-          <ion-segment-button value="all">
-            <ion-label>{{ $t("All") }}</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="purchase-orders">
-            <ion-label>{{ $t("Purchase orders") }}</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="out-of-stock">
-            <ion-label>{{ $t("Out of stock") }}</ion-label>
-          </ion-segment-button>
-        </ion-segment>
       </ion-toolbar>
     </ion-header>
 
     <ion-content>
-      <!--Segment content -->
-      <div class="search-filter">
-        <ion-searchbar />
-        <div class="filter-chips">
-          <ion-chip>
-            <ion-icon :icon="checkmarkOutline" />
-            <ion-label>{{ $t("All") }}</ion-label>
-          </ion-chip>
-          <ion-chip>
-            <ion-label>{{ $t("Pre-order") }}</ion-label>
-          </ion-chip>
-          <ion-chip>
-            <ion-label>{{ $t("Back-order") }}</ion-label>
-          </ion-chip>
-        </div>
-      </div>
-
-      <div class="list-item">
-        <ion-item lines="none">
-          <ion-icon :icon="shirtOutline" slot="start" />
-          <ion-label>1 {{ $t("sku selected") }}</ion-label>
-        </ion-item>
-
-        <ion-label class="tablet">
-          300
-          <p>{{ $t("on PO") }}</p>
-        </ion-label>
-
-        <ion-chip outline>
-          <ion-icon :icon="lockClosedOutline" />
-          <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-        </ion-chip>
-
-        <div />
-
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("back-order") }}</p>
-        </ion-label>
-
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("pre-order") }}</p>
-        </ion-label>
-
-        <ion-checkbox />
-
-        <ion-button fill="clear" color="medium" @click="openPopover">
-          <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-        </ion-button>
+      <div class="ion-padding-top">
+        <ion-toolbar>
+          <ion-searchbar :placeholder="$t('Search products')" v-model="queryString" @keyup.enter="queryString = $event.target.value; getCatalogProducts()" />
+          <ion-item lines="none">
+            <ion-chip v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
+              <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
+              <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
+              <ion-label>{{ $t(filter.name) }}</ion-label>
+            </ion-chip>
+          </ion-item>
+        </ion-toolbar>
       </div>
 
       <hr />
 
-      <div class="list-item">
-        <ion-item lines="none">
-          <ion-thumbnail slot="start">
-            <img src="https://cdn.shopify.com/s/files/1/0069/7384/9727/products/test-track.jpg?v=1626255137" />
-          </ion-thumbnail>
-          <ion-label>
-            <p class="overline">Brand</p>
-            Virtual
-            <p>Shopify SKU</p>
-          </ion-label>
-        </ion-item>
+      <div class="ion-text-center ion-padding" v-if="!products.length">
+        {{ $t('No products found') }}
+      </div>
+      <div v-else>
+        <div class="list-item" v-for="product in products" :key="product.productId">
+          <ion-item lines="none" class="tablet">
+            <ion-thumbnail slot="start">
+              <Image :src="product.mainImageUrl" />
+            </ion-thumbnail>
+            <ion-label class="ion-text-wrap">
+              <h5>{{ product.productName }}</h5>
+              <p>{{ product.sku }}</p>
+            </ion-label>
+          </ion-item>
 
-        <ion-label class="tablet">
-          300
-          <p>{{ $t("on PO") }}</p>
-        </ion-label>
-
-        <ion-chip outline>
-          <ion-icon :icon="lockClosedOutline" />
-          <ion-label>200 {{ $t("PO ATP") }}</ion-label>
-        </ion-chip>
-
-        <div class="ion-text-center">
-          <ion-chip outline>
-            <ion-icon :icon="sendOutline" />
-            <ion-label>12 Jan 2021</ion-label>
+          <ion-chip class="tablet" outline>
+            <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : $t('Back-order') }}</ion-label>
           </ion-chip>
-          <p>{{ $t("PO") }}: #19222</p>
+
+          <ion-item lines="none" class="tablet">
+            <ion-label class="ion-text-center">
+              <h5>{{ product.fromDate ? getTime(product.fromDate) : '-' }}</h5>
+              <p>{{ $t('from date') }}</p>
+            </ion-label>
+          </ion-item>
+
+          <ion-item lines="none" class="tablet">
+            <ion-label class="ion-text-center">
+              <h5>{{ product.thruDate ? getTime(product.thruDate) : '-' }}</h5>
+              <p>{{ $t('thru date') }}</p>
+            </ion-label>
+          </ion-item>
         </div>
 
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("back-order") }}</p>
-        </ion-label>
-
-        <ion-label class="tablet">
-          <ion-toggle />
-          <p>{{ $t("pre-order") }}</p>
-        </ion-label>
-
-        <ion-checkbox />
-
-        <ion-button fill="clear" color="medium" @click="openPopover">
-          <ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" />
-        </ion-button>
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isCatalogScrollable">
+          <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
+        </ion-infinite-scroll>
       </div>
     </ion-content>
+
   </ion-page>
 </template>
 
 <script lang="ts">
 import {
-  IonButton,
   IonButtons,
   IonChip,
   IonContent,
-  IonCheckbox,
   IonHeader,
+  IonIcon,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   IonItem,
   IonLabel,
-  IonIcon,
   IonMenuButton,
   IonPage,
   IonSearchbar,
-  IonSegment,
-  IonSegmentButton,
-  IonTitle,
   IonThumbnail,
-  IonToggle,
+  IonTitle,
   IonToolbar,
-  popoverController,
 } from '@ionic/vue';
-import { defineComponent, ref } from 'vue';
-import Popover from '@/views/shipping-popover.vue';
+import { defineComponent } from 'vue';
+import { useRouter } from "vue-router";
+import { useStore } from "@/store";
 import {
   checkmarkOutline,
   ellipsisVerticalOutline,
@@ -156,65 +96,126 @@ import {
   sendOutline,
   shirtOutline,
 } from 'ionicons/icons';
+import Image from '@/components/Image.vue';
+import { mapGetters } from 'vuex';
+import { DateTime } from 'luxon';
 
 export default defineComponent({
   name: 'Catalog',
   components: {
-    IonButton,
+    Image,
     IonButtons,
     IonChip,
     IonContent,
-    IonCheckbox,
     IonHeader,
+    IonIcon,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     IonItem,
     IonLabel,
-    IonIcon,
     IonMenuButton,
     IonPage,
     IonSearchbar,
-    IonSegment,
-    IonSegmentButton,
-    IonTitle,
     IonThumbnail,
-    IonToggle,
+    IonTitle,
     IonToolbar,
   },
+  data() {
+    return {
+      prodCatalogCategoryTypeId: 'PCCT_PREORDR', // selected filter
+      filters: [{
+        name: 'Pre-order',
+        value: 'PCCT_PREORDR'
+      }, {
+        name: 'Back-order',
+        value: 'PCCT_BACKORDER'
+      }, /*{
+        name: 'Never in any category',
+        value: 'NEVER'
+      }, {
+        name: 'Removed from category',
+        value: 'REMOVED'
+      }*/],
+      queryString: ''
+    }
+  },
+  computed: {
+    ...mapGetters({
+      currentEComStore: 'user/getCurrentEComStore',
+      products: 'product/getCatalogProducts',
+      getProduct: 'product/getProduct',
+      isCatalogScrollable: 'product/isCatalogScrollable'
+    })
+  },
+  mounted() {
+    this.getCatalogProducts()
+  },
   methods: {
-    segmentChanged(ev: CustomEvent) {
-      this.segment = ev.detail.value;
+    async getCatalogProducts(vSize?: any, vIndex?: any) {
+      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
+      const viewIndex = vIndex ? vIndex : 0;
+
+      const payload = {
+        "json": {
+          "params": {
+            "rows": viewSize,
+            "start": viewIndex * viewSize,
+          } as any,
+          "query": "*:*",
+          "filter": `docType: PRODUCT AND productStoreIds: ${this.currentEComStore.productStoreId} AND isVariant: true`
+        }
+      }
+
+      if (this.prodCatalogCategoryTypeId) {
+        payload.json.filter += ` AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
+      }
+
+      if(this.queryString.trim().length) {
+        payload.json.query = this.queryString
+        payload.json.params['qf'] = "productId productName sku"
+        payload.json.params['defType'] = "edismax"
+      }
+
+      this.store.dispatch("product/findCatalogProducts", payload);
     },
-    async openPopover(ev: Event) {
-      const popover = await popoverController.create({
-        component: Popover,
-        event: ev,
-        translucent: true,
-        showBackdrop: false,
-      });
-      return popover.present();
+    async loadMoreProducts(event: any){
+      this.getCatalogProducts(
+        undefined,
+        Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
+      ).then(() => {
+        event.target.complete();
+      })
     },
+    async applyFilter(value: string) {
+      if(value === this.prodCatalogCategoryTypeId) this.prodCatalogCategoryTypeId = ''
+      else this.prodCatalogCategoryTypeId = value
+      this.getCatalogProducts()
+    },
+    getTime(time: number) {
+      return DateTime.fromMillis(time).toLocaleString()
+    }
   },
   setup() {
-    const segment = ref("all");
+    const router = useRouter();
+    const store = useStore();
+
     return {
       checkmarkOutline,
       ellipsisVerticalOutline,
       lockClosedOutline,
       sendOutline,
       shirtOutline,
-      segment,
+      router,
+      store,
     };
   },
 });
 </script>
 
 <style scoped>
-.search-filter {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  align-items: center;
-}
-
-.filter-chips {
-  justify-self: end;
+.list-item {
+  --columns-tablet: 4;
+  --columns-desktop: 4;
+  border-bottom: 1px solid var(--ion-color-medium);
 }
 </style>

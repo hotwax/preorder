@@ -96,12 +96,12 @@ export default defineComponent({
         iosIcon: shirt,
         mdIcon: shirt,
       },
-      // {
-      //   title: "Pre-order catalog",
-      //   url: "/catalog",
-      //   iosIcon: albums,
-      //   mdIcon: albums,
-      // },
+      {
+        title: "Catalog",
+        url: "/catalog",
+        iosIcon: albums,
+        mdIcon: albums,
+      },
       {
         title: "Settings",
         url: "/settings",

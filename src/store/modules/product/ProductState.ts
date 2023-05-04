@@ -12,4 +12,8 @@ export default interface ProductState {
         };
         totalPreOrders: number;
     };
+    catalogProducts: {
+        items: any[],
+        total: number
+    }
 }

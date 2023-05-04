@@ -31,5 +31,9 @@ const mutations: MutationTree <ProductState> = {
     [types.PRODUCT_CURRENT_TOTAL_PRE_ORDERS_UPDATED] (state, payload) {
         state.current.totalPreOrders = payload.totalPreOrders
     },
+    [types.PRODUCT_CATALOG_UPDATED] (state, payload) {
+        state.catalogProducts.items = payload.items
+        state.catalogProducts.total = payload.total
+    },
 }
 export default mutations;
