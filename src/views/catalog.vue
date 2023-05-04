@@ -162,12 +162,16 @@ export default defineComponent({
             "start": viewIndex * viewSize,
           } as any,
           "query": "*:*",
-          "filter": `docType: PRODUCT AND productStoreIds: ${this.currentEComStore.productStoreId} AND isVariant: true AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
+          "filter": `docType: PRODUCT AND productStoreIds: ${this.currentEComStore.productStoreId} AND isVariant: true`
         }
       }
 
+      if (this.prodCatalogCategoryTypeId) {
+        payload.json.filter += `AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
+      }
+
       if(this.queryString.trim().length) {
-        payload.json.query = `(*${this.queryString}*)`
+        payload.json.query = this.queryString
         payload.json.params['qf'] = "productId productName sku"
         payload.json.params['defType'] = "edismax"
       }
@@ -183,7 +187,8 @@ export default defineComponent({
       })
     },
     async applyFilter(value: string) {
-      this.prodCatalogCategoryTypeId = value
+      if(value === this.prodCatalogCategoryTypeId) this.prodCatalogCategoryTypeId = ''
+      else this.prodCatalogCategoryTypeId = value
       this.getCatalogProducts()
     },
     getTime(time: number) {
