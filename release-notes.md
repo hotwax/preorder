@@ -1,3 +1,10 @@
+# Release 1.4.0
+
+## What's Changed
+* Implemented: find screen for pre-order catalog (#85zryakpq) by @k2maan in https://github.com/hotwax/preorder/pull/119
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.3.0...v1.4.0
+
 # Release 1.3.0
 
 ## What's Changed
