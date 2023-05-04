@@ -10,46 +10,17 @@
     </ion-header>
 
     <ion-content>
-      <div class="header">
-        <div class="filters">
-          <ion-toolbar>
-            <!-- TODO - make searchbar functional -->
-            <ion-searchbar />
-            <ion-item lines="none">
-              <ion-chip v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
-                <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
-                <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
-                <ion-label>{{ $t(filter.name) }}</ion-label>
-              </ion-chip>
-            </ion-item>
-          </ion-toolbar>
-        </div>
-
-        <div class="jobs">
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>{{ $t('Jobs') }}</ion-card-title>
-            </ion-card-header>
-            <ion-item>
-              <ion-label class="ion-text-wrap">
-                <h5>Pre-order computation</h5>
-                <p>13 minutes ago</p>
-              </ion-label>
-              <ion-label slot="end">
-                <p>in 3 mins</p>
-              </ion-label>
-            </ion-item>
-            <ion-item>
-              <ion-label class="ion-text-wrap">
-                <h5>Back-order computation</h5>
-                <p>12 minutes ago</p>
-              </ion-label>
-              <ion-label slot="end">
-                <p>in 3 mins</p>
-              </ion-label>
-            </ion-item>
-          </ion-card>
-        </div>
+      <div class="ion-padding-top">
+        <ion-toolbar>
+          <ion-searchbar :placeholder="$t('Search products')" v-model="queryString" @keyup.enter="queryString = $event.target.value; getCatalogProducts()" />
+          <ion-item lines="none">
+            <ion-chip v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
+              <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
+              <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
+              <ion-label>{{ $t(filter.name) }}</ion-label>
+            </ion-chip>
+          </ion-item>
+        </ion-toolbar>
       </div>
 
       <hr />
@@ -70,25 +41,25 @@
           </ion-item>
 
           <ion-chip class="tablet" outline>
-            <ion-label>{{ prodCatalogCategoryTypeId === 'PCCT_PREORDR' ? $t('Pre-order') : $t('Back-order') }}</ion-label>
+            <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : $t('Back-order') }}</ion-label>
           </ion-chip>
 
           <ion-item lines="none" class="tablet">
             <ion-label class="ion-text-center">
               <h5>{{ product.fromDate ? getTime(product.fromDate) : '-' }}</h5>
-              <p>from date</p>
+              <p>{{ $t('from date') }}</p>
             </ion-label>
           </ion-item>
 
           <ion-item lines="none" class="tablet">
             <ion-label class="ion-text-center">
               <h5>{{ product.thruDate ? getTime(product.thruDate) : '-' }}</h5>
-              <p>thru date</p>
+              <p>{{ $t('thru date') }}</p>
             </ion-label>
           </ion-item>
         </div>
 
-        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isCatalogScrolleable">
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isCatalogScrollable">
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
         </ion-infinite-scroll>
       </div>
@@ -100,9 +71,6 @@
 <script lang="ts">
 import {
   IonButtons,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
   IonChip,
   IonContent,
   IonHeader,
@@ -137,9 +105,6 @@ export default defineComponent({
   components: {
     Image,
     IonButtons,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
     IonChip,
     IonContent,
     IonHeader,
@@ -170,7 +135,8 @@ export default defineComponent({
       }, {
         name: 'Removed from category',
         value: 'REMOVED'
-      }*/]
+      }*/],
+      queryString: ''
     }
   },
   computed: {
@@ -178,7 +144,7 @@ export default defineComponent({
       currentEComStore: 'user/getCurrentEComStore',
       products: 'product/getCatalogProducts',
       getProduct: 'product/getProduct',
-      isCatalogScrolleable: 'product/isCatalogScrolleable'
+      isCatalogScrollable: 'product/isCatalogScrollable'
     })
   },
   mounted() {
@@ -196,13 +162,17 @@ export default defineComponent({
             "start": viewIndex * viewSize,
           } as any,
           "query": "*:*",
-          "filter": `docType: PRODUCT
-                    AND productStoreIds: ${this.currentEComStore.productStoreId}
-                    AND isVariant: true
-                    AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
+          "filter": `docType: PRODUCT AND productStoreIds: ${this.currentEComStore.productStoreId} AND isVariant: true AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
         }
       }
-      this.store.dispatch("product/getCatalogProducts", payload);
+
+      if(this.queryString.trim().length) {
+        payload.json.query = `(*${this.queryString}*)`
+        payload.json.params['qf'] = "productId productName sku"
+        payload.json.params['defType'] = "edismax"
+      }
+
+      this.store.dispatch("product/findCatalogProducts", payload);
     },
     async loadMoreProducts(event: any){
       this.getCatalogProducts(
@@ -238,39 +208,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-
-.header {
-  display: grid;
-  grid: "filters jobs"
-        /3fr 2fr;
-}
-
-.filters {
-  grid-area: filters;
-  padding: 8px 0;
-}
-
-.jobs {
-  grid-area: jobs;
-}
-
 .list-item {
   --columns-tablet: 4;
   --columns-desktop: 4;
   border-bottom: 1px solid var(--ion-color-medium);
-}
-
-@media (max-width: 991px) {
-
-  /* ==============
-   3. Mobile Header
-     ============== */
-
-  .header {
-    grid: "filters"
-          "jobs"
-          / auto;
-    padding: 0;
-}
 }
 </style>

@@ -195,7 +195,7 @@ const actions: ActionTree<ProductState, RootState> = {
   /**
    * Fetch catalog products
    */
-  async getCatalogProducts({ commit, state }, payload) {
+  async findCatalogProducts({ commit, state }, payload) {
     let resp, items = []
     try {
       resp = await ProductService.getCatalogProducts(payload)
@@ -208,7 +208,7 @@ const actions: ActionTree<ProductState, RootState> = {
       console.error(error)
       showToast(translate("Something went wrong"));
     } finally {
-      commit(types.PRODUCT_CATALOG_UPDATED, { items, total: resp.data.response.numFound ? resp.data.response.numFound : 0 });
+      commit(types.PRODUCT_CATALOG_UPDATED, { items, total: resp.data.response?.numFound ? resp.data.response.numFound : 0 });
     }
   }
 }

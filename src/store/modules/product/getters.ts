@@ -25,7 +25,7 @@ const getters: GetterTree <ProductState, RootState> = {
     getCatalogProducts: (state) => {
         return state.catalogProducts.items
     },
-    isCatalogScrolleable(state) {
+    isCatalogScrollable(state) {
         return state.catalogProducts.items.length > 0 && state.catalogProducts.items.length < state.catalogProducts.total
     },
 }
