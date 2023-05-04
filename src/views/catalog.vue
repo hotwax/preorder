@@ -167,7 +167,7 @@ export default defineComponent({
       }
 
       if (this.prodCatalogCategoryTypeId) {
-        payload.json.filter += `AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
+        payload.json.filter += ` AND prodCatalogCategoryTypeIds: ${this.prodCatalogCategoryTypeId}`
       }
 
       if(this.queryString.trim().length) {
