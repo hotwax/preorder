@@ -313,6 +313,7 @@ export default defineComponent({
       }).finally(() => emitter.emit("dismissLoader"))
     },
     async cancelItems() {
+      emitter.emit("presentLoader")
       const selectedItems = this.selectedItemsToCancel;
       const json = JSON.stringify(selectedItems);
       const blob = new Blob([json], { type: 'application/json'});
