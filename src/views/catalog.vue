@@ -229,8 +229,6 @@ export default defineComponent({
             "shopId_fld0_value": this.currentEComStore.productStoreId,
             "shopId_fld0_grp": "1",
             "shopId_fld0_op": "equals",
-            "shopId_fld1_grp": "2",
-            "shopId_fld1_op": "empty",
             'systemJobEnumId': 'JOB_REL_PREODR_CAT',
             'systemJobEnumId_op': 'equals'
           },
@@ -267,7 +265,6 @@ export default defineComponent({
           this.preordBckordComputationJob = {}
         }
       } catch (error) {
-        showToast(translate("Something went wrong"));
         console.log(error)
       }
     },
