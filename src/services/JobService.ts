@@ -2,20 +2,20 @@ import { api } from '@/adapter';
 import store from '@/store'
 import { DateTime } from 'luxon';
 
-const fetchJobLogs = async (payload: any): Promise <any>  => {
+const fetchJobLogs = async (payload: any): Promise<any> => {
   return api({
-          url: "dataManagerLogs", 
-          method: "post",
-          data: payload
-        });
+    url: "dataManagerLogs",
+    method: "post",
+    data: payload
+  });
 }
 
-const fetchJobs = async (payload: any): Promise <any>  => {
-    return api({
-            url: "findJobs", 
-            method: "post",
-            data: payload
-          });
+const fetchJobs = async (payload: any): Promise<any> => {
+  return api({
+    url: "findJobs",
+    method: "post",
+    data: payload
+  });
 }
 const prepareFetchJobsQuery = () => {
   const lastActionTimestamp = (store.state as any).order.lastActionTimestamp;
@@ -46,31 +46,40 @@ const prepareFetchLogsQuery = () => {
     "viewSize": "10"
   }
 }
-const pollJobs = async (): Promise <any>  => {
-  const lastPoll = setTimeout(function() {
+const pollJobs = async (): Promise<any> => {
+  const lastPoll = setTimeout(function () {
     store.dispatch("job/fetchPolledJobs", prepareFetchLogsQuery())
   }, process.env.VUE_APP_POLL_TIME);
-  window.onbeforeunload = function(){
+  window.onbeforeunload = function () {
     clearTimeout(lastPoll);
   }
 }
 
-const fetchBackgroundJobs = async (): Promise <any>  => {
-  const lastActionTimestamp = (store.state  as any).order.lastActionTimestamp;
+const fetchBackgroundJobs = async (): Promise<any> => {
+  const lastActionTimestamp = (store.state as any).order.lastActionTimestamp;
   let jobResponse;
   // If we have lastActionTimestamp, release job ran and Job needs to be fetched
   if (lastActionTimestamp && DateTime.fromMillis(lastActionTimestamp).plus({ minutes: 10 }).diffNow('seconds').valueOf() > 0) {
     jobResponse = await store.dispatch("job/fetchJobs", prepareFetchJobsQuery())
   }
   const logResponse = await store.dispatch("job/fetchJobLogs", prepareFetchLogsQuery())
-  return { jobResponse , logResponse }
+  return { jobResponse, logResponse }
+}
+
+const fetchJobInformation = async (payload: any): Promise<any> => {
+  return api({
+    url: "/findJobs",
+    method: "get",
+    params: payload
+  });
 }
 
 export const JobService = {
-    fetchBackgroundJobs,
-    fetchJobLogs,
-    fetchJobs,
-    pollJobs,
-    prepareFetchJobsQuery,
-    prepareFetchLogsQuery
+  fetchBackgroundJobs,
+  fetchJobLogs,
+  fetchJobs,
+  pollJobs,
+  prepareFetchJobsQuery,
+  prepareFetchLogsQuery,
+  fetchJobInformation
 }
