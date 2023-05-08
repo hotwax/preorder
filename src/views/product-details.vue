@@ -429,6 +429,7 @@ export default defineComponent({
       return bgjobmodal.present();
     },
     async releaseItems() {
+      emitter.emit("presentLoader")
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate ASC");
       let selectedItems = [] as any;
       selectedItemsResponse.forEach((response: any) => {
@@ -455,9 +456,10 @@ export default defineComponent({
           data: formData
       }).then(() => {
         this.store.dispatch("order/removeItems", { items: selectedItems });
-      })
+      }).finally(() => emitter.emit("dismissLoader"))
     },
     async cancelItems() {
+      emitter.emit("presentLoader")
       const selectedItemsResponse = await this.processSelectedVaiants("orderDate DESC");
       let selectedItems = [] as any;
       selectedItemsResponse.forEach((response: any) => {
@@ -482,7 +484,7 @@ export default defineComponent({
           data: formData
       }).then(() => {
         this.store.dispatch("order/removeItems", { items: selectedItems });
-      })
+      }).finally(() => emitter.emit("dismissLoader"))
     },
     async processSelectedVaiants(sortBy: string) {
       const variantRequests: any = [];
