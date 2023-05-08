@@ -10,24 +10,20 @@ const actions: ActionTree<JobState, RootState> = {
 
   async fetchJobs ( { commit }, payload) {
     const resp = await JobService.fetchJobs(payload)
-    if (resp.status === 200 && !hasError(resp)) {
-      commit(types.JOB_LIST_UPDATED, {
-        items: resp.data.docs ? resp.data.docs : [], // TODO Handled error & docs undefined when no record
-        total: resp.data.count ? resp.data.count : 0 , //  TODO Handled error & count undefined when no record
-       });
-    }
+    commit(types.JOB_LIST_UPDATED, {
+      items: resp.data.docs ? resp.data.docs : [], // TODO Handled error & docs undefined when no record
+      total: resp.data.count ? resp.data.count : 0 , //  TODO Handled error & count undefined when no record
+      });
     // Removed Toast as it will also be async job
     // TODO Handle specific error
     return resp;
   },
   async fetchJobLogs ( { commit }, payload) {
     const resp = await JobService.fetchJobLogs(payload)
-    if (resp.status === 200 && !hasError(resp)) {
-      commit(types.JOB_LOGS_UPDATED, {
-        items: resp.data.docs ? resp.data.docs : [], // TODO Handled error & docs undefined when no record
-        total: resp.data.count ? resp.data.count : 0 , //  TODO Handled error & count undefined when no record
-       });
-    }
+    commit(types.JOB_LOGS_UPDATED, {
+      items: resp.data.docs ? resp.data.docs : [], // TODO Handled error & docs undefined when no record
+      total: resp.data.count ? resp.data.count : 0 , //  TODO Handled error & count undefined when no record
+      });
     // TODO Handle specific error
     return resp;
   },
