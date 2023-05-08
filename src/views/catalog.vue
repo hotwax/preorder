@@ -28,17 +28,14 @@
             <ion-card-header>
               <ion-card-title>{{ $t('Jobs') }}</ion-card-title>
             </ion-card-header>
-            <ion-item v-if="Object.keys(preordBckordComputationJob).length" lines="none">
+            <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h5>{{ $t('Pre-order/back-order computation') }}</h5>
+                <h5>{{ $t('Presell computation') }}</h5>
                 <p>{{ preordBckordComputationJob.lastRunTime && timeTillJob(preordBckordComputationJob.lastRunTime) }}</p>
-                </ion-label>
-                <ion-label slot="end">
-                <p>{{ preordBckordComputationJob.runTime && timeTillJob(preordBckordComputationJob.runTime) }}</p>
               </ion-label>
-            </ion-item>
-            <ion-item v-else>
-              {{ $t('No pending job found') }}
+              <ion-label slot="end" :color="!preordBckordComputationJob.runTime ? 'medium' : ''">
+                <p>{{ preordBckordComputationJob.runTime ? timeTillJob(preordBckordComputationJob.runTime) : $t('disabled')}}</p>
+              </ion-label>
             </ion-item>
           </ion-card>
         </div>
@@ -227,8 +224,8 @@ export default defineComponent({
       try {
         const params = {
           "inputFields": {
-            "statusId": "SERVICE_PENDING",
-            "statusId_op": "equals",
+            "statusId": ["SERVICE_PENDING", "SERVICE_DRAFT"],
+            "statusId_op": "in",
             "shopId_fld0_value": this.currentEComStore.productStoreId,
             "shopId_fld0_grp": "1",
             "shopId_fld0_op": "equals",
@@ -238,30 +235,36 @@ export default defineComponent({
             'systemJobEnumId_op': 'equals'
           },
           "noConditionFind": "Y",
-          "viewSize": 1
+          "viewSize": 2
         } as any
 
         let resp = await JobService.fetchJobInformation(params)
+
         if (!hasError(resp)) {
-          this.preordBckordComputationJob = resp.data.docs[0]
+          this.preordBckordComputationJob = resp.data.docs.find((job: any) => job.statusId === 'SERVICE_PENDING')
         }
 
-        // fetching last run time
-        resp = await JobService.fetchJobInformation({
-          "inputFields": {
-            ...params.inputFields,
-            "statusId": ["SERVICE_CANCELLED", "SERVICE_CRASHED", "SERVICE_FAILED", "SERVICE_FINISHED"],
-            "statusId_op": "in",
-          },
-          // fetching statusId as well as only one fiel cannot be sent
-          "fieldList": ["runTime", "statusId"],
-          "noConditionFind": "Y",
-          "viewSize": 1,
-          "orderBy": "runTime DESC"
-        })
+        // fetching last run time only if its a pending job
+        if (this.preordBckordComputationJob) {
+          // fetching last run time
+          resp = await JobService.fetchJobInformation({
+            "inputFields": {
+              ...params.inputFields,
+              "statusId": ["SERVICE_CANCELLED", "SERVICE_CRASHED", "SERVICE_FAILED", "SERVICE_FINISHED"],
+              "statusId_op": "in",
+            },
+            // fetching statusId as well as only one field cannot be sent
+            "fieldList": ["runTime", "statusId"],
+            "noConditionFind": "Y",
+            "viewSize": 1,
+            "orderBy": "runTime DESC"
+          })
 
-        if (!hasError(resp)) {
-          this.preordBckordComputationJob.lastRunTime = resp.data.docs[0].runTime
+          if (!hasError(resp)) {
+            this.preordBckordComputationJob.lastRunTime = resp.data.docs[0].runTime
+          }
+        } else {
+          this.preordBckordComputationJob = {}
         }
       } catch (error) {
         showToast(translate("Something went wrong"));
