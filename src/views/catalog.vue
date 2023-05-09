@@ -226,9 +226,7 @@ export default defineComponent({
           "inputFields": {
             "statusId": ["SERVICE_PENDING", "SERVICE_DRAFT"],
             "statusId_op": "in",
-            "shopId_fld0_value": this.currentEComStore.productStoreId,
-            "shopId_fld0_grp": "1",
-            "shopId_fld0_op": "equals",
+            "productStoreId": this.currentEComStore.productStoreId,
             'systemJobEnumId': 'JOB_REL_PREODR_CAT',
             'systemJobEnumId_op': 'equals'
           },
