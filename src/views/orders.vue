@@ -223,6 +223,7 @@ import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import Image from '@/components/Image.vue';
+import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
 
@@ -292,6 +293,7 @@ export default defineComponent({
       })
     },
     async releaseItems() {
+      emitter.emit("presentLoader")
       const selectedItems = this.getSelectedItemsToRelease("_NA_", "RELEASED"); // TODO Make it configurable
       const json = JSON.stringify(selectedItems);
       const blob = new Blob([json], { type: 'application/json'});
@@ -308,9 +310,10 @@ export default defineComponent({
       }).then(() => {
         // TODO Find a better place to call this
         this.store.dispatch("order/removeItems", { items: selectedItems });
-      })
+      }).finally(() => emitter.emit("dismissLoader"))
     },
     async cancelItems() {
+      emitter.emit("presentLoader")
       const selectedItems = this.selectedItemsToCancel;
       const json = JSON.stringify(selectedItems);
       const blob = new Blob([json], { type: 'application/json'});
@@ -327,7 +330,7 @@ export default defineComponent({
       }).then(() => {
         // TODO Find a better place to call this
         this.store.dispatch("order/removeItems", { items: selectedItems });
-      })
+      }).finally(() => emitter.emit("dismissLoader"))
     },
     async deselectAlert() {
       const alert = await alertController.create({

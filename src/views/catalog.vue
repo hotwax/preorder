@@ -10,17 +10,35 @@
     </ion-header>
 
     <ion-content>
-      <div class="ion-padding-top">
-        <ion-toolbar>
-          <ion-searchbar :placeholder="$t('Search products')" v-model="queryString" @keyup.enter="queryString = $event.target.value; getCatalogProducts()" />
-          <ion-item lines="none">
-            <ion-chip :color="prodCatalogCategoryTypeId === filter.value ? '' : 'dark'" v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
-              <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
-              <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
-              <ion-label>{{ $t(filter.name) }}</ion-label>
-            </ion-chip>
-          </ion-item>
-        </ion-toolbar>
+      <div class="header">
+        <div class="filters ion-padding-top">
+          <ion-toolbar>
+            <ion-searchbar :placeholder="$t('Search products')" v-model="queryString" @keyup.enter="queryString = $event.target.value; getCatalogProducts()" />
+            <ion-item lines="none">
+              <ion-chip :color="prodCatalogCategoryTypeId === filter.value ? '' : 'dark'" v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
+                <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
+                <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
+                <ion-label>{{ $t(filter.name) }}</ion-label>
+              </ion-chip>
+            </ion-item>
+          </ion-toolbar>
+        </div>
+        <div class="jobs">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>{{ $t('Jobs') }}</ion-card-title>
+            </ion-card-header>
+            <ion-item lines="none">
+              <ion-label class="ion-text-wrap">
+                <h5>{{ $t('Presell computation') }}</h5>
+                <p>{{ preordBckordComputationJob.lastRunTime && timeTillJob(preordBckordComputationJob.lastRunTime) }}</p>
+              </ion-label>
+              <ion-label slot="end" :color="!preordBckordComputationJob.runTime ? 'medium' : ''">
+                <p>{{ preordBckordComputationJob.runTime ? timeTillJob(preordBckordComputationJob.runTime) : $t('disabled')}}</p>
+              </ion-label>
+            </ion-item>
+          </ion-card>
+        </div>
       </div>
 
       <hr />
@@ -40,8 +58,8 @@
             </ion-label>
           </ion-item>
 
-          <ion-chip class="tablet" outline>
-            <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : $t('Back-order') }}</ion-label>
+          <ion-chip v-if="product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER')" class="tablet" outline>
+            <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER') ? $t('Back-order') : '-' }}</ion-label>
           </ion-chip>
 
           <ion-item lines="none" class="tablet">
@@ -71,6 +89,9 @@
 <script lang="ts">
 import {
   IonButtons,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
   IonChip,
   IonContent,
   IonHeader,
@@ -99,6 +120,9 @@ import {
 import Image from '@/components/Image.vue';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
+import { JobService } from '@/services/JobService';
+import { hasError, showToast } from '@/utils';
+import { translate } from '@/i18n';
 
 export default defineComponent({
   name: 'Catalog',
@@ -106,6 +130,9 @@ export default defineComponent({
     Image,
     IonButtons,
     IonChip,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
     IonContent,
     IonHeader,
     IonIcon,
@@ -136,7 +163,8 @@ export default defineComponent({
         name: 'Removed from category',
         value: 'REMOVED'
       }*/],
-      queryString: ''
+      queryString: '',
+      preordBckordComputationJob: {} as any
     }
   },
   computed: {
@@ -149,6 +177,7 @@ export default defineComponent({
   },
   mounted() {
     this.getCatalogProducts()
+    this.preparePreordBckordComputationJob()
   },
   methods: {
     async getCatalogProducts(vSize?: any, vIndex?: any) {
@@ -196,9 +225,59 @@ export default defineComponent({
         this.router.push({ path: `/catalog-product-details/${product.groupId}/${product.productId}` });
       })
     },
+    async preparePreordBckordComputationJob() {
+      try {
+        const params = {
+          "inputFields": {
+            "statusId": ["SERVICE_PENDING", "SERVICE_DRAFT"],
+            "statusId_op": "in",
+            "productStoreId": this.currentEComStore.productStoreId,
+            'systemJobEnumId': 'JOB_REL_PREODR_CAT',
+            'systemJobEnumId_op': 'equals'
+          },
+          "noConditionFind": "Y",
+          "viewSize": 2
+        } as any
+
+        let resp = await JobService.fetchJobInformation(params)
+
+        if (!hasError(resp)) {
+          this.preordBckordComputationJob = resp.data.docs.find((job: any) => job.statusId === 'SERVICE_PENDING')
+        }
+
+        // fetching last run time only if its a pending job
+        if (this.preordBckordComputationJob) {
+          // fetching last run time
+          resp = await JobService.fetchJobInformation({
+            "inputFields": {
+              ...params.inputFields,
+              "statusId": ["SERVICE_CANCELLED", "SERVICE_CRASHED", "SERVICE_FAILED", "SERVICE_FINISHED"],
+              "statusId_op": "in",
+            },
+            // fetching statusId as well as only one field cannot be sent
+            "fieldList": ["runTime", "statusId"],
+            "noConditionFind": "Y",
+            "viewSize": 1,
+            "orderBy": "runTime DESC"
+          })
+
+          if (!hasError(resp)) {
+            this.preordBckordComputationJob.lastRunTime = resp.data.docs[0].runTime
+          }
+        } else {
+          this.preordBckordComputationJob = {}
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
     getTime(time: number) {
       return DateTime.fromMillis(time).toLocaleString()
-    }
+    },
+    timeTillJob (time: any) {
+      const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
+    },
   },
   setup() {
     const router = useRouter();
@@ -218,10 +297,33 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.header {
+  display: grid;
+  grid: "filters jobs"
+        /3fr 2fr;
+}
+.filters {
+  grid-area: filters;
+  padding: 8px 0;
+}
+.jobs {
+  grid-area: jobs;
+}
 .list-item {
   --columns-tablet: 4;
   --columns-desktop: 4;
   border-bottom: 1px solid var(--ion-color-medium);
   cursor: pointer;
+}
+@media (max-width: 991px) {
+  /* ==============
+   3. Mobile Header
+     ============== */
+  .header {
+    grid: "filters"
+          "jobs"
+          / auto;
+    padding: 0;
+}
 }
 </style>

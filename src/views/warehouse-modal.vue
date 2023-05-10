@@ -134,6 +134,7 @@ export default defineComponent({
       })
     },
     releaseItemsToWarehouse: async function() {
+      emitter.emit("presentLoader")
       const items = this.selectedVariants ? this.variantItems.map((item: any) => {
         item.toFacilityId = this.facilityId
         item.changeReasonEnumId = "BROKERED";
@@ -153,7 +154,7 @@ export default defineComponent({
           data: formData
       }).then(() => {
         this.store.dispatch("order/removeItems", { items: this.items });
-      })
+      }).finally(() => emitter.emit("dismissLoader"))
     },
     async releaseItemToWarehouse () {
       return this.store.dispatch("order/releaseItem", {
