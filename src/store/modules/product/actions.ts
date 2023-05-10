@@ -210,6 +210,59 @@ const actions: ActionTree<ProductState, RootState> = {
     } finally {
       commit(types.PRODUCT_CATALOG_UPDATED, { items, total: resp.data.response?.numFound ? resp.data.response.numFound : 0 });
     }
-  }
+  },
+
+  /**
+   * Add catalog product to cache
+  */
+  async addCatalogProductToCache({ commit, state }, payload) {
+    if (!state.cached[payload.productId]) commit(types.PRODUCT_ADD_CTLGPRDCT_TO_CACHED, payload);
+  },
+
+  /**
+   * Setting current catalog product in state
+  */
+  async setCurrentCatalogProduct({ commit, state }, payload) {
+    // checking if product is in cache
+    let product = state.cachedCatalogProducts[payload.groupId] ? JSON.parse(JSON.stringify(state.cachedCatalogProducts[payload.groupId])) : {}
+    const isProductCached = Object.keys(product).length
+    if (isProductCached && product.variants?.length) return commit(types.PRODUCT_CURRENT_UPDATED, product)
+
+    emitter.emit("presentLoader")
+
+    let resp;
+    let productFilterCondition: any = `docType: PRODUCT AND groupId: ${payload.groupId}`;
+    if (!isProductCached) productFilterCondition = `docType: PRODUCT AND (productId: ${payload.groupId} OR groupId: ${payload.groupId})`
+
+    try {
+      const params = {
+        "json": {
+          "params": {
+            "rows": 50,
+          } as any,
+          "filter": productFilterCondition,
+          "query": "*:*"
+        }
+      }
+
+      resp = await ProductService.getCatalogProducts(params)
+      if (!hasError(resp) && resp.data.response.numFound) {
+        let variants = resp.data.response
+        if (!isProductCached) {
+          product = resp.data.response.docs.find((product: any) => product.productId === payload.groupId)
+          variants = resp.data.response.docs.filter((product: any) => product.productId !== payload.groupId)
+        }
+        product.variants = variants
+        commit(types.PRODUCT_CURRENT_CTLGPRDCT_UPDATED, product)
+        commit(types.PRODUCT_ADD_CTLGPRDCT_TO_CACHED, product)
+      } else {
+        showToast(translate("Product not found"));
+      }
+    } catch(error){
+      console.error(error)
+      showToast(translate("Something went wrong"));
+    }
+    emitter.emit("dismissLoader");
+  },
 }
 export default actions;

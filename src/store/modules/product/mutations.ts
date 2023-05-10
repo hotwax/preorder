@@ -35,5 +35,11 @@ const mutations: MutationTree <ProductState> = {
         state.catalogProducts.items = payload.items
         state.catalogProducts.total = payload.total
     },
+    [types.PRODUCT_CURRENT_CTLGPRDCT_UPDATED] (state, payload) {
+        state.currentCatalogProduct = payload
+    },
+    [types.PRODUCT_ADD_CTLGPRDCT_TO_CACHED] (state, payload) {
+        state.cachedCatalogProducts[payload.productId] = payload
+    },
 }
 export default mutations;
