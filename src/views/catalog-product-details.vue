@@ -25,8 +25,7 @@
               <ion-list-header>{{ $t("Colors") }}</ion-list-header>
               <ion-item lines="none">
                 <ion-row>
-                  <ion-chip :color="selectedColor === colorFeature ? '' : 'dark'" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
-                    <ion-icon v-show="selectedColor === colorFeature" :icon="checkmarkOutline" />
+                  <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
                     <ion-label class="ion-text-wrap">{{ colorFeature }}</ion-label>
                   </ion-chip>
                 </ion-row>
@@ -37,8 +36,7 @@
               <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                 <ion-row>
-                  <ion-chip :color="selectedSize === sizeFeature ? '' : 'dark'" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
-                    <ion-icon v-show="selectedSize === sizeFeature" :icon="checkmarkOutline" />
+                  <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
                     <ion-label class="ion-text-wrap">{{ sizeFeature }}</ion-label>
                   </ion-chip>
                 </ion-row>
@@ -53,25 +51,21 @@
 
 <script lang="ts">
 import {
-  IonIcon,
-  IonItem,
-  IonPage,
   IonButtons,
   IonBackButton,
-  IonContent,
-  IonLabel,
   IonChip,
+  IonContent,
   IonHeader,
-  IonToolbar,
-  IonTitle,
+  IonItem,
+  IonLabel,
   IonListHeader,
   IonList,
-  IonRow,
+  IonPage,
+  IonToolbar,
+  IonTitle,
+  IonRow
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import {
-  checkmarkOutline
-} from "ionicons/icons";
 import { useStore } from "@/store";
 import Image from '@/components/Image.vue';
 import { mapGetters } from "vuex";
@@ -82,21 +76,20 @@ import { sortSizes } from '@/apparel-sorter';
 export default defineComponent({
   name: "catalog-product-details",
   components: {
-    IonIcon,
-    IonRow,
     Image,
-    IonLabel,
     IonButtons,
     IonBackButton,
-    IonContent,
     IonChip,
-    IonTitle,
+    IonContent,
     IonHeader,
-    IonPage,
     IonItem,
-    IonList,
-    IonToolbar,
+    IonLabel,
     IonListHeader,
+    IonList,
+    IonPage,
+    IonToolbar,
+    IonTitle,
+    IonRow,
   },
   data() {
     return {
@@ -117,7 +110,6 @@ export default defineComponent({
       this.getFeatures()
       await this.updateVariant()
     }
-    console.log(this.product)
   },
   methods: {
     async applyFeature(feature: string, type: string) {
@@ -163,8 +155,6 @@ export default defineComponent({
   setup() {
     const store = useStore();
     return {
-      checkmarkOutline,
-      Image,
       store
     };
   },

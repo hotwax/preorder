@@ -15,9 +15,8 @@
           <ion-toolbar>
             <ion-searchbar :placeholder="$t('Search products')" v-model="queryString" @keyup.enter="queryString = $event.target.value; getCatalogProducts()" />
             <ion-item lines="none">
-              <ion-chip :color="prodCatalogCategoryTypeId === filter.value ? '' : 'dark'" v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
+              <ion-chip :outline="prodCatalogCategoryTypeId !== filter.value" v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
                 <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
-                <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
                 <ion-label>{{ $t(filter.name) }}</ion-label>
               </ion-chip>
             </ion-item>
@@ -95,7 +94,6 @@ import {
   IonChip,
   IonContent,
   IonHeader,
-  IonIcon,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonItem,
@@ -110,19 +108,11 @@ import {
 import { defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import {
-  checkmarkOutline,
-  ellipsisVerticalOutline,
-  lockClosedOutline,
-  sendOutline,
-  shirtOutline,
-} from 'ionicons/icons';
 import Image from '@/components/Image.vue';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
-import { hasError, showToast } from '@/utils';
-import { translate } from '@/i18n';
+import { hasError } from '@/utils';
 
 export default defineComponent({
   name: 'Catalog',
@@ -135,7 +125,6 @@ export default defineComponent({
     IonCardTitle,
     IonContent,
     IonHeader,
-    IonIcon,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonItem,
@@ -284,11 +273,6 @@ export default defineComponent({
     const store = useStore();
 
     return {
-      checkmarkOutline,
-      ellipsisVerticalOutline,
-      lockClosedOutline,
-      sendOutline,
-      shirtOutline,
       router,
       store,
     };
