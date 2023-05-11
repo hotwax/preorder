@@ -1,3 +1,13 @@
+# Release 1.5.0
+
+## What's Changed
+* Improved: added spinner while performing bulk actions by @adityasharma7 in https://github.com/hotwax/preorder/pull/123
+* Implemented: computation jobs section on catalog page (#85zt0m698) by @k2maan in https://github.com/hotwax/preorder/pull/122
+* Implemented: product features section in the catalog product details page (#85zt0m4qc) by @k2maan in https://github.com/hotwax/preorder/pull/124
+
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.4.0...v1.5.0
+
 # Release 1.4.0
 
 ## What's Changed
