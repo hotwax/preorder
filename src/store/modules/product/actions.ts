@@ -210,6 +210,57 @@ const actions: ActionTree<ProductState, RootState> = {
     } finally {
       commit(types.PRODUCT_CATALOG_UPDATED, { items, total: resp.data.response?.numFound ? resp.data.response.numFound : 0 });
     }
-  }
+  },
+
+  /**
+   * Setting current catalog product in state
+  */
+  async setCurrentCatalogProduct({ commit, state }, payload) {
+    // checking if product is in cache
+    let product = state.cached[payload.productId] ? JSON.parse(JSON.stringify(state.cached[payload.productId])) : {}
+    const isProductCached = Object.keys(product).length
+    if (isProductCached && product.variants?.length) {
+      commit(types.PRODUCT_CURRENT_CTLGPRDCT_UPDATED, product)
+      return product
+    }
+
+    emitter.emit("presentLoader")
+
+    let resp;
+    let productFilterCondition: any = `docType: PRODUCT AND groupId: ${payload.productId}`;
+    if (!isProductCached) productFilterCondition = `docType: PRODUCT AND (productId: ${payload.productId} OR groupId: ${payload.productId})`
+
+    try {
+      const params = {
+        "json": {
+          "params": {
+            "rows": 50,
+          } as any,
+          "filter": productFilterCondition,
+          "query": "*:*"
+        }
+      }
+
+      resp = await ProductService.getCatalogProducts(params)
+      if (!hasError(resp) && resp.data.response.numFound) {
+        let variants = resp.data.response
+        if (!isProductCached) {
+          product = resp.data.response.docs.find((product: any) => product.productId === payload.productId)
+          variants = resp.data.response.docs.filter((product: any) => product.productId !== payload.productId)
+        }
+        product.variants = variants
+        commit(types.PRODUCT_CURRENT_CTLGPRDCT_UPDATED, product)
+        commit(types.PRODUCT_ADD_TO_CACHED, { product })
+        commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products: product.variants })
+      } else {
+        showToast(translate("Product not found"));
+      }
+    } catch(error){
+      console.error(error)
+      showToast(translate("Something went wrong"));
+    }
+    emitter.emit("dismissLoader");
+    return product
+  },
 }
 export default actions;

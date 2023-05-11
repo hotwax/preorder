@@ -15,9 +15,8 @@
           <ion-toolbar>
             <ion-searchbar :placeholder="$t('Search products')" v-model="queryString" @keyup.enter="queryString = $event.target.value; getCatalogProducts()" />
             <ion-item lines="none">
-              <ion-chip v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
+              <ion-chip :outline="prodCatalogCategoryTypeId !== filter.value" v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
                 <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
-                <ion-icon v-show="prodCatalogCategoryTypeId === filter.value" :icon="checkmarkOutline" />
                 <ion-label>{{ $t(filter.name) }}</ion-label>
               </ion-chip>
             </ion-item>
@@ -47,7 +46,7 @@
         {{ $t('No products found') }}
       </div>
       <div v-else>
-        <div class="list-item" v-for="product in products" :key="product.productId">
+        <div class="list-item" v-for="product in products" :key="product.productId" @click="viewProduct(product)">
           <ion-item lines="none" class="tablet">
             <ion-thumbnail slot="start">
               <Image :src="product.mainImageUrl" />
@@ -95,7 +94,6 @@ import {
   IonChip,
   IonContent,
   IonHeader,
-  IonIcon,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonItem,
@@ -110,19 +108,11 @@ import {
 import { defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import {
-  checkmarkOutline,
-  ellipsisVerticalOutline,
-  lockClosedOutline,
-  sendOutline,
-  shirtOutline,
-} from 'ionicons/icons';
 import Image from '@/components/Image.vue';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
-import { hasError, showToast } from '@/utils';
-import { translate } from '@/i18n';
+import { hasError } from '@/utils';
 
 export default defineComponent({
   name: 'Catalog',
@@ -135,7 +125,6 @@ export default defineComponent({
     IonCardTitle,
     IonContent,
     IonHeader,
-    IonIcon,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonItem,
@@ -220,6 +209,9 @@ export default defineComponent({
       else this.prodCatalogCategoryTypeId = value
       this.getCatalogProducts()
     },
+    viewProduct(product: any) {
+      this.router.push({ path: `/catalog-product-details/${product.groupId}/${product.productId}` });
+    },
     async preparePreordBckordComputationJob() {
       try {
         const params = {
@@ -263,7 +255,7 @@ export default defineComponent({
           this.preordBckordComputationJob = {}
         }
       } catch (error) {
-        console.log(error)
+        console.error(error)
       }
     },
     getTime(time: number) {
@@ -279,11 +271,6 @@ export default defineComponent({
     const store = useStore();
 
     return {
-      checkmarkOutline,
-      ellipsisVerticalOutline,
-      lockClosedOutline,
-      sendOutline,
-      shirtOutline,
       router,
       store,
     };
@@ -308,6 +295,7 @@ export default defineComponent({
   --columns-tablet: 4;
   --columns-desktop: 4;
   border-bottom: 1px solid var(--ion-color-medium);
+  cursor: pointer;
 }
 @media (max-width: 991px) {
   /* ==============

@@ -25,4 +25,14 @@ const handleDateTimeInput = (dateTimeValue: any) => {
   return DateTime.fromISO(dateTime).toMillis()
 }
 
-export { handleDateTimeInput, showToast, hasError }
+const getFeature = (featureHierarchy: any, featureKey: string) => {
+  let  featureValue = ''
+  if (featureHierarchy) {
+    const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
+    const featureSplit = feature ? feature.split('/') : [];
+    featureValue = featureSplit[2] ? featureSplit[2] : '';
+  }
+  return featureValue;
+}
+
+export { handleDateTimeInput, showToast, hasError, getFeature }
