@@ -255,7 +255,7 @@ export default defineComponent({
           this.preordBckordComputationJob = {}
         }
       } catch (error) {
-        console.log(error)
+        console.error(error)
       }
     },
     getTime(time: number) {

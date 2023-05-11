@@ -105,7 +105,7 @@ export default defineComponent({
     })
   },
   async mounted() {
-    await this.store.dispatch('product/setCurrentCatalogProduct', { productId: this.$route.params.groupId })
+    await this.store.dispatch('product/setCurrentCatalogProduct', { productId: this.$route.params.productId })
     if (this.product.variants) {
       this.getFeatures()
       this.updateVariant()
@@ -128,7 +128,7 @@ export default defineComponent({
 
       Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
       
-      const openedVariant = this.product.variants.find((variant: any) => variant.productId === this.$route.params.productId)
+      const openedVariant = this.product.variants.find((variant: any) => variant.productId === this.$route.params.variantId)
       this.selectedColor = getFeature(openedVariant.featureHierarchy, '1/COLOR/')
       this.selectedSize = getFeature(openedVariant.featureHierarchy, '1/SIZE/')
     },
