@@ -25,8 +25,7 @@ const productModule: Module<ProductState, RootState> = {
         items: [],
         total: 0
       },
-      currentCatalogProduct: {},
-      cachedCatalogProducts: {}
+      currentCatalogProduct: {}
     },
     getters,
     actions,

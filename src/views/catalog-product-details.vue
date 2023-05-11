@@ -17,7 +17,7 @@
         <div class="product-info">
           <div class="ion-padding">
             <h4>{{ currentVariant.productName }}</h4>
-            <h4>{{ currentVariant.sku }}</h4>
+            <p>{{ currentVariant.sku }}</p>
           </div>
 
           <div class="product-features">
@@ -105,17 +105,17 @@ export default defineComponent({
     })
   },
   async mounted() {
-    await this.store.dispatch('product/setCurrentCatalogProduct', { groupId: this.$route.params.groupId })
+    await this.store.dispatch('product/setCurrentCatalogProduct', { productId: this.$route.params.groupId })
     if (this.product.variants) {
       this.getFeatures()
-      await this.updateVariant()
+      this.updateVariant()
     }
   },
   methods: {
-    async applyFeature(feature: string, type: string) {
+    applyFeature(feature: string, type: string) {
       if (type === 'color') this.selectedColor = feature
       else if (type === 'size') this.selectedSize = feature
-      await this.updateVariant();
+      this.updateVariant();
     },
     getFeatures() {
       const features = {} as any
@@ -132,7 +132,7 @@ export default defineComponent({
       this.selectedColor = getFeature(openedVariant.featureHierarchy, '1/COLOR/')
       this.selectedSize = getFeature(openedVariant.featureHierarchy, '1/SIZE/')
     },
-    async updateVariant() {
+    updateVariant() {
       let variant
       if (this.selectedColor || this.selectedSize) {
         variant = this.product.variants.find((variant: any) => {

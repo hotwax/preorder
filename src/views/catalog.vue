@@ -209,10 +209,8 @@ export default defineComponent({
       else this.prodCatalogCategoryTypeId = value
       this.getCatalogProducts()
     },
-    async viewProduct(product: any) {
-      await this.store.dispatch('product/addCatalogProductToCache', product).then(() => {
-        this.router.push({ path: `/catalog-product-details/${product.groupId}/${product.productId}` });
-      })
+    viewProduct(product: any) {
+      this.router.push({ path: `/catalog-product-details/${product.groupId}/${product.productId}` });
     },
     async preparePreordBckordComputationJob() {
       try {
