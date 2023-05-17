@@ -216,24 +216,23 @@ export default defineComponent({
       try {
         const params = {
           "inputFields": {
-            "statusId": ["SERVICE_PENDING", "SERVICE_DRAFT"],
-            "statusId_op": "in",
+            "statusId": "SERVICE_PENDING",
+            "statusId_op": "equals",
             "productStoreId": this.currentEComStore.productStoreId,
             'systemJobEnumId': 'JOB_REL_PREODR_CAT',
             'systemJobEnumId_op': 'equals'
           },
           "noConditionFind": "Y",
-          "viewSize": 2
+          "viewSize": 1
         } as any
 
         let resp = await JobService.fetchJobInformation(params)
 
         if (!hasError(resp)) {
-          this.preordBckordComputationJob = resp.data.docs.find((job: any) => job.statusId === 'SERVICE_PENDING')
+          this.preordBckordComputationJob = resp.data.docs[0]
         }
 
-        // fetching last run time only if its a pending job
-        if (this.preordBckordComputationJob) {
+        if (Object.keys(this.preordBckordComputationJob).length) {
           // fetching last run time
           resp = await JobService.fetchJobInformation({
             "inputFields": {
@@ -251,8 +250,6 @@ export default defineComponent({
           if (!hasError(resp)) {
             this.preordBckordComputationJob.lastRunTime = resp.data.docs[0].runTime
           }
-        } else {
-          this.preordBckordComputationJob = {}
         }
       } catch (error) {
         console.error(error)

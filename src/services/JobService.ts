@@ -74,12 +74,30 @@ const fetchJobInformation = async (payload: any): Promise<any> => {
   });
 }
 
+const cancelJob = async (payload: any): Promise <any> => {
+  return api({
+    url: "service/cancelScheduledJob",
+    method: "post",
+    data: payload
+  });
+}
+
+const scheduleJob = async (payload: any): Promise <any>  => {
+  return api({
+    url: "scheduleService",
+    method: "post",
+    data: payload
+  });
+}
+
 export const JobService = {
+  cancelJob,
   fetchBackgroundJobs,
   fetchJobLogs,
   fetchJobs,
+  fetchJobInformation,
   pollJobs,
   prepareFetchJobsQuery,
   prepareFetchLogsQuery,
-  fetchJobInformation
+  scheduleJob
 }

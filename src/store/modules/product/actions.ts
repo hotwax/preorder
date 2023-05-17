@@ -250,8 +250,7 @@ const actions: ActionTree<ProductState, RootState> = {
         }
         product.variants = variants
         commit(types.PRODUCT_CURRENT_CTLGPRDCT_UPDATED, product)
-        commit(types.PRODUCT_ADD_TO_CACHED, { product })
-        commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products: product.variants })
+        commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products: [product, ...product.variants] })
       } else {
         showToast(translate("Product not found"));
       }
