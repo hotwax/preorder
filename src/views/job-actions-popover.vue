@@ -1,14 +1,17 @@
 <template>
   <ion-content>
-    <ion-list>
+    <!-- Show "Schedule in every 15 minutes" option for draft jobs only -->
+    <ion-list v-if="job.statusId === 'SERVICE_DRAFT'">
+      <ion-item lines="none" button @click="schdlInEvry15Mins()">
+        <ion-icon slot="start" :icon="timerOutline" />
+        {{ $t("Schedule in every 15 minutes") }}
+      </ion-item>
+    </ion-list>
+    <ion-list v-else>
       <ion-item lines="none" button @click="runNow()">
         <ion-icon slot="start" :icon="flashOutline" />
         {{ $t("Run now") }}
       </ion-item>
-      <!-- <ion-item lines="none" button>
-        <ion-icon slot="start" :icon="timerOutline" />
-        {{ $t("Schedule in every 15 minutes") }}
-      </ion-item> -->
       <ion-item lines="none" button @click="openJobHistoryModal()">
         <ion-icon slot="start" :icon="timeOutline" />
         {{ $t("History") }}
@@ -45,7 +48,7 @@ export default defineComponent({
     IonContent,
     IonIcon,
     IonItem,
-    IonList,
+    IonList
   },
   methods: {
     closeJobActionsPopover() {
@@ -83,6 +86,10 @@ export default defineComponent({
         }]
       });
       await alert.present();
+    },
+    async schdlInEvry15Mins() {
+      await this.store.dispatch('job/scheduleJob', { job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
+      this.closeJobActionsPopover()
     }
   },
   setup() {

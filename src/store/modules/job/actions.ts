@@ -97,6 +97,7 @@ const actions: ActionTree<JobState, RootState> = {
       'statusId': "SERVICE_PENDING",
       'systemJobEnumId': job.systemJobEnumId
     } as any
+
     // checking if the runtimeData has productStoreId, and if present then adding it on root level
     job?.runtimeData?.productStoreId?.length >= 0 && (payload['productStoreId'] = job.productStoreId)
     job?.priority && (payload['SERVICE_PRIORITY'] = job.priority.toString())
@@ -144,27 +145,121 @@ const actions: ActionTree<JobState, RootState> = {
     }
     return resp
   },
-  async fetchCtgryAndBrkrngJobs ({ commit }, payload) {
-    const params = {
-      "inputFields": {
-        "statusId": "SERVICE_PENDING",
-        "statusId_op": "equals",
-        "productStoreId": this.state.user.currentEComStore?.productStoreId,
-        'systemJobEnumId': payload.systemJobEnumIds,
-        'systemJobEnumId_op': 'in'
-      },
-      "noConditionFind": "Y",
-      "viewSize": payload.systemJobEnumIds.length,
-    } as any
+  async scheduleJob({ dispatch }, payload) {
+    let resp;
 
-    let resp, jobs = [] as any
+    const params = {
+      'JOB_NAME': payload.job.jobName,
+      'SERVICE_NAME': payload.job.serviceName,
+      'SERVICE_COUNT': '0',
+      'SERVICE_TEMP_EXPR': payload.frequency,
+      'SERVICE_RUN_AS_SYSTEM':'Y',
+      'jobFields': {
+        'productStoreId': this.state.user.currentEComStore.productStoreId,
+        'systemJobEnumId': payload.job.systemJobEnumId,
+        'tempExprId': payload.frequency, // Need to remove this as we are passing frequency in SERVICE_TEMP_EXPR, currently kept it for backward compatibility
+        'maxRecurrenceCount': '-1',
+        'parentJobId': payload.job.parentJobId,
+        'runAsUser': 'system', //default system, but empty in run now.  TODO Need to remove this as we are using SERVICE_RUN_AS_SYSTEM, currently kept it for backward compatibility
+        'recurrenceTimeZone': this.state.user.current.userTimeZone
+      },
+      'statusId': "SERVICE_PENDING",
+      'systemJobEnumId': payload.job.systemJobEnumId
+    } as any
+    
+    // checking if the runtimeData has productStoreId, and if present then adding it on root level
+    payload.job?.runtimeData?.productStoreId?.length >= 0 && (params['productStoreId'] = this.state.user.currentEComStore.productStoreId)
+    payload.job?.priority && (params['SERVICE_PRIORITY'] = payload.job.priority.toString())
+    payload.runTime && (params['SERVICE_TIME'] = payload.runTime.toString())
+
+    // assigning '' (empty string) to all the runtimeData properties whose value is "null"
+    payload.job.runtimeData && Object.keys(payload.job.runtimeData).map((key: any) => {
+      if (payload.job.runtimeData[key] === 'null' ) payload.job.runtimeData[key] = ''
+    })
+
     try {
-      resp = await JobService.fetchJobInformation(params)
+      resp = await JobService.scheduleJob({ ...payload.job.runtimeData, ...params });
       if (!hasError(resp)) {
-        jobs = resp.data.docs
+        showToast(translate('Service has been scheduled'));
+      } else {
+        showToast(translate('Something went wrong'))
+      }
+    } catch (err) {
+      showToast(translate('Something went wrong'))
+      console.error(err)
+    } finally {
+      // refetching the jobs
+      const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
+      await dispatch('fetchCtgryAndBrkrngJobs', { systemJobEnumIds })
+    }
+    return {};
+  },
+  async fetchCtgryAndBrkrngJobs ({ commit }, payload) {
+    let resp, jobs = [] as any
+    const requests = []
+
+    try {
+      let params = {
+        "inputFields": {
+          "statusId": "SERVICE_DRAFT",
+          "statusId_op": "equals",
+          'systemJobEnumId': payload.systemJobEnumIds,
+          'systemJobEnumId_op': 'in'
+        },
+        "noConditionFind": "Y",
+        "viewSize": payload.systemJobEnumIds.length,
+      } as any
+
+      requests.push(JobService.fetchJobInformation(params).catch((error: any) => error))
+
+      params = {
+        "inputFields": {
+          "statusId": "SERVICE_PENDING",
+          "statusId_op": "equals",
+          "productStoreId": this.state.user.currentEComStore?.productStoreId,
+          'systemJobEnumId': payload.systemJobEnumIds,
+          'systemJobEnumId_op': 'in'
+        },
+        "noConditionFind": "Y",
+        "viewSize": payload.systemJobEnumIds.length
+      } as any
+      
+      requests.push(JobService.fetchJobInformation(params).catch((error: any) => error))
+
+      resp = await Promise.all(requests)
+      if (!hasError(resp[0])) {
+        resp[0].data.docs.map((job: any) => delete job.runTime)
+        jobs = resp[0].data.docs
       }
 
-      const pendingSysJobEnumIds = jobs.filter((job: any) => job.statusId === 'SERVICE_PENDING').map((job: any) => job.systemJobEnumId)
+      const pendingSysJobEnumIds = [] as any // for fetching history
+      if (!hasError(resp[1])) {
+        const pendingJobs = Object.values(resp[1].data.docs.reduce((jobs: [any], job: any) => {
+          // keeping the job with the highest runTime
+          if (!jobs[job.systemJobEnumId] || job.runTime > jobs[job.systemJobEnumId].runTime) {
+            pendingSysJobEnumIds.push(job.systemJobEnumId)
+            jobs[job.systemJobEnumId] = job
+          }
+          return jobs
+        }, {}))
+        jobs = [...jobs, ...pendingJobs]
+      } else {
+        return resp
+      }
+
+      jobs = Object.values(jobs.reduce((jobs: [any], job: any) => {
+        const { systemJobEnumId, statusId } = job;
+        if (jobs[systemJobEnumId]) {
+          // taking pendnig if both and draft exist
+          if (statusId === 'SERVICE_PENDING' && jobs[systemJobEnumId].statusId !== 'SERVICE_PENDING') {
+            jobs[systemJobEnumId] = job;
+          }
+        } else {
+          jobs[systemJobEnumId] = job;
+        }
+        return jobs;
+      }, {}))
+
       await Promise.allSettled(pendingSysJobEnumIds.map(async (systemJobEnumId: string) => {
         const resp = await JobService.fetchJobInformation({
           "inputFields": {
@@ -180,7 +275,7 @@ const actions: ActionTree<JobState, RootState> = {
           "viewSize": 1,
           "orderBy": "runTime DESC"
         })
-        
+
         if (!hasError(resp)) {
           const respJob = resp.data.docs[0]
           jobs.find((job: any) => {
@@ -197,7 +292,13 @@ const actions: ActionTree<JobState, RootState> = {
     } catch (error) {
       console.error(error)
     } finally {
-      commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, { jobs })
+      jobs.length ? jobs = jobs.reduce((jobs: [any], job: any) => {
+        jobs[job.systemJobEnumId] = job
+        return jobs
+      }, {}) : jobs = {}
+
+      jobs.isLoaded = true
+      commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, jobs)
     }
     return resp;
   },

@@ -20,13 +20,7 @@ const mutations: MutationTree <JobState> = {
         state.polling = payload.polling
     },
     [types.JOB_CTGRY_AND_BRKRNG_UPDATED] (state, payload) {
-        if (payload.jobs.length) {
-            payload.jobs.forEach((job: any) => {
-                state.ctgryAndBrkrngJobs[job.systemJobEnumId] = job
-            })
-        } else {
-            state.ctgryAndBrkrngJobs = {};
-        }
+        state.ctgryAndBrkrngJobs = payload;
     },
 }
 export default mutations;

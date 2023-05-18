@@ -32,7 +32,7 @@
                 <h5>{{ $t('Presell computation') }}</h5>
                 <p>{{ preordBckordComputationJob.lastRunTime && timeTillJob(preordBckordComputationJob.lastRunTime) }}</p>
               </ion-label>
-              <ion-label slot="end" :color="!preordBckordComputationJob.runTime ? 'medium' : ''">
+              <ion-label slot="end">
                 <p>{{ preordBckordComputationJob.runTime ? timeTillJob(preordBckordComputationJob.runTime) : $t('disabled')}}</p>
               </ion-label>
             </ion-item>
@@ -216,6 +216,8 @@ export default defineComponent({
       try {
         const params = {
           "inputFields": {
+            // fetching only pending job here as there are no actions for 
+            // draft jobs and so fetching draft job data is not of any use.
             "statusId": "SERVICE_PENDING",
             "statusId_op": "equals",
             "productStoreId": this.currentEComStore.productStoreId,

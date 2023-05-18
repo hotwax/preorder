@@ -15,12 +15,8 @@
           <Image v-else :src="currentVariant.mainImageUrl" />
         </div>
 
-        <div class="product-info">
-          <div v-if="!Object.keys(currentVariant).length" class="ion-padding">
-            <ion-skeleton-text animated style="width: 60%;" />
-            <ion-skeleton-text animated style="width: 80%;" />
-          </div>
-          <div v-else class="ion-padding">
+        <div class="product-info" v-if="Object.keys(currentVariant).length">
+          <div class="ion-padding">
             <h4>{{ currentVariant.productName }}</h4>
             <p>{{ currentVariant.sku }}</p>
           </div>
@@ -36,15 +32,9 @@
                 </ion-row>
               </ion-item>
             </ion-list>
-            <ion-list v-else-if="!Object.keys(currentVariant).length" >
-              <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
-              <ion-item lines="none">
-                <ion-skeleton-text animated />
-              </ion-item>
-            </ion-list>
 
             <ion-list v-if="selectedSize">
-              <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
+              <ion-list-header>{{ $t("Sizes") }}</ion-list-header>
               <ion-item lines="none">
                 <ion-row>
                   <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
@@ -53,10 +43,27 @@
                 </ion-row>
               </ion-item>
             </ion-list>
-            <ion-list v-else-if="!Object.keys(currentVariant).length">
-              <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
+          </div>
+        </div>
+
+        <div class="product-info" v-else>
+          <div class="ion-padding">
+            <ion-skeleton-text animated style="width: 30%; height: 80%;" />
+            <ion-skeleton-text animated style="width: 50%;" />
+          </div>
+          
+          <div class="product-features">
+            <ion-list>
+              <ion-skeleton-text class="ion-margin" animated style="width: 20%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated />
+                <ion-skeleton-text animated style="width: 40%;"/>
+              </ion-item>
+            </ion-list>
+
+            <ion-list>
+              <ion-skeleton-text class="ion-margin" animated style="width: 20%" />
+              <ion-item lines="none">
+                <ion-skeleton-text animated style="width: 40%;"/>
               </ion-item>
             </ion-list>
           </div>
@@ -92,9 +99,9 @@
         </div> -->
       </div>
 
-      <!-- <hr />
+      <hr />
 
-      <div class="ion-padding-start" lines="none">
+      <!-- <div class="ion-padding-start" lines="none">
         <h3>{{ $t("Purchase order and Online ATP calculation") }}</h3>
       </div>
 
@@ -137,7 +144,7 @@
             <ion-label>{{ $t("Total PO ATP") }}</ion-label>
             <ion-label slot="end">{{ $t("200") }}</ion-label>
           </ion-item>
-        </ion-card> 
+        </ion-card>
 
         <ion-card>
           <ion-card-header>
@@ -166,28 +173,35 @@
             <ion-toggle slot="end" />
           </ion-item>
         </ion-card>
-      </section> -->
+      </section>
 
-      <hr />
+      <hr /> -->
 
       <section>
-        <ion-card>
+        <ion-card v-if="isCtgryAndBrkrngJobLoaded">
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t('Category and brokering jobs') }}</h3>
             </ion-card-title>
           </ion-card-header>
 
-          <div>
+          <!-- in case jobs are not available -->
+          <div v-if="!Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length
+            && !Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length 
+            && !Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length">
+            <ion-item>{{ $t("No jobs found") }}</ion-item>
+          </div>
+
+          <div v-else>
             <ion-item>
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Presell computation') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
               </ion-label>
-              <ion-label slot="end" :color="!getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime ? 'medium' : ''">
+              <ion-label slot="end">
                 <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime) : $t('disabled')}}</p>
               </ion-label>
-              <ion-button v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" class="job-action" fill="clear" slot="end" @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Presell computation')">
+              <ion-button class="job-action" fill="clear" slot="end" @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Presell computation')">
                 <ion-icon slot="icon-only" :icon="chevronForwardOutline" />
               </ion-button>
             </ion-item>
@@ -197,10 +211,10 @@
                 <h3>{{ $t('Order brokering') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime) }}</p>
               </ion-label>
-              <ion-label slot="end" :color="!getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime ? 'medium' : ''">
+              <ion-label slot="end">
                 <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime) : $t('disabled')}}</p>
               </ion-label>
-              <ion-button v-if="Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length" class="job-action" fill="clear" slot="end" @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
+              <ion-button class="job-action" fill="clear" slot="end" @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
                 <ion-icon slot="icon-only" :icon="chevronForwardOutline" />
               </ion-button>
             </ion-item>
@@ -210,12 +224,40 @@
                 <h3>{{ $t('Auto releasing') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
               </ion-label>
-              <ion-label slot="end" :color="!getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime ? 'medium' : ''">
+              <ion-label slot="end">
                 <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime) : $t('disabled')}}</p>
               </ion-label>
-              <ion-button v-if="Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length" class="job-action" fill="clear" slot="end" @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
+              <ion-button class="job-action" fill="clear" slot="end" @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
                 <ion-icon slot="icon-only" :icon="chevronForwardOutline" />
               </ion-button>
+            </ion-item>
+          </div>
+        </ion-card>
+
+        <ion-card v-else>
+          <ion-card-header>
+            <ion-card-title>
+              <ion-skeleton-text animated style="height: 40%;" />
+            </ion-card-title>
+          </ion-card-header>
+
+          <div>
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                <ion-skeleton-text animated style="height: 20%; width: 50%;" />
+              </ion-label>
+            </ion-item>
+
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                <ion-skeleton-text animated style="height: 20%; width: 50%;" />
+              </ion-label>
+            </ion-item>
+
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                <ion-skeleton-text animated style="height: 20%; width: 50%;" />
+              </ion-label>
             </ion-item>
           </div>
         </ion-card>
@@ -329,26 +371,30 @@ export default defineComponent({
       selectedColor: '',
       selectedSize: '',
       features: [] as any,
-      currentVariant: {} as any,
-      pOAndATPDetails: {} as any
+      currentVariant: {} as any
     }
   },
   computed: {
     ...mapGetters({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
-      getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob"
+      getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
+      isCtgryAndBrkrngJobLoaded: "job/isCtgryAndBrkrngJobLoaded"
     })
   },
-  async ionViewWillEnter() {
-    await this.store.dispatch('product/setCurrentCatalogProduct', { productId: this.$route.params.productId })
-    if (this.product.variants) {
-      this.getFeatures()
-      this.updateVariant()
-    }
-    await this.getCtgryAndBrkrngJobs()
+  ionViewWillEnter() {
+    this.getPODetails()
+    this.getVariantDetails()
+    this.getCtgryAndBrkrngJobs()
   },
   methods: {
+    async getVariantDetails() {
+      await this.store.dispatch('product/setCurrentCatalogProduct', { productId: this.$route.params.productId })
+      if (this.product.variants) {
+        this.getFeatures()
+        this.updateVariant()
+      }
+    },
     applyFeature(feature: string, type: string) {
       if (type === 'color') this.selectedColor = feature
       else if (type === 'size') this.selectedSize = feature
@@ -409,7 +455,44 @@ export default defineComponent({
     timeTillJob (time: any) {
       const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
-    }
+    },
+    async getPODetails() {
+      try {
+        let payload = {
+          "inputFields": {
+            "productId": this.currentVariant.productId,
+            "productCategoryId": "PREORDER_CAT",
+            "productCategoryId_op": "equals"
+          },
+          "entityName": "ProductCategoryDcsnRsn",
+          "viewSize": 1
+        } as any
+
+        let resp: any = await OrderService.getPODeliveryDate(payload)
+        if (!hasError(resp)) {
+          // this.pOAndATPDetails = {
+          //   purchaseOrderId: resp.data.docs[0].purchaseOrderId,
+          //   estimatedDeliveryDate: resp.data.docs[0].estimatedDeliveryDate
+          // }
+        } else {
+          return
+        }
+
+        payload = {
+          "json": {
+            "params": {
+              "rows": 10,
+            },
+            "filter": `docType: ORDER AND orderTypeId: PURCHASE_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND orderId: 10041`,
+            "query": "*:*"
+          }
+        }
+
+        resp = await OrderService.getPOItemAndATPDetails(payload)
+      } catch (error) {
+        console.error(error)
+      }
+    },
   },
   setup() {
     const store = useStore();
