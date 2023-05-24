@@ -68,6 +68,38 @@ const getEComStores = async (payload: any): Promise<any> => {
   });
 }
 
+const getReserveInvConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload
+  });
+}
+
+const getPreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload
+  });
+}
+
+const updatePreOrdPhyInvHoldStatus  = async (payload: any): Promise<any> => {
+  return api({
+    url: "service/updateProductStoreSetting",
+    method: "post",
+    data: payload
+  });
+}
+
+const updateReserveInvStatus = async (payload: any): Promise <any> => {
+  return api({
+    url: "service/updateProductStore",
+    method: "post",
+    data: payload
+  });
+}
+
 export const UserService = {
     login,
     getAvailableTimeZones,
@@ -76,5 +108,9 @@ export const UserService = {
     checkPermission,
     setUserPreference,
     getUserPreference,
-    getEComStores
+    getEComStores,
+    getReserveInvConfig,
+    getPreOrdPhyInvHoldConfig,
+    updateReserveInvStatus,
+    updatePreOrdPhyInvHoldStatus
 }

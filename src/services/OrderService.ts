@@ -67,20 +67,44 @@ const updatePromiseDateItem = async (payload: any): Promise<any> => {
   });
 }
 
-const getPODeliveryDate = async (query: any): Promise <any> => {
+const getPOID = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
-    method: 'POST',
-    data: query
+    method: "get",
+    params: query
   });
 }
 
-const getPOItemAndATPDetails = async (payload: any): Promise<any> => {
+const getPOItemAndATPDetails = async (query: any): Promise <any> => {
+  return api({
+    url: 'performFind',
+    method: "get",
+    params: query
+  });
+}
+
+const getPOItemATPSum = async (query: any): Promise <any> => {
+  return api({
+    url: 'performFind',
+    method: "get",
+    params: query
+  });
+}
+
+const getCrspndgSalesOrdr = async (payload: any): Promise<any> => {
   return api({
     url: "solr-query",
     method: "POST",
     data: payload
   })
+}
+
+const getPOFromDate = async (query: any): Promise <any> => {
+  return api({
+    url: 'performFind',
+    method: "get",
+    params: query
+  });
 }
 
 export const OrderService = {
@@ -92,6 +116,8 @@ export const OrderService = {
   releaseItems,
   cancelItems,
   updatePromiseDateItems,
-  getPODeliveryDate,
-  getPOItemAndATPDetails
+  getPOID,
+  getPOItemAndATPDetails,
+  getCrspndgSalesOrdr,
+  getPOFromDate
 }

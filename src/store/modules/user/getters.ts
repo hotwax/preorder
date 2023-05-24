@@ -22,5 +22,8 @@ const getters: GetterTree <UserState, RootState> = {
     getCurrentEComStore(state) {
         return state.currentEComStore
     },
+    getInventoryConfig: (state) => (type: string) => {
+        return (state.inventoryConfig as any)[type]
+    }
 }
 export default getters;

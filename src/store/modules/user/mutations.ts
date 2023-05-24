@@ -20,5 +20,8 @@ const mutations: MutationTree <UserState> = {
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload;
     },
+    [types.USER_STORE_INV_CONFIG_UPDATED] (state, payload) {
+        state.inventoryConfig = payload;
+    },
 }
 export default mutations;

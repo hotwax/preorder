@@ -45,140 +45,218 @@
             </ion-list>
           </div>
         </div>
-
         <div class="product-info" v-else>
           <div class="ion-padding">
-            <ion-skeleton-text animated style="width: 30%; height: 80%;" />
-            <ion-skeleton-text animated style="width: 50%;" />
+            <ion-skeleton-text animated style="width: 40%; height: 80%;" />
+            <ion-skeleton-text animated style="width: 60%;" />
           </div>
           
           <div class="product-features">
             <ion-list>
-              <ion-skeleton-text class="ion-margin" animated style="width: 20%" />
+              <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 40%;"/>
+                <ion-skeleton-text animated style="width: 70%;"/>
               </ion-item>
             </ion-list>
 
             <ion-list>
-              <ion-skeleton-text class="ion-margin" animated style="width: 20%" />
+              <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 40%;"/>
+                <ion-skeleton-text animated style="width: 70%;"/>
               </ion-item>
             </ion-list>
           </div>
         </div>
 
-        <!-- <div>
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>
-                {{ $t("Product has been accepting pre-orders from 20 March 2023 against PO #1234") }}
-              </ion-card-title>
-            </ion-card-header>
-            <ion-item lines="none">
+        <div>
+          <ion-card v-if="pOAndATPDetails.isLoaded && pOSummary.isLoaded">
+            <ion-item v-if="pOSummary.header" lines="none">
+              <ion-label class="ion-text-wrap">{{ pOSummary.header }}</ion-label>
+            </ion-item>
+            <ion-item>
               <ion-label>{{ $t("Eligible") }}</ion-label>
-              <ion-label slot="end">{{ $t("Yes") }}</ion-label>
-              <ion-icon slot="end" color="success" :icon="checkmarkCircleOutline" />
+              <ion-label slot="end">{{ pOSummary.isActivePO ? $t("Yes") : $t("No") }}</ion-label>
+              <ion-icon v-if="pOSummary.isActivePO" slot="end" color="success" :icon="checkmarkCircleOutline" />
+              <ion-icon v-else slot="end" color="warning" :icon="alertCircleOutline" />
             </ion-item>
-            <ion-item lines="none">
+            <ion-item>
               <ion-label>{{ $t("Category") }}</ion-label>
-              <ion-label slot="end">{{ $t("Pre-order") }}</ion-label>
-              <ion-icon slot="end" color="success" :icon="checkmarkCircleOutline" />
+              <ion-label slot="end">{{ pOSummary.categoryId === 'PREORDER_CAT' ? 'Pre-order' : pOSummary.categoryId === 'BACKORDER_CAT' ? 'Back-order' : 'None' }}</ion-label>
+              <ion-icon v-if="pOSummary.categoryId === 'PREORDER_CAT' || pOSummary.categoryId === 'BACKORDER_CAT'" slot="end" color="success" :icon="checkmarkCircleOutline" />
+              <ion-icon v-else slot="end" color="warning" :icon="alertCircleOutline" />
             </ion-item>
-            <ion-item lines="none">
+            <!-- <ion-item>
               <ion-label>{{ $t("Shopify") }}</ion-label>
               <ion-label slot="end">{{ $t("List on all stores") }}</ion-label>
               <ion-icon slot="end" color="success" :icon="checkmarkCircleOutline" />
-            </ion-item>
-            <ion-item lines="none">
+            </ion-item> -->
+            <ion-item v-if="pOSummary.isActivePO">
               <ion-label>{{ $t("Promise date") }}</ion-label>
-              <ion-label slot="end">{{ $t("20 May 2023") }}</ion-label>
+              <ion-label slot="end">{{ pOSummary.promiseDate }}</ion-label>
             </ion-item>
           </ion-card>
-        </div> -->
+          <ion-card v-else>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 80%; width: 90%;" />
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+            </ion-item> 
+            <ion-item>
+              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+            </ion-item>
+          </ion-card>
+        </div>
       </div>
 
       <hr />
 
-      <!-- <div class="ion-padding-start" lines="none">
-        <h3>{{ $t("Purchase order and Online ATP calculation") }}</h3>
+      <div v-if="pOAndATPDetails.isLoaded" class="ion-padding-start">
+        <h3>{{ $t("Presell eligibility") }}</h3>
+      </div>
+      <div v-else>
+        <ion-item lines="none">
+          <ion-skeleton-text animated style="width: 50%; height: 50%;" />
+        </ion-item>
       </div>
 
       <section>
-        <ion-card>
+        <ion-card v-if="pOAndATPDetails.isLoaded">
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t("Active purchase order") }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item v-if="!pOAndATPDetails.purchaseOrderId && !pOAndATPDetails.estimatedDeliveryDate">
-            <ion-skeleton-text animated style="width: 70%; height: 20%;" />
-          </ion-item>
-          <ion-item v-else>
-            <ion-label>{{ pOAndATPDetails.purchaseOrderId }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.estimatedDeliveryDate && getTime(pOAndATPDetails.estimatedDeliveryDate) }}</ion-label>
+          <ion-item>
+            <ion-label>{{ $t('PO #') }} {{ pOAndATPDetails.purchaseOrderId ? pOAndATPDetails.purchaseOrderId : '' }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.estimatedDeliveryDate ? getTime(pOAndATPDetails.activePO.estimatedDeliveryDate) : "-" }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Ordered") }}</ion-label>
-            <ion-label slot="end">{{ $t("10") }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.quantity ? pOAndATPDetails.activePO?.quantity : "-" }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Available") }}</ion-label>
-            <ion-label slot="end">{{ $t("100") }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.availableToPromise ? pOAndATPDetails.activePO?.availableToPromise : "-" }}</ion-label>
           </ion-item>
 
           <ion-item lines="full">
             <ion-label>{{ $t("Corresponding sales order") }}</ion-label>
-            <ion-label slot="end">{{ $t("100") }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.crspndgSalesOrdr ? pOAndATPDetails.crspndgSalesOrdr : "-" }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO items") }}</ion-label>
-            <ion-label slot="end">{{ $t("50") }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.totalPOItems ? pOAndATPDetails.totalPOItems : "-" }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO ATP") }}</ion-label>
-            <ion-label slot="end">{{ $t("200") }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.totalPOATP ? pOAndATPDetails.totalPOATP : "-" }}</ion-label>
+          </ion-item>
+        </ion-card>
+        <ion-card v-else>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
           </ion-item>
         </ion-card>
 
-        <ion-card>
+        <ion-card v-if="inventoryConfig.isLoaded">
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t("Online ATP calculation") }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item>
+          <!-- <ion-item>
             <ion-label>{{ $t("Online ATP") }}</ion-label>
-            <ion-label slot="end">{{ $t("0") }}</ion-label>
+            <ion-label slot="end">{{ 0 }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Quantity on hand") }}</ion-label>
-            <ion-label slot="end">{{ $t("0") }}</ion-label>
+            <ion-label slot="end">{{ "0" }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Excluded ATP") }}</ion-label>
-            <ion-label slot="end">{{ $t("100") }}</ion-label>
-          </ion-item>
+            <ion-label slot="end">{{ "100" }}</ion-label>
+          </ion-item> -->
           <ion-item>
             <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-            <ion-label slot="end">{{ $t("100") }}</ion-label>
+            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('reserveInv')).length" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateInvConfigStatusValue('reserveInv', getInventoryConfig('reserveInv'), $event.detail.checked)"/>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Hold pre-order reset inventory") }}</ion-label>
-            <ion-toggle slot="end" />
+            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('preOrdPhyInvHold')).length" :checked="inventoryConfig.preOrdPhyInvHoldStatus" @ionChange="updateInvConfigStatusValue('preOrdPhyInvHold', getInventoryConfig('preOrdPhyInvHold'), $event.detail.checked)"/>
+          </ion-item>
+        </ion-card>
+        <ion-card v-else>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
           </ion-item>
         </ion-card>
       </section>
 
-      <hr /> -->
+      <hr />
 
       <section>
-        <ion-card v-if="isCtgryAndBrkrngJobLoaded">
+        <ion-card v-if="!isCtgryAndBrkrngJobLoaded">
+          <ion-item>
+            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+          </ion-item>
+        </ion-card>
+        <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t('Category and brokering jobs') }}</h3>
@@ -230,34 +308,6 @@
               <ion-button class="job-action" fill="clear" slot="end" @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
                 <ion-icon slot="icon-only" :icon="chevronForwardOutline" />
               </ion-button>
-            </ion-item>
-          </div>
-        </ion-card>
-
-        <ion-card v-else>
-          <ion-card-header>
-            <ion-card-title>
-              <ion-skeleton-text animated style="height: 40%;" />
-            </ion-card-title>
-          </ion-card-header>
-
-          <div>
-            <ion-item>
-              <ion-label class="ion-text-wrap">
-                <ion-skeleton-text animated style="height: 20%; width: 50%;" />
-              </ion-label>
-            </ion-item>
-
-            <ion-item>
-              <ion-label class="ion-text-wrap">
-                <ion-skeleton-text animated style="height: 20%; width: 50%;" />
-              </ion-label>
-            </ion-item>
-
-            <ion-item>
-              <ion-label class="ion-text-wrap">
-                <ion-skeleton-text animated style="height: 20%; width: 50%;" />
-              </ion-label>
             </ion-item>
           </div>
         </ion-card>
@@ -322,6 +372,7 @@ import {
   IonList,
   IonPage,
   IonSkeletonText,
+  IonToggle,
   IonToolbar,
   IonTitle,
   IonRow,
@@ -329,6 +380,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import {
+  alertCircleOutline,
   checkmarkCircleOutline,
   chevronForwardOutline
 } from "ionicons/icons";
@@ -362,6 +414,7 @@ export default defineComponent({
     IonList,
     IonPage,
     IonSkeletonText,
+    IonToggle,
     IonToolbar,
     IonTitle,
     IonRow,
@@ -371,7 +424,11 @@ export default defineComponent({
       selectedColor: '',
       selectedSize: '',
       features: [] as any,
-      currentVariant: {} as any
+      currentVariant: {} as any,
+      pOAndATPDetails: {} as any,
+      aTPcalcDetails : {} as any,
+      inventoryConfig: {} as any,
+      pOSummary: {} as any
     }
   },
   computed: {
@@ -379,12 +436,14 @@ export default defineComponent({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
-      isCtgryAndBrkrngJobLoaded: "job/isCtgryAndBrkrngJobLoaded"
+      isCtgryAndBrkrngJobLoaded: "job/isCtgryAndBrkrngJobLoaded",
+      getInventoryConfig: "user/getInventoryConfig"
     })
   },
   ionViewWillEnter() {
-    this.getPODetails()
     this.getVariantDetails()
+    this.getPODetails()
+    this.getATPCalcDetails()
     this.getCtgryAndBrkrngJobs()
   },
   methods: {
@@ -458,45 +517,150 @@ export default defineComponent({
     },
     async getPODetails() {
       try {
+        const requests = []
+        let resp: any
+
         let payload = {
           "inputFields": {
-            "productId": this.currentVariant.productId,
-            "productCategoryId": "PREORDER_CAT",
+            "productId": this.$route.params.variantId,
+            "productCategoryId": this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : "",
             "productCategoryId_op": "equals"
           },
           "entityName": "ProductCategoryDcsnRsn",
+          "fieldList": ["productId", "purchaseOrderId"],
           "viewSize": 1
         } as any
 
-        let resp: any = await OrderService.getPODeliveryDate(payload)
-        if (!hasError(resp)) {
-          // this.pOAndATPDetails = {
-          //   purchaseOrderId: resp.data.docs[0].purchaseOrderId,
-          //   estimatedDeliveryDate: resp.data.docs[0].estimatedDeliveryDate
-          // }
+        requests.push(OrderService.getPOID(payload).catch((error: any) => error))
+
+        payload = {
+          "inputFields": {
+            "productId": this.$route.params.variantId,
+            "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
+            "orderStatusId_op": "in",
+            "orderTypeId": "PURCHASE_ORDER",
+            "orderTypeId_op": "equals"
+          },
+          "entityName": "PreOrderPOItem",
+          "sortBy": "entryDate DESC",
+          "fieldList": ["orderId", "estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
+          "viewSize": 1
+        }
+
+        requests.push(OrderService.getPOItemAndATPDetails(payload).catch((error: any) => error))
+
+        payload = {
+          "json": {
+            "params": {
+              "rows": 0,
+            },
+            "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.pOAndATPDetails.purchaseOrderId}`,
+            "query": "*:*",
+          }
+        }
+
+        requests.push(OrderService.getCrspndgSalesOrdr(payload).catch((error: any) => error))
+
+        resp = await Promise.all(requests)
+
+        this.pOAndATPDetails.activePO = {}
+        if (!hasError(resp[0]) && !hasError(resp[1]) && !hasError(resp[2])) {
+          this.pOAndATPDetails.purchaseOrderId = resp[0].data.docs[0].purchaseOrderId
+          this.pOAndATPDetails.activePO = resp[1].data.docs[0]
+          this.pOAndATPDetails.totalPOItems = resp[1].data.count
+          this.pOAndATPDetails.crspndgSalesOrdr = resp[2].data.response.numFound
         } else {
           return
         }
 
         payload = {
-          "json": {
-            "params": {
-              "rows": 10,
-            },
-            "filter": `docType: ORDER AND orderTypeId: PURCHASE_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND orderId: 10041`,
-            "query": "*:*"
-          }
+          "inputFields": {
+            "orderId": this.pOAndATPDetails.activePO.orderId,
+            "productId": this.$route.params.variantId,
+            "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
+            "orderStatusId_op": "in",
+            "orderTypeId": "PURCHASE_ORDER",
+            "orderTypeId_op": "equals"
+          },
+          "entityName": "PurchaseOrderItemAtpSum",
+          "fieldList": ["orderId", "totalAtp"],
+          "viewSize": 1
         }
 
         resp = await OrderService.getPOItemAndATPDetails(payload)
+        if (!hasError(resp)) {
+          this.pOAndATPDetails.totalPOATP = resp.data.docs[0].totalAtp
+        } else {
+          return
+        }
       } catch (error) {
         console.error(error)
+      } finally {
+        this.pOAndATPDetails.isLoaded = true
+        // preparePOSummary needs PO details to be fetched first
+        await this.preparePOSummary()
       }
     },
+    getATPCalcDetails() {
+      this.prepareInvConfig()
+    },
+    async updateInvConfigStatusValue(type: string, config: object, value: boolean) {
+      type === 'preOrdPhyInvHold'
+      ? await this.store.dispatch('user/updatePreOrdPhyInvHoldStatus', { value, config })
+      : await this.store.dispatch('user/updateReserveInvStatus', { value, config })
+    },
+    prepareInvConfig() {
+      this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv').reserveInventory
+      this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold').settingValue
+      this.inventoryConfig.isLoaded = true
+    },
+    async preparePOSummary() {
+      this.pOSummary.isActivePO = this.pOAndATPDetails.activePO && Object.keys(this.pOAndATPDetails?.activePO).length
+      this.pOSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
+      this.pOSummary.promiseDate = this.pOSummary.isActivePO && this.getTime(this.pOAndATPDetails.activePO.estimatedDeliveryDate)
+
+      try {
+        // fetch fromDate only for active POs in pre-order/back-order category
+        if (this.pOSummary.isActivePO && this.pOSummary.categoryId) {
+          let resp: any = await OrderService.getPOFromDate({
+            "inputFields": {
+              "productId": this.$route.params.variantId,
+              "productCategoryId": this.pOSummary.categoryId,
+              "productCategoryId_op": "equals"
+            },
+            "entityName": "PreOrderCategoryProducts",
+            "fieldList": ["productId", "fromDate"],
+            "viewSize": 1
+          })
+
+          this.pOSummary.header = ''
+          if (!hasError(resp)) {
+            const fromDate = resp.data.docs[0].fromDate
+            const category = this.pOSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
+            this.pOSummary.header = `Product has been accepting ${category}s from ${this.getTime(fromDate)} against PO #${this.pOAndATPDetails.purchaseOrderId}`
+          }
+        } else if (!this.pOSummary.categoryId) {
+          if (this.pOSummary.isActivePO) {
+            const eligibleCategory = this.pOAndATPDetails.activePO.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
+            this.pOSummary.header = `Product is eligible for ${eligibleCategory}s but not added to the ${eligibleCategory} category`
+          } else {
+            this.pOSummary.header = "This product cannot be pre-sold because it doesn’t have active purchase orders"
+          }
+        }
+        // TODO handle the two left cases for -
+        // This product cannot be pre-sold because it doesn’t have active purchase orders.
+        // With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues.
+      } catch (error) {
+        console.error(error)
+      } finally {
+        this.pOSummary.isLoaded = true
+      }
+    }
   },
   setup() {
     const store = useStore();
     return {
+      alertCircleOutline,
       checkmarkCircleOutline,
       chevronForwardOutline,
       store
