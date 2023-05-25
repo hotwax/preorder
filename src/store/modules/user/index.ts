@@ -12,7 +12,7 @@ const userModule: Module<UserState, RootState> = {
       current: null,
       instanceUrl: '',
       currentEComStore: {},
-      inventoryConfig: {
+      config: {
         "reserveInv": {},
         "preOrdPhyInvHold": {}
       }

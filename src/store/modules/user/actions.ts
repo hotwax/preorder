@@ -125,9 +125,6 @@ const actions: ActionTree<UserState, RootState> = {
       }
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  userPrefStore);
       commit(types.USER_INFO_UPDATED, userProfile);
-      this.dispatch('util/getServiceStatusDesc')
-      await dispatch('getReserveInvConfig', userPrefStore.productStoreId)
-      await dispatch('getPreOrdPhyInvHoldConfig', userPrefStore.productStoreId)
     }
   },
 
@@ -157,8 +154,7 @@ const actions: ActionTree<UserState, RootState> = {
         'userPrefTypeId': 'SELECTED_BRAND',
         'userPrefValue': payload.eComStore.productStoreId
       });
-      await dispatch('getReserveInvConfig', payload.eComStore.productStoreId)
-      await dispatch('getPreOrdPhyInvHoldConfig', payload.eComStore.productStoreId)
+      commit(types.USER_STORE_INV_CONFIG_UPDATED, { "reserveInv": {}, "preOrdPhyInvHold": {} })
     },
 
   /**
@@ -184,7 +180,7 @@ const actions: ActionTree<UserState, RootState> = {
       if (!hasError(resp)) {
         reserveInvConfig = resp.data.docs[0]
       }
-      inventoryConfig = { ...state.inventoryConfig, 'reserveInv': reserveInvConfig }
+      inventoryConfig = { ...state.config, 'reserveInv': reserveInvConfig }
       commit(types.USER_STORE_INV_CONFIG_UPDATED, inventoryConfig)
     },
 
@@ -204,20 +200,14 @@ const actions: ActionTree<UserState, RootState> = {
       if (!hasError(resp)) {
         preOrdPhyInvHoldConfig = resp.data.docs[0]
       }
-      inventoryConfig = {...state.inventoryConfig, 'preOrdPhyInvHold': preOrdPhyInvHoldConfig }
+      inventoryConfig = {...state.config, 'preOrdPhyInvHold': preOrdPhyInvHoldConfig }
       commit(types.USER_STORE_INV_CONFIG_UPDATED, inventoryConfig)
     },
 
     /**
     Update preorder physical inventory hold config
    */
-    async updatePreOrdPhyInvHoldStatus({ dispatch, state }, payload) {
-      // Handled initial programmatical update
-      // When storing boolean values, it is stored as string. Further comparison needs conversion
-      if (payload.config.settingValue === payload.value || (typeof payload.value === 'boolean' && (payload.config.settingValue == 'true') === payload.value)) {
-        return;
-      }
-      
+    async updatePreOrdPhyInvHoldConfig({ dispatch, state }, payload) {
       const productStoreId = (state.currentEComStore as any).productStoreId
       const params = {
         "fromDate": payload.config.fromDate,
@@ -227,7 +217,7 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       try {
-        const resp = await UserService.updatePreOrdPhyInvHoldStatus(params) as any
+        const resp = await UserService.updatePreOrdPhyInvHoldConfig(params) as any
         if(!hasError(resp)) {
           showToast(translate('Configuration updated'))
         } else {
@@ -244,12 +234,7 @@ const actions: ActionTree<UserState, RootState> = {
     /**
     Update reserve inventory config
    */
-    async updateReserveInvStatus({ dispatch, state }, payload) {
-      // Handled initial programmatical update
-      if ((payload.config.reserveInventory === "Y" && payload.value ) || (payload.config.reserveInventory === "N" && !payload.value )) {
-        return;
-      }
-      
+    async updateReserveInvConfig({ dispatch, state }, payload) {
       const productStoreId = (state.currentEComStore as any).productStoreId
       const params = {
         "reserveInventory": payload.value ? "Y" : "N",
@@ -257,7 +242,7 @@ const actions: ActionTree<UserState, RootState> = {
       }
 
       try {
-        const resp = await UserService.updateReserveInvStatus(params) as any
+        const resp = await UserService.updateReserveInvConfig(params) as any
         if(!hasError(resp)) {
           showToast(translate('Configuration updated'))
         } else {

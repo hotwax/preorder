@@ -3,5 +3,5 @@ export default interface UserState {
     current: object | null;
     instanceUrl: string;
     currentEComStore: object;
-    inventoryConfig: object;
+    config: object;
 }

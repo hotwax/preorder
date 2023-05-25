@@ -119,5 +119,6 @@ export const OrderService = {
   getPOID,
   getPOItemAndATPDetails,
   getCrspndgSalesOrdr,
-  getPOFromDate
+  getPOFromDate,
+  getPOItemATPSum
 }

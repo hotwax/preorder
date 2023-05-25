@@ -207,11 +207,11 @@
           </ion-item> -->
           <ion-item>
             <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('reserveInv')).length" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateInvConfigStatusValue('reserveInv', getInventoryConfig('reserveInv'), $event.detail.checked)"/>
+            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('reserveInv')).length" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateInvConfig('reserveInv', getInventoryConfig('reserveInv'), $event.detail.checked)"/>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Hold pre-order reset inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('preOrdPhyInvHold')).length" :checked="inventoryConfig.preOrdPhyInvHoldStatus" @ionChange="updateInvConfigStatusValue('preOrdPhyInvHold', getInventoryConfig('preOrdPhyInvHold'), $event.detail.checked)"/>
+            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('preOrdPhyInvHold')).length" :checked="inventoryConfig.preOrdPhyInvHoldStatus" @ionChange="updateInvConfig('preOrdPhyInvHold', getInventoryConfig('preOrdPhyInvHold'), $event.detail.checked)"/>
           </ion-item>
         </ion-card>
         <ion-card v-else>
@@ -561,7 +561,9 @@ export default defineComponent({
 
         requests.push(OrderService.getCrspndgSalesOrdr(payload).catch((error: any) => error))
 
-        resp = await Promise.all(requests)
+        const promiseResult = await Promise.allSettled(requests)
+        // promise.allSettled returns an array of result with status and value fields
+        resp = promiseResult.map((respone: any) => respone.value)
 
         this.pOAndATPDetails.activePO = {}
         if (!hasError(resp[0]) && !hasError(resp[1]) && !hasError(resp[2])) {
@@ -587,7 +589,7 @@ export default defineComponent({
           "viewSize": 1
         }
 
-        resp = await OrderService.getPOItemAndATPDetails(payload)
+        resp = await OrderService.getPOItemATPSum(payload)
         if (!hasError(resp)) {
           this.pOAndATPDetails.totalPOATP = resp.data.docs[0].totalAtp
         } else {
@@ -601,17 +603,36 @@ export default defineComponent({
         await this.preparePOSummary()
       }
     },
-    getATPCalcDetails() {
-      this.prepareInvConfig()
+    async getATPCalcDetails() {
+      await this.prepareInvConfig()
     },
-    async updateInvConfigStatusValue(type: string, config: object, value: boolean) {
+    async updateInvConfig(type: string, config: any, value: boolean) {
+      // Handled initial programmatical update
+      if ((config.reserveInventory === "Y" && value) 
+        || (config.settingValue === value)
+        || (typeof value === 'boolean' && (config.settingValue == 'true') === value)
+        || (config.reserveInventory === "N" && !value)) {
+        return;
+      }
+
       type === 'preOrdPhyInvHold'
       ? await this.store.dispatch('user/updatePreOrdPhyInvHoldStatus', { value, config })
       : await this.store.dispatch('user/updateReserveInvStatus', { value, config })
     },
-    prepareInvConfig() {
-      this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv').reserveInventory
-      this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold').settingValue
+    async prepareInvConfig() {
+      const reserInvConfig = this.getInventoryConfig('reserveInv')
+      const preOrdPhyInvHoldConfig = this.getInventoryConfig('preOrdPhyInvHold')
+
+      if (!Object.keys(reserInvConfig).length) {
+        await this.store.dispatch('user/getReserveInvConfig', this.currentEComStore.productStoreId)
+      }
+
+      if (!Object.keys(preOrdPhyInvHoldConfig).length) {
+        await this.store.dispatch('user/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
+      }
+
+      this.inventoryConfig.reserveInvStatus = reserInvConfig.reserveInventory
+      this.inventoryConfig.preOrdPhyInvHoldStatus = preOrdPhyInvHoldConfig.settingValue
       this.inventoryConfig.isLoaded = true
     },
     async preparePOSummary() {

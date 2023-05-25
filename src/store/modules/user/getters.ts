@@ -23,7 +23,7 @@ const getters: GetterTree <UserState, RootState> = {
         return state.currentEComStore
     },
     getInventoryConfig: (state) => (type: string) => {
-        return (state.inventoryConfig as any)[type]
+        return (state.config as any)[type]
     }
 }
 export default getters;

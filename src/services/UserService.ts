@@ -84,7 +84,7 @@ const getPreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
   });
 }
 
-const updatePreOrdPhyInvHoldStatus  = async (payload: any): Promise<any> => {
+const updatePreOrdPhyInvHoldConfig  = async (payload: any): Promise<any> => {
   return api({
     url: "service/updateProductStoreSetting",
     method: "post",
@@ -92,7 +92,7 @@ const updatePreOrdPhyInvHoldStatus  = async (payload: any): Promise<any> => {
   });
 }
 
-const updateReserveInvStatus = async (payload: any): Promise <any> => {
+const updateReserveInvConfig = async (payload: any): Promise <any> => {
   return api({
     url: "service/updateProductStore",
     method: "post",
@@ -111,6 +111,6 @@ export const UserService = {
     getEComStores,
     getReserveInvConfig,
     getPreOrdPhyInvHoldConfig,
-    updateReserveInvStatus,
-    updatePreOrdPhyInvHoldStatus
+    updateReserveInvConfig,
+    updatePreOrdPhyInvHoldConfig
 }

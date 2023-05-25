@@ -120,8 +120,7 @@ const actions: ActionTree<JobState, RootState> = {
       console.error(err)
     } finally {
       // refetching the jobs
-      const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
-      await dispatch('fetchCtgryAndBrkrngJobs', { systemJobEnumIds })
+      await dispatch('fetchCtgryAndBrkrngJobs')
     }
     return resp;
   },
@@ -139,9 +138,7 @@ const actions: ActionTree<JobState, RootState> = {
       console.error(err)
     } finally {
       // refetching the jobs
-      await dispatch('clearCtgryAndBrkrngJobs')
-      const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
-      await dispatch('fetchCtgryAndBrkrngJobs', { systemJobEnumIds })
+      await dispatch('fetchCtgryAndBrkrngJobs')
     }
     return resp
   },
@@ -189,25 +186,25 @@ const actions: ActionTree<JobState, RootState> = {
       console.error(err)
     } finally {
       // refetching the jobs
-      const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
-      await dispatch('fetchCtgryAndBrkrngJobs', { systemJobEnumIds })
+      await dispatch('fetchCtgryAndBrkrngJobs')
     }
     return {};
   },
-  async fetchCtgryAndBrkrngJobs ({ commit }, payload) {
+  async fetchCtgryAndBrkrngJobs ({ commit }) {
     let resp, jobs = [] as any
     const requests = []
+    const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
 
     try {
       let params = {
         "inputFields": {
           "statusId": "SERVICE_DRAFT",
           "statusId_op": "equals",
-          'systemJobEnumId': payload.systemJobEnumIds,
+          'systemJobEnumId': systemJobEnumIds,
           'systemJobEnumId_op': 'in'
         },
         "noConditionFind": "Y",
-        "viewSize": payload.systemJobEnumIds.length,
+        "viewSize": systemJobEnumIds.length,
       } as any
 
       requests.push(JobService.fetchJobInformation(params).catch((error: any) => error))
@@ -217,16 +214,20 @@ const actions: ActionTree<JobState, RootState> = {
           "statusId": "SERVICE_PENDING",
           "statusId_op": "equals",
           "productStoreId": this.state.user.currentEComStore?.productStoreId,
-          'systemJobEnumId': payload.systemJobEnumIds,
+          'systemJobEnumId': systemJobEnumIds,
           'systemJobEnumId_op': 'in'
         },
         "noConditionFind": "Y",
-        "viewSize": payload.systemJobEnumIds.length
+        "sortBy": "runTime DESC",
+        "viewSize": 15
       } as any
       
       requests.push(JobService.fetchJobInformation(params).catch((error: any) => error))
 
-      resp = await Promise.all(requests)
+      const promiseResult = await Promise.allSettled(requests)
+      // promise.allSettled returns an array of result with status and value fields
+      resp = promiseResult.map((respone: any) => respone.value)
+
       if (!hasError(resp[0])) {
         resp[0].data.docs.map((job: any) => delete job.runTime)
         jobs = resp[0].data.docs
@@ -236,7 +237,7 @@ const actions: ActionTree<JobState, RootState> = {
       if (!hasError(resp[1])) {
         const pendingJobs = Object.values(resp[1].data.docs.reduce((jobs: [any], job: any) => {
           // keeping the job with the highest runTime
-          if (!jobs[job.systemJobEnumId] || job.runTime > jobs[job.systemJobEnumId].runTime) {
+          if (!jobs[job.systemJobEnumId]) {
             pendingSysJobEnumIds.push(job.systemJobEnumId)
             jobs[job.systemJobEnumId] = job
           }
@@ -249,12 +250,7 @@ const actions: ActionTree<JobState, RootState> = {
 
       jobs = Object.values(jobs.reduce((jobs: [any], job: any) => {
         const { systemJobEnumId, statusId } = job;
-        if (jobs[systemJobEnumId]) {
-          // taking pendnig if both and draft exist
-          if (statusId === 'SERVICE_PENDING' && jobs[systemJobEnumId].statusId !== 'SERVICE_PENDING') {
-            jobs[systemJobEnumId] = job;
-          }
-        } else {
+        if (!jobs[systemJobEnumId] || (jobs[systemJobEnumId] && statusId === 'SERVICE_PENDING')) {
           jobs[systemJobEnumId] = job;
         }
         return jobs;
