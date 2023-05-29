@@ -130,7 +130,7 @@ export default defineComponent({
         viewSize,
         viewIndex,
         queryString: this.queryString,
-        queryFields: 'parentProductId productId parentProductName productName search_goodIdentifications goodIdentifications',
+        queryFields: 'parentProductId productId parentProductName productName search_goodIdentifications internalName',
         groupByField: 'parentProductId',
         groupLimit: 0,
         filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
