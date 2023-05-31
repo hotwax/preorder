@@ -218,7 +218,7 @@ const actions: ActionTree<JobState, RootState> = {
           'systemJobEnumId_op': 'in'
         },
         "noConditionFind": "Y",
-        "sortBy": "runTime DESC",
+        "orderBy": "runTime DESC",
         "viewSize": 15
       } as any
       
@@ -295,6 +295,7 @@ const actions: ActionTree<JobState, RootState> = {
 
       jobs.isLoaded = true
       commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, jobs)
+      this.dispatch('util/getServiceStatusDesc')
     }
     return resp;
   },
