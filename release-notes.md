@@ -1,3 +1,12 @@
+# Release 1.6.0
+
+## What's Changed
+* Improved: order and product query to allow searching using good identifications by @adityasharma7 in https://github.com/hotwax/preorder/pull/131
+* Improved: added more customer specific fields for order and product specific for product query by @adityasharma7 in https://github.com/hotwax/preorder/pull/132
+
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.5.0...v1.6.0
+
 # Release 1.5.0
 
 ## What's Changed
