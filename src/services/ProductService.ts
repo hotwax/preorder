@@ -31,9 +31,27 @@ const getCatalogProducts = async (payload: any): Promise<any> => {
   })
 }
 
+const getProductInventory = async (query: any): Promise<any> => {
+  return api({
+    url: "getProductInventory",
+    method: "get",
+    data: query
+  });
+}
+
+const getProductInventoryAvailable = async (query: any): Promise<any> => {
+  return api({
+    url: "service/getProductInventoryAvailable",
+    method: "post", // not supporting get
+    data: query
+  });
+}
+
 export const ProductService = {
   fetchProducts,
   findOrder,
   fetchCurrentList,
-  getCatalogProducts
+  getCatalogProducts,
+  getProductInventory,
+  getProductInventoryAvailable
 }

@@ -50,26 +50,26 @@
             <ion-skeleton-text animated style="width: 40%; height: 80%;" />
             <ion-skeleton-text animated style="width: 60%;" />
           </div>
-          
+
           <div class="product-features">
             <ion-list>
               <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 70%;"/>
+                <ion-skeleton-text animated style="width: 70%;" />
               </ion-item>
             </ion-list>
 
             <ion-list>
               <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 70%;"/>
+                <ion-skeleton-text animated style="width: 70%;" />
               </ion-item>
             </ion-list>
           </div>
         </div>
 
         <div>
-          <ion-card v-if="!Object.keys(pOSummary).length">
+          <ion-card v-if="!Object.keys(pOSummary).length || !pOSummary.listingCountStatus">
             <ion-item>
               <ion-skeleton-text animated style="height: 60%; width: 90%;" />
             </ion-item>
@@ -81,7 +81,7 @@
             </ion-item>
             <ion-item>
               <ion-skeleton-text animated style="height: 40%; width: 70%;" />
-            </ion-item> 
+            </ion-item>
             <ion-item>
               <ion-skeleton-text animated style="height: 40%; width: 60%;" />
             </ion-item>
@@ -118,7 +118,7 @@
       <hr />
 
       <div v-if="!Object.keys(pOAndATPDetails).length">
-        <ion-item lines="none"> 
+        <ion-item lines="none">
           <ion-skeleton-text animated style="width: 50%; height: 50%;" />
         </ion-item>
       </div>
@@ -132,22 +132,22 @@
             <ion-skeleton-text animated style="height: 40%; width: 70%;" />
           </ion-item>
           <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" />
           </ion-item>
           <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" />
           </ion-item>
           <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" />
           </ion-item>
           <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" />
           </ion-item>
           <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" />
           </ion-item>
           <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" />
           </ion-item>
         </ion-card>
         <ion-card v-else>
@@ -157,33 +157,33 @@
             </ion-card-title>
           </ion-card-header>
           <ion-item>
-            <ion-label>{{ $t('PO #') }} {{ pOAndATPDetails.purchaseOrderId ? pOAndATPDetails.purchaseOrderId : '' }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.activePO?.estimatedDeliveryDate ? getTime(pOAndATPDetails.activePO.estimatedDeliveryDate) : "-" }}</ion-label>
+            <ion-label>{{ $t('PO #', { pOId: pOAndATPDetails.purchaseOrderId }) }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.estimatedDeliveryDate ? getTime(pOAndATPDetails.activePO.estimatedDeliveryDate) : 0 }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Ordered") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.activePO?.quantity ? pOAndATPDetails.activePO?.quantity : "-" }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.quantity ? pOAndATPDetails.activePO?.quantity : 0 }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Available") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.activePO?.availableToPromise ? pOAndATPDetails.activePO?.availableToPromise : "-" }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.availableToPromise ? pOAndATPDetails.activePO?.availableToPromise : 0 }}</ion-label>
           </ion-item>
 
           <ion-item lines="full">
-            <ion-label>{{ $t("Corresponding sales order") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.crspndgSalesOrdr ? pOAndATPDetails.crspndgSalesOrdr : "-" }}</ion-label>
+            <ion-label>{{ $t("Corresponding sales orders") }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.crspndgSalesOrdr ? pOAndATPDetails.crspndgSalesOrdr : 0 }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO items") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.totalPOItems ? pOAndATPDetails.totalPOItems : "-" }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.totalPOItems ? pOAndATPDetails.totalPOItems : 0 }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO ATP") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.totalPOATP ? pOAndATPDetails.totalPOATP : "-" }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.totalPOATP ? pOAndATPDetails.totalPOATP : 0 }}</ion-label>
           </ion-item>
         </ion-card>
 
@@ -213,18 +213,18 @@
               <h3>{{ $t("Online ATP calculation") }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <!-- <ion-item>
+          <ion-item>
             <ion-label>{{ $t("Online ATP") }}</ion-label>
-            <ion-label slot="end">{{ 0 }}</ion-label>
+            <ion-label slot="end">{{ aTPcalcDetails.onlineATP ? aTPcalcDetails.onlineATP : 0 }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Quantity on hand") }}</ion-label>
-            <ion-label slot="end">{{ "0" }}</ion-label>
+            <ion-label slot="end">{{ aTPcalcDetails.totalQOH ? aTPcalcDetails.totalQOH : 0 }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Excluded ATP") }}</ion-label>
-            <ion-label slot="end">{{ "100" }}</ion-label>
-          </ion-item> -->
+            <ion-label slot="end">{{ aTPcalcDetails.excludedATP ? aTPcalcDetails.excludedATP : 0 }}</ion-label>
+          </ion-item>
           <ion-item>
             <ion-label>{{ $t("Reserve inventory") }}</ion-label>
             <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('reserveInv')).length" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateInvConfig('reserveInv', getInventoryConfig('reserveInv'), $event.detail.checked)"/>
@@ -234,13 +234,14 @@
             <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('preOrdPhyInvHold')).length" :checked="inventoryConfig.preOrdPhyInvHoldStatus" @ionChange="updateInvConfig('preOrdPhyInvHold', getInventoryConfig('preOrdPhyInvHold'), $event.detail.checked)"/>
           </ion-item>
         </ion-card>
-        
       </section>
 
       <hr />
 
       <section>
-        <ion-card v-if="!isCtgryAndBrkrngJobLoaded">
+        <ion-card v-if="!Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length
+          || !Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length
+          || !Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length">
           <ion-item>
             <ion-skeleton-text animated style="height: 40%; width: 70%;" />
           </ion-item>
@@ -304,7 +305,7 @@
           </div>
         </ion-card>
 
-        <ion-card v-if="!shopListings.isLoaded">
+        <ion-card v-if="!pOSummary.listingCountStatus">
           <ion-item>
             <ion-skeleton-text animated style="height: 40%; width: 60%;" />
           </ion-item>
@@ -327,17 +328,17 @@
               <h3>{{ $t('Shop listing status') }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item v-if="Object.keys(shopListings).length === 1">
+          <ion-item v-if="!Object.keys(shopListings).length">
             {{ $t('No shop listings found') }}
           </ion-item>
           <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
             <ion-label class="ion-text-wrap">
-              <h5>{{ $t('Shop', {index: index + 1}) }}</h5>
+              <h5>{{ $t('Shop', { index: index + 1 }) }}</h5>
               <!-- internationalized while preparation -->
               <p>{{ listData.listingTimeAndStatus }}</p>
             </ion-label>
-            <ion-label slot="end">
-              <p>{{ $t(listData.listingStatus) }}</p>
+            <ion-label :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
+              <h5>{{ $t(listData.listingStatus) }}</h5>
             </ion-label>
           </ion-item>
         </ion-card>
@@ -386,6 +387,7 @@ import JobActionsPopover from "./job-actions-popover.vue";
 import { OrderService } from "@/services/OrderService";
 import { ShopifyService } from "@/services/ShopifyService";
 import { JobService } from "@/services/JobService";
+import { ProductService } from "@/services/ProductService";
 
 export default defineComponent({
   name: "catalog-product-details",
@@ -418,7 +420,7 @@ export default defineComponent({
       features: [] as any,
       currentVariant: {} as any,
       pOAndATPDetails: {} as any,
-      aTPcalcDetails : {} as any,
+      aTPcalcDetails: {} as any,
       inventoryConfig: {} as any,
       pOSummary: {} as any,
       shopListings: [] as any,
@@ -431,14 +433,12 @@ export default defineComponent({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
-      isCtgryAndBrkrngJobLoaded: "job/isCtgryAndBrkrngJobLoaded",
       getInventoryConfig: "user/getInventoryConfig"
     })
   },
   async ionViewWillEnter() {
     await this.getShopifyConfigsByStore()
     await this.getVariantDetails()
-    await this.getATPCalcDetails()
     await this.getCtgryAndBrkrngJobs()
   },
   methods: {
@@ -446,9 +446,7 @@ export default defineComponent({
       await this.store.dispatch('product/setCurrentCatalogProduct', { productId: this.$route.params.productId })
       if (this.product.variants) {
         this.getFeatures()
-        this.updateVariant()
-        await this.getPODetails()
-        await this.prepareShopListings()
+        await this.updateVariant()
       }
     },
     applyFeature(feature: string, type: string) {
@@ -466,12 +464,12 @@ export default defineComponent({
       })
 
       Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
-      
+
       const openedVariant = this.product.variants.find((variant: any) => variant.productId === this.$route.params.variantId)
       this.selectedColor = getFeature(openedVariant.featureHierarchy, '1/COLOR/')
       this.selectedSize = getFeature(openedVariant.featureHierarchy, '1/SIZE/')
     },
-    updateVariant() {
+    async updateVariant() {
       let variant
       if (this.selectedColor || this.selectedSize) {
         variant = this.product.variants.find((variant: any) => {
@@ -489,6 +487,8 @@ export default defineComponent({
       }
       // if the variant does not have color or size as features
       this.currentVariant = variant || this.product.variants[0]
+      await this.getPODetails()
+      await this.getATPCalcDetails()
     },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
@@ -508,11 +508,12 @@ export default defineComponent({
     getTime(time: number) {
       return DateTime.fromMillis(time).toLocaleString()
     },
-    timeTillJob (time: any) {
+    timeTillJob(time: number) {
       const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
     async getPODetails() {
+      this.pOAndATPDetails = {}
       try {
         const requests = []
         let resp: any
@@ -568,38 +569,48 @@ export default defineComponent({
           this.pOAndATPDetails.activePO = resp[1].data.docs[0]
           this.pOAndATPDetails.crspndgSalesOrdr = resp[2].data.response.numFound
         }
-
-        payload = {
-          "inputFields": {
-            "productId": this.$route.params.variantId,
-            "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
-            "orderStatusId_op": "in",
-            "orderTypeId": "PURCHASE_ORDER",
-            "orderTypeId_op": "equals"
-          },
-          "entityName": "PurchaseOrderItemAtpSum",
-          "fieldList": ["productId", "totalAtp", "orderId"],
-          "viewSize": 50
-        }
-
-        // seperate API call for getting total items and ATP as they are 
-        // not included with the active PO data
-        resp = await OrderService.getPOItemATPSum(payload)
-
-        if (!hasError(resp)) {
-          this.pOAndATPDetails.totalPOATP = resp.data.docs.reduce((total: number, poData: any) => poData.totalAtp + total, 0)
-          this.pOAndATPDetails.totalPOItems = resp.data.count
-        }
       } catch (error) {
         console.error(error)
       } finally {
-        this.pOAndATPDetails.isLoaded = true
+        await this.prepareShopListings()
         // preparePOSummary needs PO details to be fetched first
         await this.preparePOSummary()
       }
     },
     async getATPCalcDetails() {
       await this.prepareInvConfig()
+      this.aTPcalcDetails = {}
+      try {
+        const requests = []
+        let payload = {
+          "inputFields": {
+            "productId": this.$route.params.variantId,
+            "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
+            "orderStatusId_op": "in",
+            "itemStatusId": ["ITEM_CREATED", "ITEM_APPROVED"],
+            "itemStatusId_op": "in",
+            "estimatedDeliveryDate_op": "greaterThanFromDayStart"
+          },
+          "entityName": "OrderHeaderAndItems",
+          "viewSize": 1
+        } as any
+        requests.push(OrderService.getPOItemCount(payload).catch((error: any) => error))
+
+        payload = { "productId": this.$route.params.variantId }
+        requests.push(ProductService.getProductInventoryAvailable(payload).catch((error: any) => error))
+
+        const promiseResult = await Promise.allSettled(requests)
+        // promise.allSettled returns an array of result with status and value fields
+        let resp = promiseResult.map((respone: any) => respone.value) as any
+
+        if (!hasError(resp[0]) && !hasError(resp[1])) {
+          this.pOAndATPDetails.totalPOItems = resp[0].data.count
+          this.pOAndATPDetails.totalPOATP = resp[1].data.availableToPromiseTotal
+          this.aTPcalcDetails.totalQOH = resp[1].data.quantityOnHandTotal
+        }
+      } catch (error) {
+        console.error(error)
+      }
     },
     async updateInvConfig(type: string, config: any, value: boolean) {
       if (type === 'reserveInv') {
@@ -632,9 +643,18 @@ export default defineComponent({
       this.inventoryConfig.preOrdPhyInvHoldStatus = preOrdPhyInvHoldConfig.settingValue
     },
     async preparePOSummary() {
+      this.pOSummary = {}
+
+      // TODO - add check for 'no inventory' in the active PO status
       this.pOSummary.isActivePO = this.pOAndATPDetails.activePO && Object.keys(this.pOAndATPDetails?.activePO).length
       this.pOSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
       this.pOSummary.promiseDate = this.pOSummary.isActivePO && this.getTime(this.pOAndATPDetails.activePO.estimatedDeliveryDate)
+
+      // Currently we are only having one shop listing condition
+      // will improve the logic as the listing conditions increase
+      const listedCount = this.shopListings.reduce((count: number, listData: any) =>
+        (listData.status === 'active' && !listData.containsError) ? count + 1 : count
+      , 0)
 
       try {
         // fetch fromDate only for active POs in pre-order/back-order category
@@ -655,7 +675,13 @@ export default defineComponent({
           if (!hasError(resp)) {
             const fromDate = resp.data.docs[0].fromDate
             const category = this.pOSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
-            this.pOSummary.header = `Product has been accepting ${category}s from ${this.getTime(fromDate)} against PO #${this.pOAndATPDetails.purchaseOrderId}`
+            if (this.configsByStores.length > listedCount) {
+              this.pOSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length - listedCount })
+              this.pOSummary.header = `Added to pre-order category on ${this.getTime(fromDate)}, against PO #${this.pOAndATPDetails.purchaseOrderId} but not listed on all stores`
+            } else if (listedCount === this.configsByStores.length) {
+              this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
+              this.pOSummary.header = `Product has been accepting ${category}s from ${this.getTime(fromDate)} against PO #${this.pOAndATPDetails.purchaseOrderId}`
+            }
           }
         } else if (!this.pOSummary.categoryId) {
           if (this.pOSummary.isActivePO) {
@@ -664,9 +690,9 @@ export default defineComponent({
           } else {
             this.pOSummary.header = "This product cannot be pre-sold because it doesn’t have active purchase orders"
           }
+          this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
         }
-        // TODO handle the two left cases for -
-        // Added to pre-order category at 10:00 am 20 March 2023, against PO #1234 but not listed on all stores
+        // TODO handle the left cases for -
         // With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues.
       } catch (error) {
         console.error(error)
@@ -692,6 +718,7 @@ export default defineComponent({
       }
     },
     async prepareShopListings() {
+      this.shopListings = []
       try {
         if (!this.configsByStores.length) return
 
@@ -737,9 +764,6 @@ export default defineComponent({
           }
 
           resp = await ShopifyService.getShopifyConfigDetails(payload)
-          // console.log(resp)
-          // console.log(this.configsByStores)
-          // console.log(shopifyConfigsAndProductIds)
           if (!hasError(resp)) {
             let listData = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
             listData = {
@@ -768,20 +792,6 @@ export default defineComponent({
         }))
       } catch (error) {
         console.error(error)
-      } finally {
-        this.shopListings.isLoaded = true
-        // Currently we are only having one shop listing condition
-        // will improve the logic as the listing conditions increase
-        const activeListingsCount = this.shopListings.reduce((count: number, listData: any) =>
-          (listData.status === 'active' && !listData.containsError) ? count + 1 : count
-        , 0)
-        if (!activeListingsCount) {
-          this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
-        } else if (activeListingsCount === this.configsByStores.length) {
-          this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
-        } else {
-          this.pOSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length - activeListingsCount })
-        }
       }
     },
     getProductIdentificationId(identifications: any, id: string) {

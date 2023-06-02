@@ -83,14 +83,6 @@ const getPOItemAndATPDetails = async (query: any): Promise <any> => {
   });
 }
 
-const getPOItemATPSum = async (query: any): Promise <any> => {
-  return api({
-    url: 'performFind',
-    method: "get",
-    params: query
-  });
-}
-
 const getCrspndgSalesOrdr = async (payload: any): Promise<any> => {
   return api({
     url: "solr-query",
@@ -100,6 +92,14 @@ const getCrspndgSalesOrdr = async (payload: any): Promise<any> => {
 }
 
 const getPOFromDate = async (query: any): Promise <any> => {
+  return api({
+    url: 'performFind',
+    method: "get",
+    params: query
+  });
+}
+
+const getPOItemCount = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -120,5 +120,5 @@ export const OrderService = {
   getPOItemAndATPDetails,
   getCrspndgSalesOrdr,
   getPOFromDate,
-  getPOItemATPSum
+  getPOItemCount
 }
