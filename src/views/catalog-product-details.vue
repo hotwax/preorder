@@ -165,27 +165,27 @@
 
           <ion-item>
             <ion-label>{{ $t("Ordered") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.activePO?.quantity ? pOAndATPDetails.activePO?.quantity : 0 }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.quantity ? pOAndATPDetails.activePO?.quantity : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Available") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.activePO?.availableToPromise ? pOAndATPDetails.activePO?.availableToPromise : 0 }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.availableToPromise ? pOAndATPDetails.activePO?.availableToPromise : '-' }}</ion-label>
           </ion-item>
 
           <ion-item lines="full">
             <ion-label>{{ $t("Corresponding sales orders") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.crspndgSalesOrdr ? pOAndATPDetails.crspndgSalesOrdr : 0 }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.crspndgSalesOrdr }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO items") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.totalPOItems ? pOAndATPDetails.totalPOItems : 0 }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.totalPOItems }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO ATP") }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.totalPOATP ? pOAndATPDetails.totalPOATP : 0 }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.totalPOATP }}</ion-label>
           </ion-item>
         </ion-card>
 
@@ -566,8 +566,10 @@ export default defineComponent({
         payload = {
           "inputFields": {
             "productId": this.$route.params.variantId,
-            "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
-            "orderStatusId_op": "in",
+            ...(this.pOAndATPDetails.activePOID && {
+              "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
+              "orderStatusId_op": "in"
+            }),
             "orderTypeId": "PURCHASE_ORDER",
             "orderTypeId_op": "equals"
           },
@@ -611,10 +613,10 @@ export default defineComponent({
         resp = promiseResult.map((respone: any) => respone.value)
 
         this.pOAndATPDetails.activePO = {}
-        if (!hasError(resp[0]) && !hasError(resp[1]) && !hasError(resp[2])) {
-          this.pOAndATPDetails.activePO = resp[0].data.docs[0]
-          this.pOAndATPDetails.crspndgSalesOrdr = resp[1].data.response.numFound
-          this.pOAndATPDetails.totalPOItems = resp[2].data.count
+        if (!hasError(resp[0]) || !hasError(resp[1]) || !hasError(resp[2])) {
+          this.pOAndATPDetails.activePO = resp[0]?.data.docs[0]
+          this.pOAndATPDetails.crspndgSalesOrdr = resp[1]?.data.response.numFound || '-'
+          this.pOAndATPDetails.totalPOItems = resp[2]?.data.count || '-'
         }
 
         // seperate API call as we need activePO data for the 'isNewProduct' field
@@ -693,8 +695,7 @@ export default defineComponent({
       this.inventoryConfig.preOrdPhyInvHoldStatus = preOrdPhyInvHoldConfig.settingValue
     },
     async preparePOSummary() {
-      // this.pOSummary.isActivePO = (this.pOAndATPDetails.activePO && Object.keys(this.pOAndATPDetails?.activePO).length) && this.pOAndATPDetails.onlineATP > 0
-      this.pOSummary.isActivePO = this.pOAndATPDetails.activePOID && Object.keys(this.pOAndATPDetails?.activePO).length
+      this.pOSummary.isActivePO = (this.pOAndATPDetails.activePO && Object.keys(this.pOAndATPDetails?.activePO).length) && this.pOAndATPDetails.onlineATP > 0
       this.pOSummary.isLastActivePO = this.pOAndATPDetails.lastActivePOID && Object.keys(this.pOAndATPDetails?.activePO).length
       this.pOSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
 
