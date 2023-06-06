@@ -67,7 +67,7 @@ const updatePromiseDateItem = async (payload: any): Promise<any> => {
   });
 }
 
-const getPOID = async (query: any): Promise <any> => {
+const getActivePOID = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -75,7 +75,7 @@ const getPOID = async (query: any): Promise <any> => {
   });
 }
 
-const getPOItemAndATPDetails = async (query: any): Promise <any> => {
+const getActivePODetails = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -107,6 +107,14 @@ const getPOItemCount = async (query: any): Promise <any> => {
   });
 }
 
+const getPOItemChangeHistory = async (query: any): Promise <any> => {
+  return api({
+    url: 'performFind',
+    method: "get",
+    params: query
+  });
+}
+
 export const OrderService = {
   fetchBrokeringCountByProducts,
   findOrder,
@@ -116,9 +124,10 @@ export const OrderService = {
   releaseItems,
   cancelItems,
   updatePromiseDateItems,
-  getPOID,
-  getPOItemAndATPDetails,
+  getActivePOID,
+  getActivePODetails,
   getCrspndgSalesOrdr,
   getPOFromDate,
-  getPOItemCount
+  getPOItemCount,
+  getPOItemChangeHistory
 }

@@ -69,7 +69,7 @@
         </div>
 
         <div>
-          <ion-card v-if="!Object.keys(pOSummary).length || !pOSummary.listingCountStatus">
+          <ion-card v-if="!pOSummary.listingCountStatus">
             <ion-item>
               <ion-skeleton-text animated style="height: 60%; width: 90%;" />
             </ion-item>
@@ -123,7 +123,8 @@
         </ion-item>
       </div>
       <div class="ion-padding-start" v-else>
-        <h3>{{ $t("Presell eligibility") }}</h3>
+        <h3 v-if="!pOAndATPDetails.lastActivePOID">{{ $t("Presell eligibility") }}</h3>
+        <h3 v-else>{{ $t("Purchase order and online ATP calculation") }}</h3>
       </div>
 
       <section>
@@ -153,12 +154,13 @@
         <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t("Active purchase order") }}</h3>
+              <h3 v-if="!pOAndATPDetails.lastActivePOID">{{ $t("Active purchase order") }}</h3>
+              <h3 v-else>{{ $t("Last active purchase order")  }}</h3>
             </ion-card-title>
           </ion-card-header>
           <ion-item>
-            <ion-label>{{ $t('PO #', { pOId: pOAndATPDetails.purchaseOrderId }) }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.activePO?.estimatedDeliveryDate ? getTime(pOAndATPDetails.activePO.estimatedDeliveryDate) : 0 }}</ion-label>
+            <ion-label>{{ $t('PO #', { pOId: pOAndATPDetails.activePOID ? pOAndATPDetails.activePOID : pOAndATPDetails.lastActivePOID }) }}</ion-label>
+            <ion-label slot="end">{{ pOAndATPDetails.activePO?.estimatedDeliveryDate ? getTime(pOAndATPDetails.activePO.estimatedDeliveryDate) : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
@@ -387,7 +389,7 @@ import JobActionsPopover from "./job-actions-popover.vue";
 import { OrderService } from "@/services/OrderService";
 import { ShopifyService } from "@/services/ShopifyService";
 import { JobService } from "@/services/JobService";
-import { ProductService } from "@/services/ProductService";
+import { StockService } from "@/services/StockService";
 
 export default defineComponent({
   name: "catalog-product-details",
@@ -513,7 +515,15 @@ export default defineComponent({
       return DateTime.local().plus(timeDiff).toRelative();
     },
     async getPODetails() {
+      // For showing skeleton component, emptying it here as
+      // if we empty it in the preparePOSummary function
+      // the execution is too fast for the DOM to catch
+      this.pOSummary = {}
+
+      // the section starts loading later hence emptying here
+      this.aTPcalcDetails = {}
       this.pOAndATPDetails = {}
+
       try {
         const requests = []
         let resp: any
@@ -529,7 +539,29 @@ export default defineComponent({
           "viewSize": 1
         } as any
 
-        requests.push(OrderService.getPOID(payload).catch((error: any) => error))
+        resp = await OrderService.getActivePOID(payload)
+
+        if (!hasError(resp)) {
+          this.pOAndATPDetails.activePOID = resp.data.docs[0].purchaseOrderId
+        }
+
+        if (!this.pOAndATPDetails.activePOID) {
+          // get last active PO ID if active PO ID is not found
+          payload = {
+            "inputFields": {
+              "productId": this.$route.params.variantId,
+            },
+            "entityName": "PurchaseOrderItemChangeHistory",
+            "sortBy": "entryDate DESC",
+            "fieldList": ["poId", "changeDatetime", "changeTypeEnumId"],
+            "viewSize": 1
+          } as any
+          resp = await OrderService.getPOItemChangeHistory(payload)
+          if (!hasError(resp)) {
+            this.pOAndATPDetails.lastActivePOID = resp.data.docs[0].poId,
+            this.pOAndATPDetails.changeDatetime = resp.data.docs[0].changeDatetime
+          }
+        }
 
         payload = {
           "inputFields": {
@@ -541,48 +573,25 @@ export default defineComponent({
           },
           "entityName": "PreOrderPOItem",
           "sortBy": "entryDate DESC",
-          "fieldList": ["orderId", "estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
+          "fieldList": ["estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
           "viewSize": 1
         }
 
-        requests.push(OrderService.getPOItemAndATPDetails(payload).catch((error: any) => error))
+        requests.push(OrderService.getActivePODetails(payload).catch((error: any) => error))
 
         payload = {
           "json": {
             "params": {
               "rows": 0,
             },
-            "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.pOAndATPDetails.purchaseOrderId}`,
+            "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.pOAndATPDetails.activePOID}`,
             "query": "*:*",
           }
         }
 
         requests.push(OrderService.getCrspndgSalesOrdr(payload).catch((error: any) => error))
 
-        const promiseResult = await Promise.allSettled(requests)
-        // promise.allSettled returns an array of result with status and value fields
-        resp = promiseResult.map((respone: any) => respone.value)
-
-        this.pOAndATPDetails.activePO = {}
-        if (!hasError(resp[0]) && !hasError(resp[1]) && !hasError(resp[2])) {
-          this.pOAndATPDetails.purchaseOrderId = resp[0].data.docs[0].purchaseOrderId
-          this.pOAndATPDetails.activePO = resp[1].data.docs[0]
-          this.pOAndATPDetails.crspndgSalesOrdr = resp[2].data.response.numFound
-        }
-      } catch (error) {
-        console.error(error)
-      } finally {
-        await this.prepareShopListings()
-        // preparePOSummary needs PO details to be fetched first
-        await this.preparePOSummary()
-      }
-    },
-    async getATPCalcDetails() {
-      await this.prepareInvConfig()
-      this.aTPcalcDetails = {}
-      try {
-        const requests = []
-        let payload = {
+        payload = {
           "inputFields": {
             "productId": this.$route.params.variantId,
             "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
@@ -593,23 +602,64 @@ export default defineComponent({
           },
           "entityName": "OrderHeaderAndItems",
           "viewSize": 1
-        } as any
+        }
+
         requests.push(OrderService.getPOItemCount(payload).catch((error: any) => error))
 
-        payload = { "productId": this.$route.params.variantId }
-        requests.push(ProductService.getProductInventoryAvailable(payload).catch((error: any) => error))
+        const promiseResult = await Promise.allSettled(requests)
+        // promise.allSettled returns an array of result with status and value fields
+        resp = promiseResult.map((respone: any) => respone.value)
 
+        this.pOAndATPDetails.activePO = {}
+        if (!hasError(resp[0]) && !hasError(resp[1]) && !hasError(resp[2])) {
+          this.pOAndATPDetails.activePO = resp[0].data.docs[0]
+          this.pOAndATPDetails.crspndgSalesOrdr = resp[1].data.response.numFound
+          this.pOAndATPDetails.totalPOItems = resp[2].data.count
+        }
+
+        // seperate API call as we need activePO data for the 'isNewProduct' field
+        payload = {
+          "productId": this.$route.params.variantId,
+          ...((Object.keys(this.pOAndATPDetails.activePO).length) && { "isNewProduct": this.pOAndATPDetails.activePO.isNewProduct })
+        }
+
+        resp = await StockService.getProductPOATP(payload)
+        if (!hasError(resp)) {
+          this.pOAndATPDetails.totalPOATP = resp.data.poAtp
+        }
+      } catch (error) {
+        console.error(error)
+      } finally {
+        await this.prepareShopListings()
+        // preparePOSummary needs PO details to be fetched first
+        await this.preparePOSummary()
+      }
+    },
+    async getATPCalcDetails() {
+      try {
+        const requests = []
+        let payload = { "productId": this.$route.params.variantId } as any
+        requests.push(StockService.getProductInventoryAvailable(payload).catch((error: any) => error))
+
+        payload = { 
+          ...payload,
+          "productStoreId": this.currentEComStore.productStoreId
+        }
+        requests.push(StockService.getProductFutureATP(payload).catch((error: any) => error))
+        
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         let resp = promiseResult.map((respone: any) => respone.value) as any
 
         if (!hasError(resp[0]) && !hasError(resp[1])) {
-          this.pOAndATPDetails.totalPOItems = resp[0].data.count
-          this.pOAndATPDetails.totalPOATP = resp[1].data.availableToPromiseTotal
-          this.aTPcalcDetails.totalQOH = resp[1].data.quantityOnHandTotal
+          this.aTPcalcDetails.totalQOH = resp[0].data.quantityOnHandTotal
+          this.aTPcalcDetails.onlineATP = resp[1].data.futureAtp
+          this.aTPcalcDetails.excludedATP = this.pOAndATPDetails.totalPOATP - this.aTPcalcDetails.onlineATP
         }
       } catch (error) {
         console.error(error)
+      } finally {
+        await this.prepareInvConfig()
       }
     },
     async updateInvConfig(type: string, config: any, value: boolean) {
@@ -643,13 +693,12 @@ export default defineComponent({
       this.inventoryConfig.preOrdPhyInvHoldStatus = preOrdPhyInvHoldConfig.settingValue
     },
     async preparePOSummary() {
-      this.pOSummary = {}
-
-      // TODO - add check for 'no inventory' in the active PO status
-      this.pOSummary.isActivePO = this.pOAndATPDetails.activePO && Object.keys(this.pOAndATPDetails?.activePO).length
+      // this.pOSummary.isActivePO = (this.pOAndATPDetails.activePO && Object.keys(this.pOAndATPDetails?.activePO).length) && this.pOAndATPDetails.onlineATP > 0
+      this.pOSummary.isActivePO = this.pOAndATPDetails.activePOID && Object.keys(this.pOAndATPDetails?.activePO).length
+      this.pOSummary.isLastActivePO = this.pOAndATPDetails.lastActivePOID && Object.keys(this.pOAndATPDetails?.activePO).length
       this.pOSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
-      this.pOSummary.promiseDate = this.pOSummary.isActivePO && this.getTime(this.pOAndATPDetails.activePO.estimatedDeliveryDate)
 
+      const category = this.pOSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
       // Currently we are only having one shop listing condition
       // will improve the logic as the listing conditions increase
       const listedCount = this.shopListings.reduce((count: number, listData: any) =>
@@ -658,42 +707,66 @@ export default defineComponent({
 
       try {
         // fetch fromDate only for active POs in pre-order/back-order category
-        this.pOSummary.header = ''
-        if (this.pOSummary.isActivePO && this.pOSummary.categoryId) {
-          let resp: any = await OrderService.getPOFromDate({
-            "inputFields": {
-              "productId": this.$route.params.variantId,
-              "productCategoryId": this.pOSummary.categoryId,
-              "productCategoryId_op": "equals"
-            },
-            "entityName": "PreOrderCategoryProducts",
-            "fieldList": ["productId", "fromDate"],
-            "viewSize": 1
-          })
-
-          // TODO - internationalize header after getting generic strings
-          if (!hasError(resp)) {
-            const fromDate = resp.data.docs[0].fromDate
-            const category = this.pOSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
-            if (this.configsByStores.length > listedCount) {
-              this.pOSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length - listedCount })
-              this.pOSummary.header = `Added to pre-order category on ${this.getTime(fromDate)}, against PO #${this.pOAndATPDetails.purchaseOrderId} but not listed on all stores`
-            } else if (listedCount === this.configsByStores.length) {
-              this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
-              this.pOSummary.header = `Product has been accepting ${category}s from ${this.getTime(fromDate)} against PO #${this.pOAndATPDetails.purchaseOrderId}`
+        if (this.pOSummary.isActivePO) {
+          if (this.pOSummary.categoryId) {
+            let resp: any = await OrderService.getPOFromDate({
+              "inputFields": {
+                "productId": this.$route.params.variantId,
+                "productCategoryId": this.pOSummary.categoryId,
+                "productCategoryId_op": "equals"
+              },
+              "entityName": "PreOrderCategoryProducts",
+              "fieldList": ["productId", "fromDate"],
+              "viewSize": 1
+            })
+  
+            // TODO - internationalize header after getting generic strings
+            if (!hasError(resp)) {
+              const fromDate = resp.data.docs[0].fromDate
+              if (this.configsByStores.length > listedCount) {
+                this.pOSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length - listedCount })
+                this.pOSummary.header = `Added to pre-order category on ${this.getTime(fromDate)}, against PO #${this.pOAndATPDetails.activePOID} but not listed on all stores`
+              } else if (listedCount === this.configsByStores.length) {
+                this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
+                this.pOSummary.header = `Product has been accepting ${category}s from ${this.getTime(fromDate)} against PO #${this.pOAndATPDetails.activePOID}`
+              }
             }
-          }
-        } else if (!this.pOSummary.categoryId) {
-          if (this.pOSummary.isActivePO) {
+            this.pOSummary.promiseDate = this.getTime(this.pOAndATPDetails.activePO.estimatedDeliveryDate)
+          } else {
             const eligibleCategory = this.pOAndATPDetails.activePO.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
             this.pOSummary.header = `Product is eligible for ${eligibleCategory}s but not added to the ${eligibleCategory} category`
-          } else {
-            this.pOSummary.header = "This product cannot be pre-sold because it doesn’t have active purchase orders"
           }
-          this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
+        } else if (this.pOSummary.isLastActivePO) {
+          if (!this.pOSummary.categoryId) {
+            if (!listedCount) {
+              this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
+              this.pOSummary.header = `Stopped accepting ${category}s from ${this.getTime(this.pOAndATPDetails.changeDatetime)} as there is not active PO`
+            } else {
+              this.pOSummary.listingCountStatus = this.$t("Listed on store(s)", { count: this.configsByStores.length - listedCount })
+              this.pOSummary.header = `Removed from ${category} category on ${this.getTime(this.pOAndATPDetails.changeDatetime)} because there is no active PO but stil listed on ${listedCount} stores`
+              this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+            }
+          } else {
+            this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
+            this.pOSummary.header = `Not eligible for accepting ${category}s but currently added in ${category} category`
+            this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+          }
+        } else {
+          if (listedCount === this.configsByStores.length) {
+            this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
+            if (this.aTPcalcDetails.onlineATP) {
+              this.pOSummary.header = `Product is currently in stock and cannot accept ${category}s`
+            } else {
+              this.pOSummary.header = `Product has no active purchase order to be eligible for accepting ${category}s`
+            }
+            this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+          } else if (!listedCount) {
+            this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
+            this.pOSummary.header = `This product cannot be pre-sold because it does not have active purchase orders`
+            // TODO handle the left cases for -
+            // With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues.
+          }
         }
-        // TODO handle the left cases for -
-        // With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues.
       } catch (error) {
         console.error(error)
       }
@@ -768,7 +841,7 @@ export default defineComponent({
             let listData = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
             listData = {
               containsError: listData.contains_error[0],
-              listingTime: DateTime.fromISO(listData._timestamp_).toLocaleString(DateTime.DATETIME_MED),
+              listingTime: listData._timestamp_,
               status: JSON.parse(listData.data_productVariantUpdate_productVariant_metafields_edges_node_value[0]).status
             }
             if (!listData.containsError) {
@@ -777,11 +850,11 @@ export default defineComponent({
                 listData.listingTimeAndStatus = this.$t("Listing at", { listingTime: DateTime.fromMillis(this.listingJobRunTime).toLocaleString(DateTime.DATETIME_MED) })
                 listData.listingStatus = 'Not listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listed at", { listingTime: listData.listingTime })
+                listData.listingTimeAndStatus = this.$t("Listed at", { listingTime: DateTime.fromISO(listData.listingTime).toLocaleString(DateTime.DATETIME_MED) })
                 listData.listingStatus = 'Listed'
               }
             } else {
-              listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime: listData.listingTime })
+              listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime: DateTime.fromISO(listData.listingTime).toLocaleString(DateTime.DATETIME_MED) })
               listData.listingStatus = 'Not listed'
             }
             this.shopListings = [...this.shopListings, listData]
