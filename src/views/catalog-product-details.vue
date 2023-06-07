@@ -98,12 +98,12 @@
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
               <ion-label slot="end">{{ pOSummary.categoryId === 'PREORDER_CAT' ? $t('Pre-order') : pOSummary.categoryId === 'BACKORDER_CAT' ? $t('Back-order') : $t('None') }}</ion-label>
-              <ion-icon v-if="pOSummary.categoryId === 'PREORDER_CAT' || pOSummary.categoryId === 'BACKORDER_CAT'" slot="end" color="success" :icon="checkmarkCircleOutline" />
-              <ion-icon v-else slot="end" color="warning" :icon="alertCircleOutline" />
+              <ion-icon slot="end" :icon="optCheckmarkIconForCategory(pOSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForCategory(pOSummary) ? 'success' : 'warning'" />
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
               <ion-label class="ion-text-wrap" slot="end">{{ pOSummary.listingCountStatus }}</ion-label>
+              <ion-icon slot="end" :icon="optCheckmarkIconForListing(pOSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForListing(pOSummary) ? 'success' : 'warning'" />
             </ion-item>
             <ion-item v-if="pOSummary.isActivePO">
               <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
@@ -702,7 +702,7 @@ export default defineComponent({
       const category = this.pOSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
       // Currently we are only having one shop listing condition
       // will improve the logic as the listing conditions increase
-      const listedCount = this.shopListings.reduce((count: number, listData: any) =>
+      this.pOSummary.listedCount = this.shopListings.reduce((count: number, listData: any) =>
         (listData.status === 'active' && !listData.containsError) ? count + 1 : count
       , 0)
 
@@ -724,10 +724,10 @@ export default defineComponent({
             // TODO - internationalize header after getting generic strings
             if (!hasError(resp)) {
               const fromDate = resp.data.docs[0].fromDate
-              if (this.configsByStores.length > listedCount) {
-                this.pOSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length - listedCount })
+              if (this.configsByStores.length >  this.pOSummary.listedCount) {
+                this.pOSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length -  this.pOSummary.listedCount })
                 this.pOSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.pOAndATPDetails.activePOID })
-              } else if (listedCount === this.configsByStores.length) {
+              } else if ( this.pOSummary.listedCount === this.configsByStores.length) {
                 this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
                 this.pOSummary.header = this.$t("Product has been accepting s from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.pOAndATPDetails.activePOID})
               }
@@ -740,12 +740,12 @@ export default defineComponent({
           }
         } else if (this.pOSummary.isLastActivePO) {
           if (!this.pOSummary.categoryId) {
-            if (!listedCount) {
+            if (! this.pOSummary.listedCount) {
               this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
               this.pOSummary.header = this.$t("Stopped accepting from as there is not active PO", { category, changedDatetime: this.getTime(this.pOAndATPDetails.changeDatetime) })
             } else {
-              this.pOSummary.listingCountStatus = this.$t("Listed on store(s)", { count: this.configsByStores.length - listedCount })
-              this.pOSummary.header = this.$t("Removed from category on because there is no active PO but stil listed on stores", { listedCount, changedDatetime: this.getTime(this.pOAndATPDetails.changeDatetime) })
+              this.pOSummary.listingCountStatus = this.$t("Listed on store(s)", { count: this.configsByStores.length -  this.pOSummary.listedCount })
+              this.pOSummary.header = this.$t("Removed from category on because there is no active PO but stil listed on stores", { listedCount: this.pOSummary.listedCount, changedDatetime: this.getTime(this.pOAndATPDetails.changeDatetime) })
               this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
             }
           } else {
@@ -754,7 +754,7 @@ export default defineComponent({
             this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
           }
         } else {
-          if (listedCount === this.configsByStores.length) {
+          if (this.pOSummary.listedCount === this.configsByStores.length) {
             this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
             if (typeof this.aTPcalcDetails.onlineATP === 'number' && this.aTPcalcDetails.onlineATP > 0) {
               this.pOSummary.header = this.$t("Product is currently in stock and cannot accept s", { category })
@@ -762,7 +762,7 @@ export default defineComponent({
               this.pOSummary.header = this.$t("Product has no active purchase order to be eligible for accepting s", { category })
             }
             this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
-          } else if (!listedCount) {
+          } else if (!this.pOSummary.listedCount) {
             if (this.inventoryConfig.preOrdPhyInvHoldStatus === 'false' && typeof this.aTPcalcDetails.onlineATP === 'number' && this.aTPcalcDetails.onlineATP > 0) {
               this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
               this.pOSummary.header = this.$t("With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues")
@@ -880,6 +880,26 @@ export default defineComponent({
         externalId = externalIdentificationSplit[2] ? externalIdentificationSplit[2] : '';
       }
       return externalId;
+    },
+    optCheckmarkIconForCategory(pOSummary: any) {
+      if (pOSummary.isActivePO) {
+        if (pOSummary.categoryId) return true
+        else return false
+      } else if (pOSummary.isLastActivePO) {
+        if (!pOSummary.categoryId) return true
+        else return false
+      }
+      return false
+    },
+    optCheckmarkIconForListing(pOSummary: any) {
+      if (pOSummary.isActivePO && pOSummary.categoryId) {
+        if (pOSummary.listedCount === this.configsByStores.length) return true
+        else return false
+      } else if (pOSummary.isLastActivePO && !pOSummary.categoryId) {
+        if (!pOSummary.listedCount) return true
+        else return false
+      }
+      return false
     }
   },
   setup() {
