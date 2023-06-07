@@ -24,9 +24,9 @@ const getProductFutureATP = async (query: any): Promise<any> => {
     });
 }
 
-const getProductPOATP = async (query: any): Promise<any> => {
+const getProductOnlineATP = async (query: any): Promise<any> => {
     return api({
-        url: "service/getProductPOAtp",
+        url: "service/getProductOnlineAtp",
         method: "post",
         data: query
     });
@@ -36,5 +36,5 @@ export const StockService = {
     checkInventory,
     getProductInventoryAvailable,
     getProductFutureATP,
-    getProductPOATP
+    getProductOnlineATP
 }
