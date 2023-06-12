@@ -54,17 +54,17 @@
         <ion-card>
           <ion-card-header>
             <ion-card-subtitle>
-              {{ $t("Shopify Config") }}
+              {{ $t("Product Store") }}
             </ion-card-subtitle>
             <ion-card-title>
-              {{ $t("eCommerce") }}
+              {{ $t("Store") }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            {{ $t('eCommerce stores are directly connected to one Shop Config. If your OMS is connected to multiple eCommerce stores selling the same catalog operating as one Company, you may have multiple Shop Configs for the selected Product Store.') }}
+            {{ $t('A store represents a company or a unique catalog of products. If your OMS is connected to multiple eCommerce stores sellling different collections of products, you may have multiple Product Stores set up in HotWax Commerce.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Select eCommerce") }}</ion-label>
+            <ion-label>{{ $t("Select store") }}</ion-label>
             <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
               <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
             </ion-select>
