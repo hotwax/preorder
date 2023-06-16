@@ -4,12 +4,15 @@ import RootState from '@/store/RootState'
 import UtilState from './UtilState'
 import * as types from './mutation-types'
 import { hasError } from '@/utils'
+import { config } from '@ionic/core'
 
 const actions: ActionTree<UtilState, RootState> = {
   /**
    * Status Description
    */
-  async getServiceStatusDesc ({ commit }) {
+  async getServiceStatusDesc ({ commit, state }) {
+    if (Object.keys(state.statusDesc).length) return
+
     try{
       const resp = await UtilService.getServiceStatusDesc({
         "inputFields": {
@@ -28,6 +31,51 @@ const actions: ActionTree<UtilState, RootState> = {
       console.error(err)
     }
   },
+  /**
+    Get reserve inventory config
+   */
+    async getReserveInvConfig({ commit, state }) {
+      const resp = await UtilService.getReserveInvConfig({
+        "fieldList": ["productStoreId", "reserveInventory"],
+        "entityName": "ProductStore",
+        "viewSize": 20,
+        "noConditionFind": 'Y',
+      })
+      let reserveInvConfigs = {}, inventoryConfig = {}
+      if (!hasError(resp)) {
+        reserveInvConfigs = resp.data.docs.reduce((configs: any, config: any) => {
+          configs[config.productStoreId] = config
+          return configs
+        }, {})
+      }
+
+      inventoryConfig = { ...state.config, 'reserveInv': reserveInvConfigs }
+      commit(types.UTIL_STORE_INV_CONFIG_UPDATED, inventoryConfig)
+    },
+
+  /**
+    Get preorder physical inventory hold config
+   */
+    async getPreOrdPhyInvHoldConfig({ commit, state }, productStoreId) {
+      const resp = await UtilService.getPreOrdPhyInvHoldConfig({
+        "inputFields": {
+          "settingTypeEnumId": "HOLD_PRORD_PHYCL_INV"
+        },
+        "fieldList": ["settingTypeEnumId", "settingValue", "fromDate", "productStoreId"],
+        "entityName": "ProductStoreSetting",
+        "viewSize": 20
+      })
+      let preOrdPhyInvHoldConfig = {}, inventoryConfig = {}
+      if (!hasError(resp)) {
+        preOrdPhyInvHoldConfig = resp.data.docs.reduce((configs: any, config: any) => {
+          configs[config.productStoreId] = config
+          return configs
+        }, {})
+      }
+
+      inventoryConfig = {...state.config, 'preOrdPhyInvHold': preOrdPhyInvHoldConfig }
+      commit(types.UTIL_STORE_INV_CONFIG_UPDATED, inventoryConfig)
+    },
 }
 
 export default actions;

@@ -67,7 +67,7 @@ const updatePromiseDateItem = async (payload: any): Promise<any> => {
   });
 }
 
-const getActivePOID = async (query: any): Promise <any> => {
+const getActivePoId = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -75,7 +75,7 @@ const getActivePOID = async (query: any): Promise <any> => {
   });
 }
 
-const getActivePODetails = async (query: any): Promise <any> => {
+const getActivePoDetails = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -91,7 +91,7 @@ const getCrspndgSalesOrdr = async (payload: any): Promise<any> => {
   })
 }
 
-const getPOFromDate = async (query: any): Promise <any> => {
+const getPoFromDate = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -99,7 +99,7 @@ const getPOFromDate = async (query: any): Promise <any> => {
   });
 }
 
-const getPOItemCount = async (query: any): Promise <any> => {
+const getPoItemCount = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -107,7 +107,7 @@ const getPOItemCount = async (query: any): Promise <any> => {
   });
 }
 
-const getPOItemChangeHistory = async (query: any): Promise <any> => {
+const getPoItemChangeHistory = async (query: any): Promise <any> => {
   return api({
     url: 'performFind',
     method: "get",
@@ -124,10 +124,10 @@ export const OrderService = {
   releaseItems,
   cancelItems,
   updatePromiseDateItems,
-  getActivePOID,
-  getActivePODetails,
+  getActivePoId,
+  getActivePoDetails,
   getCrspndgSalesOrdr,
-  getPOFromDate,
-  getPOItemCount,
-  getPOItemChangeHistory
+  getPoFromDate,
+  getPoItemCount,
+  getPoItemChangeHistory
 }

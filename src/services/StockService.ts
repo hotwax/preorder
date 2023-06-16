@@ -16,7 +16,7 @@ const getProductInventoryAvailable = async (query: any): Promise<any> => {
     });
 }
 
-const getProductFutureATP = async (query: any): Promise<any> => {
+const getProductFutureAtp = async (query: any): Promise<any> => {
     return api({
         url: "service/getProductFutureAtp",
         method: "post",
@@ -24,7 +24,7 @@ const getProductFutureATP = async (query: any): Promise<any> => {
     });
 }
 
-const getProductOnlineATP = async (query: any): Promise<any> => {
+const getProductOnlineAtp = async (query: any): Promise<any> => {
     return api({
         url: "service/getProductOnlineAtp",
         method: "post",
@@ -35,6 +35,6 @@ const getProductOnlineATP = async (query: any): Promise<any> => {
 export const StockService = {
     checkInventory,
     getProductInventoryAvailable,
-    getProductFutureATP,
-    getProductOnlineATP
+    getProductFutureAtp,
+    getProductOnlineAtp
 }

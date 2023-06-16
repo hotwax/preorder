@@ -145,7 +145,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Set user's selected Ecom store
    */
-    async setEcomStore({ commit, dispatch }, payload) {
+    async setEcomStore({ commit }, payload) {
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
       // Reset all the current queries
       this.dispatch("product/resetProductList")
@@ -154,7 +154,6 @@ const actions: ActionTree<UserState, RootState> = {
         'userPrefTypeId': 'SELECTED_BRAND',
         'userPrefValue': payload.eComStore.productStoreId
       });
-      commit(types.USER_STORE_INV_CONFIG_UPDATED, { "reserveInv": {}, "preOrdPhyInvHold": {} })
     },
 
   /**
@@ -163,97 +162,6 @@ const actions: ActionTree<UserState, RootState> = {
     setUserInstanceUrl ({ commit }, payload){
       commit(types.USER_INSTANCE_URL_UPDATED, payload)
       updateInstanceUrl(payload)
-    },
-
-  /**
-    Get reserve inventory config
-   */
-    async getReserveInvConfig({ commit, state }, productStoreId) {
-      const resp = await UserService.getReserveInvConfig({
-        "inputFields": {
-          "productStoreId": productStoreId
-        },
-        "fieldList": ["productStoreId", "reserveInventory"],
-        "entityName": "ProductStore",
-      })
-      let reserveInvConfig = {}, inventoryConfig = {}
-      if (!hasError(resp)) {
-        reserveInvConfig = resp.data.docs[0]
-      }
-      inventoryConfig = { ...state.config, 'reserveInv': reserveInvConfig }
-      commit(types.USER_STORE_INV_CONFIG_UPDATED, inventoryConfig)
-    },
-
-  /**
-    Get preorder physical inventory hold config
-   */
-    async getPreOrdPhyInvHoldConfig({ commit, state }, productStoreId) {
-      const resp = await UserService.getPreOrdPhyInvHoldConfig({
-        "inputFields": {
-          "productStoreId": productStoreId,
-          "settingTypeEnumId": "HOLD_PRORD_PHYCL_INV"
-        },
-        "fieldList": ["settingTypeEnumId", "settingValue", "fromDate"],
-        "entityName": "ProductStoreSetting",
-      })
-      let preOrdPhyInvHoldConfig = {}, inventoryConfig = {}
-      if (!hasError(resp)) {
-        preOrdPhyInvHoldConfig = resp.data.docs[0]
-      }
-      inventoryConfig = {...state.config, 'preOrdPhyInvHold': preOrdPhyInvHoldConfig }
-      commit(types.USER_STORE_INV_CONFIG_UPDATED, inventoryConfig)
-    },
-
-    /**
-    Update preorder physical inventory hold config
-   */
-    async updatePreOrdPhyInvHoldConfig({ dispatch, state }, payload) {
-      const productStoreId = (state.currentEComStore as any).productStoreId
-      const params = {
-        "fromDate": payload.config.fromDate,
-        "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',
-        "settingValue": payload.value,
-        productStoreId
-      }
-
-      try {
-        const resp = await UserService.updatePreOrdPhyInvHoldConfig(params) as any
-        if(!hasError(resp)) {
-          showToast(translate('Configuration updated'))
-        } else {
-          showToast(translate('Failed to update configuration'))
-        }
-      } catch(err) {
-        showToast(translate('Failed to update configuration'))
-        console.error(err)
-      }
-
-      dispatch('getPreOrdPhyInvHoldConfig', productStoreId)
-    },
-
-    /**
-    Update reserve inventory config
-   */
-    async updateReserveInvConfig({ dispatch, state }, payload) {
-      const productStoreId = (state.currentEComStore as any).productStoreId
-      const params = {
-        "reserveInventory": payload.value ? "Y" : "N",
-        productStoreId
-      }
-
-      try {
-        const resp = await UserService.updateReserveInvConfig(params) as any
-        if(!hasError(resp)) {
-          showToast(translate('Configuration updated'))
-        } else {
-          showToast(translate('Failed to update configuration'))
-        }
-      } catch(err) {
-        showToast(translate('Failed to update configuration'))
-        console.error(err)
-      }
-
-      dispatch('getReserveInvConfig', productStoreId)
     },
 }
 export default actions;

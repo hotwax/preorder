@@ -69,7 +69,7 @@
         </div>
 
         <div>
-          <ion-card v-if="!pOSummary.listingCountStatus">
+          <ion-card v-if="!poSummary.listingCountStatus">
             <ion-item>
               <ion-skeleton-text animated style="height: 60%; width: 90%;" />
             </ion-item>
@@ -89,25 +89,25 @@
           <ion-card v-else>
             <ion-item lines="none">
               <!-- internationalized while preparaion -->
-              <ion-label class="ion-text-wrap">{{ pOSummary.header }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ poSummary.header }}</ion-label>
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-              <ion-label slot="end">{{ pOSummary.isActivePO ? $t("Yes") : $t("No") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.isActivePo ? $t("Yes") : $t("No") }}</ion-label>
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-              <ion-label slot="end">{{ pOSummary.categoryId === 'PREORDER_CAT' ? $t('Pre-order') : pOSummary.categoryId === 'BACKORDER_CAT' ? $t('Back-order') : $t('None') }}</ion-label>
-              <ion-icon slot="end" :icon="optCheckmarkIconForCategory(pOSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForCategory(pOSummary) ? 'success' : 'warning'" />
+              <ion-label slot="end">{{ poSummary.categoryId === 'PREORDER_CAT' ? $t('Pre-order') : poSummary.categoryId === 'BACKORDER_CAT' ? $t('Back-order') : $t('None') }}</ion-label>
+              <ion-icon slot="end" :icon="optCheckmarkIconForCategory(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForCategory(poSummary) ? 'success' : 'warning'" />
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
-              <ion-label class="ion-text-wrap" slot="end">{{ pOSummary.listingCountStatus }}</ion-label>
-              <ion-icon slot="end" :icon="optCheckmarkIconForListing(pOSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForListing(pOSummary) ? 'success' : 'warning'" />
+              <ion-label class="ion-text-wrap" slot="end">{{ poSummary.listingCountStatus }}</ion-label>
+              <ion-icon slot="end" :icon="optCheckmarkIconForListing(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForListing(poSummary) ? 'success' : 'warning'" />
             </ion-item>
-            <ion-item v-if="pOSummary.isActivePO">
+            <ion-item v-if="poSummary.isActivePo">
               <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
-              <ion-label slot="end">{{ pOSummary.promiseDate }}</ion-label>
+              <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
             </ion-item>
           </ion-card>
         </div>
@@ -115,18 +115,18 @@
 
       <hr />
 
-      <div v-if="!Object.keys(pOAndATPDetails).length">
+      <div v-if="!Object.keys(poAndAtpDetails).length">
         <ion-item lines="none">
           <ion-skeleton-text animated style="width: 50%; height: 50%;" />
         </ion-item>
       </div>
       <div class="ion-padding-start" v-else>
-        <h3 v-if="!pOAndATPDetails.lastActivePOID">{{ $t("Presell eligibility") }}</h3>
+        <h3 v-if="!poAndAtpDetails.lastActivePoId">{{ $t("Presell eligibility") }}</h3>
         <h3 v-else>{{ $t("Purchase order and online ATP calculation") }}</h3>
       </div>
 
       <section>
-        <ion-card v-if="!Object.keys(pOAndATPDetails).length">
+        <ion-card v-if="!Object.keys(poAndAtpDetails).length">
           <ion-item>
             <ion-skeleton-text animated style="height: 40%; width: 70%;" />
           </ion-item>
@@ -152,38 +152,38 @@
         <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
-              <h3 v-if="!pOAndATPDetails.lastActivePOID">{{ $t("Active purchase order") }}</h3>
+              <h3 v-if="!poAndAtpDetails.lastActivePoId">{{ $t("Active purchase order") }}</h3>
               <h3 v-else>{{ $t("Last active purchase order")  }}</h3>
             </ion-card-title>
           </ion-card-header>
           <ion-item>
-            <ion-label>{{ $t('PO #', { pOId: pOAndATPDetails.activePOID ? pOAndATPDetails.activePOID : pOAndATPDetails.lastActivePOID }) }}</ion-label>
-            <ion-label slot="end">{{ pOAndATPDetails.activePO?.estimatedDeliveryDate ? getTime(pOAndATPDetails.activePO.estimatedDeliveryDate) : '-' }}</ion-label>
+            <ion-label>{{ $t('PO #', { pOId: poAndAtpDetails.activePoId ? poAndAtpDetails.activePoId : poAndAtpDetails.lastActivePoId }) }}</ion-label>
+            <ion-label slot="end">{{ poAndAtpDetails.activePo?.estimatedDeliveryDate ? getTime(poAndAtpDetails.activePo.estimatedDeliveryDate) : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Ordered") }}</ion-label>
-            <ion-label slot="end">{{ (pOAndATPDetails.activePO?.quantity >= 0)? pOAndATPDetails.activePO?.quantity : '-' }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0)? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Available") }}</ion-label>
-            <ion-label slot="end">{{ (pOAndATPDetails.activePO?.availableToPromise >= 0) ? pOAndATPDetails.activePO?.availableToPromise : '-' }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.activePo?.availableToPromise >= 0) ? poAndAtpDetails.activePo?.availableToPromise : '-' }}</ion-label>
           </ion-item>
 
           <ion-item lines="full">
             <ion-label>{{ $t("Corresponding sales orders") }}</ion-label>
-            <ion-label slot="end">{{ (pOAndATPDetails.crspndgSalesOrdr >= 0) ? pOAndATPDetails.crspndgSalesOrdr : '-' }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.crspndgSalesOrdr >= 0) ? poAndAtpDetails.crspndgSalesOrdr : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO items") }}</ion-label>
-            <ion-label slot="end">{{ (pOAndATPDetails.totalPOItems >= 0) ? pOAndATPDetails.totalPOItems : '-' }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.totalPoItems >= 0) ? poAndAtpDetails.totalPoItems : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
             <ion-label>{{ $t("Total PO ATP") }}</ion-label>
-            <ion-label slot="end">{{ (pOAndATPDetails.totalPOATP >= 0) ? pOAndATPDetails.totalPOATP : '-' }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
           </ion-item>
         </ion-card>
 
@@ -215,15 +215,15 @@
           </ion-card-header>
           <ion-item>
             <ion-label>{{ $t("Online ATP") }}</ion-label>
-            <ion-label slot="end">{{ (aTPcalcDetails.onlineATP >= 0) ? aTPcalcDetails.onlineATP : '-' }}</ion-label>
+            <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Quantity on hand") }}</ion-label>
-            <ion-label slot="end">{{ (aTPcalcDetails.totalQOH >= 0) ? aTPcalcDetails.totalQOH : '-' }}</ion-label>
+            <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Excluded ATP") }}</ion-label>
-            <ion-label slot="end">{{ (aTPcalcDetails.excludedATP >= 0) ? aTPcalcDetails.excludedATP : '-' }}</ion-label>
+            <ion-label slot="end">{{ (atpCalcDetails.excludedAtp >= 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Reserve inventory") }}</ion-label>
@@ -305,7 +305,7 @@
           </div>
         </ion-card>
 
-        <ion-card v-if="!pOSummary.listingCountStatus">
+        <ion-card v-if="!poSummary.listingCountStatus">
           <ion-item>
             <ion-skeleton-text animated style="height: 40%; width: 60%;" />
           </ion-item>
@@ -388,6 +388,7 @@ import { OrderService } from "@/services/OrderService";
 import { ShopifyService } from "@/services/ShopifyService";
 import { JobService } from "@/services/JobService";
 import { StockService } from "@/services/StockService";
+import { UtilService } from "@/services/UtilService";
 
 export default defineComponent({
   name: "catalog-product-details",
@@ -419,10 +420,10 @@ export default defineComponent({
       selectedSize: '',
       features: [] as any,
       currentVariant: {} as any,
-      pOAndATPDetails: {} as any,
-      aTPcalcDetails: {} as any,
+      poAndAtpDetails: {} as any,
+      atpCalcDetails: {} as any,
       inventoryConfig: {} as any,
-      pOSummary: {} as any,
+      poSummary: {} as any,
       shopListings: [] as any,
       configsByStores: [] as any,
       listingJobRunTime: 0
@@ -433,7 +434,7 @@ export default defineComponent({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
-      getInventoryConfig: "user/getInventoryConfig"
+      getInventoryConfig: "util/getInventoryConfig"
     })
   },
   async ionViewWillEnter() {
@@ -487,8 +488,8 @@ export default defineComponent({
       }
       // if the variant does not have color or size as features
       this.currentVariant = variant || this.product.variants[0]
-      await this.getPODetails()
-      await this.getATPCalcDetails()
+      await this.getPoDetails()
+      await this.getAtpCalcDetails()
     },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
@@ -512,23 +513,24 @@ export default defineComponent({
       const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
     },
-    async getPODetails() {
+    async getPoDetails() {
       // For showing skeleton component, emptying it here as
-      // if we empty it in the preparePOSummary function
+      // if we empty it in the preparePoSummary function
       // the execution is too fast for the DOM to catch
-      this.pOSummary = {}
+      this.poSummary = {}
 
       // the section starts loading later hence emptying here
-      this.aTPcalcDetails = {}
-      this.pOAndATPDetails = {}
+      this.atpCalcDetails = {}
+      this.poAndAtpDetails = {}
 
       try {
         const requests = []
         let resp: any
+        const variantId = this.$route.params.variantId
 
         let payload = {
           "inputFields": {
-            "productId": this.$route.params.variantId,
+            "productId": variantId,
             "productCategoryId": this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : "",
             "productCategoryId_op": "equals"
           },
@@ -537,34 +539,34 @@ export default defineComponent({
           "viewSize": 1
         } as any
 
-        resp = await OrderService.getActivePOID(payload)
+        resp = await OrderService.getActivePoId(payload)
 
         if (!hasError(resp)) {
-          this.pOAndATPDetails.activePOID = resp.data.docs[0].purchaseOrderId
+          this.poAndAtpDetails.activePoId = resp.data?.docs[0].purchaseOrderId
         }
 
-        if (!this.pOAndATPDetails.activePOID) {
+        if (!this.poAndAtpDetails.activePoId) {
           // get last active PO ID if active PO ID is not found
           payload = {
             "inputFields": {
-              "productId": this.$route.params.variantId,
+              "productId": variantId,
             },
             "entityName": "PurchaseOrderItemChangeHistory",
             "sortBy": "entryDate DESC",
             "fieldList": ["poId", "changeDatetime", "changeTypeEnumId"],
             "viewSize": 1
           } as any
-          resp = await OrderService.getPOItemChangeHistory(payload)
+          resp = await OrderService.getPoItemChangeHistory(payload)
           if (!hasError(resp)) {
-            this.pOAndATPDetails.lastActivePOID = resp.data.docs[0].poId,
-            this.pOAndATPDetails.changeDatetime = resp.data.docs[0].changeDatetime
+            this.poAndAtpDetails.lastActivePoId = resp.data?.docs[0].poId,
+            this.poAndAtpDetails.changeDatetime = resp.data?.docs[0].changeDatetime
           }
         }
 
         payload = {
           "inputFields": {
-            "productId": this.$route.params.variantId,
-            ...(this.pOAndATPDetails.activePOID && {
+            "productId": variantId,
+            ...(this.poAndAtpDetails.activePoId && {
               "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
               "orderStatusId_op": "in"
             }),
@@ -577,23 +579,11 @@ export default defineComponent({
           "viewSize": 1
         }
 
-        requests.push(OrderService.getActivePODetails(payload).catch((error: any) => error))
-
-        payload = {
-          "json": {
-            "params": {
-              "rows": 0,
-            },
-            "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.pOAndATPDetails.activePOID ? this.pOAndATPDetails.activePOID : this.pOAndATPDetails.lastActivePOID}`,
-            "query": "*:*",
-          }
-        }
-
-        requests.push(OrderService.getCrspndgSalesOrdr(payload).catch((error: any) => error))
+        requests.push(OrderService.getActivePoDetails(payload).catch((error: any) => error))
 
         payload = {
           "inputFields": {
-            "productId": this.$route.params.variantId,
+            "productId": variantId,
             "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
             "orderStatusId_op": "in",
             "itemStatusId": ["ITEM_CREATED", "ITEM_APPROVED"],
@@ -604,38 +594,51 @@ export default defineComponent({
           "viewSize": 1
         }
 
-        requests.push(OrderService.getPOItemCount(payload).catch((error: any) => error))
+        requests.push(OrderService.getPoItemCount(payload).catch((error: any) => error))
 
+        if (this.poAndAtpDetails.activePoId || this.poAndAtpDetails.lastActivePoId) {
+          payload = {
+            "json": {
+              "params": {
+                "rows": 0,
+              },
+              "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId ? this.poAndAtpDetails.activePoId : this.poAndAtpDetails.lastActivePoId}`,
+              "query": "*:*",
+            }
+          }
+          requests.push(OrderService.getCrspndgSalesOrdr(payload).catch((error: any) => error))
+        }
+        
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         resp = promiseResult.map((respone: any) => respone.value)
 
-        this.pOAndATPDetails.activePO = {}
-        if (!hasError(resp[0]) || !hasError(resp[1]) || !hasError(resp[2])) {
-          this.pOAndATPDetails.activePO = resp[0].data.error || resp[0].data.docs[0]
-          this.pOAndATPDetails.crspndgSalesOrdr = resp[1].data?.response.numFound
-          this.pOAndATPDetails.totalPOItems = resp[2].data?.count
+        this.poAndAtpDetails.activePo = {}
+        if (!hasError(resp[0]) || !hasError(resp[1]) || (resp[2] && !hasError(resp[2]))) {
+          this.poAndAtpDetails.activePo = resp[0]?.error ? {}: resp[0]?.data?.docs[0]
+          this.poAndAtpDetails.totalPoItems = resp[1].data?.count
+          this.poAndAtpDetails.crspndgSalesOrdr = resp[2].data?.response.numFound
         }
 
-        // seperate API call as we need activePO data for the 'isNewProduct' field
+        // seperate API call as we need activePo data for the 'isNewProduct' field
         payload = {
-          "productId": this.$route.params.variantId,
-          ...((Object.keys(this.pOAndATPDetails.activePO).length) && { "isNewProduct": this.pOAndATPDetails.activePO.isNewProduct })
+          "productId": variantId,
+          ...((Object.keys(this.poAndAtpDetails.activePo).length) && { "isNewProduct": this.poAndAtpDetails.activePo.isNewProduct })
         }
 
-        resp = await StockService.getProductFutureATP(payload)
+        resp = await StockService.getProductFutureAtp(payload)
         if (!hasError(resp)) {
-          this.pOAndATPDetails.totalPOATP = resp.data.poAtp
+          this.poAndAtpDetails.totalPoAtp = resp.data.poAtp
         }
       } catch (error) {
         console.error(error)
       } finally {
         await this.prepareShopListings()
-        // preparePOSummary needs PO details to be fetched first
-        await this.preparePOSummary()
+        // preparePoSummary needs PO details to be fetched first
+        await this.preparePoSummary()
       }
     },
-    async getATPCalcDetails() {
+    async getAtpCalcDetails() {
       try {
         const requests = []
         let payload = { "productId": this.$route.params.variantId } as any
@@ -645,17 +648,17 @@ export default defineComponent({
           ...payload,
           "productStoreId": this.currentEComStore.productStoreId
         }
-        requests.push(StockService.getProductOnlineATP(payload).catch((error: any) => error))
+        requests.push(StockService.getProductOnlineAtp(payload).catch((error: any) => error))
         
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         let resp = promiseResult.map((respone: any) => respone.value) as any
 
         if (!hasError(resp[0]) || !hasError(resp[1])) {
-          this.aTPcalcDetails.totalQOH = resp[0].data?.quantityOnHandTotal
-          this.aTPcalcDetails.onlineATP = resp[1].data?.onlineATP
-          if (typeof this.aTPcalcDetails.totalQOH === 'number' && typeof this.aTPcalcDetails.onlineATP === 'number') {
-            this.aTPcalcDetails.excludedATP = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineATP
+          this.atpCalcDetails.totalQOH = resp[0].data?.quantityOnHandTotal
+          this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
+          if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
+            this.atpCalcDetails.excludedAtp = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineAtp
           }
         }
       } catch (error) {
@@ -670,13 +673,36 @@ export default defineComponent({
         if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
           return
         }
-        await this.store.dispatch('user/updateReserveInvConfig', { value, config })
+        try {
+          const resp = await UtilService.updateReserveInvConfig({ value, config })
+          if (!hasError(resp)) {
+            showToast(translate('Configuration updated'))
+            await this.store.dispatch('util/getReserveInvConfig', this.currentEComStore.productStoreId)
+          } else {
+            showToast(translate('Failed to update configuration'))
+          }
+        } catch (err) {
+          showToast(translate('Failed to update configuration'))
+          console.error(err)
+        }
       } else {
         // Handled initial programmatical update
         if ((config.settingValue === value) || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
           return
         }
-        await this.store.dispatch('user/updatePreOrdPhyInvHoldConfig', { value, config })
+
+        try {
+          const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
+          if (!hasError(resp)) {
+            showToast(translate('Configuration updated'))
+            await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
+          } else {
+            showToast(translate('Failed to update configuration'))
+          }
+        } catch (err) {
+          showToast(translate('Failed to update configuration'))
+          console.error(err)
+        }
       }
     },
     async prepareInvConfig() {
@@ -684,36 +710,36 @@ export default defineComponent({
       const preOrdPhyInvHoldConfig = this.getInventoryConfig('preOrdPhyInvHold')
 
       if (!Object.keys(reserInvConfig).length) {
-        await this.store.dispatch('user/getReserveInvConfig', this.currentEComStore.productStoreId)
+        await this.store.dispatch('util/getReserveInvConfig')
       }
 
       if (!Object.keys(preOrdPhyInvHoldConfig).length) {
-        await this.store.dispatch('user/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig')
       }
 
       this.inventoryConfig.reserveInvStatus = reserInvConfig.reserveInventory
       this.inventoryConfig.preOrdPhyInvHoldStatus = preOrdPhyInvHoldConfig.settingValue
     },
-    async preparePOSummary() {
-      this.pOSummary.isActivePO = (this.pOAndATPDetails.activePO && Object.keys(this.pOAndATPDetails?.activePO).length) && this.pOAndATPDetails.onlineATP > 0
-      this.pOSummary.isLastActivePO = this.pOAndATPDetails.lastActivePOID && Object.keys(this.pOAndATPDetails?.activePO).length
-      this.pOSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
+    async preparePoSummary() {
+      this.poSummary.isActivePo = (this.poAndAtpDetails.activePo && Object.keys(this.poAndAtpDetails?.activePo).length) && this.poAndAtpDetails.onlineAtp > 0
+      this.poSummary.isLastActivePo = this.poAndAtpDetails.lastActivePoId && Object.keys(this.poAndAtpDetails?.activePo).length
+      this.poSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
 
-      const category = this.pOSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
+      const category = this.poSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
       // Currently we are only having one shop listing condition
       // will improve the logic as the listing conditions increase
-      this.pOSummary.listedCount = this.shopListings.reduce((count: number, listData: any) =>
+      this.poSummary.listedCount = this.shopListings.reduce((count: number, listData: any) =>
         (listData.status === 'active' && !listData.containsError) ? count + 1 : count
       , 0)
 
       try {
         // fetch fromDate only for active POs in pre-order/back-order category
-        if (this.pOSummary.isActivePO) {
-          if (this.pOSummary.categoryId) {
-            let resp: any = await OrderService.getPOFromDate({
+        if (this.poSummary.isActivePo) {
+          if (this.poSummary.categoryId) {
+            let resp: any = await OrderService.getPoFromDate({
               "inputFields": {
                 "productId": this.$route.params.variantId,
-                "productCategoryId": this.pOSummary.categoryId,
+                "productCategoryId": this.poSummary.categoryId,
                 "productCategoryId_op": "equals"
               },
               "entityName": "PreOrderCategoryProducts",
@@ -724,51 +750,51 @@ export default defineComponent({
             // TODO - internationalize header after getting generic strings
             if (!hasError(resp)) {
               const fromDate = resp.data.docs[0].fromDate
-              if (this.configsByStores.length >  this.pOSummary.listedCount) {
-                this.pOSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length -  this.pOSummary.listedCount })
-                this.pOSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.pOAndATPDetails.activePOID })
-              } else if ( this.pOSummary.listedCount === this.configsByStores.length) {
-                this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
-                this.pOSummary.header = this.$t("Product has been accepting s from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.pOAndATPDetails.activePOID})
+              if (this.configsByStores.length >  this.poSummary.listedCount) {
+                this.poSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length -  this.poSummary.listedCount })
+                this.poSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
+              } else if ( this.poSummary.listedCount === this.configsByStores.length) {
+                this.poSummary.listingCountStatus = this.$t("Listed on all stores")
+                this.poSummary.header = this.$t("Product has been accepting s from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId})
               }
             }
-            this.pOSummary.promiseDate = this.getTime(this.pOAndATPDetails.activePO.estimatedDeliveryDate)
+            this.poSummary.promiseDate = this.getTime(this.poAndAtpDetails.activePo.estimatedDeliveryDate)
           } else {
-            const eligibleCategory = this.pOAndATPDetails.activePO.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
-            this.pOSummary.header = this.$t("Product is eligible for s but not added to the category", { eligibleCategory })
-            this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
+            const eligibleCategory = this.poAndAtpDetails.activePo.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
+            this.poSummary.header = this.$t("Product is eligible for s but not added to the category", { eligibleCategory })
+            this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
           }
-        } else if (this.pOSummary.isLastActivePO) {
-          if (!this.pOSummary.categoryId) {
-            if (! this.pOSummary.listedCount) {
-              this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
-              this.pOSummary.header = this.$t("Stopped accepting from as there is not active PO", { category, changedDatetime: this.getTime(this.pOAndATPDetails.changeDatetime) })
+        } else if (this.poSummary.isLastActivePo) {
+          if (!this.poSummary.categoryId) {
+            if (! this.poSummary.listedCount) {
+              this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
+              this.poSummary.header = this.$t("Stopped accepting from as there is not active PO", { category, changedDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
             } else {
-              this.pOSummary.listingCountStatus = this.$t("Listed on store(s)", { count: this.configsByStores.length -  this.pOSummary.listedCount })
-              this.pOSummary.header = this.$t("Removed from category on because there is no active PO but stil listed on stores", { listedCount: this.pOSummary.listedCount, changedDatetime: this.getTime(this.pOAndATPDetails.changeDatetime) })
-              this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+              this.poSummary.listingCountStatus = this.$t("Listed on store(s)", { count: this.configsByStores.length -  this.poSummary.listedCount })
+              this.poSummary.header = this.$t("Removed from category on because there is no active PO but stil listed on stores", { listedCount: this.poSummary.listedCount, changedDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
+              this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
             }
           } else {
-            this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
-            this.pOSummary.header = this.$t("Not eligible for accepting but currently added in category", { category })
-            this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+            this.poSummary.listingCountStatus = this.$t("Listed on all stores")
+            this.poSummary.header = this.$t("Not eligible for accepting but currently added in category", { category })
+            this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
           }
         } else {
-          if (this.pOSummary.listedCount === this.configsByStores.length) {
-            this.pOSummary.listingCountStatus = this.$t("Listed on all stores")
-            if (typeof this.aTPcalcDetails.onlineATP === 'number' && this.aTPcalcDetails.onlineATP > 0) {
-              this.pOSummary.header = this.$t("Product is currently in stock and cannot accept s", { category })
+          if (this.poSummary.listedCount === this.configsByStores.length) {
+            this.poSummary.listingCountStatus = this.$t("Listed on all stores")
+            if (typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
+              this.poSummary.header = this.$t("Product is currently in stock and cannot accept s", { category })
             } else {
-              this.pOSummary.header = this.$t("Product has no active purchase order to be eligible for accepting s", { category })
+              this.poSummary.header = this.$t("Product has no active purchase order to be eligible for accepting s", { category })
             }
-            this.pOSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
-          } else if (!this.pOSummary.listedCount) {
-            if (this.inventoryConfig.preOrdPhyInvHoldStatus === 'false' && typeof this.aTPcalcDetails.onlineATP === 'number' && this.aTPcalcDetails.onlineATP > 0) {
-              this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
-              this.pOSummary.header = this.$t("With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues")
+            this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+          } else if (!this.poSummary.listedCount) {
+            if (this.inventoryConfig.preOrdPhyInvHoldStatus === 'false' && typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
+              this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
+              this.poSummary.header = this.$t("With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues")
             } else {
-              this.pOSummary.listingCountStatus = this.$t("Not listed on any stores")
-              this.pOSummary.header = this.$t("Product cannot be pre-sold because it does not have active purchase orders")
+              this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
+              this.poSummary.header = this.$t("Product cannot be pre-sold because it does not have active purchase orders")
             }
           }
         }
@@ -881,22 +907,22 @@ export default defineComponent({
       }
       return externalId;
     },
-    optCheckmarkIconForCategory(pOSummary: any) {
-      if (pOSummary.isActivePO) {
-        if (pOSummary.categoryId) return true
+    optCheckmarkIconForCategory(poSummary: any) {
+      if (poSummary.isActivePo) {
+        if (poSummary.categoryId) return true
         else return false
-      } else if (pOSummary.isLastActivePO) {
-        if (!pOSummary.categoryId) return true
+      } else if (poSummary.isLastActivePo) {
+        if (!poSummary.categoryId) return true
         else return false
       }
       return false
     },
-    optCheckmarkIconForListing(pOSummary: any) {
-      if (pOSummary.isActivePO && pOSummary.categoryId) {
-        if (pOSummary.listedCount === this.configsByStores.length) return true
+    optCheckmarkIconForListing(poSummary: any) {
+      if (poSummary.isActivePo && poSummary.categoryId) {
+        if (poSummary.listedCount === this.configsByStores.length) return true
         else return false
-      } else if (pOSummary.isLastActivePO && !pOSummary.categoryId) {
-        if (!pOSummary.listedCount) return true
+      } else if (poSummary.isLastActivePo && !poSummary.categoryId) {
+        if (!poSummary.listedCount) return true
         else return false
       }
       return false

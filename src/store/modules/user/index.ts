@@ -11,11 +11,7 @@ const userModule: Module<UserState, RootState> = {
       token: '',
       current: null,
       instanceUrl: '',
-      currentEComStore: {},
-      config: {
-        "reserveInv": {},
-        "preOrdPhyInvHold": {}
-      }
+      currentEComStore: {}
     },
     getters,
     actions,

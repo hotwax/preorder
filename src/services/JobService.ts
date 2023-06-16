@@ -1,5 +1,6 @@
 import { api } from '@/adapter';
 import store from '@/store'
+import { hasError } from '@/utils';
 import { DateTime } from 'luxon';
 
 const fetchJobLogs = async (payload: any): Promise<any> => {
@@ -74,19 +75,82 @@ const fetchJobInformation = async (payload: any): Promise<any> => {
   });
 }
 
-const cancelJob = async (payload: any): Promise <any> => {
-  return api({
+const cancelJob = async (jobId: any): Promise<any> => {
+  return await api({
     url: "service/cancelScheduledJob",
     method: "post",
-    data: payload
+    data: { jobId }
   });
 }
 
-const scheduleJob = async (payload: any): Promise <any>  => {
-  return api({
+const runJobNow = async (job: any): Promise <any>  => {
+  const payload = {
+    'JOB_NAME': job.jobName,
+    'SERVICE_NAME': job.serviceName,
+    'SERVICE_COUNT': '0',
+    'SERVICE_TEMP_EXPR': job.jobStatus,
+    'jobFields': {
+      'productStoreId': job.productStoreId,
+      'systemJobEnumId': job.systemJobEnumId,
+      'tempExprId': job.jobStatus, // Need to remove this as we are passing frequency in SERVICE_TEMP_EXPR, currently kept it for backward compatibility
+      'parentJobId': job.parentJobId,
+      'recurrenceTimeZone': store.state.user.current.userTimeZone,
+    },
+    'statusId': "SERVICE_PENDING",
+    'systemJobEnumId': job.systemJobEnumId
+  } as any
+
+  // checking if the runtimeData has productStoreId, and if present then adding it on root level
+  job?.runtimeData?.productStoreId?.length >= 0 && (payload['productStoreId'] = job.productStoreId)
+  job?.priority && (payload['SERVICE_PRIORITY'] = job.priority.toString())
+  job?.sinceId && (payload['sinceId'] = job.sinceId)
+
+  // assigning '' (empty string) to all the runtimeData properties whose value is "null"
+  job.runtimeData && Object.keys(job.runtimeData).map((key: any) => {
+    if (job.runtimeData[key] === 'null') job.runtimeData[key] = ''
+  })
+
+  return await api({
     url: "scheduleService",
     method: "post",
-    data: payload
+    data: { ...job.runtimeData, ...payload }
+  });
+}
+
+const scheduleJob = async (payload: any): Promise<any> => {
+  const params = {
+    'JOB_NAME': payload.job.jobName,
+    'SERVICE_NAME': payload.job.serviceName,
+    'SERVICE_COUNT': '0',
+    'SERVICE_TEMP_EXPR': payload.frequency,
+    'SERVICE_RUN_AS_SYSTEM': 'Y',
+    'jobFields': {
+      'productStoreId': store.state.user.currentEComStore.productStoreId,
+      'systemJobEnumId': payload.job.systemJobEnumId,
+      'tempExprId': payload.frequency, // Need to remove this as we are passing frequency in SERVICE_TEMP_EXPR, currently kept it for backward compatibility
+      'maxRecurrenceCount': '-1',
+      'parentJobId': payload.job.parentJobId,
+      'runAsUser': 'system', //default system, but empty in run now.  TODO Need to remove this as we are using SERVICE_RUN_AS_SYSTEM, currently kept it for backward compatibility
+      'recurrenceTimeZone': store.state.user.current.userTimeZone
+    },
+    'statusId': "SERVICE_PENDING",
+    'systemJobEnumId': payload.job.systemJobEnumId
+  } as any
+
+  // checking if the runtimeData has productStoreId, and if present then adding it on root level
+  payload.job?.runtimeData?.productStoreId?.length >= 0 && (params['productStoreId'] = store.state.user.currentEComStore.productStoreId)
+  payload.job?.priority && (params['SERVICE_PRIORITY'] = payload.job.priority.toString())
+  payload.runTime && (params['SERVICE_TIME'] = payload.runTime.toString())
+
+  // assigning '' (empty string) to all the runtimeData properties whose value is "null"
+  payload.job.runtimeData && Object.keys(payload.job.runtimeData).map((key: any) => {
+    if (payload.job.runtimeData[key] === 'null') payload.job.runtimeData[key] = ''
+  })
+
+  return await api({
+    url: "scheduleService",
+    method: "post",
+    data: { ...payload.job.runtimeData, ...params }
   });
 }
 
@@ -99,5 +163,6 @@ export const JobService = {
   pollJobs,
   prepareFetchJobsQuery,
   prepareFetchLogsQuery,
-  scheduleJob
+  scheduleJob,
+  runJobNow
 }

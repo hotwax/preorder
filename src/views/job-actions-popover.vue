@@ -40,6 +40,9 @@ import {
 import { defineComponent } from "vue";
 import { useStore } from "@/store";
 import JobHistoryModal from "./job-history-modal.vue";
+import { JobService } from "@/services/JobService";
+import { hasError, showToast } from "@/utils";
+import { translate } from "@/i18n";
 
 export default defineComponent({
   name: "JobActionsPopover",
@@ -55,10 +58,23 @@ export default defineComponent({
       popoverController.dismiss({ dismissed: true });
     },
     async runNow() {
-      await this.store.dispatch('job/runJobNow', this.job)
-      this.closeJobActionsPopover()
+      try {
+        const resp = await JobService.runJobNow(this.job)
+        if (!hasError(resp)) {
+          showToast(translate('Service has been scheduled'))
+          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+        } else {
+          showToast(translate('Something went wrong'))
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate('Something went wrong'))
+      } finally {
+        this.closeJobActionsPopover()
+      }
     },
     async openJobHistoryModal() {
+      this.store.dispatch('util/getServiceStatusDesc')
       const jobHistoryModal = await modalController.create({
         component: JobHistoryModal,
         componentProps: { job: this.job }
@@ -68,6 +84,23 @@ export default defineComponent({
       jobHistoryModal.onDidDismiss().then(() => {
         jobHistoryModal.dismiss({ dismissed: true });
       })
+      this.closeJobActionsPopover()
+    },
+    async cancelJob() {
+      try {
+        const resp = await JobService.cancelJob(this.job.jobId)
+        if (!hasError(resp)) {
+          showToast(translate('Job cancelled successfully'))
+          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+        } else {
+          showToast(translate('Something went wrong, could not cancel the job'))
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate('Something went wrong, could not cancel the job'))
+      } finally {
+        this.closeJobActionsPopover()
+      }
     },
     async confirmJobCancellation() {
       const alert = await alertController.create({
@@ -80,16 +113,27 @@ export default defineComponent({
         {
           text: this.$t('Yes'),
           handler: async () => {
-            this.closeJobActionsPopover()
-            await this.store.dispatch('job/cancelJob', { jobId: this.job.jobId })
+            this.cancelJob()
           }
         }]
       });
       await alert.present();
     },
     async schdlInEvry15Mins() {
-      await this.store.dispatch('job/scheduleJob', { job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
-      this.closeJobActionsPopover()
+      try {
+        const resp = await JobService.scheduleJob({ job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
+        if (!hasError(resp)) {
+          showToast(translate('Service has been scheduled'));
+          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+        } else {
+          showToast(translate('Something went wrong'))
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate('Something went wrong'))
+      } finally {
+        this.closeJobActionsPopover()
+      }
     }
   },
   setup() {

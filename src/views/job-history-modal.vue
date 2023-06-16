@@ -114,8 +114,8 @@ export default defineComponent({
       }
     }
   },
-  mounted() {
-    this.fetchJobHistory()
+  async mounted() {
+    await this.fetchJobHistory()
   },
   setup() {
     const store = useStore();
