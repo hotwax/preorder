@@ -1,3 +1,33 @@
+# Release 1.7.0
+
+## What's Changed
+* Fixed: labels for product store setting (#85zt92y55) by @k2maan in https://github.com/hotwax/preorder/pull/134
+* Updated favicon by @Nidbhagwat in https://github.com/hotwax/preorder/pull/135
+
+## New Contributors
+* @Nidbhagwat made their first contribution in https://github.com/hotwax/preorder/pull/135
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.6.0...v1.7.0
+
+# Release 1.6.0
+
+## What's Changed
+* Improved: order and product query to allow searching using good identifications by @adityasharma7 in https://github.com/hotwax/preorder/pull/131
+* Improved: added more customer specific fields for order and product specific for product query by @adityasharma7 in https://github.com/hotwax/preorder/pull/132
+
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.5.0...v1.6.0
+
+# Release 1.5.0
+
+## What's Changed
+* Improved: added spinner while performing bulk actions by @adityasharma7 in https://github.com/hotwax/preorder/pull/123
+* Implemented: computation jobs section on catalog page (#85zt0m698) by @k2maan in https://github.com/hotwax/preorder/pull/122
+* Implemented: product features section in the catalog product details page (#85zt0m4qc) by @k2maan in https://github.com/hotwax/preorder/pull/124
+
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.4.0...v1.5.0
+
 # Release 1.4.0
 
 ## What's Changed

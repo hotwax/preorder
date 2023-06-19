@@ -74,17 +74,12 @@ export default defineComponent({
       }
     },
     async openJobHistoryModal() {
-      this.store.dispatch('util/getServiceStatusDesc')
+      this.closeJobActionsPopover()
       const jobHistoryModal = await modalController.create({
         component: JobHistoryModal,
         componentProps: { job: this.job }
       });
-      await jobHistoryModal.present();
-
-      jobHistoryModal.onDidDismiss().then(() => {
-        jobHistoryModal.dismiss({ dismissed: true });
-      })
-      this.closeJobActionsPopover()
+      return await jobHistoryModal.present();
     },
     async cancelJob() {
       try {

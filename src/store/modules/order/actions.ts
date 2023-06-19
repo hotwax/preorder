@@ -20,7 +20,7 @@ const actions: ActionTree<OrderState, RootState> = {
       viewSize: query.viewSize,
       viewIndex: query.viewIndex,
       queryString: query.queryString,
-      queryFields: 'parentProductId productId parentProductName productName goodIdentifications orderId search_orderIdentifications customerPartyName',
+      queryFields: 'parentProductId productId parentProductName productName search_goodIdentifications orderId search_orderIdentifications customerPartyName orderName contactPhoneNumbers customerEmailId internalName',
       groupByField: 'orderId',
       groupLimit: 10000,
       filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)

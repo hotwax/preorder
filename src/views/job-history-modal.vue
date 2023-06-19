@@ -115,6 +115,7 @@ export default defineComponent({
     }
   },
   async mounted() {
+    this.store.dispatch('util/getServiceStatusDesc')
     await this.fetchJobHistory()
   },
   setup() {
