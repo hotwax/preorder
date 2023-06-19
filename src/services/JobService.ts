@@ -1,6 +1,5 @@
 import { api } from '@/adapter';
 import store from '@/store'
-import { hasError } from '@/utils';
 import { DateTime } from 'luxon';
 
 const fetchJobLogs = async (payload: any): Promise<any> => {

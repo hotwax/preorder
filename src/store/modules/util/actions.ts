@@ -4,7 +4,6 @@ import RootState from '@/store/RootState'
 import UtilState from './UtilState'
 import * as types from './mutation-types'
 import { hasError } from '@/utils'
-import { config } from '@ionic/core'
 
 const actions: ActionTree<UtilState, RootState> = {
   /**
@@ -35,6 +34,8 @@ const actions: ActionTree<UtilState, RootState> = {
     Get reserve inventory config
    */
     async getReserveInvConfig({ commit, state }) {
+      if ((state.config as any)['reserveInv'] && Object.keys((state.config as any)['reserveInv']).length) return
+
       const resp = await UtilService.getReserveInvConfig({
         "fieldList": ["productStoreId", "reserveInventory"],
         "entityName": "ProductStore",
@@ -56,7 +57,9 @@ const actions: ActionTree<UtilState, RootState> = {
   /**
     Get preorder physical inventory hold config
    */
-    async getPreOrdPhyInvHoldConfig({ commit, state }, productStoreId) {
+    async getPreOrdPhyInvHoldConfig({ commit, state }) {
+      if ((state.config as any)['preOrdPhyInvHold'] && Object.keys((state.config as any)['preOrdPhyInvHold']).length) return
+
       const resp = await UtilService.getPreOrdPhyInvHoldConfig({
         "inputFields": {
           "settingTypeEnumId": "HOLD_PRORD_PHYCL_INV"

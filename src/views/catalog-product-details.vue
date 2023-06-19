@@ -695,7 +695,7 @@ export default defineComponent({
           const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
           if (!hasError(resp)) {
             showToast(translate('Configuration updated'))
-            await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
+            await this.store.dispatch('util/getPreOrdPhyInvHoldConfig')
           } else {
             showToast(translate('Failed to update configuration'))
           }
@@ -706,19 +706,11 @@ export default defineComponent({
       }
     },
     async prepareInvConfig() {
-      const reserInvConfig = this.getInventoryConfig('reserveInv')
-      const preOrdPhyInvHoldConfig = this.getInventoryConfig('preOrdPhyInvHold')
+      await this.store.dispatch('util/getReserveInvConfig')
+      await this.store.dispatch('util/getPreOrdPhyInvHoldConfig')
 
-      if (!Object.keys(reserInvConfig).length) {
-        await this.store.dispatch('util/getReserveInvConfig')
-      }
-
-      if (!Object.keys(preOrdPhyInvHoldConfig).length) {
-        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig')
-      }
-
-      this.inventoryConfig.reserveInvStatus = reserInvConfig.reserveInventory
-      this.inventoryConfig.preOrdPhyInvHoldStatus = preOrdPhyInvHoldConfig.settingValue
+      this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv')?.reserveInventory
+      this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold')?.settingValue
     },
     async preparePoSummary() {
       this.poSummary.isActivePo = (this.poAndAtpDetails.activePo && Object.keys(this.poAndAtpDetails?.activePo).length) && this.poAndAtpDetails.onlineAtp > 0

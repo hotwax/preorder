@@ -79,7 +79,7 @@ const actions: ActionTree<JobState, RootState> = {
       return { jobResponse, logResponse };
     }
   },
-  async fetchCtgryAndBrkrngJobs ({ commit, state }) {
+  async fetchCtgryAndBrkrngJobs ({ commit }) {
     let resp, jobs = {} as any
     const requests = []
     const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)

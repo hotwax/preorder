@@ -8,7 +8,7 @@ const getters: GetterTree <UtilState, RootState> = {
   },
   getInventoryConfig: (state, getters, rootState, rootGetters) => (type: string) => {
     const productStoreId = rootState.user.currentEComStore.productStoreId
-    return (state.config as any)[type][productStoreId]
+    return Object.keys((state.config as any)[type]).length ? (state.config as any)[type][productStoreId] : {}
   }
 }
 export default getters;

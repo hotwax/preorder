@@ -1,5 +1,4 @@
 import { api } from '@/adapter';
-import { hasError } from '@/utils';
 import store from '@/store';
 
 const getServiceStatusDesc = async (payload: any): Promise<any> => {
