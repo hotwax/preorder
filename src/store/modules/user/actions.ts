@@ -79,6 +79,7 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("product/resetProductList")
     this.dispatch("order/resetOrderQuery")
     this.dispatch("job/clearCtgryAndBrkrngJobs")
+    this.dispatch("util/clearInvConfigs")
   },
 
   /**

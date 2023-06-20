@@ -32,7 +32,7 @@ const updatePreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
     "fromDate": payload.config.fromDate,
     "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',
     "settingValue": payload.value,
-    productStoreId
+    "productStoreId": store.state.user.currentEComStore.productStoreId
   }
 
   return await api({
@@ -43,14 +43,28 @@ const updatePreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
 }
 
 const updateReserveInvConfig = async (payload: any): Promise<any> => {
-  const productStoreId = store.state.user.currentEComStore.productStoreId
   const params = {
     "reserveInventory": payload.value ? "Y" : "N",
-    productStoreId
+    "productStoreId": store.state.user.currentEComStore.productStoreId
   }
 
   return await api({
     url: "service/updateProductStore",
+    method: "post",
+    data: params
+  })
+}
+
+const createPreOrdPhyInvHoldConfig = async (): Promise<any> => {
+  const params = {
+    "fromDate": Date.now(),
+    "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',
+    "settingValue": 'true',
+    "productStoreId": store.state.user.currentEComStore.productStoreId
+  }
+
+  return await api({
+    url: "service/createProductStoreSetting",
     method: "post",
     data: params
   })
@@ -62,5 +76,6 @@ export const UtilService = {
   getReserveInvConfig,
   getPreOrdPhyInvHoldConfig,
   updateReserveInvConfig,
-  updatePreOrdPhyInvHoldConfig
+  updatePreOrdPhyInvHoldConfig,
+  createPreOrdPhyInvHoldConfig
 }

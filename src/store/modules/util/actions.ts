@@ -33,18 +33,26 @@ const actions: ActionTree<UtilState, RootState> = {
   /**
     Get reserve inventory config
    */
-    async getReserveInvConfig({ commit, state }) {
-      if ((state.config as any)['reserveInv'] && Object.keys((state.config as any)['reserveInv']).length) return
+    async getReserveInvConfig({ commit, state }, productStoreId) {
+      if (((state.config as any)['reserveInv'] && Object.keys((state.config as any)['reserveInv']).length)
+       || (this.state.user.currentEComStore.productStoreId != productStoreId)) {
+        return
+       }
 
       const resp = await UtilService.getReserveInvConfig({
+        "inputFields": {
+          "productStoreId": productStoreId,
+        },
         "fieldList": ["productStoreId", "reserveInventory"],
         "entityName": "ProductStore",
-        "viewSize": 20,
+        "viewSize": 1,
         "noConditionFind": 'Y',
       })
       let reserveInvConfigs = {}, inventoryConfig = {}
       if (!hasError(resp)) {
         reserveInvConfigs = resp.data.docs.reduce((configs: any, config: any) => {
+          // if empty, consider it 'Y'
+          if (!config.reserveInventory) config.reserveInventory = 'Y'
           configs[config.productStoreId] = config
           return configs
         }, {})
@@ -57,28 +65,46 @@ const actions: ActionTree<UtilState, RootState> = {
   /**
     Get preorder physical inventory hold config
    */
-    async getPreOrdPhyInvHoldConfig({ commit, state }) {
-      if ((state.config as any)['preOrdPhyInvHold'] && Object.keys((state.config as any)['preOrdPhyInvHold']).length) return
+    async getPreOrdPhyInvHoldConfig({ commit, state }, productStoreId) {
+      if (((state.config as any)['preOrdPhyInvHold'] && Object.keys((state.config as any)['preOrdPhyInvHold']).length)
+      || (this.state.user.currentEComStore.productStoreId != productStoreId)) {
+        return
+      }
 
+      // pid, settingenumid, fromdate, settingbvalue
       const resp = await UtilService.getPreOrdPhyInvHoldConfig({
         "inputFields": {
-          "settingTypeEnumId": "HOLD_PRORD_PHYCL_INV"
+          "settingTypeEnumId": "HOLD_PRORD_PHYCL_INV",
+          "productStoreId": productStoreId
         },
         "fieldList": ["settingTypeEnumId", "settingValue", "fromDate", "productStoreId"],
         "entityName": "ProductStoreSetting",
-        "viewSize": 20
+        "viewSize": 1
       })
-      let preOrdPhyInvHoldConfig = {}, inventoryConfig = {}
+      let preOrdPhyInvHoldConfig = {} as any, inventoryConfig = {}
       if (!hasError(resp)) {
         preOrdPhyInvHoldConfig = resp.data.docs.reduce((configs: any, config: any) => {
           configs[config.productStoreId] = config
           return configs
         }, {})
+      } else if (resp.data.error === 'No record found') {
+        // setting the config value as 'true' by default in case no record is found
+        // Will create as new record while updation if not found again
+        preOrdPhyInvHoldConfig[productStoreId] = {
+          "settingValue": 'true',
+          "settingTypeEnumId": "HOLD_PRORD_PHYCL_INV",
+          "productStoreId": productStoreId
+        }
       }
-
       inventoryConfig = {...state.config, 'preOrdPhyInvHold': preOrdPhyInvHoldConfig }
       commit(types.UTIL_STORE_INV_CONFIG_UPDATED, inventoryConfig)
     },
+  /**
+    clear inventory config state
+   */
+    async clearInvConfigs({ commit }) {
+      commit(types.UTIL_STORE_INV_CONFIG_UPDATED, {})
+    }
 }
 
 export default actions;

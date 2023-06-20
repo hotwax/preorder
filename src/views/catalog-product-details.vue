@@ -69,7 +69,7 @@
         </div>
 
         <div>
-          <ion-card v-if="!poSummary.listingCountStatus">
+          <ion-card v-if="!poSummary.listingCountStatusMessage">
             <ion-item>
               <ion-skeleton-text animated style="height: 60%; width: 90%;" />
             </ion-item>
@@ -98,12 +98,12 @@
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
               <ion-label slot="end">{{ poSummary.categoryId === 'PREORDER_CAT' ? $t('Pre-order') : poSummary.categoryId === 'BACKORDER_CAT' ? $t('Back-order') : $t('None') }}</ion-label>
-              <ion-icon slot="end" :icon="optCheckmarkIconForCategory(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForCategory(poSummary) ? 'success' : 'warning'" />
+              <ion-icon slot="end" :icon="optCategoryStatusIndicator(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCategoryStatusIndicator(poSummary) ? 'success' : 'warning'" />
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
-              <ion-label class="ion-text-wrap" slot="end">{{ poSummary.listingCountStatus }}</ion-label>
-              <ion-icon slot="end" :icon="optCheckmarkIconForListing(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCheckmarkIconForListing(poSummary) ? 'success' : 'warning'" />
+              <ion-label class="ion-text-wrap" slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
+              <ion-icon slot="end" :icon="optListingStatusIndicator(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optListingStatusIndicator(poSummary) ? 'success' : 'warning'" />
             </ion-item>
             <ion-item v-if="poSummary.isActivePo">
               <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
@@ -163,7 +163,7 @@
 
           <ion-item>
             <ion-label>{{ $t("Ordered") }}</ion-label>
-            <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0)? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0) ? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
@@ -223,15 +223,15 @@
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Excluded ATP") }}</ion-label>
-            <ion-label slot="end">{{ (atpCalcDetails.excludedAtp >= 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
+            <ion-label slot="end">{{ (atpCalcDetails.excludedAtp) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('reserveInv')).length" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateInvConfig('reserveInv', getInventoryConfig('reserveInv'), $event.detail.checked)"/>
+            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('reserveInv')).length" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateReserveInvConfig(getInventoryConfig('reserveInv'), $event.detail.checked)"/>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Hold pre-order reset inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('preOrdPhyInvHold')).length" :checked="inventoryConfig.preOrdPhyInvHoldStatus" @ionChange="updateInvConfig('preOrdPhyInvHold', getInventoryConfig('preOrdPhyInvHold'), $event.detail.checked)"/>
+            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('preOrdPhyInvHold')).length" :checked="inventoryConfig.preOrdPhyInvHoldStatus" @ionChange="updatePreOrdPhyInvHoldConfig(getInventoryConfig('preOrdPhyInvHold'), $event.detail.checked)"/>
           </ion-item>
         </ion-card>
       </section>
@@ -305,7 +305,7 @@
           </div>
         </ion-card>
 
-        <ion-card v-if="!poSummary.listingCountStatus">
+        <ion-card v-if="!poSummary.listingCountStatusMessage">
           <ion-item>
             <ion-skeleton-text animated style="height: 40%; width: 60%;" />
           </ion-item>
@@ -489,7 +489,9 @@ export default defineComponent({
       // if the variant does not have color or size as features
       this.currentVariant = variant || this.product.variants[0]
       await this.getPoDetails()
+      await this.prepareShopListings()
       await this.getAtpCalcDetails()
+      await this.preparePoSummary()
     },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
@@ -536,7 +538,8 @@ export default defineComponent({
           },
           "entityName": "ProductCategoryDcsnRsn",
           "fieldList": ["productId", "purchaseOrderId"],
-          "viewSize": 1
+          "viewSize": 1,
+          "orderBy": "createdDate DESC"
         } as any
 
         resp = await OrderService.getActivePoId(payload)
@@ -560,6 +563,8 @@ export default defineComponent({
           if (!hasError(resp)) {
             this.poAndAtpDetails.lastActivePoId = resp.data?.docs[0].poId,
             this.poAndAtpDetails.changeDatetime = resp.data?.docs[0].changeDatetime
+          } else if (hasError(resp) && resp.data.error !== "No record found") {
+            showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
           }
         }
 
@@ -612,30 +617,27 @@ export default defineComponent({
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         resp = promiseResult.map((respone: any) => respone.value)
-
         this.poAndAtpDetails.activePo = {}
         if (!hasError(resp[0]) || !hasError(resp[1]) || (resp[2] && !hasError(resp[2]))) {
-          this.poAndAtpDetails.activePo = resp[0]?.error ? {}: resp[0]?.data?.docs[0]
-          this.poAndAtpDetails.totalPoItems = resp[1].data?.count
-          this.poAndAtpDetails.crspndgSalesOrdr = resp[2].data?.response.numFound
+          if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
+          else this.poAndAtpDetails.activePo = resp[0]?.error ? {}: resp[0]?.data?.docs[0]
+          
+          if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'total PO items' }))
+          else this.poAndAtpDetails.totalPoItems = resp[1].data?.count
+
+          if (resp[2] && hasError(resp[2])) showToast(this.$t("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
+          else this.poAndAtpDetails.crspndgSalesOrdr = resp[2].data?.response.numFound
         }
 
-        // seperate API call as we need activePo data for the 'isNewProduct' field
-        payload = {
-          "productId": variantId,
-          ...((Object.keys(this.poAndAtpDetails.activePo).length) && { "isNewProduct": this.poAndAtpDetails.activePo.isNewProduct })
-        }
-
-        resp = await StockService.getProductFutureAtp(payload)
+        resp = await StockService.getProductFutureAtp({ "productId": variantId })
         if (!hasError(resp)) {
-          this.poAndAtpDetails.totalPoAtp = resp.data.poAtp
+          this.poAndAtpDetails.totalPoAtp = resp.data?.poAtp
+        } else if (hasError(resp) && resp?.data?.error !== "No record found") {
+          showToast(this.$t("Something went wrong, could not fetch", { data: 'total ATP' }))
         }
       } catch (error) {
+        showToast(translate('Something went wrong'))
         console.error(error)
-      } finally {
-        await this.prepareShopListings()
-        // preparePoSummary needs PO details to be fetched first
-        await this.preparePoSummary()
       }
     },
     async getAtpCalcDetails() {
@@ -653,61 +655,77 @@ export default defineComponent({
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         let resp = promiseResult.map((respone: any) => respone.value) as any
-
         if (!hasError(resp[0]) || !hasError(resp[1])) {
-          this.atpCalcDetails.totalQOH = resp[0].data?.quantityOnHandTotal
-          this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
+          if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'quantity on hand' }))
+          else this.atpCalcDetails.totalQOH = resp[0].data?.quantityOnHandTotal
+
+          if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
+          else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
+
           if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
             this.atpCalcDetails.excludedAtp = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineAtp
           }
         }
       } catch (error) {
+        showToast(translate('Something went wrong'))
         console.error(error)
       } finally {
         await this.prepareInvConfig()
       }
     },
-    async updateInvConfig(type: string, config: any, value: boolean) {
-      if (type === 'reserveInv') {
-        // Handled initial programmatical update
-        if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
-          return
-        }
-        try {
-          const resp = await UtilService.updateReserveInvConfig({ value, config })
-          if (!hasError(resp)) {
-            showToast(translate('Configuration updated'))
-            await this.store.dispatch('util/getReserveInvConfig', this.currentEComStore.productStoreId)
-          } else {
-            showToast(translate('Failed to update configuration'))
-          }
-        } catch (err) {
+    async updateReserveInvConfig(config: any, value: boolean) {
+      // Handled initial programmatical update
+      if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
+        return
+      }
+      try {
+        const resp = await UtilService.updateReserveInvConfig({ value, config })
+        if (!hasError(resp)) {
+          showToast(translate('Configuration updated'))
+          await this.store.dispatch('util/getReserveInvConfig', this.currentEComStore.productStoreId)
+        } else {
           showToast(translate('Failed to update configuration'))
-          console.error(err)
         }
-      } else {
-        // Handled initial programmatical update
-        if ((config.settingValue === value) || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
-          return
-        }
+      } catch (err) {
+        showToast(translate('Failed to update configuration'))
+        console.error(err)
+      }
+    },
+    async updatePreOrdPhyInvHoldConfig(config: any, value: boolean) {
+      // Handled initial programmatical update
+      // TODO - update the usage from true/false to Y/N
+      if ((config.settingValue === value) || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
+        return
+      }
 
-        try {
-          const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
-          if (!hasError(resp)) {
-            showToast(translate('Configuration updated'))
-            await this.store.dispatch('util/getPreOrdPhyInvHoldConfig')
-          } else {
+      try {
+        // fetching to handle case when config wasn't initially found on the serve
+        // but has been created meanwhile by some other user
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
+
+        // if fromDate is not present, it has not been created on the server
+        if (!this.getInventoryConfig('preOrdPhyInvHold').fromDate) {
+          const resp = await UtilService.createPreOrdPhyInvHoldConfig()
+          if (hasError(resp)) {
             showToast(translate('Failed to update configuration'))
+            return
           }
-        } catch (err) {
-          showToast(translate('Failed to update configuration'))
-          console.error(err)
         }
+        const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
+        if (!hasError(resp)) {
+          showToast(translate('Configuration updated'))
+          await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
+        } else {
+          showToast(translate('Failed to update configuration'))
+        }
+      } catch (err) {
+        showToast(translate('Failed to update configuration'))
+        console.error(err)
       }
     },
     async prepareInvConfig() {
-      await this.store.dispatch('util/getReserveInvConfig')
-      await this.store.dispatch('util/getPreOrdPhyInvHoldConfig')
+      await this.store.dispatch('util/getReserveInvConfig', this.currentEComStore.productStoreId)
+      await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
 
       this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv')?.reserveInventory
       this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold')?.settingValue
@@ -723,7 +741,7 @@ export default defineComponent({
       this.poSummary.listedCount = this.shopListings.reduce((count: number, listData: any) =>
         (listData.status === 'active' && !listData.containsError) ? count + 1 : count
       , 0)
-
+      
       try {
         // fetch fromDate only for active POs in pre-order/back-order category
         if (this.poSummary.isActivePo) {
@@ -739,53 +757,56 @@ export default defineComponent({
               "viewSize": 1
             })
   
-            // TODO - internationalize header after getting generic strings
             if (!hasError(resp)) {
               const fromDate = resp.data.docs[0].fromDate
-              if (this.configsByStores.length >  this.poSummary.listedCount) {
-                this.poSummary.listingCountStatus = this.$t("Not listed on store(s)", { count: this.configsByStores.length -  this.poSummary.listedCount })
+              if (this.configsByStores.length > this.poSummary.listedCount) {
+                this.poSummary.listingCountStatusMessage = this.$t("Not listed on store(s)", { count: this.configsByStores.length -  this.poSummary.listedCount })
                 this.poSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
-              } else if ( this.poSummary.listedCount === this.configsByStores.length) {
-                this.poSummary.listingCountStatus = this.$t("Listed on all stores")
-                this.poSummary.header = this.$t("Product has been accepting s from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId})
+              } else if (this.poSummary.listedCount === this.configsByStores.length) {
+                this.poSummary.listingCountStatusMessage = this.$t("Listed on all stores")
+                this.poSummary.header = this.$t("Product has been accepting from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId})
               }
             }
             this.poSummary.promiseDate = this.getTime(this.poAndAtpDetails.activePo.estimatedDeliveryDate)
           } else {
             const eligibleCategory = this.poAndAtpDetails.activePo.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
-            this.poSummary.header = this.$t("Product is eligible for s but not added to the category", { eligibleCategory })
-            this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
+            this.poSummary.header = this.$t("Product is eligible for but not added to the category", { category: eligibleCategory })
+            this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
           }
         } else if (this.poSummary.isLastActivePo) {
           if (!this.poSummary.categoryId) {
-            if (! this.poSummary.listedCount) {
-              this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
+            if (!this.poSummary.listedCount) {
+              this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
               this.poSummary.header = this.$t("Stopped accepting from as there is not active PO", { category, changedDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
             } else {
-              this.poSummary.listingCountStatus = this.$t("Listed on store(s)", { count: this.configsByStores.length -  this.poSummary.listedCount })
-              this.poSummary.header = this.$t("Removed from category on because there is no active PO but stil listed on stores", { listedCount: this.poSummary.listedCount, changedDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
+              this.poSummary.listingCountStatusMessage = this.$t("Listed on store(s)", { count: this.configsByStores.length -  this.poSummary.listedCount })
+              this.poSummary.header = this.$t("Removed from category on because there is no active PO but still listed on stores", { listedCount: this.poSummary.listedCount, changedDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
               this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
             }
           } else {
-            this.poSummary.listingCountStatus = this.$t("Listed on all stores")
+            if (!this.poSummary.listedCount) {
+              this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
+            } else {
+              this.poSummary.listingCountStatusMessage = this.$t("Listed on all stores")
+              this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+            }
             this.poSummary.header = this.$t("Not eligible for accepting but currently added in category", { category })
-            this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
           }
         } else {
           if (this.poSummary.listedCount === this.configsByStores.length) {
-            this.poSummary.listingCountStatus = this.$t("Listed on all stores")
+            this.poSummary.listingCountStatusMessage = this.$t("Listed on all stores")
             if (typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
-              this.poSummary.header = this.$t("Product is currently in stock and cannot accept s", { category })
+              this.poSummary.header = this.$t("Product is currently in stock and cannot accept", { category })
             } else {
-              this.poSummary.header = this.$t("Product has no active purchase order to be eligible for accepting s", { category })
+              this.poSummary.header = this.$t("Product has no active purchase order to be eligible for accepting", { category })
             }
             this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
           } else if (!this.poSummary.listedCount) {
             if (this.inventoryConfig.preOrdPhyInvHoldStatus === 'false' && typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
-              this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
+              this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
               this.poSummary.header = this.$t("With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues")
             } else {
-              this.poSummary.listingCountStatus = this.$t("Not listed on any stores")
+              this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
               this.poSummary.header = this.$t("Product cannot be pre-sold because it does not have active purchase orders")
             }
           }
@@ -899,25 +920,13 @@ export default defineComponent({
       }
       return externalId;
     },
-    optCheckmarkIconForCategory(poSummary: any) {
-      if (poSummary.isActivePo) {
-        if (poSummary.categoryId) return true
-        else return false
-      } else if (poSummary.isLastActivePo) {
-        if (!poSummary.categoryId) return true
-        else return false
-      }
-      return false
+    optCategoryStatusIndicator(poSummary: any) {
+      return (poSummary.isActivePo && poSummary.categoryId)
+        || (poSummary.isLastActivePo && !poSummary.categoryId) 
     },
-    optCheckmarkIconForListing(poSummary: any) {
-      if (poSummary.isActivePo && poSummary.categoryId) {
-        if (poSummary.listedCount === this.configsByStores.length) return true
-        else return false
-      } else if (poSummary.isLastActivePo && !poSummary.categoryId) {
-        if (!poSummary.listedCount) return true
-        else return false
-      }
-      return false
+    optListingStatusIndicator(poSummary: any) {
+      return (poSummary.isActivePo && poSummary.categoryId && poSummary.listedCount === this.configsByStores.length)
+        || (poSummary.isLastActivePo && !poSummary.categoryId && !poSummary.listedCount) 
     }
   },
   setup() {
