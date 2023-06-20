@@ -26,7 +26,7 @@
 
 <script lang="ts">
 import {
-alertController,
+  alertController,
   IonContent,
   IonIcon,
   IonItem,
@@ -35,7 +35,10 @@ alertController,
   popoverController,
 } from "@ionic/vue";
 import {
-  closeOutline, flashOutline, timeOutline, timerOutline,
+  closeOutline,
+  flashOutline,
+  timeOutline,
+  timerOutline,
 } from "ionicons/icons";
 import { defineComponent } from "vue";
 import { useStore } from "@/store";
@@ -74,7 +77,6 @@ export default defineComponent({
       }
     },
     async openJobHistoryModal() {
-      this.closeJobActionsPopover()
       const jobHistoryModal = await modalController.create({
         component: JobHistoryModal,
         componentProps: { job: this.job }
