@@ -105,7 +105,7 @@
               <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
               <ion-icon slot="end" :icon="optListingStatusIndicator(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optListingStatusIndicator(poSummary) ? 'success' : 'warning'" />
             </ion-item>
-            <ion-item v-if="shopListings.length">
+            <ion-item v-if="shopListings.length && poSummary.listedCount">
               <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
               <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
             </ion-item>
@@ -617,21 +617,20 @@ export default defineComponent({
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         resp = promiseResult.map((respone: any) => respone.value)
-        this.poAndAtpDetails.activePo = {}
-        if (!hasError(resp[0]) || !hasError(resp[1]) || (resp[2] && !hasError(resp[2]))) {
-          if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
-          else this.poAndAtpDetails.activePo = resp[0]?.error ? {}: resp[0]?.data?.docs[0]
-          
-          if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'total PO items' }))
-          else this.poAndAtpDetails.totalPoItems = resp[1].data?.count
 
-          if (resp[2] && hasError(resp[2])) showToast(this.$t("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
-          else this.poAndAtpDetails.crspndgSalesOrdr = resp[2].data?.response.numFound
-        }
+        this.poAndAtpDetails.activePo = {}
+        if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
+        else this.poAndAtpDetails.activePo = resp[0].data?.error ? {}: resp[0].data?.docs[0]
+
+        if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'total PO items' }))
+        else this.poAndAtpDetails.totalPoItems = resp[1].data?.error === "No record found" ? 0 : resp[1].data?.count // count is zero if not records are found
+
+        if (resp[2] && hasError(resp[2])) showToast(this.$t("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
+        else this.poAndAtpDetails.crspndgSalesOrdr = resp[2]?.data?.response.numFound
 
         resp = await StockService.getProductFutureAtp({ "productId": variantId })
         if (!hasError(resp)) {
-          this.poAndAtpDetails.totalPoAtp = resp.data?.poAtp
+          this.poAndAtpDetails.totalPoAtp = resp.data?.futureAtp
         } else if (hasError(resp) && resp?.data?.error !== "No record found") {
           showToast(this.$t("Something went wrong, could not fetch", { data: 'total ATP' }))
         }
@@ -655,16 +654,14 @@ export default defineComponent({
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         let resp = promiseResult.map((respone: any) => respone.value) as any
-        if (!hasError(resp[0]) || !hasError(resp[1])) {
-          if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'quantity on hand' }))
-          else this.atpCalcDetails.totalQOH = resp[0].data?.quantityOnHandTotal
+        if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'quantity on hand' }))
+        else this.atpCalcDetails.totalQOH = resp[0].data?.quantityOnHandTotal
 
-          if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
-          else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
+        if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
+        else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
 
-          if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
-            this.atpCalcDetails.excludedAtp = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineAtp
-          }
+        if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
+          this.atpCalcDetails.excludedAtp = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineAtp
         }
       } catch (error) {
         showToast(translate('Something went wrong'))
