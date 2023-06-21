@@ -522,6 +522,7 @@ export default defineComponent({
       this.poSummary = {}
 
       // the section starts loading later hence emptying here
+      this.inventoryConfig = {}
       this.atpCalcDetails = {}
       this.poAndAtpDetails = {}
 
@@ -618,15 +619,15 @@ export default defineComponent({
         // promise.allSettled returns an array of result with status and value fields
         resp = promiseResult.map((respone: any) => respone.value)
 
-        this.poAndAtpDetails.activePo = {}
-        if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
-        else this.poAndAtpDetails.activePo = resp[0].data?.error ? {}: resp[0].data?.docs[0]
-
         if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'total PO items' }))
         else this.poAndAtpDetails.totalPoItems = resp[1].data?.error === "No record found" ? 0 : resp[1].data?.count // count is zero if not records are found
 
         if (resp[2] && hasError(resp[2])) showToast(this.$t("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
         else this.poAndAtpDetails.crspndgSalesOrdr = resp[2]?.data?.response.numFound
+
+        this.poAndAtpDetails.activePo = {}
+        if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
+        else this.poAndAtpDetails.activePo = resp[0].data?.error ? {}: resp[0].data?.docs[0]
 
         resp = await StockService.getProductFutureAtp({ "productId": variantId })
         if (!hasError(resp)) {
