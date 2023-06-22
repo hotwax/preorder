@@ -542,7 +542,7 @@ export default defineComponent({
               "productCategoryId_op": "equals"
             },
             "entityName": "ProductCategoryDcsnRsn",
-            "fieldList": ["productId", "purchaseOrderId"],
+            "fieldList": ["productId", "purchaseOrderId", "fromDate"],
             "viewSize": 1,
             "orderBy": "createdDate DESC"
           } as any
@@ -551,6 +551,7 @@ export default defineComponent({
 
           if (!hasError(resp)) {
             this.poAndAtpDetails.activePoId = resp.data?.docs[0].purchaseOrderId
+            this.poAndAtpDetails.activePoFromDate = resp.data?.docs[0].purchaseOrderId
           }
         }
 
@@ -768,70 +769,41 @@ export default defineComponent({
       try {
         // fetch fromDate only for active POs in pre-order/back-order category
         if (poSummaryConditions.isActiveAndCategorized) {
-          let resp: any = await OrderService.getPoFromDate({
-            "inputFields": {
-              "productId": this.$route.params.variantId,
-              "productCategoryId": this.poSummary.categoryId,
-              "productCategoryId_op": "equals"
-            },
-            "entityName": "PreOrderCategoryProducts",
-            "fieldList": ["productId", "fromDate"],
-            "viewSize": 1
-          })
-
-          if (!hasError(resp)) {
-            const fromDate = resp.data.docs[0].fromDate
-            if (this.configsByStores.length > this.poSummary.listedCount) {
-              this.poSummary.listingCountStatusMessage = this.$t("Not listed on store(s)", { count: this.configsByStores.length - this.poSummary.listedCount })
-              this.poSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
-            } else if (this.configsByStores.length === this.poSummary.listedCount) {
-              this.poSummary.listingCountStatusMessage = this.$t("Listed on all stores")
-              this.poSummary.header = this.$t("Product has been accepting from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
-            }
+          const fromDate = this.poAndAtpDetails.activePoFromDate;
+          if (this.configsByStores.length > this.poSummary.listedCount) {
+            this.poSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
+          } else if (this.configsByStores.length === this.poSummary.listedCount) {
+            this.poSummary.header = this.$t("Product has been accepting from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
           }
           this.poSummary.promiseDate = this.getTime(this.poAndAtpDetails.activePo.estimatedDeliveryDate)
         } else if (poSummaryConditions.isActiveAndNotCategorized) {
           const eligibleCategory = this.poAndAtpDetails.activePo.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
           this.poSummary.header = this.$t("Product is eligible for but not added to the category", { category: eligibleCategory })
-          // as it is not added to any category it is assumed that it won't be listed
-          !this.shopListings.length
-            ? this.poSummary.listingCountStatusMessage = this.$t("Listing data not available")
-            : this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
         } else if (poSummaryConditions.isLastActiveAndNotCategorized) {
           if (!this.poSummary.listedCount) {
             this.poSummary.header = this.$t("Stopped accepting from as there is no active PO", { category, changeDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
-            !this.shopListings.length
-              ? this.poSummary.listingCountStatusMessage = this.$t("Listing data not available")
-              : this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
           } else {
             if (this.configsByStores.length > this.poSummary.listedCount) {
-              this.poSummary.listingCountStatusMessage = this.$t("Listed on store(s)", { count: this.configsByStores.length - this.poSummary.listedCount })
               this.poSummary.header = this.$t("Removed from category on because there is no active PO but still listed on stores", { listedCount: this.poSummary.listedCount, changeDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
               this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
-            } else {
-              this.poSummary.listingCountStatusMessage = this.$t("Listing data not available")
             }
           }
         } else if (poSummaryConditions.isLastActiveAndCategorized) {
           this.poSummary.header = this.$t("Not eligible for accepting but currently added in category", { category })
-          this.prepareListingCountStatusMsg()
         } else if (poSummaryConditions.isOnlyCategorized) {
           if (typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
             this.poSummary.header = this.$t("Product is currently in stock and cannot accept", { category })
           } else {
             this.poSummary.header = this.$t("Product has no active purchase order to be eligible for accepting", { category })
           }
-          this.prepareListingCountStatusMsg()
         } else {
           if (this.inventoryConfig.preOrdPhyInvHoldStatus === 'false' && typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
             this.poSummary.header = this.$t("With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues")
           } else {
             this.poSummary.header = this.$t("Product cannot be pre-sold because it does not have active purchase orders")
           }
-          !this.shopListings.length
-            ? this.poSummary.listingCountStatusMessage = this.$t("Listing data not available")
-            : this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
         }
+        this.prepareListingCountStatusMsg()
       } catch (error) {
         console.error(error)
       }
