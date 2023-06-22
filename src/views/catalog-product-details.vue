@@ -531,27 +531,32 @@ export default defineComponent({
         let resp: any
         const variantId = this.$route.params.variantId
 
-        let payload = {
-          "inputFields": {
-            "productId": variantId,
-            "productCategoryId": this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : "",
-            "productCategoryId_op": "equals"
-          },
-          "entityName": "ProductCategoryDcsnRsn",
-          "fieldList": ["productId", "purchaseOrderId"],
-          "viewSize": 1,
-          "orderBy": "createdDate DESC"
-        } as any
+        const productCategories = this.currentVariant.productCategories;
+        const hasBackorderCategory = productCategories?.includes("BACKORDER_CAT");
+        const hasPreOrderCategory = productCategories?.includes("PREORDER_CAT");
+        if (hasPreOrderCategory || hasBackorderCategory) {
+          const payload = {
+            "inputFields": {
+              "productId": variantId,
+              "productCategoryId": hasPreOrderCategory ? "PREORDER_CAT" : "BACKORDER_CAT",
+              "productCategoryId_op": "equals"
+            },
+            "entityName": "ProductCategoryDcsnRsn",
+            "fieldList": ["productId", "purchaseOrderId"],
+            "viewSize": 1,
+            "orderBy": "createdDate DESC"
+          } as any
 
-        resp = await OrderService.getActivePoId(payload)
+          resp = await OrderService.getActivePoId(payload)
 
-        if (!hasError(resp)) {
-          this.poAndAtpDetails.activePoId = resp.data?.docs[0].purchaseOrderId
+          if (!hasError(resp)) {
+            this.poAndAtpDetails.activePoId = resp.data?.docs[0].purchaseOrderId
+          }
         }
 
         if (!this.poAndAtpDetails.activePoId) {
           // get last active PO ID if active PO ID is not found
-          payload = {
+          const payload = {
             "inputFields": {
               "productId": variantId,
             },
@@ -569,7 +574,7 @@ export default defineComponent({
           }
         }
 
-        payload = {
+        let payload = {
           "inputFields": {
             "productId": variantId,
             ...(this.poAndAtpDetails.activePoId && {
@@ -583,7 +588,7 @@ export default defineComponent({
           "sortBy": "entryDate DESC",
           "fieldList": ["estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
           "viewSize": 1
-        }
+        } as any;
 
         requests.push(OrderService.getActivePoDetails(payload).catch((error: any) => error))
 

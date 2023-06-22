@@ -161,6 +161,7 @@
     "Selected variant not available": "Selected variant not available",
     "Select a new promise date for these orders. This new date will be used for allocating inventory and fulfilling these orders.": "Select a new promise date for these orders. This new date will be used for allocating inventory and fulfilling these orders.",
     "Select time zone": "Select time zone",
+    "Service has been scheduled": "Service has been scheduled",
     "Settings": "Settings",
     "Ships from date": "Ships from date",
     "Shop": "Shop {index}",
