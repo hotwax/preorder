@@ -77,6 +77,7 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_END_SESSION)
     resetConfig();
     this.dispatch("product/resetProductList")
+    this.dispatch("product/resetCatalogProducts")
     this.dispatch("order/resetOrderQuery")
     this.dispatch("job/clearCtgryAndBrkrngJobs")
     this.dispatch("util/clearInvConfigs")

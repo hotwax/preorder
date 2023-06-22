@@ -200,9 +200,11 @@ const actions: ActionTree<ProductState, RootState> = {
     try {
       resp = await ProductService.getCatalogProducts(payload)
 
-      if (!hasError(resp) && resp.data.response.numFound) {
+      if (!hasError(resp)) {
         items = resp.data.response.docs
         if (payload.json.params.start > 0) items = state.catalogProducts.items.concat(items);
+      } else {
+        throw resp.data;
       }
     } catch (error) {
       console.error(error)
@@ -261,5 +263,14 @@ const actions: ActionTree<ProductState, RootState> = {
     emitter.emit("dismissLoader");
     return product
   },
+  /**
+  * Reset Catalog Products
+  */
+  resetCatalogProducts ( { commit }) {
+   commit(types.PRODUCT_CATALOG_UPDATED, {
+     items: [],
+     total: 0
+   });
+ },
 }
 export default actions;
