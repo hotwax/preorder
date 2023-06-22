@@ -27,7 +27,6 @@ const getPreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
 }
 
 const updatePreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
-  const productStoreId = store.state.user.currentEComStore.productStoreId
   const params = {
     "fromDate": payload.config.fromDate,
     "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',

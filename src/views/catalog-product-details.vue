@@ -227,11 +227,11 @@
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('reserveInv')).length" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateReserveInvConfig(getInventoryConfig('reserveInv'), $event.detail.checked)"/>
+            <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateReserveInvConfig($event.detail.checked)"/>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!Object.keys(getInventoryConfig('preOrdPhyInvHold')).length" :checked="inventoryConfig.preOrdPhyInvHoldStatus" @ionChange="updatePreOrdPhyInvHoldConfig(getInventoryConfig('preOrdPhyInvHold'), $event.detail.checked)"/>
+            <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @ionChange="updatePreOrdPhyInvHoldConfig($event.detail.checked)"/>
           </ion-item>
         </ion-card>
       </section>
@@ -671,7 +671,8 @@ export default defineComponent({
         await this.prepareInvConfig()
       }
     },
-    async updateReserveInvConfig(config: any, value: boolean) {
+    async updateReserveInvConfig(value: boolean) {
+      const config = this.getInventoryConfig('reserveInv', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
         return
@@ -680,7 +681,7 @@ export default defineComponent({
         const resp = await UtilService.updateReserveInvConfig({ value, config })
         if (!hasError(resp)) {
           showToast(translate('Configuration updated'))
-          await this.store.dispatch('util/getReserveInvConfig', this.currentEComStore.productStoreId)
+          await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
         } else {
           showToast(translate('Failed to update configuration'))
         }
@@ -689,7 +690,8 @@ export default defineComponent({
         console.error(err)
       }
     },
-    async updatePreOrdPhyInvHoldConfig(config: any, value: boolean) {
+    async updatePreOrdPhyInvHoldConfig(value: boolean) {
+      const config = this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       // TODO - update the usage from true/false to Y/N
       if ((config.settingValue === value) || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
@@ -699,34 +701,45 @@ export default defineComponent({
       try {
         // fetching to handle case when config wasn't initially found on the serve
         // but has been created meanwhile by some other user
-        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
+        // TODO Find a better way
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
 
         // if fromDate is not present, it has not been created on the server
-        if (!this.getInventoryConfig('preOrdPhyInvHold').fromDate) {
+        if (!this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId).fromDate) {
           const resp = await UtilService.createPreOrdPhyInvHoldConfig()
           if (hasError(resp)) {
             showToast(translate('Failed to update configuration'))
             return
           }
-        }
-        const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
-        if (!hasError(resp)) {
-          showToast(translate('Configuration updated'))
-          await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
         } else {
-          showToast(translate('Failed to update configuration'))
+          const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
+          if (!hasError(resp)) {
+            showToast(translate('Configuration updated'))
+          } else {
+            showToast(translate('Failed to update configuration'))
+          }
         }
+        // TODO update value directly instead of get again
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
       } catch (err) {
         showToast(translate('Failed to update configuration'))
         console.error(err)
       }
     },
     async prepareInvConfig() {
-      await this.store.dispatch('util/getReserveInvConfig', this.currentEComStore.productStoreId)
-      await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', this.currentEComStore.productStoreId)
-
-      this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv')?.reserveInventory
-      this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold')?.settingValue
+      this.inventoryConfig = {}
+      try {
+        await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: false })
+        this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv', this.currentEComStore.productStoreId)?.reserveInventory
+      } catch(error) {
+        console.error(error);
+      }
+      try {
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: false })
+        this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId)?.settingValue
+      } catch(error) {
+        console.error(error);
+      }
     },
     async preparePoSummary() {
       this.poSummary.isActivePo = (this.poAndAtpDetails.activePo && Object.keys(this.poAndAtpDetails?.activePo).length) && this.poAndAtpDetails.onlineAtp > 0
