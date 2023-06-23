@@ -77,13 +77,16 @@ const actions: ActionTree<UserState, RootState> = {
     commit(types.USER_END_SESSION)
     resetConfig();
     this.dispatch("product/resetProductList")
+    this.dispatch("product/resetCatalogProducts")
     this.dispatch("order/resetOrderQuery")
+    this.dispatch("job/clearCtgryAndBrkrngJobs")
+    this.dispatch("util/clearInvConfigs")
   },
 
   /**
    * Get User profile
    */
-  async getProfile ( { commit, dispatch }) {
+  async getProfile ( { commit }) {
     const resp = await UserService.getProfile()
     const userProfile = JSON.parse(JSON.stringify(resp.data));
 
@@ -109,7 +112,7 @@ const actions: ActionTree<UserState, RootState> = {
       }
       userProfile.stores = stores;
 
-      let userPrefStore = {}
+      let userPrefStore = {} as any
 
       if (stores.length > 0) {
         userPrefStore = stores[0];

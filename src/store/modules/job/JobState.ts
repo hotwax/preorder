@@ -7,5 +7,6 @@ export default interface JobState {
         total: number;
         items: any[];
     },
-    polling: boolean
+    polling: boolean,
+    ctgryAndBrkrngJobs: any
 }

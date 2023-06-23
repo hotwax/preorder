@@ -79,6 +79,104 @@ const actions: ActionTree<JobState, RootState> = {
       return { jobResponse, logResponse };
     }
   },
+  async fetchCtgryAndBrkrngJobs ({ commit }) {
+    let resp, jobs = {} as any
+    const requests = []
+    const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
 
+    try {
+      let params = {
+        "inputFields": {
+          "statusId": "SERVICE_DRAFT",
+          "statusId_op": "equals",
+          'systemJobEnumId': systemJobEnumIds,
+          'systemJobEnumId_op': 'in'
+        },
+        "noConditionFind": "Y",
+        "viewSize": systemJobEnumIds.length,
+      } as any
+
+      requests.push(JobService.fetchJobInformation(params).catch((error: any) => error))
+
+      params = {
+        "inputFields": {
+          "statusId": "SERVICE_PENDING",
+          "statusId_op": "equals",
+          "productStoreId": this.state.user.currentEComStore?.productStoreId,
+          'systemJobEnumId': systemJobEnumIds,
+          'systemJobEnumId_op': 'in'
+        },
+        "noConditionFind": "Y",
+        "orderBy": "runTime DESC",
+        "viewSize": 15
+      } as any
+      
+      requests.push(JobService.fetchJobInformation(params).catch((error: any) => error))
+
+      const promiseResult = await Promise.allSettled(requests)
+      // promise.allSettled returns an array of result with status and value fields
+      resp = promiseResult.map((respone: any) => respone.value)
+      let draft = {}, pending = {}
+
+      if (!hasError(resp[0])) {
+        draft = resp[0].data.docs.reduce((jobs: any, job: any) => {
+          delete job.runTime
+          jobs[job.systemJobEnumId] = job
+          return jobs
+        }, {})
+      }
+
+      if (!hasError(resp[1])) {
+        pending = resp[1].data.docs.reduce((jobs: any, job: any) => {
+          // keeping the job with the highest runTime
+          if (!jobs[job.systemJobEnumId]) {
+            jobs[job.systemJobEnumId] = job
+          }
+          return jobs
+        }, {})
+      } else {
+        // if there are no pending jobs, we can skip the rest 
+        // of the logic and return draft jobs only
+        jobs = draft
+        return
+      }
+
+      jobs = {...draft, ...pending}
+      const pendingSysJobEnumIds = Object.keys(pending)
+
+      await Promise.allSettled(pendingSysJobEnumIds.map(async (systemJobEnumId: string) => {
+        const resp = await JobService.fetchJobInformation({
+          "inputFields": {
+            "productStoreId": this.state.user.currentEComStore?.productStoreId,
+            'systemJobEnumId': systemJobEnumId,
+            'systemJobEnumId_op': 'equals',
+            "statusId": ["SERVICE_CANCELLED", "SERVICE_CRASHED", "SERVICE_FAILED", "SERVICE_FINISHED"],
+            "statusId_op": "in",
+          },
+          // fetching statusId as well as only one field cannot be sent
+          "fieldList": ["runTime", "systemJobEnumId"],
+          "noConditionFind": "Y",
+          "viewSize": 1,
+          "orderBy": "runTime DESC"
+        })
+
+        if (!hasError(resp)) {
+          const respJob = resp.data.docs[0]
+          jobs[systemJobEnumId].lastRunTime = respJob.runTime
+          return Promise.resolve(resp);
+        } else {
+          return Promise.reject(resp);
+        }
+      }))
+    } catch (error) {
+      console.error(error)
+    } finally {
+      commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, jobs)
+    }
+    return jobs;
+  },
+  clearCtgryAndBrkrngJobs({commit}) {
+    commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, { jobs: [] })
+  }
 }
 export default actions;

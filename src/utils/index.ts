@@ -1,5 +1,4 @@
 import { toastController } from '@ionic/vue';
-import store from '@/store';
 import { DateTime } from "luxon";
 // TODO Use separate files for specific utilities
 

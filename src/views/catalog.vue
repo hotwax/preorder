@@ -32,7 +32,7 @@
                 <h5>{{ $t('Presell computation') }}</h5>
                 <p>{{ preordBckordComputationJob.lastRunTime && timeTillJob(preordBckordComputationJob.lastRunTime) }}</p>
               </ion-label>
-              <ion-label slot="end" :color="!preordBckordComputationJob.runTime ? 'medium' : ''">
+              <ion-label slot="end">
                 <p>{{ preordBckordComputationJob.runTime ? timeTillJob(preordBckordComputationJob.runTime) : $t('disabled')}}</p>
               </ion-label>
             </ion-item>
@@ -216,24 +216,25 @@ export default defineComponent({
       try {
         const params = {
           "inputFields": {
-            "statusId": ["SERVICE_PENDING", "SERVICE_DRAFT"],
-            "statusId_op": "in",
+            // fetching only pending job here as there are no actions for 
+            // draft jobs and so fetching draft job data is not of any use.
+            "statusId": "SERVICE_PENDING",
+            "statusId_op": "equals",
             "productStoreId": this.currentEComStore.productStoreId,
             'systemJobEnumId': 'JOB_REL_PREODR_CAT',
             'systemJobEnumId_op': 'equals'
           },
           "noConditionFind": "Y",
-          "viewSize": 2
+          "viewSize": 1
         } as any
 
         let resp = await JobService.fetchJobInformation(params)
 
         if (!hasError(resp)) {
-          this.preordBckordComputationJob = resp.data.docs.find((job: any) => job.statusId === 'SERVICE_PENDING')
+          this.preordBckordComputationJob = resp.data.docs[0]
         }
 
-        // fetching last run time only if its a pending job
-        if (this.preordBckordComputationJob) {
+        if (Object.keys(this.preordBckordComputationJob).length) {
           // fetching last run time
           resp = await JobService.fetchJobInformation({
             "inputFields": {
@@ -251,8 +252,6 @@ export default defineComponent({
           if (!hasError(resp)) {
             this.preordBckordComputationJob.lastRunTime = resp.data.docs[0].runTime
           }
-        } else {
-          this.preordBckordComputationJob = {}
         }
       } catch (error) {
         console.error(error)

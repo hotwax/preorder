@@ -21,6 +21,6 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrentEComStore(state) {
         return state.currentEComStore
-    },
+    }
 }
 export default getters;
