@@ -1,3 +1,11 @@
+# Release 1.8.0
+
+## What's Changed
+* Implemented: details page for pre-order catalog (#85zt0m4qc) by @adityasharma7 in https://github.com/hotwax/preorder/pull/137
+
+
+**Full Changelog**: https://github.com/hotwax/preorder/compare/v1.7.0...v1.8.0
+
 # Release 1.7.0
 
 ## What's Changed
