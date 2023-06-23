@@ -960,7 +960,7 @@ export default defineComponent({
 <style scoped>
 .header {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   grid-gap: 16px;
   padding: 16px 16px 48px;
 }
