@@ -466,9 +466,18 @@ export default defineComponent({
 
       Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
 
-      const openedVariant = this.product.variants.find((variant: any) => variant.productId === this.$route.params.variantId)
-      this.selectedColor = getFeature(openedVariant.featureHierarchy, '1/COLOR/')
-      this.selectedSize = getFeature(openedVariant.featureHierarchy, '1/SIZE/')
+      let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.$route.params.variantId)
+
+      if (!selectedVariant) {
+          // if the variant does not have color or size as features
+          selectedVariant = this.product.variants[0]
+          showToast(translate("Selected variant not available. Reseting to first variant."))
+        }
+
+      if (selectedVariant) {
+        this.selectedColor = getFeature(selectedVariant.featureHierarchy, '1/COLOR/')
+        this.selectedSize = getFeature(selectedVariant.featureHierarchy, '1/SIZE/')
+      }
     },
     async updateVariant() {
       let variant
