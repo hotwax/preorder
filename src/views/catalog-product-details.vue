@@ -120,10 +120,10 @@
           <ion-skeleton-text animated style="width: 50%; height: 50%;" />
         </ion-item>
       </div>
-      <div class="ion-padding-start" v-else>
-        <h3 v-if="!poAndAtpDetails.lastActivePoId">{{ $t("Presell eligibility") }}</h3>
-        <h3 v-else>{{ $t("Purchase order and online ATP calculation") }}</h3>
+      <div class="ion-padding-start">
+        <h3>{{ $t("Presell eligibility") }}</h3>
       </div>
+
 
       <section>
         <ion-card v-if="!Object.keys(poAndAtpDetails).length">
