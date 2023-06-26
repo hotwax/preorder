@@ -120,7 +120,7 @@
           <ion-skeleton-text animated style="width: 50%; height: 50%;" />
         </ion-item>
       </div>
-      <div class="ion-padding-start">
+      <div class="ion-padding-start" v-else >
         <h3>{{ $t("Presell eligibility") }}</h3>
       </div>
 
