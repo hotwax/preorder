@@ -623,7 +623,7 @@ export default defineComponent({
           payload = {
             "json": {
               "params": {
-                "rows": 1,
+                "rows": 0,
               },
               "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productId: ${variantId} AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId ? this.poAndAtpDetails.activePoId : this.poAndAtpDetails.lastActivePoId}`,
               "query": "*:*",
