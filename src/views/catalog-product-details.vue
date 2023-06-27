@@ -17,7 +17,7 @@
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
           <div class="ion-padding">
-            <h4>{{ currentVariant.productName }}</h4>
+            <h4>{{ currentVariant.parentProductName }}</h4>
             <p>{{ currentVariant.sku }}</p>
           </div>
 
@@ -609,7 +609,9 @@ export default defineComponent({
             "orderStatusId_op": "in",
             "itemStatusId": ["ITEM_CREATED", "ITEM_APPROVED"],
             "itemStatusId_op": "in",
-            "estimatedDeliveryDate_op": "greaterThanFromDayStart"
+            "estimatedDeliveryDate_op": "greaterThanFromDayStart",
+            "orderTypeId": "PURCHASE_ORDER",
+            "orderTypeId_op": "equals"
           },
           "entityName": "OrderHeaderAndItems",
           "viewSize": 1
@@ -621,9 +623,9 @@ export default defineComponent({
           payload = {
             "json": {
               "params": {
-                "rows": 0,
+                "rows": 1,
               },
-              "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId ? this.poAndAtpDetails.activePoId : this.poAndAtpDetails.lastActivePoId}`,
+              "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productId: ${variantId} AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId ? this.poAndAtpDetails.activePoId : this.poAndAtpDetails.lastActivePoId}`,
               "query": "*:*",
             }
           }
