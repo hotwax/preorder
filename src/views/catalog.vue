@@ -52,7 +52,7 @@
               <Image :src="product.mainImageUrl" />
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
-              <h5>{{ product.productName }}</h5>
+              <h5>{{ product.parentProductName }}</h5>
               <p>{{ product.sku }}</p>
             </ion-label>
           </ion-item>
@@ -61,7 +61,8 @@
             <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER') ? $t('Back-order') : '-' }}</ion-label>
           </ion-chip>
 
-          <ion-item lines="none" class="tablet">
+          <!-- TODO -->
+          <!-- <ion-item lines="none" class="tablet">
             <ion-label class="ion-text-center">
               <h5>{{ product.fromDate ? getTime(product.fromDate) : '-' }}</h5>
               <p>{{ $t('from date') }}</p>
@@ -73,7 +74,7 @@
               <h5>{{ product.thruDate ? getTime(product.thruDate) : '-' }}</h5>
               <p>{{ $t('thru date') }}</p>
             </ion-label>
-          </ion-item>
+          </ion-item> -->
         </div>
 
         <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isCatalogScrollable">
