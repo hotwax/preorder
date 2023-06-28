@@ -87,23 +87,23 @@
             </ion-item>
           </ion-card>
           <ion-card v-else>
-            <ion-item lines="none">
-              <!-- internationalized while preparaion -->
+            <!-- internationalized while preparaion -->
+            <!-- <ion-item lines="none">
               <ion-label class="ion-text-wrap">{{ poSummary.header }}</ion-label>
-            </ion-item>
+            </ion-item> -->
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-              <ion-label slot="end">{{ poSummary.isActivePo ? $t("Yes") : $t("No") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.eligible ? $t("Yes") : $t("No") }}</ion-label>
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
               <ion-label slot="end">{{ poSummary.categoryId === 'PREORDER_CAT' ? $t('Pre-order') : poSummary.categoryId === 'BACKORDER_CAT' ? $t('Back-order') : $t('None') }}</ion-label>
-              <ion-icon slot="end" :icon="optCategoryStatusIndicator(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optCategoryStatusIndicator(poSummary) ? 'success' : 'warning'" />
+              <ion-icon slot="end" :icon="isCategoryValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isCategoryValid() ? 'success' : 'warning'" />
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
               <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
-              <ion-icon slot="end" :icon="optListingStatusIndicator(poSummary) ? checkmarkCircleOutline : alertCircleOutline" :color="optListingStatusIndicator(poSummary) ? 'success' : 'warning'" />
+              <ion-icon slot="end" :icon="isShopifyListingValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isShopifyListingValid() ? 'success' : 'warning'" />
             </ion-item>
             <ion-item v-if="shopListings.length && poSummary.listedCount">
               <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
@@ -120,10 +120,6 @@
           <ion-skeleton-text animated style="width: 50%; height: 50%;" />
         </ion-item>
       </div>
-      <div class="ion-padding-start" v-else>
-        <h3>{{ $t("Presell eligibility") }}</h3>
-      </div>
-
 
       <section>
         <ion-card v-if="!Object.keys(poAndAtpDetails).length">
@@ -759,65 +755,74 @@ export default defineComponent({
       }
     },
     async preparePoSummary() {
+      this.poSummary.eligible = this.poAndAtpDetails.totalPoAtp > 0 && this.atpCalcDetails.onlineAtp === 0;
       this.poSummary.isActivePo = (this.poAndAtpDetails.activePo && Object.keys(this.poAndAtpDetails?.activePo).length) && this.poAndAtpDetails.onlineAtp > 0
       this.poSummary.isLastActivePo = this.poAndAtpDetails.lastActivePoId && Object.keys(this.poAndAtpDetails?.activePo).length
       this.poSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
-      const category = this.poSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
+      // const category = this.poSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
       // Currently we are only having one shop listing condition
       // will improve the logic as the listing conditions increase
       this.poSummary.listedCount = this.shopListings.reduce((count: number, listData: any) =>
         (listData.status === 'active' && !listData.containsError) ? count + 1 : count
       , 0)
 
-      const poSummaryConditions = {
-        isActiveAndCategorized: this.poSummary.isActivePo && this.poSummary.categoryId,
-        isActiveAndNotCategorized: this.poSummary.isActivePo && !this.poSummary.categoryId,
-        isLastActiveAndCategorized: this.poSummary.isLastActivePo && this.poSummary.categoryId,
-        isLastActiveAndNotCategorized: this.poSummary.isLastActivePo && !this.poSummary.categoryId,
-        isOnlyCategorized: (!this.poSummary.isActivePo && !this.poSummary.isLastActivePo) && this.poSummary.categoryId,
-      }
+      // TODO
+      // const poSummaryConditions = {
+      //   isActiveAndCategorized: this.poSummary.isActivePo && this.poSummary.categoryId,
+      //   isActiveAndNotCategorized: this.poSummary.isActivePo && !this.poSummary.categoryId,
+      //   isLastActiveAndCategorized: this.poSummary.isLastActivePo && this.poSummary.categoryId,
+      //   isLastActiveAndNotCategorized: this.poSummary.isLastActivePo && !this.poSummary.categoryId,
+      //   isOnlyCategorized: (!this.poSummary.isActivePo && !this.poSummary.isLastActivePo) && this.poSummary.categoryId,
+      // }
 
       try {
+        // TODO
         // fetch fromDate only for active POs in pre-order/back-order category
-        if (poSummaryConditions.isActiveAndCategorized) {
-          const fromDate = this.poAndAtpDetails.activePoFromDate;
-          if (this.configsByStores.length > this.poSummary.listedCount) {
-            this.poSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
-          } else if (this.configsByStores.length === this.poSummary.listedCount) {
-            this.poSummary.header = this.$t("Product has been accepting from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
-          }
-          this.poSummary.promiseDate = this.getTime(this.poAndAtpDetails.activePo.estimatedDeliveryDate)
-        } else if (poSummaryConditions.isActiveAndNotCategorized) {
-          const eligibleCategory = this.poAndAtpDetails.activePo.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
-          this.poSummary.header = this.$t("Product is eligible for but not added to the category", { category: eligibleCategory })
-        } else if (poSummaryConditions.isLastActiveAndNotCategorized) {
-          if (!this.poSummary.listedCount) {
-            this.poSummary.header = this.$t("Stopped accepting from as there is no active PO", { category, changeDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
-          } else {
-            if (this.configsByStores.length > this.poSummary.listedCount) {
-              this.poSummary.header = this.$t("Removed from category on because there is no active PO but still listed on stores", { listedCount: this.poSummary.listedCount, changeDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
-              this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
-            }
-          }
-        } else if (poSummaryConditions.isLastActiveAndCategorized) {
-          this.poSummary.header = this.$t("Not eligible for accepting but currently added in category", { category })
-        } else if (poSummaryConditions.isOnlyCategorized) {
-          if (typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
-            this.poSummary.header = this.$t("Product is currently in stock and cannot accept", { category })
-          } else {
-            this.poSummary.header = this.$t("Product has no active purchase order to be eligible for accepting", { category })
-          }
-        } else {
-          if (this.inventoryConfig.preOrdPhyInvHoldStatus === 'false' && typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
-            this.poSummary.header = this.$t("With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues")
-          } else {
-            this.poSummary.header = this.$t("Product cannot be pre-sold because it does not have active purchase orders")
-          }
-        }
+        // if (poSummaryConditions.isActiveAndCategorized) {
+        //   const fromDate = this.poAndAtpDetails.activePoFromDate;
+        //   if (this.configsByStores.length > this.poSummary.listedCount) {
+        //     this.poSummary.header = this.$t("Added to pre-order category on, against PO # but not listed on all stores", { fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
+        //   } else if (this.configsByStores.length === this.poSummary.listedCount) {
+        //     this.poSummary.header = this.$t("Product has been accepting from against PO #", { category, fromDate: this.getTime(fromDate), POID: this.poAndAtpDetails.activePoId })
+        //   }
+        //   this.poSummary.promiseDate = this.getTime(this.poAndAtpDetails.activePo.estimatedDeliveryDate)
+        // } else if (poSummaryConditions.isActiveAndNotCategorized) {
+        //   const eligibleCategory = this.poAndAtpDetails.activePo.isNewProduct === 'Y' ? 'pre-order' : 'back-order'
+        //   this.poSummary.header = this.$t("Product is eligible for but not added to the category", { category: eligibleCategory })
+        // } else if (poSummaryConditions.isLastActiveAndNotCategorized) {
+        //   if (!this.poSummary.listedCount) {
+        //     this.poSummary.header = this.$t("Stopped accepting from as there is no active PO", { category, changeDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
+        //   } else {
+        //     if (this.configsByStores.length > this.poSummary.listedCount) {
+        //       this.poSummary.header = this.$t("Removed from category on because there is no active PO but still listed on stores", { listedCount: this.poSummary.listedCount, changeDatetime: this.getTime(this.poAndAtpDetails.changeDatetime) })
+        //       this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+        //     }
+        //   }
+        // } else if (poSummaryConditions.isLastActiveAndCategorized) {
+        //   this.poSummary.header = this.$t("Not eligible for accepting but currently added in category", { category })
+        // } else if (poSummaryConditions.isOnlyCategorized) {
+        //   if (typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
+        //     this.poSummary.header = this.$t("Product is currently in stock and cannot accept", { category })
+        //   } else {
+        //     this.poSummary.header = this.$t("Product has no active purchase order to be eligible for accepting", { category })
+        //   }
+        // } else {
+        //   if (this.inventoryConfig.preOrdPhyInvHoldStatus === 'false' && typeof this.atpCalcDetails.onlineAtp === 'number' && this.atpCalcDetails.onlineAtp > 0) {
+        //     this.poSummary.header = this.$t("With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues")
+        //   } else {
+        //     this.poSummary.header = this.$t("Product cannot be pre-sold because it does not have active purchase orders")
+        //   }
+        // }
         this.prepareListingCountStatusMsg()
       } catch (error) {
         console.error(error)
       }
+    },
+    isCategoryValid() {
+      return (this.poSummary.eligible && this.poSummary.categoryId) || (!this.poSummary.eligible && !this.poSummary.categoryId)
+    },
+    isShopifyListingValid() {
+      return (this.poSummary.eligible && this.configsByStores.length === this.poSummary.listedCount) || (!this.poSummary.eligible && this.configsByStores.length !== this.poSummary.listedCount)
     },
     prepareListingCountStatusMsg() {
       if (!this.shopListings.length) {
@@ -938,14 +943,6 @@ export default defineComponent({
         externalId = externalIdentificationSplit[2] ? externalIdentificationSplit[2] : '';
       }
       return externalId;
-    },
-    optCategoryStatusIndicator(poSummary: any) {
-      return (poSummary.isActivePo && poSummary.categoryId)
-        || (poSummary.isLastActivePo && !poSummary.categoryId) 
-    },
-    optListingStatusIndicator(poSummary: any) {
-      return (poSummary.isActivePo && poSummary.categoryId && poSummary.listedCount === this.configsByStores.length)
-        || (poSummary.isLastActivePo && !poSummary.categoryId && !poSummary.listedCount) 
     }
   },
   setup() {
