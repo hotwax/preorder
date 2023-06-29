@@ -1014,7 +1014,7 @@ export default defineComponent({
 
 section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
   align-items: start;
 }
 
