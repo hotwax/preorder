@@ -148,26 +148,27 @@
         <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
-              <h3 v-if="!poAndAtpDetails.lastActivePoId">{{ $t("Active purchase order") }}</h3>
-              <h3 v-else>{{ $t("Last active purchase order")  }}</h3>
+              <h3 v-if="hasCategory()">{{ $t("Active purchase order") }}</h3>
+              <h3 v-else-if="poAndAtpDetails.activePoId">{{ $t("Last active purchase order")  }}</h3>
+              <h3 v-else>{{ $t("Purchase orders")  }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item>
-            <ion-label>{{ $t('PO #', { pOId: poAndAtpDetails.activePoId ? poAndAtpDetails.activePoId : poAndAtpDetails.lastActivePoId }) }}</ion-label>
+          <ion-item v-if="poAndAtpDetails.activePoId">
+            <ion-label>{{ $t('PO #', { pOId: poAndAtpDetails.activePoId }) }}</ion-label>
             <ion-label slot="end">{{ poAndAtpDetails.activePo?.estimatedDeliveryDate ? getTime(poAndAtpDetails.activePo.estimatedDeliveryDate) : '-' }}</ion-label>
           </ion-item>
 
-          <ion-item>
+          <ion-item v-if="poAndAtpDetails.activePoId">
             <ion-label>{{ $t("Ordered") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0) ? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
           </ion-item>
 
-          <ion-item>
+          <ion-item v-if="poAndAtpDetails.activePoId">
             <ion-label>{{ $t("Available") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.activePo?.availableToPromise >= 0) ? poAndAtpDetails.activePo?.availableToPromise : '-' }}</ion-label>
           </ion-item>
 
-          <ion-item lines="full">
+          <ion-item v-if="poAndAtpDetails.activePoId" lines="full">
             <ion-label>{{ $t("Corresponding sales orders") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.crspndgSalesOrdr >= 0) ? poAndAtpDetails.crspndgSalesOrdr : '-' }}</ion-label>
           </ion-item>
@@ -545,72 +546,72 @@ export default defineComponent({
       this.poAndAtpDetails = {}
 
       try {
-        const requests = []
         let resp: any
         const variantId = this.currentVariant.productId
 
         const productCategories = this.currentVariant.productCategories;
         // TODO Make categoryIds dynamic
-        const hasBackorderCategory = productCategories?.includes("BACKORDER_CAT");
         const hasPreOrderCategory = productCategories?.includes("PREORDER_CAT");
-        if (hasPreOrderCategory || hasBackorderCategory) {
-          const payload = {
-            "inputFields": {
-              "productId": variantId,
-              "productCategoryId": hasPreOrderCategory ? "PREORDER_CAT" : "BACKORDER_CAT",
-              "productCategoryId_op": "equals"
-            },
-            "entityName": "ProductCategoryDcsnRsn",
-            "fieldList": ["productId", "purchaseOrderId", "fromDate"],
-            "viewSize": 1,
-            "orderBy": "createdDate DESC"
-          } as any
-
-          resp = await OrderService.getActivePoId(payload)
-
-          if (!hasError(resp)) {
-            this.poAndAtpDetails.activePoId = resp.data?.docs[0].purchaseOrderId
-            this.poAndAtpDetails.activePoFromDate = resp.data?.docs[0].purchaseOrderId
-          }
-        }
-
-        if (!this.poAndAtpDetails.activePoId) {
-          // get last active PO ID if active PO ID is not found
-          const payload = {
-            "inputFields": {
-              "productId": variantId,
-            },
-            "entityName": "PurchaseOrderItemChangeHistory",
-            "sortBy": "entryDate DESC",
-            "fieldList": ["poId", "changeDatetime", "changeTypeEnumId"],
-            "viewSize": 1
-          } as any
-          resp = await OrderService.getPoItemChangeHistory(payload)
-          if (!hasError(resp)) {
-            this.poAndAtpDetails.lastActivePoId = resp.data?.docs[0].poId,
-            this.poAndAtpDetails.changeDatetime = resp.data?.docs[0].changeDatetime
-          } else if (hasError(resp) && resp.data.error !== "No record found") {
-            showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
-          }
-        }
-
         let payload = {
           "inputFields": {
             "productId": variantId,
-            ...(this.poAndAtpDetails.activePoId && {
-              "orderStatusId": ["ORDER_CREATED", "ORDER_APPROVED"],
-              "orderStatusId_op": "in"
-            }),
-            "orderTypeId": "PURCHASE_ORDER",
-            "orderTypeId_op": "equals"
+            "productCategoryId": hasPreOrderCategory ? "PREORDER_CAT" : "BACKORDER_CAT",
+            "productCategoryId_op": "equals"
           },
-          "entityName": "PreOrderPOItem",
-          "sortBy": "entryDate DESC",
-          "fieldList": ["estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
-          "viewSize": 1
-        } as any;
+          "entityName": "ProductCategoryDcsnRsn",
+          "fieldList": ["productId", "purchaseOrderId", "fromDate"],
+          "viewSize": 1,
+          "orderBy": "createdDate DESC"
+        } as any
 
-        requests.push(OrderService.getActivePoDetails(payload).catch((error: any) => error))
+        resp = await OrderService.getActivePoId(payload)
+
+        if (!hasError(resp)) {
+          this.poAndAtpDetails.activePoId = resp.data?.docs[0].purchaseOrderId
+          this.poAndAtpDetails.activePoFromDate = resp.data?.docs[0].purchaseOrderId
+        }
+
+        this.poAndAtpDetails.activePo = {}
+        if (this.poAndAtpDetails.activePoId) {
+          const requests = []
+
+          payload = {
+            "inputFields": {
+              "productId": variantId,
+              "orderId": this.poAndAtpDetails.activePoId,
+              "orderTypeId": "PURCHASE_ORDER",
+              "orderTypeId_op": "equals"
+            },
+            "entityName": "PreOrderPOItem",
+            "sortBy": "entryDate DESC",
+            "fieldList": ["estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
+            "viewSize": 1
+          } as any;
+
+          requests.push(OrderService.getActivePoDetails(payload).catch((error: any) => error))
+
+          payload = {
+            "json": {
+              "params": {
+                "rows": 0,
+              },
+              "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productId: ${variantId} AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId}`,
+              "query": "*:*",
+            }
+          }
+          requests.push(OrderService.getCrspndgSalesOrdr(payload).catch((error: any) => error))
+
+          const promiseResult = await Promise.allSettled(requests)
+          // promise.allSettled returns an array of result with status and value fields
+          resp = promiseResult.map((respone: any) => respone.value)
+
+          if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
+          else this.poAndAtpDetails.activePo = resp[0].data?.error ? {}: resp[0].data?.docs[0]
+
+          if (resp[1] && hasError(resp[1])) showToast(this.$t("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
+          else this.poAndAtpDetails.crspndgSalesOrdr = resp[1]?.data?.response.numFound
+
+        }
 
         payload = {
           "inputFields": {
@@ -626,36 +627,11 @@ export default defineComponent({
           "entityName": "OrderHeaderAndItems",
           "viewSize": 1
         }
+        resp = await OrderService.getPoItemCount(payload)
+        if (hasError(resp) && resp?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'total PO items' }))
+        else this.poAndAtpDetails.totalPoItems = resp.data?.error === "No record found" ? 0 : resp.data?.count // count is zero if not records are found
 
-        requests.push(OrderService.getPoItemCount(payload).catch((error: any) => error))
-
-        if (this.poAndAtpDetails.activePoId || this.poAndAtpDetails.lastActivePoId) {
-          payload = {
-            "json": {
-              "params": {
-                "rows": 0,
-              },
-              "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productId: ${variantId} AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId ? this.poAndAtpDetails.activePoId : this.poAndAtpDetails.lastActivePoId}`,
-              "query": "*:*",
-            }
-          }
-          requests.push(OrderService.getCrspndgSalesOrdr(payload).catch((error: any) => error))
-        }
-        
-        const promiseResult = await Promise.allSettled(requests)
-        // promise.allSettled returns an array of result with status and value fields
-        resp = promiseResult.map((respone: any) => respone.value)
-
-        if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'total PO items' }))
-        else this.poAndAtpDetails.totalPoItems = resp[1].data?.error === "No record found" ? 0 : resp[1].data?.count // count is zero if not records are found
-
-        if (resp[2] && hasError(resp[2])) showToast(this.$t("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
-        else this.poAndAtpDetails.crspndgSalesOrdr = resp[2]?.data?.response.numFound
-
-        this.poAndAtpDetails.activePo = {}
-        if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
-        else this.poAndAtpDetails.activePo = resp[0].data?.error ? {}: resp[0].data?.docs[0]
-
+        // Getting PO ATP
         resp = await StockService.getProductFutureAtp({ "productId": variantId })
         if (!hasError(resp)) {
           this.poAndAtpDetails.totalPoAtp = resp.data?.futureAtp
@@ -768,10 +744,15 @@ export default defineComponent({
         console.error(error);
       }
     },
+    hasCategory() {
+      // TODO make categoryIds dynamic
+      return this.currentVariant.productCategories?.includes("PREORDER_CAT") || this.currentVariant.productCategories?.includes("BACKORDER_CAT");
+    },
     async preparePoSummary() {
       this.poSummary.eligible = this.poAndAtpDetails.totalPoAtp > 0 && this.atpCalcDetails.onlineAtp === 0;
       this.poSummary.isActivePo = (this.poAndAtpDetails.activePo && Object.keys(this.poAndAtpDetails?.activePo).length) && this.poAndAtpDetails.onlineAtp > 0
-      this.poSummary.isLastActivePo = this.poAndAtpDetails.lastActivePoId && Object.keys(this.poAndAtpDetails?.activePo).length
+      // TODO Remove code for lastActivePoId
+      // this.poSummary.isLastActivePo = this.poAndAtpDetails.lastActivePoId && Object.keys(this.poAndAtpDetails?.activePo).length
       this.poSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
       // const category = this.poSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
       // Currently we are only having one shop listing condition
