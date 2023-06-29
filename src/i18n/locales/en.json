@@ -116,7 +116,7 @@
     "Pieces": "Pieces",
     "pieces preordered": "pieces preordered",
     "PO": "PO",
-    "PO #": "PO # {pOId}",
+    "PO #": "PO #{pOId}",
     "PO ATP": "PO ATP",
     "preorder": "preorder",
     "pre-order": "pre-order",
