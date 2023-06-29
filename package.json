@@ -16,7 +16,7 @@
     "@capacitor/android": "^2.5.0",
     "@capacitor/core": "^2.4.7",
     "@capacitor/ios": "^2.5.0",
-    "@hotwax/apps-theme": "^1.1.0",
+    "@hotwax/apps-theme": "^1.2.1",
     "@hotwax/app-version-info": "^1.0.0",
     "@hotwax/oms-api": "^1.6.0",
     "@ionic/core": "6.2.9",
