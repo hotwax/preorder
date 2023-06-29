@@ -868,7 +868,9 @@ export default defineComponent({
       try {
         let payload = {
           "inputFields": {
-            "productStoreId": this.currentEComStore.productStoreId
+            "productStoreId": this.currentEComStore.productStoreId,
+            "accessScopeEnumId": "SHOP_NO_ACCESS",
+            'accessScopeEnumId_op': 'notEqual'
           },
           "entityName": "ShopifyShopAndConfig",
           "fieldList": ["shopifyConfigId", "shopId", "name"],
