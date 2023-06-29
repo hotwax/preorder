@@ -190,7 +190,7 @@ export default defineComponent({
       }
 
       if(this.queryString.trim().length) {
-        payload.json.query = this.queryString
+        payload.json.query = this.queryString + "*"
         payload.json.params['qf'] = "productId productName upc sku internalName brandName parentProductName"
         payload.json.params['defType'] = "edismax"
       }
