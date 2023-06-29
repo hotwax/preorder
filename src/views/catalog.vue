@@ -211,7 +211,7 @@ export default defineComponent({
       this.getCatalogProducts()
     },
     viewProduct(product: any) {
-      this.router.push({ path: `/catalog-product-details/${product.groupId}/${product.productId}` });
+      this.router.push({ path: `/catalog-product-details/${product.groupId}`, query: { variantId: product.productId } });
     },
     async preparePreordBckordComputationJob() {
       try {

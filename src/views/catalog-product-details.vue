@@ -105,7 +105,7 @@
               <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
               <ion-icon slot="end" :icon="isShopifyListingValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isShopifyListingValid() ? 'success' : 'warning'" />
             </ion-item>
-            <ion-item v-if="shopListings.length && poSummary.listedCount">
+            <ion-item v-if="poSummary.promiseDate">
               <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
               <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
             </ion-item>
@@ -329,12 +329,18 @@
           </ion-item>
           <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
             <ion-label class="ion-text-wrap">
-              <h5>{{ $t('Shop', { index: index + 1 }) }}</h5>
+              <h5>{{ listData.name }}</h5>
               <!-- internationalized while preparation -->
               <p>{{ listData.listingTimeAndStatus }}</p>
             </ion-label>
-            <ion-label :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
+            <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
               <h5>{{ $t(listData.listingStatus) }}</h5>
+            </ion-label>
+            <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
+              <h5>{{ $t("No listing data") }}</h5>
+            </ion-label>
+            <ion-label v-else color="medium" slot="end">
+              <h5>{{ $t("Not linked") }}</h5>
             </ion-label>
           </ion-item>
         </ion-card>
@@ -385,6 +391,7 @@ import { ShopifyService } from "@/services/ShopifyService";
 import { JobService } from "@/services/JobService";
 import { StockService } from "@/services/StockService";
 import { UtilService } from "@/services/UtilService";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "catalog-product-details",
@@ -412,6 +419,8 @@ export default defineComponent({
   },
   data() {
     return {
+      variantId: '',
+      productId: '',
       selectedColor: '',
       selectedSize: '',
       features: [] as any,
@@ -434,13 +443,15 @@ export default defineComponent({
     })
   },
   async ionViewWillEnter() {
+    (this as any).productId = this.$route.params.productId;
+    (this as any).variantId = this.$route.query.variantId;
     await this.getShopifyConfigsByStore()
     await this.getVariantDetails()
     await this.getCtgryAndBrkrngJobs()
   },
   methods: {
     async getVariantDetails() {
-      await this.store.dispatch('product/setCurrentCatalogProduct', { productId: this.$route.params.productId })
+      await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId})
       if (this.product.variants) {
         this.getFeatures()
         await this.updateVariant()
@@ -462,7 +473,7 @@ export default defineComponent({
 
       Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
 
-      let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.$route.params.variantId)
+      let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)
 
       if (!selectedVariant) {
           // if the variant does not have color or size as features
@@ -479,8 +490,8 @@ export default defineComponent({
       let variant
       if (this.selectedColor || this.selectedSize) {
         variant = this.product.variants.find((variant: any) => {
-          const hasSize = getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize
-          const hasColor = getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor
+          const hasSize = !this.selectedSize || (this.selectedSize && getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
+          const hasColor = !this.selectedColor || (this.selectedColor && getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor)
           return hasSize && hasColor
         })
 
@@ -493,6 +504,8 @@ export default defineComponent({
       }
       // if the variant does not have color or size as features
       this.currentVariant = variant || this.product.variants[0]
+      this.variantId = this.currentVariant.variantId
+      this.$route.query.variantId !==  this.currentVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: this.currentVariant.productId } }));
       await this.getPoDetails()
       await this.prepareShopListings()
       await this.getAtpCalcDetails()
@@ -514,7 +527,7 @@ export default defineComponent({
       await popover.present();
     },
     getTime(time: number) {
-      return DateTime.fromMillis(time).toLocaleString()
+      return DateTime.fromMillis(time).toLocaleString(DateTime.DATE_MED)
     },
     timeTillJob(time: number) {
       const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
@@ -534,9 +547,10 @@ export default defineComponent({
       try {
         const requests = []
         let resp: any
-        const variantId = this.$route.params.variantId
+        const variantId = this.currentVariant.productId
 
         const productCategories = this.currentVariant.productCategories;
+        // TODO Make categoryIds dynamic
         const hasBackorderCategory = productCategories?.includes("BACKORDER_CAT");
         const hasPreOrderCategory = productCategories?.includes("PREORDER_CAT");
         if (hasPreOrderCategory || hasBackorderCategory) {
@@ -656,7 +670,7 @@ export default defineComponent({
     async getAtpCalcDetails() {
       try {
         const requests = []
-        let payload = { "productId": this.$route.params.variantId } as any
+        let payload = { "productId": this.currentVariant.productId } as any
         requests.push(StockService.getProductInventoryAvailable(payload).catch((error: any) => error))
 
         payload = { 
@@ -822,22 +836,33 @@ export default defineComponent({
       return (this.poSummary.eligible && this.poSummary.categoryId) || (!this.poSummary.eligible && !this.poSummary.categoryId)
     },
     isShopifyListingValid() {
-      return (this.poSummary.eligible && this.configsByStores.length === this.poSummary.listedCount) || (!this.poSummary.eligible && this.configsByStores.length !== this.poSummary.listedCount)
+      // Checking if it is linked
+      const shopListings = this.shopListings.filter((shopListing: any) => shopListing.shopifyShopProductId)
+      // Checking if we have the data
+      const shopListingsWithMissingData = shopListings.filter((shopifyListing: any) => !shopifyListing.status)
+      return !(shopListingsWithMissingData.length > 0) && ((this.poSummary.eligible && shopListings.length === this.poSummary.listedCount) || (!this.poSummary.eligible && shopListings.length !== this.poSummary.listedCount))
     },
     prepareListingCountStatusMsg() {
-      if (!this.shopListings.length) {
+      // Checking if it is linked
+      const shopListings = this.shopListings.filter((shopListing: any) => shopListing.shopifyShopProductId)
+      // Checking if we have the data
+      const shopListingsWithMissingData = shopListings.filter((shopifyListing: any) => !shopifyListing.status)
+      if (shopListingsWithMissingData.length === shopListings.length) {
         this.poSummary.listingCountStatusMessage = this.$t("Listing data not available")
+      } else if (shopListingsWithMissingData.length > 0) {
+        this.poSummary.listingCountStatusMessage = this.$t("Some listing data not available")
       } else if (!this.poSummary.listedCount) {
         this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
-      } else if (this.configsByStores.length === this.poSummary.listedCount) {
+      } else if (shopListings.length === this.poSummary.listedCount) {
         this.poSummary.listingCountStatusMessage = this.$t("Listed on all stores")
-        this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
-      } else if (this.configsByStores.length > this.poSummary.listedCount) {
-        this.poSummary.isActivePo 
+      } else if (shopListings.length > this.poSummary.listedCount) {
+        this.poSummary.eligible 
           ? this.poSummary.listingCountStatusMessage = this.$t("Not listed on store(s)", { count: this.configsByStores.length - this.poSummary.listedCount })
-          : this.poSummary.listingCountStatusMessage = this.$t("Listed on store(s)", { count: this.configsByStores.length - this.poSummary.listedCount })
-        this.poSummary.promiseDate = DateTime.fromISO(this.shopListings[0].listingTime).toLocaleString({ month: '2-digit', day: '2-digit', year: '2-digit' })
+          : this.poSummary.listingCountStatusMessage = this.$t("Listed on store(s)", { count: this.poSummary.listedCount })
       }
+      // Get the first record with promise date
+      const shopListingWithPromiseDate = shopListings.find((shopifyListing: any) => shopifyListing.status === 'active' && shopifyListing.promiseDate)
+      shopListingWithPromiseDate && (this.poSummary.promiseDate = DateTime.fromFormat(shopListingWithPromiseDate.promiseDate, "MM/dd/yyyy").toLocaleString(DateTime.DATE_MED))
     },
     async getShopifyConfigsByStore() {
       try {
@@ -846,7 +871,7 @@ export default defineComponent({
             "productStoreId": this.currentEComStore.productStoreId
           },
           "entityName": "ShopifyShopAndConfig",
-          "fieldList": ["shopifyConfigId", "shopId"],
+          "fieldList": ["shopifyConfigId", "shopId", "name"],
           "viewSize": 20
         } as any
 
@@ -859,6 +884,8 @@ export default defineComponent({
       }
     },
     async prepareShopListings() {
+
+      // TODO Use ShopifyShopProduct to check if product is associated
       this.shopListings = []
       try {
         if (!this.configsByStores.length) return
@@ -880,15 +907,27 @@ export default defineComponent({
         if (!hasError(resp)) {
           this.listingJobRunTime = resp.data.docs[0].runTime
         }
+        const configs = {} as any;
 
         const shopifyConfigsAndProductIds = this.configsByStores.reduce((shopifyConfigsAndProductIds: any, config: any) => {
           const shopifyShop = shopifyConfigsAndProductIds[config.shopId] || {}
           !shopifyShop.variantProductId && (shopifyShop.variantProductId = this.getProductIdentificationId(this.currentVariant.goodIdentifications, 'ShopifyShopProduct/' + config.shopId))
           shopifyConfigsAndProductIds[config.shopId] = shopifyShop;
+          configs[config.shopId] = config;
           return shopifyConfigsAndProductIds
         }, {})
 
-        await Promise.allSettled(Object.values(shopifyConfigsAndProductIds).map(async (configAndIdData: any) => {
+        await Promise.allSettled(Object.keys(configs).map(async (shopId: any) => {
+          const configAndIdData = shopifyConfigsAndProductIds[shopId];
+          let listData = {
+            ...configs[shopId], // adding shopify shop information to be available for showing name
+          } as any
+          if (!configAndIdData.variantProductId) {
+            this.shopListings = [...this.shopListings, listData]
+            // TODO Find a better way
+            return Promise.resolve(this.shopListings)
+          }
+          listData.shopifyShopProductId = configAndIdData.variantProductId
           payload = {
             "json": {
               "params": {
@@ -906,24 +945,41 @@ export default defineComponent({
 
           resp = await ShopifyService.getShopifyConfigDetails(payload)
           if (!hasError(resp)) {
-            let listData = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
-            listData = {
-              containsError: listData.contains_error[0],
-              listingTime: listData._timestamp_,
-              status: JSON.parse(listData.data_productVariantUpdate_productVariant_metafields_edges_node_value[0]).status
+            if (resp.data.response.docs.length === 0) {
+              this.shopListings = [...this.shopListings, listData]
+              // TODO Find a better way
+              return Promise.resolve(this.shopListings)
             }
+            const listDataDoc = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
+            const metafieldValueList  = listDataDoc.data_productVariantUpdate_productVariant_metafields_edges_node_value;
+            const metafieldValue = metafieldValueList.length > 0 ? JSON.parse(metafieldValueList[0]): {};
+            listData = {
+              ...listData,
+              containsError: listDataDoc.contains_error[0],
+              listingTime: metafieldValue["last_updated_at"],
+              status: metafieldValue.status,
+              promiseDate: metafieldValue["promise_date"]
+            }
+            const listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
             if (!listData.containsError) {
               if (listData.status === 'inactive') {
                 // showing the job's runTime as listing time
-                listData.listingTimeAndStatus = this.$t("Listing at", { listingTime: DateTime.fromMillis(this.listingJobRunTime).toLocaleString(DateTime.DATETIME_MED) })
+                listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime })
                 listData.listingStatus = 'Not listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listed at", { listingTime: DateTime.fromISO(listData.listingTime).toLocaleString(DateTime.DATETIME_MED) })
+                listData.listingTimeAndStatus = this.$t("Listed at", { listingTime })
                 listData.listingStatus = 'Listed'
               }
             } else {
-              listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime: DateTime.fromISO(listData.listingTime).toLocaleString(DateTime.DATETIME_MED) })
-              listData.listingStatus = 'Not listed'
+              // If it failed to update, considered the status must old
+              if (listData.status === 'inactive') {
+                // showing the job's runTime as listing time
+                listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime })
+                listData.listingStatus = 'Listed'
+              } else {
+                listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime })
+                listData.listingStatus = 'Not listed'
+              }
             }
             this.shopListings = [...this.shopListings, listData]
             return Promise.resolve(resp)
@@ -947,10 +1003,12 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const router = useRouter();
     return {
       alertCircleOutline,
       checkmarkCircleOutline,
       chevronForwardOutline,
+      router,
       store
     };
   },
