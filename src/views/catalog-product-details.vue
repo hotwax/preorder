@@ -153,8 +153,9 @@
               <h3 v-else>{{ $t("Purchase orders")  }}</h3>
             </ion-card-title>
           </ion-card-header>
+          <!-- TODO Show orderName -->
           <ion-item v-if="poAndAtpDetails.activePoId">
-            <ion-label>{{ $t('PO #', { pOId: poAndAtpDetails.activePoId }) }}</ion-label>
+            <ion-label>{{ $t('PO #', { pOId: poAndAtpDetails.activePo?.orderExternalId ? poAndAtpDetails.activePo?.orderExternalId :  poAndAtpDetails.activePoId}) }}</ion-label>
             <ion-label slot="end">{{ poAndAtpDetails.activePo?.estimatedDeliveryDate ? getTime(poAndAtpDetails.activePo.estimatedDeliveryDate) : '-' }}</ion-label>
           </ion-item>
 
@@ -584,7 +585,7 @@ export default defineComponent({
             },
             "entityName": "PreOrderPOItem",
             "sortBy": "entryDate DESC",
-            "fieldList": ["estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
+            "fieldList": ["orderExternalId", "estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
             "viewSize": 1
           } as any;
 
