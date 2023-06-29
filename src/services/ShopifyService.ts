@@ -4,7 +4,8 @@ const getShopifyShopConfig = async (query: any): Promise<any> => {
   return api({
     url: 'performFind',
     method: "get",
-    params: query
+    params: query,
+    cache: true
   });
 }
 

@@ -854,6 +854,7 @@ export default defineComponent({
             "accessScopeEnumId": "SHOP_NO_ACCESS",
             'accessScopeEnumId_op': 'notEqual'
           },
+          "orderBy": "name ASC",
           "entityName": "ShopifyShopAndConfig",
           "fieldList": ["shopifyConfigId", "shopId", "name"],
           "viewSize": 20
@@ -901,7 +902,7 @@ export default defineComponent({
           return shopifyConfigsAndProductIds
         }, {})
 
-        await Promise.allSettled(Object.keys(configs).map(async (shopId: any) => {
+        await Promise.allSettled(Object.keys(configs).sort().map(async (shopId: any) => {
           const configAndIdData = shopifyConfigsAndProductIds[shopId];
           let listData = {
             ...configs[shopId], // adding shopify shop information to be available for showing name

@@ -28,7 +28,7 @@ const prepareFetchJobsQuery = () => {
       "runTime_op": "lessThanEqualTo",
     },
     "fieldList": ["jobId", "runTime", "jobName"],
-    "orderBy": "runTime ASC",
+    "": "runTime ASC",
     "viewSize": 10
   }
 }
