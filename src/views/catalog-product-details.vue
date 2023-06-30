@@ -155,7 +155,7 @@
           </ion-card-header>
           <!-- TODO Show orderName -->
           <ion-item v-if="poAndAtpDetails.activePoId">
-            <ion-label>{{ $t('PO#', { pOId: poAndAtpDetails.activePo?.orderExternalId ? poAndAtpDetails.activePo?.orderExternalId :  poAndAtpDetails.activePoId}) }}</ion-label>
+            <ion-label>{{ poAndAtpDetails.activePo?.orderExternalId ? poAndAtpDetails.activePo?.orderExternalId :  poAndAtpDetails.activePoId }}</ion-label>
             <ion-label slot="end">{{ poAndAtpDetails.activePo?.estimatedDeliveryDate ? getTime(poAndAtpDetails.activePo.estimatedDeliveryDate) : '-' }}</ion-label>
           </ion-item>
 
