@@ -72,6 +72,7 @@
     "Listed at": "Listed at {listingTime}",
     "Listed on stores(s)": "Listed on {count} store(s)",
     "Listing at": "Listing at {listingTime}",
+    "Listing failed at": "Listing failed at {listingTime}",
     "Listing data not available": "Listing data not available",
     "Listed on all stores": "Listed on all stores",
     "Listed on store(s)": "Listed on {count} store(s)",
