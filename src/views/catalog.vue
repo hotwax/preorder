@@ -29,7 +29,7 @@
             </ion-card-header>
             <ion-item lines="none">
               <ion-label class="ion-text-wrap">
-                <h5>{{ $t('Presell computation') }}</h5>
+                <h5>{{ $t('Pre-sell computation') }}</h5>
                 <p>{{ preordBckordComputationJob.lastRunTime && timeTillJob(preordBckordComputationJob.lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
