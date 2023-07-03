@@ -160,6 +160,11 @@
           </ion-item>
 
           <ion-item v-if="poAndAtpDetails.activePoId">
+            <ion-label>{{ $t('Pre-selling category') }}</ion-label>
+            <ion-label slot="end">{{ poAndAtpDetails.activePo?.isNewProduct === "Y" ? $t('Pre-order') : $t('Back-order') }}</ion-label>
+          </ion-item>
+
+          <ion-item v-if="poAndAtpDetails.activePoId">
             <ion-label>{{ $t("Ordered") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0) ? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
           </ion-item>
@@ -271,9 +276,9 @@
           </div>
 
           <div v-else>
-            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Presell computation')">
+            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
               <ion-label class="ion-text-wrap">
-                <h3>{{ $t('Presell computation') }}</h3>
+                <h3>{{ $t('Pre-sell computation') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
@@ -815,7 +820,8 @@ export default defineComponent({
       }
     },
     isCategoryValid() {
-      return (this.poSummary.eligible && this.poSummary.categoryId) || (!this.poSummary.eligible && !this.poSummary.categoryId)
+      const poCategoryId = this.poAndAtpDetails.activePo?.isNewProduct === "Y" ? "PREORDER_CAT" : "BACKORDER_CAT";
+      return (this.poSummary.eligible && this.poSummary.categoryId && (!this.poAndAtpDetails.activePo || poCategoryId === this.poSummary.categoryId) ) || (!this.poSummary.eligible && !this.poSummary.categoryId)
     },
     isShopifyListingValid() {
       // Checking if it is linked
