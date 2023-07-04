@@ -24,7 +24,7 @@
         <ion-item v-bind:key="log.jobId" v-for="log in logs">
           <ion-icon slot="start" :icon="cloudUpload" />
           <ion-label>{{ log.scriptTitle ? log.scriptTitle : log.description }}</ion-label>
-          <ion-note slot="end"> {{ log.createdDate ? getDateTime(log.runTime) : '-' }}</ion-note>
+          <ion-note slot="end"> {{ log.createdDate ? getDateTime(log.createdDate) : '-' }}</ion-note>
         </ion-item>
         <ion-item v-bind:key="job.jobId" v-for="job in jobs">
           <ion-icon slot="start" :icon="cloudUpload" />
