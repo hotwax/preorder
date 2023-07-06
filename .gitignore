@@ -32,3 +32,6 @@ npm-debug.log*
 .firebase/
 
 .env
+.history
+.env.*
+!.env.example

@@ -37,6 +37,9 @@ const mutations: MutationTree <ProductState> = {
     },
     [types.PRODUCT_CURRENT_CTLGPRDCT_UPDATED] (state, payload) {
         state.currentCatalogProduct = payload
+    },
+    [types.PRODUCT_STR_CAT_UPDATED] (state, payload) {
+        state.productStoreCategory = payload
     }
 }
 export default mutations;

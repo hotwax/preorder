@@ -25,7 +25,8 @@ const productModule: Module<ProductState, RootState> = {
         items: [],
         total: 0
       },
-      currentCatalogProduct: {}
+      currentCatalogProduct: {},
+      productStoreCategory: {}
     },
     getters,
     actions,

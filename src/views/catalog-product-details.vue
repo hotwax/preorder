@@ -97,7 +97,7 @@
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-              <ion-label slot="end">{{ poSummary.categoryId === 'PREORDER_CAT' ? $t('Pre-order') : poSummary.categoryId === 'BACKORDER_CAT' ? $t('Back-order') : $t('None') }}</ion-label>
+              <ion-label slot="end">{{ poSummary.categoryId === preOrderCategoryId ? $t('Pre-order') : poSummary.categoryId === backorderCategoryId ? $t('Back-order') : $t('None') }}</ion-label>
               <ion-icon slot="end" :icon="isCategoryValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isCategoryValid() ? 'success' : 'warning'" />
             </ion-item>
             <ion-item>
@@ -455,7 +455,9 @@ export default defineComponent({
       poSummary: {} as any,
       shopListings: [] as any,
       configsByStores: [] as any,
-      listingJobRunTime: 0
+      listingJobRunTime: 0,
+      backorderCategoryId: '',
+      preOrderCategoryId: ''
     }
   },
   computed: {
@@ -469,6 +471,26 @@ export default defineComponent({
   async ionViewWillEnter() {
     (this as any).productId = this.$route.params.productId;
     (this as any).variantId = this.$route.query.variantId;
+    const productStoreId = this.currentEComStore.productStoreId;
+    // TODO Handle it better
+    if (!productStoreId) {
+      showToast(translate("No selected store found."))
+      return;
+    }
+    try {
+      // TODO Handle error case
+      const productStoreCategories = await this.store.dispatch('product/getPreOrderBackorderCategory', { productStoreId })
+      this.preOrderCategoryId = productStoreCategories["PCCT_PREORDR"];
+      this.backorderCategoryId = productStoreCategories["PCCT_BACKORDER"];
+      if (!this.preOrderCategoryId) {
+        showToast(translate("No pre-order category found"))
+      }
+      if (!this.backorderCategoryId) {
+        showToast(translate("No backorder category found"))
+      }
+    } catch (error) {
+      showToast(translate("Failed to get pre-order/backorder categories"))
+    }
     await this.getShopifyConfigsByStore()
     await this.getVariantDetails()
     await this.getCtgryAndBrkrngJobs()
@@ -585,15 +607,14 @@ export default defineComponent({
           showToast(this.$t("Something went wrong, could not fetch", { data: 'total ATP' }))
         }
 
-        // TODO Make categoryIds dynamic
-        const hasPreOrderCategory = productCategories?.includes("PREORDER_CAT");
-        const hasBackorderCategory = productCategories?.includes("BACKORDER_CAT");
+        const hasPreOrderCategory = productCategories?.includes(this.preOrderCategoryId);
+        const hasBackorderCategory = productCategories?.includes(this.backorderCategoryId);
 
         if (hasPreOrderCategory || hasBackorderCategory) {
           payload = {
             "inputFields": {
               "productId": variantId,
-              "productCategoryId": hasPreOrderCategory ? "PREORDER_CAT" : "BACKORDER_CAT",
+              "productCategoryId": hasPreOrderCategory ? this.preOrderCategoryId : this.backorderCategoryId,
               "productCategoryId_op": "equals"
             },
             "entityName": "ProductCategoryDcsnRsn",
@@ -794,15 +815,15 @@ export default defineComponent({
     },
     hasCategory() {
       // TODO make categoryIds dynamic
-      return this.currentVariant.productCategories?.includes("PREORDER_CAT") || this.currentVariant.productCategories?.includes("BACKORDER_CAT");
+      return this.currentVariant.productCategories?.includes(this.preOrderCategoryId) || this.currentVariant.productCategories?.includes(this.backorderCategoryId);
     },
     async preparePoSummary() {
       this.poSummary.eligible = this.poAndAtpDetails.totalPoAtp > 0 && this.atpCalcDetails.onlineAtp === 0;
       this.poSummary.isActivePo = (this.poAndAtpDetails.activePo && Object.keys(this.poAndAtpDetails?.activePo).length) && this.poAndAtpDetails.onlineAtp > 0
       // TODO Remove code for lastActivePoId
       // this.poSummary.isLastActivePo = this.poAndAtpDetails.lastActivePoId && Object.keys(this.poAndAtpDetails?.activePo).length
-      this.poSummary.categoryId = this.currentVariant.productCategories?.includes("PREORDER_CAT") ? "PREORDER_CAT" : this.currentVariant.productCategories?.includes("BACKORDER_CAT") ? "BACKORDER_CAT" : ""
-      // const category = this.poSummary.categoryId === 'PREORDER_CAT' ? 'pre-order' : 'back-order'
+      this.poSummary.categoryId = this.currentVariant.productCategories?.includes(this.preOrderCategoryId) ? this.preOrderCategoryId : this.currentVariant.productCategories?.includes(this.backorderCategoryId) ? this.backorderCategoryId : ""
+      // const category = this.poSummary.categoryId === this.preOrderCategoryId ? 'pre-order' : 'back-order'
       // Currently we are only having one shop listing condition
       // will improve the logic as the listing conditions increase
       this.poSummary.listedCount = this.shopListings.reduce((count: number, listData: any) =>
@@ -862,7 +883,7 @@ export default defineComponent({
       }
     },
     isCategoryValid() {
-      const poCategoryId = this.poAndAtpDetails.activePo?.isNewProduct === "Y" ? "PREORDER_CAT" : "BACKORDER_CAT";
+      const poCategoryId = this.poAndAtpDetails.activePo?.isNewProduct === "Y" ? this.preOrderCategoryId : this.backorderCategoryId;
       return (this.poSummary.eligible && this.poSummary.categoryId && (!this.poAndAtpDetails.activePo || poCategoryId === this.poSummary.categoryId) ) || (!this.poSummary.eligible && !this.poSummary.categoryId)
     },
     isShopifyListingValid() {

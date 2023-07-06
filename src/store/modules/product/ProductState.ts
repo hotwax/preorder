@@ -15,6 +15,7 @@ export default interface ProductState {
     catalogProducts: {
         items: any[],
         total: number
-    },
-    currentCatalogProduct: any
+    };
+    currentCatalogProduct: any;
+    productStoreCategory: any;
 }
