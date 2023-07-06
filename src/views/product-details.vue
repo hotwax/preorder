@@ -134,8 +134,8 @@
             </ion-item>
           </div>
           <div class="order-info">
-            <ion-badge color="success" @click="autoFillQuantity(item, item.doclist && item.doclist.numFound ? item.doclist.numFound : 0)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
-            <ion-badge color="medium" @click="autoFillQuantity(item, getProductStock(item.groupValue))">{{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
+            <ion-badge class="cursor-pointer" color="success" @click="autoFillQuantity(item, item.doclist && item.doclist.numFound ? item.doclist.numFound : 0)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
+            <ion-badge class="cursor-pointer" color="medium" @click="autoFillQuantity(item, getProductStock(item.groupValue))">{{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
             <ion-badge color="medium"> {{ getBrokeringCountByProduct(item.groupValue) }} {{ $t("in brokering") }}</ion-badge>
           </div>
           <div class="order-select">
@@ -594,6 +594,11 @@ export default defineComponent({
 </script>
 
 <style scoped>
+
+/* Class for the cursor pointer */
+.cursor-pointer {
+  cursor: pointer;
+}
 
 /* Table of contents
 
