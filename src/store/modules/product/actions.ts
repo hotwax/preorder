@@ -276,6 +276,7 @@ const actions: ActionTree<ProductState, RootState> = {
    * Fetch catalog products
    */
    async getPreOrderBackorderCategory({ commit, state }, payload) {
+    const productStoreCategory = JSON.parse(JSON.stringify(state.productStoreCategory));
     let productStoreCategories = state.productStoreCategory[payload.productStoreId];
 
     if (productStoreCategories) {
@@ -325,8 +326,8 @@ const actions: ActionTree<ProductState, RootState> = {
       } else {
         throw resp.data;
       }
-      state.productStoreCategory[payload.productStoreId] = productStoreCategories;
-      commit(types.PRODUCT_STR_CAT_UPDATED, state.productStoreCategory)
+      productStoreCategory[payload.productStoreId] = productStoreCategories;
+      commit(types.PRODUCT_STR_CAT_UPDATED, productStoreCategory)
     } catch (error) {
       console.error(error)
       return Promise.reject(error);
