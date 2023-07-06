@@ -134,8 +134,8 @@
             </ion-item>
           </div>
           <div class="order-info">
-            <ion-badge color="success" @click="autoFillQuantity(item)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
-            <ion-badge color="medium"> {{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
+            <ion-badge button color="success" @click="autoFillQuantity(item, item.doclist && item.doclist.numFound ? item.doclist.numFound : 0)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
+            <ion-badge button color="medium" @click="autoFillQuantity(item, getProductStock(item.groupValue))">{{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
             <ion-badge color="medium"> {{ getBrokeringCountByProduct(item.groupValue) }} {{ $t("in brokering") }}</ion-badge>
           </div>
           <div class="order-select">
@@ -299,8 +299,8 @@ export default defineComponent({
       await this.getVariantProducts();
       this.isRefreshing = false;
     },
-    autoFillQuantity (item: any) {
-      this.selectedVariants[item.productId] = item.doclist.numFound;
+    autoFillQuantity (item: any, value: any) {
+      this.selectedVariants[item.productId] = value;
     },
     filter (featureValue: any, type: string) {
       if (this.filters[type] === featureValue) {
