@@ -31,9 +31,29 @@ const getCatalogProducts = async (payload: any): Promise<any> => {
   })
 }
 
+const getProductStoreCatalog = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload,
+    cache: true
+  });
+}
+
+const getCatalogCategories = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload,
+    cache: true
+  });
+}
+
 export const ProductService = {
   fetchProducts,
   findOrder,
   fetchCurrentList,
-  getCatalogProducts
+  getCatalogCategories,
+  getCatalogProducts,
+  getProductStoreCatalog
 }

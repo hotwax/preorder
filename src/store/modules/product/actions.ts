@@ -272,5 +272,67 @@ const actions: ActionTree<ProductState, RootState> = {
      total: 0
    });
  },
+   /**
+   * Fetch catalog products
+   */
+   async getPreOrderBackorderCategory({ commit, state }, payload) {
+    const productStoreCategory = JSON.parse(JSON.stringify(state.productStoreCategory));
+    let productStoreCategories = state.productStoreCategory[payload.productStoreId];
+
+    if (productStoreCategories) {
+      return productStoreCategories;
+    }
+
+    let resp;
+    try {
+      productStoreCategories = {};
+      let productStoreCatalogId;
+      resp = await ProductService.getProductStoreCatalog({
+        "inputFields": {
+          "productStoreId": payload.productStoreId,
+        },
+        "fieldList": ["productStoreId", "prodCatalogId"],
+        "entityName": "ProductStoreCatalog",
+        "distinct": "Y",
+        "noConditionFind": "Y",
+        "filterByDate": "Y",
+        "viewSize": 1,
+      })
+
+      if (!hasError(resp)) {
+        productStoreCatalogId = resp.data.docs[0].prodCatalogId
+      } else {
+        throw resp.data;
+      }
+
+      resp = await ProductService.getCatalogCategories({
+        "inputFields": {
+          "productStoreId": payload.productStoreId,
+          "prodCatalogCategoryTypeId": ["PCCT_PREORDR", "PCCT_BACKORDER"],
+          "prodCatalogCategoryTypeId_op": "in"
+        },
+        "fieldList": ["productCategoryId", "prodCatalogCategoryTypeId"],
+        "entityName": "ProdCatalogCategory",
+        "distinct": "Y",
+        "noConditionFind": "Y",
+        "filterByDate": "Y",
+        "viewSize": 10, // view size should be 2, considered if there are duplicate records it should not affect
+      })
+      if (!hasError(resp)) {
+        resp.data.docs.reduce((productStoreCategories: any, category: any) => {
+          productStoreCategories[category.prodCatalogCategoryTypeId] = category.productCategoryId;
+          return productStoreCategories;
+        }, productStoreCategories);
+      } else {
+        throw resp.data;
+      }
+      productStoreCategory[payload.productStoreId] = productStoreCategories;
+      commit(types.PRODUCT_STR_CAT_UPDATED, productStoreCategory)
+    } catch (error) {
+      console.error(error)
+      return Promise.reject(error);
+    }
+    return productStoreCategories;
+  },
 }
 export default actions;
