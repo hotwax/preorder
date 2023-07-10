@@ -21,7 +21,7 @@
       <div class="header">
         <div class="product-image">
           <!-- TODO Create a separate component to handled default image -->
-          <Image :src="current.product.mainImageUrl"></Image>
+          <ShopifyImg :src="current.product.mainImageUrl"></ShopifyImg>
         </div>
 
         <div class="product-info">
@@ -124,7 +124,7 @@
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
-                <Image :src="getProduct(item.groupValue).mainImageUrl" ></Image>
+                <ShopifyImg :src="getProduct(item.groupValue).mainImageUrl" />
               </ion-thumbnail>
               <ion-label>
                 <h2> {{ getProduct(item.groupValue).productName }}</h2>
@@ -213,7 +213,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import Image from '@/components/Image.vue';
+import { ShopifyImg } from "dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
@@ -245,7 +245,7 @@ export default defineComponent({
     IonTitle,
     IonToggle,
     IonToolbar,
-    Image
+    ShopifyImg
   },
   beforeMount () {
     // TODO Handle if product id is invalid

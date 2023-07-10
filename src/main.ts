@@ -25,6 +25,7 @@ import '@ionic/vue/css/text-alignment.css';
 import '@ionic/vue/css/text-transformation.css';
 import '@ionic/vue/css/flex-utils.css';
 import '@ionic/vue/css/display.css';
+import { dxpComponents } from 'dxp-components';
 
 /* Theme variables */
 import './theme/variables.css';
@@ -35,7 +36,10 @@ const app = createApp(App)
   })
   .use(router)
   .use(i18n)
-  .use(store);
+  .use(store)
+  .use(dxpComponents, {
+    defaultImgUrl: require("@/assets/images/defaultImage.png")
+  });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
 app.config.globalProperties.$filters = {

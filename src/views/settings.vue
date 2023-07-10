@@ -14,7 +14,7 @@
         <ion-card>
           <ion-item lines="full">
             <ion-avatar slot="start" v-if="userProfile?.partyImageUrl">
-              <Image :src="userProfile.partyImageUrl"/>
+              <ShopifyImg :src="userProfile.partyImageUrl"/>
             </ion-avatar>
             <ion-card-header>
               <ion-card-subtitle>{{ userProfile?.userLoginId }}</ion-card-subtitle>
@@ -130,7 +130,7 @@ import {
 import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
 import TimeZoneModal from '@/views/timezone-modal.vue'
-import Image from '@/components/Image.vue'
+import { ShopifyImg } from 'dxp-components';
 import { DateTime } from 'luxon';
 
 export default defineComponent({
@@ -155,7 +155,7 @@ export default defineComponent({
     IonSelectOption,
     IonTitle,
     IonToolbar,
-    Image
+    ShopifyImg
   },
   setup() {
     const store = useStore();

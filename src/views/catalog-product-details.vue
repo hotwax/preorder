@@ -12,7 +12,7 @@
       <div class="header">
         <div class="product-image">
           <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
-          <Image v-else :src="currentVariant.mainImageUrl" />
+          <ShopifyImg v-else :src="currentVariant.mainImageUrl" />
         </div>
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
@@ -403,7 +403,7 @@ import {
   chevronForwardOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import Image from '@/components/Image.vue';
+import { ShopifyImg } from "dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -420,7 +420,7 @@ import { useRouter } from "vue-router";
 export default defineComponent({
   name: "catalog-product-details",
   components: {
-    Image,
+    ShopifyImg,
     IonButtons,
     IonBackButton,
     IonCard,
