@@ -124,7 +124,7 @@
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
-                <ShopifyImg :src="getProduct(item.groupValue).mainImageUrl" />
+                <ShopifyImg :src="getProduct(item.groupValue).mainImageUrl" size="small"/>
               </ion-thumbnail>
               <ion-label>
                 <h2> {{ getProduct(item.groupValue).productName }}</h2>
@@ -213,7 +213,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import { ShopifyImg } from "dxp-components";
+import { ShopifyImg } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";

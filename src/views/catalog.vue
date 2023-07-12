@@ -49,7 +49,7 @@
         <div class="list-item" v-for="product in products" :key="product.productId" @click="viewProduct(product)">
           <ion-item lines="none" class="tablet">
             <ion-thumbnail slot="start">
-              <ShopifyImg :src="product.mainImageUrl" />
+              <ShopifyImg :src="product.mainImageUrl" size="small"/>
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
               <h5>{{ product.parentProductName }}</h5>
@@ -109,7 +109,7 @@ import {
 import { defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import { ShopifyImg } from 'dxp-components';
+import { ShopifyImg } from '@hotwax/dxp-components';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';

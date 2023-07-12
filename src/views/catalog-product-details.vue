@@ -403,7 +403,7 @@ import {
   chevronForwardOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import { ShopifyImg } from "dxp-components";
+import { ShopifyImg } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
