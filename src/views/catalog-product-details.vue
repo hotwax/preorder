@@ -105,7 +105,7 @@
               <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
               <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
             </ion-item>
-            <ion-item-divider color="light" v-else>
+            <ion-item-divider color="light">
               <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
             </ion-item-divider>
             <!-- internationalized while preparaion -->
