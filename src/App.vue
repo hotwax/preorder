@@ -76,7 +76,7 @@ export default defineComponent({
       cacheMaxAge: this.maxAge,
       events: {
         unauthorised: this.unauthorised,
-        responseErrror: () => {
+        responseError: () => {
           setTimeout(() => this.dismissLoader(), 100);
         },
         queueTask: (payload: any) => {
