@@ -32,7 +32,7 @@
             <Image :src="getProduct(product.groupValue).mainImageUrl"></Image>
           </ion-thumbnail>
           <ion-label>
-            <h2>{{ getProduct(product.groupValue).productName}}</h2>
+            <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(product.groupValue)) }}</h2>
             <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(product.groupValue).featureHierarchy))" :key="attribute" ><span class="sentence-case">{{ feature }}</span>: {{ attribute }}</p>
           </ion-label>
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
@@ -66,13 +66,14 @@ import {
   IonToolbar,
   modalController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
 import { hourglass } from "ionicons/icons";
 import { useRouter } from "vue-router";
 import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import Image from '@/components/Image.vue';
+import { getProductIdentificationValue } from '@/utils'
 
 export default defineComponent({
   name: "settings",
@@ -159,10 +160,16 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
+
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
+
     return {
       router,
       store,
       hourglass,
+      productIdentificationPref,
+      getProductIdentificationValue
     };
   },
 });

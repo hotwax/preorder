@@ -17,8 +17,8 @@
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
           <div class="ion-padding">
-            <h4>{{ currentVariant.parentProductName }}</h4>
-            <p>{{ currentVariant.sku }}</p>
+            <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h4>
+            <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</p>
           </div>
 
           <div class="product-features">
@@ -404,7 +404,7 @@ import {
   IonRow,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
@@ -414,7 +414,7 @@ import {
 import { useStore } from "@/store";
 import Image from '@/components/Image.vue';
 import { mapGetters } from "vuex";
-import { showToast, getFeature, hasError } from "@/utils";
+import { showToast, getFeature, hasError, getProductIdentificationValue } from "@/utils";
 import { translate } from "@/i18n";
 import { sortSizes } from '@/apparel-sorter';
 import { DateTime } from "luxon";
@@ -1072,13 +1072,19 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
+
     return {
       alertCircleOutline,
       checkmarkCircleOutline,
       chevronForwardOutline,
       router,
       shirtOutline,
-      store
+      store,
+      productIdentificationPref,
+      getProductIdentificationValue
     };
   },
 });

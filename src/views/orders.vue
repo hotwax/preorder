@@ -120,7 +120,7 @@
                   <Image :src="getProduct(item.productId).mainImageUrl"></Image>
                 </ion-thumbnail>
                 <ion-label>
-                  <h2>{{ item.parentProductName ? item.parentProductName :item.productName }}</h2>
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, item) }}</h2>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
                 </ion-label>
@@ -202,7 +202,7 @@ import {
   modalController,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
 import WarehouseModal from "./warehouse-modal.vue";
 import BackgroundJobModal from "./background-job-modal.vue";
 import PromiseDateModal from "./promise-date-modal.vue";
@@ -220,7 +220,7 @@ import {
 } from "ionicons/icons";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
-import { showToast } from '@/utils'
+import { showToast, getProductIdentificationValue } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import Image from '@/components/Image.vue';
 import emitter from "@/event-bus";
@@ -475,6 +475,10 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
+
     return {
       store,
       pricetag,
@@ -486,6 +490,8 @@ export default defineComponent({
       closeCircle,
       hourglass,
       close,
+      productIdentificationPref,
+      getProductIdentificationValue
     };
   },
 });

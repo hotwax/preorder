@@ -52,8 +52,8 @@
               <Image :src="product.mainImageUrl" />
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
-              <h5>{{ product.parentProductName }}</h5>
-              <p>{{ product.sku }}</p>
+              <h5>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}</h5>
+              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
             </ion-label>
           </ion-item>
 
@@ -106,14 +106,14 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { defineComponent, inject } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 import Image from '@/components/Image.vue';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
-import { hasError } from '@/utils';
+import { hasError, getProductIdentificationValue } from '@/utils';
 
 export default defineComponent({
   name: 'Catalog',
@@ -270,9 +270,14 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
 
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
+
     return {
       router,
       store,
+      productIdentificationPref,
+      getProductIdentificationValue
     };
   },
 });

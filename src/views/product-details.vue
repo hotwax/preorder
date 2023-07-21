@@ -26,7 +26,7 @@
 
         <div class="product-info">
           <ion-item lines="none" class="product-title">
-            <h1>{{ current.product.productName }}</h1>
+            <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, current.product) }}</h1>
           </ion-item>
           <div class="product-features">
             <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
@@ -127,7 +127,7 @@
                 <Image :src="getProduct(item.groupValue).mainImageUrl" ></Image>
               </ion-thumbnail>
               <ion-label>
-                <h2> {{ getProduct(item.groupValue).productName }}</h2>
+                <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(item.groupValue)) }}</h2>
                 <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
                 <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
               </ion-label>
@@ -195,7 +195,7 @@ import {
   alertController,
   modalController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
 import {
   informationCircle,
   send,
@@ -217,6 +217,7 @@ import Image from '@/components/Image.vue';
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
+import { getProductIdentificationValue } from '@/utils'
 
 export default defineComponent({
   name: "product-details",
@@ -576,6 +577,10 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
+
     return {
       informationCircle,
       send,
@@ -587,7 +592,9 @@ export default defineComponent({
       list,
       ribbon,
       refresh,
-      store
+      store,
+      productIdentificationPref,
+      getProductIdentificationValue
     };
   },
 });
