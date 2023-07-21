@@ -14,7 +14,7 @@ import {
   IonSplitPane
 } from "@ionic/vue";
 import Menu from '@/components/Menu.vue';
-import { defineComponent } from "vue";
+import { defineComponent, provide, ref } from "vue";
 import { useI18n } from 'vue-i18n'
 import TaskQueue from './task-queue';
 import OfflineHelper from "./offline-helper"
@@ -119,6 +119,26 @@ export default defineComponent({
     OfflineHelper.register();
     const { t, locale } = useI18n();
     const router = useRouter();
+
+    /* Start Product Identifier */
+
+    const productIdentificationStore = useProductIdentificationStore();
+
+    // Reactive state for productIdentificationPref
+    let productIdentificationPref = ref(
+      productIdentificationStore.$state.productIdentificationPref
+    );
+
+    // Providing productIdentificationPref to child components
+    provide('productIdentificationPref', productIdentificationPref);
+
+    // Subscribing to productIdentificationStore state change and changing value productIdentificationPref 
+    productIdentificationStore.$subscribe((mutation: any, state) => {
+        productIdentificationPref.value = state.productIdentificationPref;
+    }, {detached: true});
+
+    /* End Product Identifier */
+
     return {
       router,
       TaskQueue,

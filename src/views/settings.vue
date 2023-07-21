@@ -98,6 +98,34 @@
             <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
           </ion-item>
         </ion-card>
+
+        <!-- Product Identifier -->
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t('Product Identifier') }}
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            {{ $t('Choosing a product identifier allows you to view products with your preferred identifiers.') }}
+          </ion-card-content>
+
+          <ion-item>
+            <ion-label>{{ $t("Primary Product Identifier") }}</ion-label>
+            <ion-select interface="popover" :placeholder="$t('primary identifier')" :value="productIdentificationPref.primaryId" @ionChange.="setProductIdentificationPref($event.detail.value, 'primaryId')">
+              <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-label>{{ $t("Secondary Product Identifier") }}</ion-label>
+            <ion-select interface="popover" :placeholder="$t('secondary identifier')" :value="productIdentificationPref.secondaryId" @ionChange="setProductIdentificationPref($event.detail.value, 'secondaryId')">
+              <ion-select-option v-for="identification in productIdentificationOptions" :key="identification" :value="identification" >{{ identification }}</ion-select-option>
+              <ion-select-option value="">{{ $t("None") }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -127,11 +155,13 @@ import {
   IonTitle,
   IonToolbar,
   modalController } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
 import { mapGetters } from 'vuex'
 import TimeZoneModal from '@/views/timezone-modal.vue'
 import Image from '@/components/Image.vue'
 import { DateTime } from 'luxon';
+import { showToast } from '@/utils';
+import { useProductIdentificationStore } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "settings",
@@ -159,7 +189,32 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline, openOutline, saveOutline }
+
+    /* Start Product Identifier */
+
+    const productIdentificationStore = useProductIdentificationStore();
+    const productIdentificationOptions = productIdentificationStore.getProductIdentificationOptions;
+
+    // Injecting identifier preference from app.view
+    const productIdentificationPref: any  = inject("productIdentificationPref");
+
+    // Function to set the value of productIdentificationPref using dxp-component
+    const setProductIdentificationPref = (value: string, id: string) =>  {
+      const eComStore = store.getters['user/getCurrentEComStore']; 
+
+      // If productPreference value is same as ion change value then not calling the set function as there is no cahnge 
+      if(eComStore.productStoreId && (productIdentificationPref.value[id] !== value)){
+        productIdentificationStore.setProductIdentificationPref(id, value, eComStore.productStoreId)
+          .then(() => {
+            showToast("Product identifier preference updated");
+          })
+          .catch(error => console.log(error)); 
+      } 
+    }
+
+    /* End Product Identifier */
+
+    return { store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline, openOutline, saveOutline, setProductIdentificationPref, productIdentificationOptions, productIdentificationPref }
   },
   data() {
     return {
