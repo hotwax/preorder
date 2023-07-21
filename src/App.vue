@@ -24,6 +24,7 @@ import { mapGetters, useStore } from 'vuex';
 import { Settings } from 'luxon'
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
+import { useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "App",
@@ -43,7 +44,8 @@ export default defineComponent({
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore'
     })
   },
   methods: {
@@ -98,6 +100,12 @@ export default defineComponent({
     // Luxon timezzone should be set with the user's selected timezone
     if (this.userProfile && this.userProfile.userTimeZone) {
       Settings.defaultZone = this.userProfile.userTimeZone;
+    }
+
+    // Get product identification from api using dxp-component and set the state if eComStore is defined
+    if (this.currentEComStore.productStoreId) {
+      await useProductIdentificationStore().getIdentificationPref(this.currentEComStore.productStoreId)
+        .catch((error) => console.log(error));
     }
   },
   unmounted() {

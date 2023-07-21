@@ -7,6 +7,7 @@ import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { Settings } from 'luxon'
 import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import { useProductIdentificationStore } from '@hotwax/dxp-components'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -156,6 +157,12 @@ const actions: ActionTree<UserState, RootState> = {
         'userPrefTypeId': 'SELECTED_BRAND',
         'userPrefValue': payload.eComStore.productStoreId
       });
+
+      // Get product identification from api using dxp-component and set the state if eComStore is defined
+      if(payload.eComStore.productStoreId){
+        await useProductIdentificationStore().getIdentificationPref(payload.eComStore.productStoreId)
+          .catch((error) => console.log(error));
+      }
     },
 
   /**

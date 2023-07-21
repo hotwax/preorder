@@ -28,6 +28,8 @@ import '@ionic/vue/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import { dxpComponents } from '@hotwax/dxp-components';
+import { setProductIdentificationPref, getProductIdentificationPref } from '@hotwax/oms-api';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -35,12 +37,17 @@ const app = createApp(App)
   })
   .use(router)
   .use(i18n)
-  .use(store);
- 
+  .use(store)
+  .use(dxpComponents, {
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
+    setProductIdentificationPref,
+    getProductIdentificationPref
+  });
+
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
 app.config.globalProperties.$filters = {
   formatDate(value: any, inFormat?: string, outFormat = 'MM-dd-yyyy') {
-    if(inFormat){
+    if (inFormat) {
       return DateTime.fromFormat(value, inFormat).toFormat(outFormat);
     }
     return DateTime.fromISO(value).toFormat(outFormat);
@@ -53,7 +60,7 @@ app.config.globalProperties.$filters = {
     return DateTime.fromISO(value, { zone: 'utc' }).setZone(userProfile.userTimeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy')
   },
   getOrderIdentificationId(identifications: any, id: string) {
-    let  externalId = ''
+    let externalId = ''
     if (identifications) {
       const externalIdentification = identifications.find((identification: any) => identification.startsWith(id))
       const externalIdentificationSplit = externalIdentification ? externalIdentification.split('/') : [];
@@ -62,7 +69,7 @@ app.config.globalProperties.$filters = {
     return externalId;
   },
   getFeature(featureHierarchy: any, featureKey: string) {
-    let  featureValue = ''
+    let featureValue = ''
     if (featureHierarchy) {
       const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
       const featureSplit = feature ? feature.split('/') : [];
@@ -76,7 +83,7 @@ app.config.globalProperties.$filters = {
         const featureSplit = feature.split('/');
         if (featureSplit[1] && featureSplit[2]) {
           filteredFeatures[featureSplit[1]] ? filteredFeatures[featureSplit[1]].push(featureSplit[2]) : filteredFeatures[featureSplit[1]] = [featureSplit[2]]
-        }  
+        }
         return filteredFeatures;
       }, {});
       const sortedFeatures = {} as any;
@@ -109,12 +116,12 @@ app.config.globalProperties.$filters = {
     return featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList;
   },
   getCustomerLoyalty(orderNotes: any, cusotmerLoyaltyOptions: any) {
-    let  customerLoyalty = '' as any
+    let customerLoyalty = '' as any
     if (orderNotes && cusotmerLoyaltyOptions) {
       for (const customerLoyaltyOption of Object.entries(cusotmerLoyaltyOptions)) {
-          if (orderNotes.includes(customerLoyaltyOption[0])) {
-            customerLoyalty = customerLoyaltyOption[1];
-          }
+        if (orderNotes.includes(customerLoyaltyOption[0])) {
+          customerLoyalty = customerLoyaltyOption[1];
+        }
       }
     }
     return customerLoyalty;
