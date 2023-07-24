@@ -128,6 +128,12 @@ const actions: ActionTree<UserState, RootState> = {
       }
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  userPrefStore);
       commit(types.USER_INFO_UPDATED, userProfile);
+
+      // Get product identification from api using dxp-component and set the state if eComStore is defined
+      if(userPrefStore.productStoreId){
+        await useProductIdentificationStore().getIdentificationPref(userPrefStore.productStoreId)
+        .catch((error) => console.log(error));
+      }
     }
   },
 
