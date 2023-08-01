@@ -181,7 +181,7 @@ export default defineComponent({
   methods: {
     logout: function() {
       this.store.dispatch("user/logout").then(() => {
-        this.$router.push('/login')
+        window.location.href = process.env.VUE_APP_LOGIN_URL as string;
       })
     },
     async changeTimeZone() {
