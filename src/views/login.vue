@@ -39,7 +39,6 @@ import { defineComponent } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "./../store";
 import { mapGetters } from 'vuex';
-import { useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "login",
