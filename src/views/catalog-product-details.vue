@@ -1095,7 +1095,7 @@ export default defineComponent({
 <style scoped>
 .header {
   display: grid;
-  grid-template-columns: 200px 1fr 375px;
+  grid-template-columns: 200px 1fr 400px;
   grid-gap: 16px;
   padding: 16px 16px 48px;
 }
