@@ -2,7 +2,6 @@
     "Added to": "Added to {categoryName}",
     "Added to at": "Added to {categoryName} at {addedDateTime}",
     "Active jobs": "Active jobs",
-    "Active session": "Active session",
     "Active purchase order": "Active purchase order",
     "Added to pre-order category on, against PO but not listed on all stores" : "Added to pre-order category on {fromDate}, against PO #{POID} but not listed on all stores",
     "Adding to in": "Adding to {categoryName} in {addingTime}",
