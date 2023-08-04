@@ -107,7 +107,7 @@
             </ion-item>
             <ion-item-divider color="light">
               <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
-              <ion-button color="medium" fill="clear" slot="end" @click="copyAuditMsg()">
+              <ion-button v-if="poSummary.header || poSummary.body" color="medium" fill="clear" slot="end" @click="copyAuditMsg()">
                 <ion-icon slot="icon-only" :icon="copyOutline" />
               </ion-button>
             </ion-item-divider>
