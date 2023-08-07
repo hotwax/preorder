@@ -21,7 +21,7 @@ const prepareFetchJobsQuery = () => {
   const lastActionTimestamp = (store.state as any).order.lastActionTimestamp;
   return {
     "inputFields": {
-      "serviceName": "ftpExportProductThresholdCsv",
+      "serviceName": "brokerReleasedOrderItems",
       "statusId": ['SERVICE_PENDING', 'SERVICE_RUNNING', 'SERVICE_QUEUED'],
       "statusId_op": "in",
       "runTime": DateTime.fromMillis(lastActionTimestamp).plus({ minutes: 10 }).valueOf(), // Fetch Jobs for next 10 mins from the last action
