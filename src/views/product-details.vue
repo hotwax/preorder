@@ -53,7 +53,7 @@
             <ion-label>{{ $t("Ordered after") }} </ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
               <ion-label @click="openDateSelectionModal('orderedAfter')">{{ orderedAfter ? $filters.formatDate(orderedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
-              <ion-icon @click="openDateSelectionModal('orderedAfter')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click="openDateSelectionModal('orderedAfter')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='orderedAfter = ""; getVariantProducts()' v-if="orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -61,7 +61,7 @@
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
               <ion-label @click="openDateSelectionModal('orderedBefore')">{{ orderedBefore ? $filters.formatDate(orderedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
-              <ion-icon @click="openDateSelectionModal('orderedBefore')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click="openDateSelectionModal('orderedBefore')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='orderedBefore = ""; getVariantProducts()' v-if="orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -69,7 +69,7 @@
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
               <ion-label @click="openDateSelectionModal('promisedAfter')">{{ promisedAfter ? $filters.formatDate(promisedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
-              <ion-icon @click="openDateSelectionModal('promisedAfter')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click="openDateSelectionModal('promisedAfter')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='promisedAfter = ""; getVariantProducts()' v-if="promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -77,7 +77,7 @@
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
               <ion-label @click="openDateSelectionModal('promisedBefore')">{{ promisedBefore ? $filters.formatDate(promisedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
-              <ion-icon @click="openDateSelectionModal('promisedBefore')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click="openDateSelectionModal('promisedBefore')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='promisedBefore = ""; getVariantProducts()' v-if="promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -207,6 +207,7 @@ import {
   closeCircle,
   hourglass,
   calendar,
+  calendarClearOutline,
   close,
   list,
   refresh,
@@ -619,6 +620,7 @@ export default defineComponent({
       closeCircle,
       hourglass,
       calendar,
+      calendarClearOutline,
       close,
       list,
       ribbon,
