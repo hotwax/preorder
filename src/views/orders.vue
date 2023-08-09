@@ -222,7 +222,7 @@ import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import Image from '@/components/Image.vue';
 import emitter from "@/event-bus";
-import DateSelectionModal from '@/components/DateSelectorModal.vue';
+import DateSelectionModal from '@/components/DateSelectionModal.vue';
 
 const { Clipboard } = Plugins;
 
@@ -281,15 +281,13 @@ export default defineComponent({
   methods: {
     async openDateSelectionModal(dateFilter: string) {
       const dateSelectionModal = await modalController.create({
-        component: DateSelectionModal,
-        componentProps: {
-          
-        },
+        component: DateSelectionModal
       });
 
-      dateSelectionModal.onDidDismiss().then((data) => {
-        if(data.data){
-        const selectedDate = data.data.split('T')[0];
+      // Getting selected date from the modal on modal dismiss
+      dateSelectionModal.onDidDismiss().then((dataFromModal) => {
+        if(dataFromModal.data){
+        const selectedDate = dataFromModal.data.split('T')[0];
           switch (dateFilter) {
             case 'orderedAfter':
               this.query.orderedAfter = selectedDate;

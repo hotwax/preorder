@@ -51,30 +51,34 @@
         <div class="filters">
           <ion-item>
             <ion-label>{{ $t("Ordered after") }} </ion-label>
-            <ion-chip slot="end">
-              <ion-input v-model="orderedAfter" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='orderedAfter = ""' v-if="orderedAfter" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label @click="openDateSelectionModal('orderedAfter')">{{ orderedAfter ? $filters.formatDate(orderedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('orderedAfter')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click='orderedAfter = ""; getVariantProducts()' v-if="orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
-            <ion-chip slot="end">
-              <ion-input v-model="orderedBefore" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='orderedBefore = ""' v-if="orderedBefore" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label @click="openDateSelectionModal('orderedBefore')">{{ orderedBefore ? $filters.formatDate(orderedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('orderedBefore')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click='orderedBefore = ""; getVariantProducts()' v-if="orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
-            <ion-chip slot="end">
-              <ion-input v-model="promisedAfter" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='promisedAfter = ""' v-if="promisedAfter" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label @click="openDateSelectionModal('promisedAfter')">{{ promisedAfter ? $filters.formatDate(promisedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('promisedAfter')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click='promisedAfter = ""; getVariantProducts()' v-if="promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
-            <ion-chip slot="end">
-              <ion-input v-model="promisedBefore" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='promisedBefore = ""' v-if="promisedBefore" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label @click="openDateSelectionModal('promisedBefore')">{{ promisedBefore ? $filters.formatDate(promisedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('promisedBefore')" class="ion-padding-start" :icon=" calendar"/>
+              <ion-icon @click='promisedBefore = ""; getVariantProducts()' v-if="promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <!-- TODO -->
@@ -217,6 +221,7 @@ import Image from '@/components/Image.vue';
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
+import DateSelectionModal from'@/components/DateSelectionModal.vue';
 
 export default defineComponent({
   name: "product-details",
@@ -290,6 +295,37 @@ export default defineComponent({
     })
   },
   methods: {
+    async openDateSelectionModal(dateFilter: string) {
+      const dateSelectionModal = await modalController.create({
+        component: DateSelectionModal
+      });
+
+      // Getting selected date from the modal on modal dismiss
+      dateSelectionModal.onDidDismiss().then((dataFromModal) => {
+        if(dataFromModal.data){
+        const selectedDate = dataFromModal.data.split('T')[0];
+          switch (dateFilter) {
+            case 'orderedAfter':
+              this.orderedAfter = selectedDate;
+              break;
+            case 'orderedBefore':
+              this.orderedBefore = selectedDate;
+              break;
+            case 'promisedAfter':
+              this.promisedAfter = selectedDate;
+              break;
+            case 'promisedBefore':
+              this.promisedBefore = selectedDate;
+              break;
+            default:
+              break;
+          }
+        this.getVariantProducts();
+        }
+      });
+
+      return dateSelectionModal.present();
+    },
     onBackgroundJobsFinished() {
       this.refreshProducts();
       // Reset quantity when the background job is finished

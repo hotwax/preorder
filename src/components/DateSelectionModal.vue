@@ -4,19 +4,12 @@
 						@ionChange="onDateChange($event)"
 						showDefaultButtons
             presentation="date"
-        >
-				</ion-datetime>
-			<!-- <ion-buttons slot="end">
-				<ion-button color="primary" fill="clear">Cancel</ion-button> 
-				<ion-button color="primary" fill="clear" @click="onDateChange($event)">Done</ion-button>
-			</ion-buttons> -->
+        />
     </ion-content>
 </template>
   
 <script lang="ts">
 import {
-	// IonButton,
-	// IonButtons,
 	IonContent,
   IonDatetime,
 	modalController,
@@ -27,22 +20,12 @@ export default defineComponent({
 	name: "DateSelectionModal",
 	components: {
 		IonContent,
-		IonDatetime,
-		// IonButtons,
-		// IonButton
+		IonDatetime
 	},
-	props: ['query'],
 	methods: {
 		onDateChange(event: any) {
 			modalController.dismiss(event.target.value);
-		},
-		cancel(){
-			console.log('cancel');
-		},
-	},
-	setup() {	
-		console.log('s');
-		
+		}
 	}
 });
 </script>
