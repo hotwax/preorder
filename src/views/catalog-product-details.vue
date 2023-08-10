@@ -107,6 +107,9 @@
             </ion-item>
             <ion-item-divider color="light">
               <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+              <ion-button v-if="poSummary.header || poSummary.body" color="medium" fill="clear" slot="end" @click="copyAuditMsg()">
+                <ion-icon slot="icon-only" :icon="copyOutline" />
+              </ion-button>
             </ion-item-divider>
             <!-- internationalized while preparaion -->
             <ion-item v-if="poSummary.header || poSummary.body">
@@ -382,6 +385,7 @@
 
 <script lang="ts">
 import {
+  IonButton,
   IonButtons,
   IonBackButton,
   IonCard,
@@ -409,6 +413,7 @@ import {
   alertCircleOutline,
   checkmarkCircleOutline,
   chevronForwardOutline,
+  copyOutline,
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
@@ -425,11 +430,13 @@ import { JobService } from "@/services/JobService";
 import { StockService } from "@/services/StockService";
 import { UtilService } from "@/services/UtilService";
 import { useRouter } from "vue-router";
+import { Plugins } from "@capacitor/core";
 
 export default defineComponent({
   name: "catalog-product-details",
   components: {
     Image,
+    IonButton,
     IonButtons,
     IonBackButton,
     IonCard,
@@ -1067,7 +1074,17 @@ export default defineComponent({
         externalId = externalIdentificationSplit[2] ? externalIdentificationSplit[2] : '';
       }
       return externalId;
-    }
+    },
+    async copyAuditMsg() {
+      const { Clipboard } = Plugins;
+      const auditMsg = this.poSummary.header + '\n' + this.poSummary.body
+
+      await Clipboard.write({
+        string: auditMsg
+      }).then(() => {
+        showToast(this.$t("Copied to clipboard"));
+      })
+    },
   },
   setup() {
     const store = useStore();
@@ -1076,6 +1093,7 @@ export default defineComponent({
       alertCircleOutline,
       checkmarkCircleOutline,
       chevronForwardOutline,
+      copyOutline,
       router,
       shirtOutline,
       store
