@@ -874,7 +874,7 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          if(this.timeTillJob(presellingJob.runTime)?.includes('in')){
+          if(!this.isTimePassed(presellingJob.runTime)){
             this.poSummary.header = this.$t("Removing from", { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
           }else{
             this.poSummary.header = this.$t("Removed from", { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
@@ -1071,6 +1071,9 @@ export default defineComponent({
         externalId = externalIdentificationSplit[2] ? externalIdentificationSplit[2] : '';
       }
       return externalId;
+    },
+    isTimePassed(time: number){
+      return time - (new Date().getTime()) >= 0 ? false : true;
     }
   },
   setup() {
