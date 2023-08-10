@@ -385,6 +385,7 @@
 
 <script lang="ts">
 import {
+  IonButton,
   IonButtons,
   IonBackButton,
   IonCard,
@@ -435,6 +436,7 @@ export default defineComponent({
   name: "catalog-product-details",
   components: {
     Image,
+    IonButton,
     IonButtons,
     IonBackButton,
     IonCard,
