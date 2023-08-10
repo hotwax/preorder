@@ -874,7 +874,11 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Removing from in", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          if(this.timeTillJob(presellingJob.runTime)?.includes('in')){
+            this.poSummary.header = this.$t("Removing from", { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
+          }else{
+            this.poSummary.header = this.$t("Removed from", { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
+          }
         }
         if (this.atpCalcDetails.onlineAtp > 0) {
           this.poSummary.body = this.$t("This product will be removed from because it is in stock", { categoryName });
