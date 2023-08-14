@@ -1073,7 +1073,8 @@ export default defineComponent({
       return externalId;
     },
     isTimePassed(time: number){
-      return time - (new Date().getTime()) >= 0 ? false : true;
+      const timeDiff: any = DateTime.fromMillis(time).diff(DateTime.local());
+      return timeDiff.values.milliseconds > 0 ? false : true;
     }
   },
   setup() {
