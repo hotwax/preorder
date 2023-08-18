@@ -1081,7 +1081,7 @@ export default defineComponent({
     },
     isTimePassed(time: number) {
       const timeDiff: any = DateTime.fromMillis(time).diff(DateTime.local());
-      return timeDiff.values.milliseconds > 0 ? false : true;
+      return timeDiff.values.milliseconds <= 0;
     },
     async copyAuditMsg() {
       const { Clipboard } = Plugins;
