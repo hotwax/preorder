@@ -69,66 +69,64 @@
         </div>
 
         <div>
-          <ion-card>
-            <div v-if="!poSummary.listingCountStatusMessage">
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-                <ion-skeleton-text slot="end" animated style="height: 50%; width: 20%;" />
-              </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-                <ion-skeleton-text slot="end" animated style="height: 50%; width: 40%;" />
-              </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
-                <ion-skeleton-text slot="end" animated style="height: 50%; width: 50%;" />
-              </ion-item>
-              <ion-item-divider color="light">
-                <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
-              </ion-item-divider>
-              <ion-item>
-                <ion-icon slot="start" :icon="shirtOutline" />
-                <ion-label>
-                  <ion-item lines="none">
-                    <ion-skeleton-text animated style="width: 90%; height: 40%;" />
-                  </ion-item>
-                  <ion-item lines="none">
-                    <ion-skeleton-text animated style="width: 100%; height: 60%;" />
-                  </ion-item>
-                </ion-label> 
-              </ion-item>
-            </div>
-            <div v-else>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.eligible ? $t("Yes") : $t("No") }}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.categoryId === preOrderCategoryId ? $t('Pre-order') : poSummary.categoryId === backorderCategoryId ? $t('Back-order') : $t('None') }}</ion-label>
-                <ion-icon slot="end" :icon="isCategoryValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isCategoryValid() ? 'success' : 'warning'" />
-              </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
-                <ion-icon slot="end" :icon="isShopifyListingValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isShopifyListingValid() ? 'success' : 'warning'" />
-              </ion-item>
-              <ion-item v-if="poSummary.promiseDate">
-                <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
-              </ion-item>
-              <ion-item-divider color="light">
-                <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
-              </ion-item-divider>
-              <!-- internationalized while preparaion -->
-              <ion-item v-if="poSummary.header || poSummary.body">
-                <ion-icon slot="start" :icon="shirtOutline" />
-                <ion-label class="ion-text-wrap">
-                  <h2 v-if="poSummary.header">{{ poSummary.header }}</h2>
-                  <p v-if="poSummary.body">{{ poSummary.body }}</p>
-                </ion-label>
-              </ion-item>
-            </div>
+          <ion-card v-if="!poSummary.listingCountStatusMessage">
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 50%; width: 20%;" />
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 50%; width: 40%;" />
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 50%; width: 50%;" />
+            </ion-item>
+            <ion-item-divider color="light">
+              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+            </ion-item-divider>
+            <ion-item>
+              <ion-icon slot="start" :icon="shirtOutline" />
+              <ion-label>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 90%; height: 40%;" />
+                </ion-item>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 100%; height: 60%;" />
+                </ion-item>
+              </ion-label> 
+            </ion-item>
+          </ion-card>
+          <ion-card v-else>
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.eligible ? $t("Yes") : $t("No") }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.categoryId === preOrderCategoryId ? $t('Pre-order') : poSummary.categoryId === backorderCategoryId ? $t('Back-order') : $t('None') }}</ion-label>
+              <ion-icon slot="end" :icon="isCategoryValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isCategoryValid() ? 'success' : 'warning'" />
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
+              <ion-icon slot="end" :icon="isShopifyListingValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isShopifyListingValid() ? 'success' : 'warning'" />
+            </ion-item>
+            <ion-item v-if="poSummary.promiseDate">
+              <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
+            </ion-item>
+            <ion-item-divider color="light">
+              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+            </ion-item-divider>
+            <!-- internationalized while preparaion -->
+            <ion-item v-if="poSummary.header || poSummary.body">
+              <ion-icon slot="start" :icon="shirtOutline" />
+              <ion-label class="ion-text-wrap">
+                <h2 v-if="poSummary.header">{{ poSummary.header }}</h2>
+                <p v-if="poSummary.body">{{ poSummary.body }}</p>
+              </ion-label>
+            </ion-item>
           </ion-card>
         </div>
       </div>
