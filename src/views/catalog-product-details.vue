@@ -299,9 +299,6 @@
             <ion-item>
               <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
             </ion-item>
-            <ion-item>
-              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-            </ion-item>
           </div>
           <div v-else>
             <!-- in case jobs are not available -->
@@ -418,6 +415,7 @@ import {
   alertCircleOutline,
   checkmarkCircleOutline,
   chevronForwardOutline,
+  copyOutline,
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
@@ -434,6 +432,7 @@ import { JobService } from "@/services/JobService";
 import { StockService } from "@/services/StockService";
 import { UtilService } from "@/services/UtilService";
 import { useRouter } from "vue-router";
+import { Plugins } from "@capacitor/core";
 
 export default defineComponent({
   name: "catalog-product-details",
@@ -1076,7 +1075,17 @@ export default defineComponent({
         externalId = externalIdentificationSplit[2] ? externalIdentificationSplit[2] : '';
       }
       return externalId;
-    }
+    },
+    async copyAuditMsg() {
+      const { Clipboard } = Plugins;
+      const auditMsg = this.poSummary.header + '\n' + this.poSummary.body
+
+      await Clipboard.write({
+        string: auditMsg
+      }).then(() => {
+        showToast(this.$t("Copied to clipboard"));
+      })
+    },
   },
   setup() {
     const store = useStore();
@@ -1085,6 +1094,7 @@ export default defineComponent({
       alertCircleOutline,
       checkmarkCircleOutline,
       chevronForwardOutline,
+      copyOutline,
       router,
       shirtOutline,
       store
