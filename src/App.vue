@@ -66,7 +66,8 @@ export default defineComponent({
     },
     async unauthorised() {
       this.store.dispatch("user/logout");
-      this.router.push("/login")
+      const redirectUrl = window.location.origin + '/login';
+      window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`;
     }
   },
   created() {
@@ -76,7 +77,7 @@ export default defineComponent({
       cacheMaxAge: this.maxAge,
       events: {
         unauthorised: this.unauthorised,
-        responseErrror: () => {
+        responseError: () => {
           setTimeout(() => this.dismissLoader(), 100);
         },
         queueTask: (payload: any) => {

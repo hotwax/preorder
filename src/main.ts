@@ -25,10 +25,11 @@ import '@ionic/vue/css/text-alignment.css';
 import '@ionic/vue/css/text-transformation.css';
 import '@ionic/vue/css/flex-utils.css';
 import '@ionic/vue/css/display.css';
-import { dxpComponents } from '@hotwax/dxp-components';
 
 /* Theme variables */
 import './theme/variables.css';
+import { dxpComponents } from '@hotwax/dxp-components'
+import { login, logout, loader } from './user-utils';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -38,7 +39,11 @@ const app = createApp(App)
   .use(i18n)
   .use(store)
   .use(dxpComponents, {
-    defaultImgUrl: require("@/assets/images/defaultImage.png")
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
+    login,
+    logout,
+    loader,
+    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
