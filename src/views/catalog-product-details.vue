@@ -1088,11 +1088,7 @@ export default defineComponent({
     getSortedShopListings(shopListings: any) {
       // using return based sorting instead of localeCompare
       // as localeCompare is slower
-      return shopListings.sort((a: any, b: any) => {
-        if (a.name < b.name) return -1;
-        if (a.name > b.name) return 1;
-        return 0;
-      })
+      return shopListings.sort((a: any, b: any) => a.name < b.name ? -1 : 1)
     }
   },
   setup() {
