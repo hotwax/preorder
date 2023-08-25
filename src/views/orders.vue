@@ -282,33 +282,18 @@ export default defineComponent({
   methods: {
     async openDateSelectionModal(dateFilter: string) {
       const dateSelectionModal = await modalController.create({
-        component: DateSelectionModal
+        component: DateSelectionModal,
+        cssClass: 'date-selection-modal'
       });
 
       // Getting selected date from the modal on modal dismiss
       dateSelectionModal.onDidDismiss().then((dataFromModal) => {
         if(dataFromModal.data){
-        const selectedDate = dataFromModal.data.split('T')[0];
-          switch (dateFilter) {
-            case 'orderedAfter':
-              this.query.orderedAfter = selectedDate;
-              break;
-            case 'orderedBefore':
-              this.query.orderedBefore = selectedDate;
-              break;
-            case 'promisedAfter':
-              this.query.promisedAfter = selectedDate;
-              break;
-            case 'promisedBefore':
-              this.query.promisedBefore = selectedDate;
-              break;
-            default:
-              break;
-          }
-        this.updateQuery();
+          // Assigning value to dateFilters of this.query (orderedAfter, orderedBefore, promisedAfter, promisedBefore) the selected date from the modal
+          this.query[dateFilter] = dataFromModal.data.split('T')[0];
+          this.updateQuery();
         }
       });
-
       return dateSelectionModal.present();
     },
     updateQuery() {      

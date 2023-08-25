@@ -327,6 +327,12 @@ hr {
   text-transform: capitalize;
 }
 
+.date-selection-modal {
+  --width: 290px;
+  --height: 400px;
+  --border-radius: 8px;
+}
+
 @media (min-width: 700px) {
   .list-item {
     --col-calc: var(--columns-tablet);
