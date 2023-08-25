@@ -28,7 +28,7 @@
           <ion-item>
             <ion-label>{{ $t("Ordered after") }}</ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
-              <ion-label @click="openDateSelectionModal('orderedAfter')">{{ query.orderedAfter ? $filters.formatDate(query.orderedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-label>{{ query.orderedAfter ? $filters.formatDate(query.orderedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
               <ion-icon @click="openDateSelectionModal('orderedAfter')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='query.orderedAfter = ""; updateQuery()' v-if="query.orderedAfter" :icon="close"/>
             </ion-chip>
@@ -36,7 +36,7 @@
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
-              <ion-label @click="openDateSelectionModal('orderedBefore')">{{ query.orderedBefore ? $filters.formatDate(query.orderedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-label>{{ query.orderedBefore ? $filters.formatDate(query.orderedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
               <ion-icon @click="openDateSelectionModal('orderedBefore')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='query.orderedBefore = ""; updateQuery()' v-if="query.orderedBefore" :icon="close"/>
             </ion-chip>
@@ -44,7 +44,7 @@
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
-              <ion-label @click="openDateSelectionModal('promisedAfter')">{{ query.promisedAfter ? $filters.formatDate(query.promisedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-label>{{ query.promisedAfter ? $filters.formatDate(query.promisedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
               <ion-icon @click="openDateSelectionModal('promisedAfter')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='query.promisedAfter = ""; updateQuery()' v-if="query.promisedAfter" :icon="close"/>
             </ion-chip>
@@ -52,7 +52,7 @@
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip class="ion-padding-horizontal" slot="end">
-              <ion-label @click="openDateSelectionModal('promisedBefore')">{{ query.promisedBefore ? $filters.formatDate(query.promisedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-label>{{ query.promisedBefore ? $filters.formatDate(query.promisedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
               <ion-icon @click="openDateSelectionModal('promisedBefore')" class="ion-padding-start" :icon="calendarClearOutline"/>
               <ion-icon @click='query.promisedBefore = ""; updateQuery()' v-if="query.promisedBefore" :icon="close"/>
             </ion-chip>
