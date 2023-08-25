@@ -303,10 +303,10 @@ export default defineComponent({
       });
 
       // Getting selected date from the modal on modal dismiss
-      dateSelectionModal.onDidDismiss().then((dataFromModal) => {
-        if(dataFromModal.data){
+      dateSelectionModal.onDidDismiss().then((result) => {
+        if(result.data){
           // Assigning value to dateFilters data properties (orderedAfter, orderedBefore, promisedAfter, promisedBefore) the selected date from the modal
-          (this as any)[dateFilter] = dataFromModal.data.split('T')[0];
+          (this as any)[dateFilter] = result.data.split('T')[0];
           this.getVariantProducts();
         }
       });

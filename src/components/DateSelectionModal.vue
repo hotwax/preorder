@@ -1,11 +1,11 @@
 <template>
-    <ion-content>
-        <ion-datetime
-            @ionChange="onDateChange($event)"
-            showDefaultButtons
-            presentation="date"
-        />
-    </ion-content>
+  <ion-content>
+    <ion-datetime
+      @ionChange="onDateChange($event)"
+      showDefaultButtons
+      presentation="date"
+    />
+  </ion-content>
 </template>
   
 <script lang="ts">
