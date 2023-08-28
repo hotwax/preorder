@@ -8,6 +8,7 @@ import { translate } from '@/i18n'
 import { Settings } from 'luxon'
 import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import { useAuthStore } from '@hotwax/dxp-components';
+import { getServerPermissionsFromRules, prepareAppPermissions, resetPermissions, setPermissions } from '@/authorization'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -21,33 +22,39 @@ const actions: ActionTree<UserState, RootState> = {
 
     try {
         if (token) {
-          const permissionId = process.env.VUE_APP_PERMISSION_ID;
-          if (permissionId) {
-            const checkPermissionResponse = await UserService.checkPermission({
-              data: {
-                permissionId
-              },
-              headers: {
-                Authorization:  'Bearer ' + token,
-                'Content-Type': 'application/json'
-              }
-            });
 
-            if (checkPermissionResponse.status === 200 && !hasError(checkPermissionResponse) && checkPermissionResponse.data && checkPermissionResponse.data.hasPermission) {
-              commit(types.USER_TOKEN_CHANGED, { newToken: token })
-              updateToken(token)
-              await dispatch('getProfile')
-            } else {
+          // Getting the permissions list from server
+          const permissionId = process.env.VUE_APP_PERMISSION_ID;
+
+          // Prepare permissions list
+          const serverPermissionsFromRules = getServerPermissionsFromRules();
+          if (permissionId) serverPermissionsFromRules.push(permissionId);
+
+          const serverPermissions = await UserService.getUserPermissions({
+            permissionIds: serverPermissionsFromRules
+          }, token);
+          const appPermissions = prepareAppPermissions(serverPermissions);
+
+          // Checking if the user has permission to access the app
+          // If there is no configuration, the permission check is not enabled
+          if (permissionId) {
+            // As the token is not yet set in the state passing token headers explicitly
+            // TODO Abstract this out, how token is handled should be part of the method not the callee
+            const hasPermission = appPermissions.some((appPermissionId: any) => appPermissionId === permissionId );
+            // If there are any errors or permission check fails do not allow user to login
+            if (hasPermission) {
               const permissionError = 'You do not have permission to access the app.';
               showToast(translate(permissionError));
               console.error("error", permissionError);
               return Promise.reject(new Error(permissionError));
             }
-          } else {
-            commit(types.USER_TOKEN_CHANGED, { newToken: token })
-            updateToken(token)
-            await dispatch('getProfile')
           }
+
+          const userProfile = await UserService.getUserProfile(token);
+          
+          userProfile.stores = await UserService.getEComStores(token, currentFacility.facilityId);
+
+          
         }
     } catch (err: any) {
       showToast(translate('Something went wrong'));
