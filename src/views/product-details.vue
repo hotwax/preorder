@@ -286,7 +286,8 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore'
+      currentEComStore: 'user/getCurrentEComStore',
+      currentOrderParking: 'user/getCurrentOrderParking'
     })
   },
   methods: {
@@ -337,6 +338,13 @@ export default defineComponent({
       if (this.currentEComStore) {
         payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
       }
+
+      if(this.currentOrderParking.length) {
+        payload.filters.push(`facilityId: (${this.currentOrderParking.join(' OR ')})`)
+      } else {
+        payload.filters.push(`facilityId: (PRE_ORDER_PARKING OR BACKORDER_PARKING)`)
+      }
+
       const current = await this.store.dispatch("product/fetchCurrentList", payload);
       this.store.dispatch('order/fetchBrokeringCountByProducts', { productIds: current.list.items.map((item: any) => item.productId) })
       return current;
@@ -521,6 +529,13 @@ export default defineComponent({
         if (this.currentEComStore) {
           payload.filters.push('productStoreId: ' +this.currentEComStore.productStoreId);
         }
+
+        if(this.currentOrderParking.length) {
+          payload.filters.push(`facilityId: (${this.currentOrderParking.join(' OR ')})`)
+        } else {
+          payload.filters.push(`facilityId: (PRE_ORDER_PARKING OR BACKORDER_PARKING)`)
+        }
+
         variantRequests.push(ProductService.fetchCurrentList(payload));
       });
       return Promise.all(variantRequests);

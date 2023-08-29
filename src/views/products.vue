@@ -112,6 +112,7 @@ export default defineComponent({
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
       currentEComStore: 'user/getCurrentEComStore',
+      currentOrderParking: 'user/getCurrentOrderParking'
     })
   },
   methods: {
@@ -138,6 +139,13 @@ export default defineComponent({
       if (this.currentEComStore) {
         payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
       }
+
+      if(this.currentOrderParking.length) {
+        payload.filters.push(`facilityId: (${this.currentOrderParking.join(' OR ')})`)
+      } else {
+        payload.filters.push(`facilityId: (PRE_ORDER_PARKING OR BACKORDER_PARKING)`)
+      }
+
       return this.store.dispatch("product/findProducts", payload).finally(() => {
         this.hasQuery = true;
       })

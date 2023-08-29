@@ -4,5 +4,5 @@ export default interface UserState {
     instanceUrl: string;
     currentEComStore: object;
     virtualFacilities: object | null;
-    currentOrderParking: string;
+    currentOrderParking: Array<string>;
 }

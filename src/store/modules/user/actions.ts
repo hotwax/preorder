@@ -168,8 +168,8 @@ const actions: ActionTree<UserState, RootState> = {
         parentTypeId: "VIRTUAL_FACILITY"
       },
       viewSize: 20, // expecting that there will be no more than 20 virtual facilities
-      fieldList: ["facilityTypeId", "description"],
-      entityName: "FacilityType"
+      fieldList: ["facilityId", "facilityName"],
+      entityName: "FacilityAndType"
     }
 
     try {
@@ -177,11 +177,11 @@ const actions: ActionTree<UserState, RootState> = {
 
       if(resp.status == 200 && !hasError(resp) && resp.data?.docs?.length) {
         const facilities = resp.data.docs.reduce((facilities: any, facility: any) => {
-          facilities[facility.facilityTypeId] = facility.description
+          facilities[facility.facilityId] = facility.facilityName
           return facilities
         }, {})
 
-        let currentOrderParking = Object.keys(facilities)[0] as string | string[]
+        let currentOrderParking = [Object.keys(facilities)[0]] as string[]
 
         const userPrefResponse =  await UserService.getUserPreference({
           'userPrefTypeId': 'SELECTED_ORDER_PARKING'

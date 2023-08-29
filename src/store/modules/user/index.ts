@@ -13,7 +13,7 @@ const userModule: Module<UserState, RootState> = {
       instanceUrl: '',
       currentEComStore: {},
       virtualFacilities: {},
-      currentOrderParking: ''
+      currentOrderParking: []
     },
     getters,
     actions,
