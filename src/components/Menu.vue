@@ -38,7 +38,7 @@ import {
   IonMenu,
   IonMenuToggle,
 } from "@ionic/vue";
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent } from "vue";
 import { mapGetters } from "vuex";
 
 import { albums ,shirt, pricetags, settings } from "ionicons/icons";
