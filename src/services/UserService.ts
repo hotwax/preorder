@@ -12,13 +12,6 @@ const login = async (username: string, password: string): Promise <any> => {
     }
   });
 }
-
-const getProfile = async (): Promise <any>  => {
-    return api({
-      url: "user-profile", 
-      method: "get",
-    });
-}
 const getAvailableTimeZones = async (): Promise <any>  => {
   return api({
     url: "getAvailableTimeZones",
@@ -33,16 +26,6 @@ const setUserTimeZone = async (payload: any): Promise <any>  => {
     data: payload
   });
 }
-const checkPermission = async (payload: any): Promise <any>  => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
-  return client({
-    url: "checkPermission",
-    method: "post",
-    baseURL: baseURL,
-    ...payload
-  });
-}
 
 const setUserPreference = async (payload: any): Promise<any> => {
   return api({
@@ -52,28 +35,19 @@ const setUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
-const getUserPreference = async (payload: any): Promise<any> => {
-  return api({
-    url: "service/getUserPreference",
-    //TODO Due to security reasons service model OMS 1.0 does not support sending parameters in get request that's why we use post here
-    method: "post",
-    data: payload
-  });
-}
-
-const getEComStores = async (token: any, facilityId: any): Promise<any> => {
+const getEComStores = async (token: any, partyId: any): Promise<any> => {
   try {
     const params = {
       "inputFields": {
         "storeName_op": "not-empty",
-        facilityId
+        "partyId": partyId
       },
       "fieldList": ["productStoreId", "storeName"],
-      "entityName": "ProductStoreFacilityDetail",
+      "entityName": "ProductStoreAndRole",
       "distinct": "Y",
-      "noConditionFind": "Y",
-      "filterByDate": 'Y',
+      "noConditionFind": "Y"
     }
+
     const baseURL = store.getters['user/getBaseUrl'];
     const resp = await client({
       url: "performFind",
@@ -232,11 +206,8 @@ const getUserProfile = async (token: any): Promise<any> => {
 export const UserService = {
     login,
     getAvailableTimeZones,
-    getProfile,
     setUserTimeZone,
-    checkPermission,
     setUserPreference,
-    getUserPreference,
     getUserProfile,
     getPreferredStore,
     getUserPermissions,

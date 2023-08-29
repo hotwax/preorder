@@ -66,7 +66,7 @@ const routes: Array<RouteRecordRaw> = [
     component: ProductDetails,
     beforeEnter: authGuard,
     meta: {
-      permissionId: "APP_PRODUCTS_DETAIL_VIEW"
+      permissionId: "APP_PRDTS_DTL_VIEW"
     }
   },
   {
@@ -93,7 +93,7 @@ const routes: Array<RouteRecordRaw> = [
     component: CatalogProductDetails,
     beforeEnter: authGuard,
     meta: {
-      permissionId: "APP_CATALOG_PRODUCT_DETAILS_VIEW"
+      permissionId: "APP_CTLG_PRDT_DTLS_VIEW"
     }
   },
   {

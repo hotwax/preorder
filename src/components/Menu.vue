@@ -11,7 +11,6 @@
             <ion-menu-toggle auto-hide="false" v-for="(p, i) in getValidMenuItems(appPages)" :key="i">
               <ion-item
                 button
-                @click="selectedIndex = i"
                 router-direction="root"
                 :router-link="p.url"
                 class="hydrated"
@@ -66,15 +65,6 @@ export default defineComponent({
       isUserAuthenticated: 'user/isUserAuthenticated'
     })
   },
-  watch:{
-    $route (to) {
-      // When logout and login it should point to Oth index
-      // TODO Find a better way
-      if (to.path === '/login') {
-        this.selectedIndex = 0;
-      }
-    },
-  }, 
   setup() {
     const store = useStore();
 

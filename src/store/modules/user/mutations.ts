@@ -10,12 +10,17 @@ const mutations: MutationTree <UserState> = {
       state.token = ''
       state.current = {}
       state.currentEComStore = {}
+      state.permissions = []
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
+        state.current = { ...state.current,  ...payload}
     },
     [types.USER_INSTANCE_URL_UPDATED] (state, payload) {
         state.instanceUrl = payload;
+    },
+    [types.USER_PERMISSIONS_UPDATED] (state, payload) {
+        state.permissions = payload
     },
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload;
