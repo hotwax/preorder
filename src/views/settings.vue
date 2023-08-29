@@ -105,6 +105,25 @@
             <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
           </ion-item>
         </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t('Order parking') }}
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            {{ $t('Choose the parking for importing orders. After selection, the Orders and Products page will retrieve orders from the selected parking.') }}
+          </ion-card-content>
+
+          <ion-item lines="none">
+            <ion-label>{{ $t("Select parking") }}</ion-label>
+            <ion-select multiple interface="popover" :value="currentOrderParking" @ionChange="updateOrderParking($event)">
+              <ion-select-option v-for="(facility, id) in virtualFacilities" :key="id" :value="id" >{{ facility }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -183,6 +202,8 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       instanceUrl: 'user/getInstanceUrl',
       currentEComStore: 'user/getCurrentEComStore',
+      currentOrderParking: 'user/getCurrentOrderParking',
+      virtualFacilities: 'user/getVirtualFacilities'
     })
   },
   methods: {
@@ -213,7 +234,12 @@ export default defineComponent({
     },
     getDateTime(time: any) {
       return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
-    }
+    },
+    updateOrderParking(event: any) {
+      if(event.detail.value && this.userProfile && this.currentOrderParking !== event.detail.value) {
+        this.store.dispatch('user/setOrderParking', event.detail.value)
+      }
+    },
   }
 });
 </script>

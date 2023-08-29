@@ -8,6 +8,7 @@ import { translate } from '@/i18n'
 import { Settings } from 'luxon'
 import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import { useAuthStore } from '@hotwax/dxp-components';
+import { UtilService } from '@/services/UtilService'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -78,7 +79,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Get User profile
    */
-  async getProfile ( { commit }) {
+  async getProfile ( { commit, dispatch }) {
     const resp = await UserService.getProfile()
     const userProfile = JSON.parse(JSON.stringify(resp.data));
 
@@ -117,6 +118,9 @@ const actions: ActionTree<UserState, RootState> = {
           console.error(err)
         }
       }
+
+      await dispatch('fetchVirtualFacilities')
+
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  userPrefStore);
       commit(types.USER_INFO_UPDATED, userProfile);
     }
@@ -157,5 +161,55 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_INSTANCE_URL_UPDATED, payload)
       updateInstanceUrl(payload)
     },
+
+  async fetchVirtualFacilities({ commit, dispatch }) {
+    const payload = {
+      inputFields: {
+        parentTypeId: "VIRTUAL_FACILITY"
+      },
+      viewSize: 20, // expecting that there will be no more than 20 virtual facilities
+      fieldList: ["facilityTypeId", "description"],
+      entityName: "FacilityType"
+    }
+
+    try {
+      const resp = await UtilService.fetchFacilities(payload)
+
+      if(resp.status == 200 && !hasError(resp) && resp.data?.docs?.length) {
+        const facilities = resp.data.docs.reduce((facilities: any, facility: any) => {
+          facilities[facility.facilityTypeId] = facility.description
+          return facilities
+        }, {})
+
+        let currentOrderParking = Object.keys(facilities)[0] as string | string[]
+
+        const userPrefResponse =  await UserService.getUserPreference({
+          'userPrefTypeId': 'SELECTED_ORDER_PARKING'
+        });
+
+        // if we already have a preference for order parking then updating it, otherwise, creating a new preference for order parking
+        if(userPrefResponse.data.userPrefValue) {
+          currentOrderParking = Object.keys(facilities).filter((facilityId: any) => userPrefResponse.data.userPrefValue.includes(facilityId))
+          commit(types.USER_CURRENT_PARKING_UPDATED, currentOrderParking);
+        } else {
+          dispatch('setOrderParking', currentOrderParking)
+        }
+
+        commit(types.USER_VIRTUAL_FACILITIES_UPDATED, facilities)
+      } else {
+        throw resp.data
+      }
+    } catch(err) {
+      console.error('Failed to fetch facilities for selection', err)
+    }
+  },
+
+  async setOrderParking({ commit }, payload) {
+    commit(types.USER_CURRENT_PARKING_UPDATED, payload);
+    await UserService.setUserPreference({
+      'userPrefTypeId': 'SELECTED_ORDER_PARKING',
+      'userPrefValue': JSON.stringify(payload)
+    });
+  },
 }
 export default actions;

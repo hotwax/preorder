@@ -3,4 +3,6 @@ export default interface UserState {
     current: object | null;
     instanceUrl: string;
     currentEComStore: object;
+    virtualFacilities: object | null;
+    currentOrderParking: string;
 }
