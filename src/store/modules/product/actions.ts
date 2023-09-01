@@ -258,7 +258,6 @@ const actions: ActionTree<ProductState, RootState> = {
       console.error(error)
       showToast(translate("Something went wrong"));
     }
-    emitter.emit("dismissLoader");
     return product
   },
   /**
