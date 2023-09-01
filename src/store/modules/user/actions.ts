@@ -187,14 +187,12 @@ const actions: ActionTree<UserState, RootState> = {
           'userPrefTypeId': 'SELECTED_ORDER_PARKING'
         });
 
-        // if we already have a preference for order parking then updating it, otherwise, creating a new preference for order parking
+        // if we already have a preference for order parking then updating it
         if(userPrefResponse.data.userPrefValue) {
           currentOrderParking = Object.keys(facilities).filter((facilityId: any) => userPrefResponse.data.userPrefValue.includes(facilityId))
-          commit(types.USER_CURRENT_PARKING_UPDATED, currentOrderParking);
-        } else {
-          dispatch('setOrderParking', currentOrderParking)
         }
 
+        commit(types.USER_CURRENT_PARKING_UPDATED, currentOrderParking);
         commit(types.USER_VIRTUAL_FACILITIES_UPDATED, facilities)
       } else {
         throw resp.data
