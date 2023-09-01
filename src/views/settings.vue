@@ -114,7 +114,7 @@
           </ion-card-header>
 
           <ion-card-content>
-            {{ $t('Choose the parking for importing orders. After selection, the Orders and Products page will retrieve orders from the selected parking.') }}
+            {{ $t('Select which order parkings to view and manage orders for.') }}
           </ion-card-content>
 
           <ion-item lines="none">
