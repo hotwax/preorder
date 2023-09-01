@@ -226,8 +226,6 @@ const actions: ActionTree<ProductState, RootState> = {
       return product
     }
 
-    emitter.emit("presentLoader")
-
     let resp;
     let productFilterCondition: any = `docType: PRODUCT AND groupId: ${payload.productId}`;
     if (!isProductCached) productFilterCondition = `docType: PRODUCT AND (productId: ${payload.productId} OR groupId: ${payload.productId})`
