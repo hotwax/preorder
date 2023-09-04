@@ -72,15 +72,15 @@
           <ion-card v-if="!poSummary.listingCountStatusMessage">
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-              <ion-skeleton-text slot="end" animated style="height: 50%; width: 20%;" />
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 20%;" />
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-              <ion-skeleton-text slot="end" animated style="height: 50%; width: 40%;" />
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 40%;" />
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
-              <ion-skeleton-text slot="end" animated style="height: 50%; width: 50%;" />
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 50%;" />
             </ion-item>
             <ion-item-divider color="light">
               <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
@@ -89,7 +89,7 @@
               <ion-icon slot="start" :icon="shirtOutline" />
               <ion-label>
                 <ion-item lines="none">
-                  <ion-skeleton-text animated style="width: 90%; height: 40%;" />
+                  <ion-skeleton-text animated style="width: 90%; height: 30%;" />
                 </ion-item>
                 <ion-item lines="none">
                   <ion-skeleton-text animated style="width: 100%; height: 60%;" />
@@ -133,15 +133,9 @@
 
       <hr />
 
-      <div v-if="!Object.keys(poAndAtpDetails).length">
-        <ion-item lines="none">
-          <ion-skeleton-text animated style="width: 50%; height: 50%;" />
-        </ion-item>
-      </div>
-
       <section>
         <ion-card v-if="!Object.keys(poAndAtpDetails).length">
-          <ion-item>
+          <ion-item lines="none">
             <ion-skeleton-text animated style="height: 40%; width: 70%;" />
           </ion-item>
           <ion-item>
@@ -206,7 +200,6 @@
             <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
           </ion-item>
         </ion-card>
-
         <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
