@@ -185,23 +185,23 @@ const getUserPermissions = async (payload: any, token: any): Promise<any> => {
 }
 
 const getUserProfile = async (token: any): Promise<any> => {
-    const baseURL = store.getters['user/getBaseUrl'];
-    try {
-      const resp = await client({
-        url: "user-profile",
-        method: "get",
-        baseURL,
-        headers: {
-          Authorization:  'Bearer ' + token,
-          'Content-Type': 'application/json'
-        }
-      });
-      if(hasError(resp)) return Promise.reject("Error getting user profile: " + JSON.stringify(resp.data));
-      return Promise.resolve(resp.data)
-    } catch (error: any) {
-      return Promise.reject(error)
-    }
+  const baseURL = store.getters['user/getBaseUrl'];
+  try {
+    const resp = await client({
+      url: "user-profile",
+      method: "get",
+      baseURL,
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (hasError(resp)) return Promise.reject("Error getting user profile: " + JSON.stringify(resp.data));
+    return Promise.resolve(resp.data)
+  } catch (error: any) {
+    return Promise.reject(error)
   }
+}
 
 export const UserService = {
   getAvailableTimeZones,
