@@ -198,18 +198,18 @@ const getUserProfile = async (token: any): Promise<any> => {
       });
       if(hasError(resp)) return Promise.reject("Error getting user profile: " + JSON.stringify(resp.data));
       return Promise.resolve(resp.data)
-    } catch(error: any) {
+    } catch (error: any) {
       return Promise.reject(error)
     }
   }
 
 export const UserService = {
-    login,
-    getAvailableTimeZones,
-    setUserTimeZone,
-    setUserPreference,
-    getUserProfile,
-    getPreferredStore,
-    getUserPermissions,
-    getEComStores
+  getAvailableTimeZones,
+  getEComStores,
+  getPreferredStore,
+  getUserProfile,
+  getUserPermissions,
+  login,
+  setUserPreference,
+  setUserTimeZone,
 }
