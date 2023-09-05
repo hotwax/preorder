@@ -881,7 +881,8 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Removing from in", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          const headerMessage = this.isPastTime(presellingJob.runTime) ? "Removed from" : "Removing from";
+          this.poSummary.header = this.$t(headerMessage, { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
         }
         if (this.atpCalcDetails.onlineAtp > 0) {
           this.poSummary.body = this.$t("This product will be removed from because it is in stock", { categoryName });
@@ -1075,6 +1076,10 @@ export default defineComponent({
       }
       return externalId;
     },
+    isPastTime(time: number) {
+      const timeDiff: any = DateTime.fromMillis(time).diff(DateTime.local());
+      return timeDiff.values.milliseconds <= 0;
+    },
     async copyAuditMsg() {
       const { Clipboard } = Plugins;
       const auditMsg = this.poSummary.header + '\n' + this.poSummary.body
@@ -1084,7 +1089,7 @@ export default defineComponent({
       }).then(() => {
         showToast(this.$t("Copied to clipboard"));
       })
-    },
+    }
   },
   setup() {
     const store = useStore();
