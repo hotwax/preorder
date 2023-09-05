@@ -145,7 +145,7 @@
     "preorders will be cancelled. This action cannot be undone.": "{count} preorders will be cancelled. This action cannot be undone.",
     "Products": "Products",
     "Product details": "Product details",
-    "Product summary page": "Product summary page",
+    "Product summary": "Product summary",
     "Product cannot be pre-sold because it does not have active purchase orders": "Product cannot be pre-sold because it does not have active purchase orders",
     "Product has been accepting from against PO #": "Product has been accepting {category}s from {fromDate} against PO #${POID}",
     "Product is eligible for but not added to the category": "Product is eligible for {category}s but not added to the {category} category",
