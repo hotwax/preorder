@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/catalog"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ $t("Product details") }}</ion-title>
+        <ion-title>{{ $t("Product summary") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
