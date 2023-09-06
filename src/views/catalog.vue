@@ -165,9 +165,9 @@ export default defineComponent({
       isCatalogScrollable: 'product/isCatalogScrollable'
     })
   },
-  mounted() {
-    this.getCatalogProducts()
-    this.preparePreordBckordComputationJob()
+  async ionViewWillEnter() {
+    await this.getCatalogProducts()
+    await this.preparePreordBckordComputationJob()
   },
   methods: {
     async getCatalogProducts(vSize?: any, vIndex?: any) {
