@@ -805,7 +805,7 @@ export default defineComponent({
       try {
         const resp = await UtilService.updateReserveInvConfig({ value, config })
         if (!hasError(resp)) {
-          event.target.checked = !isChecked;
+          event.target.checked = value;
           showToast(translate('Configuration updated'))
           await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
         } else {
@@ -850,11 +850,11 @@ export default defineComponent({
             showToast(translate('Failed to update configuration'))
             return
           }
-          event.target.checked = !isChecked;
+          event.target.checked = value;
         } else {
           const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
           if (!hasError(resp)) {
-            event.target.checked = !isChecked;
+            event.target.checked = value;
             showToast(translate('Configuration updated'))
           } else {
             showToast(translate('Failed to update configuration'))
