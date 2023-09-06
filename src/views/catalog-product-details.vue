@@ -765,7 +765,7 @@ export default defineComponent({
         console.error(error)
       }
     },
-    async showAlert(header: string, message: string, successButtonLabel: string){
+    async confirmInvConfigUpdate(header: string, message: string, successButtonLabel: string){
       const alert = await alertController.create({
         header: translate(header),
         message: translate(message),
@@ -792,13 +792,11 @@ export default defineComponent({
       const header = isChecked ? 'Disable Reserve Inventory?' : 'Enable Reserve Inventory?';
       const message = isChecked ? 'Disabling inventory reservations prevents committed inventory from being reduced until it has been shipped. Orders that are pending allocation or haven’t been shipped will not be reduced from sellable inventory.' : 'Enabling inventory reservations reduces inventory counts for committed inventory before it has been shipped. Committed inventory includes orders waiting to be brokered or waiting to be shipped.';
 
-      if (await this.showAlert(header, message, successButtonLabel)) {
-        event.target.checked = !isChecked;
-      } else {
+      if (!(await this.confirmInvConfigUpdate(header, message, successButtonLabel))) {
         return;
       }
 
-      const value = event.target.checked;
+      const value = !isChecked;
       const config = this.getInventoryConfig('reserveInv', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
@@ -807,6 +805,7 @@ export default defineComponent({
       try {
         const resp = await UtilService.updateReserveInvConfig({ value, config })
         if (!hasError(resp)) {
+          event.target.checked = !isChecked;
           showToast(translate('Configuration updated'))
           await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
         } else {
@@ -826,13 +825,11 @@ export default defineComponent({
       const header = isChecked ? 'Disable Hold Pre-order Physical Inventory?' : 'Enable Hold Pre-order Physical Inventory?';
       const message = isChecked ? 'Disabling this setting will push excess physical inventory for pre-sell products online and start selling them as in-stock items.' : 'Enabling this setting will prevent pre-selling products from publishing physical inventory online until their pre-selling queue is cleared.';
 
-      if (await this.showAlert(header, message, successButtonLabel)) {
-        event.target.checked = !isChecked;
-      } else {
+      if (!(await this.confirmInvConfigUpdate(header, message, successButtonLabel))) {
         return;
       }
 
-      const value = event.target.checked;
+      const value = !isChecked;
       const config = this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       // TODO - update the usage from true/false to Y/N
@@ -853,9 +850,11 @@ export default defineComponent({
             showToast(translate('Failed to update configuration'))
             return
           }
+          event.target.checked = !isChecked;
         } else {
           const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
           if (!hasError(resp)) {
+            event.target.checked = !isChecked;
             showToast(translate('Configuration updated'))
           } else {
             showToast(translate('Failed to update configuration'))
