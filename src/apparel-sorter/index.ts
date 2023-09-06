@@ -139,6 +139,16 @@ export function sortSizes(sizes: any) {
   if (!sizes) {
     return [];
   }
+
+  const hasFloatNumSizes = sizes.some((size: string) => {
+    const sizeAsInt = +size
+    return (!Number.isNaN(sizeAsInt) && !Number.isInteger(sizeAsInt))
+  })
+
+  if (hasFloatNumSizes) {
+    sizes.sort((a: string, b: string) => (+a) - (+b))
+  }
+
   return sizes
     .map(matchSizesWithRegexes)
     .sort(sortSizesByIndex)
