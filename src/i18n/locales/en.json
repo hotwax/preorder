@@ -4,7 +4,7 @@
     "Active jobs": "Active jobs",
     "Active purchase order": "Active purchase order",
     "Added to pre-order category on, against PO but not listed on all stores" : "Added to pre-order category on {fromDate}, against PO #{POID} but not listed on all stores",
-    "Adding to in": "Adding to {categoryName} in {addingTime}",
+    "Adding to": "Adding to {categoryName} {addingTime}",
     "All": "All",
     "App": "App",
     "Are you sure you want to update the promise date for these orders?": "Are you sure you want to update the promise date for these orders?",
