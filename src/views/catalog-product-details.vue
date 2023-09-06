@@ -853,7 +853,7 @@ export default defineComponent({
         } else {
           this.poSummary.header = this.$t("Added to", { categoryName });
         }
-        this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.totalPoAtp , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
+        this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.activePo.quantity , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
       } else if (!this.poSummary.eligible && !hasCategory) {
         const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
