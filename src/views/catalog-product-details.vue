@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/catalog"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ $t("Product details") }}</ion-title>
+        <ion-title>{{ $t("Product summary") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -269,9 +269,7 @@
       <hr />
 
       <section>
-        <ion-card v-if="!Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length
-          || !Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length
-          || !Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length">
+        <ion-card v-if="!isCtgryAndBrkrngJobsLoaded">
           <ion-item>
             <ion-skeleton-text animated style="height: 40%; width: 70%;" />
           </ion-item>
@@ -303,7 +301,7 @@
           </div>
 
           <div v-else>
-            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Pre-sell computation') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
@@ -313,7 +311,7 @@
               </ion-label>
             </ion-item>
 
-            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length " detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Order brokering') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime) }}</p>
@@ -323,7 +321,7 @@
               </ion-label>
             </ion-item>
 
-            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Auto releasing') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
@@ -474,7 +472,8 @@ export default defineComponent({
       configsByStores: [] as any,
       listingJobRunTime: 0,
       backorderCategoryId: '',
-      preOrderCategoryId: ''
+      preOrderCategoryId: '',
+      isCtgryAndBrkrngJobsLoaded: false
     }
   },
   computed: {
@@ -577,7 +576,9 @@ export default defineComponent({
     },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
-      await this.store.dispatch('job/fetchCtgryAndBrkrngJobs', { systemJobEnumIds })
+      this.store.dispatch('job/fetchCtgryAndBrkrngJobs', { systemJobEnumIds }).then(() => {
+        this.isCtgryAndBrkrngJobsLoaded = true
+      })
     },
     async openJobActionsPopover(event: Event, job: any, jobTitle: string) {
       job.jobTitle = jobTitle
@@ -840,7 +841,6 @@ export default defineComponent({
     async preparePoSummary() {
       this.poSummary.eligible = this.poAndAtpDetails.totalPoAtp > 0 && this.atpCalcDetails.onlineAtp === 0;
 
-
       const productCategories = this.currentVariant.productCategories;
       const hasPreOrderCategory = productCategories?.includes(this.preOrderCategoryId);
       const hasBackorderCategory = productCategories?.includes(this.backorderCategoryId);
@@ -881,7 +881,8 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Removing from in", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          const headerMessage = this.isPastTime(presellingJob.runTime) ? "Removed from" : "Removing from";
+          this.poSummary.header = this.$t(headerMessage, { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
         }
         if (this.atpCalcDetails.onlineAtp > 0) {
           this.poSummary.body = this.$t("This product will be removed from because it is in stock", { categoryName });
@@ -959,7 +960,6 @@ export default defineComponent({
       }
     },
     async prepareShopListings() {
-
       // TODO Use ShopifyShopProduct to check if product is associated
       this.shopListings = []
       try {
@@ -1074,6 +1074,10 @@ export default defineComponent({
         externalId = externalIdentificationSplit[2] ? externalIdentificationSplit[2] : '';
       }
       return externalId;
+    },
+    isPastTime(time: number) {
+      const timeDiff: any = DateTime.fromMillis(time).diff(DateTime.local());
+      return timeDiff.values.milliseconds <= 0;
     },
     async copyAuditMsg() {
       const { Clipboard } = Plugins;
