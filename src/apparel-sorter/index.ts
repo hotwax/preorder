@@ -146,7 +146,7 @@ export function sortSizes(sizes: any) {
   })
 
   if (hasFloatNumSizes) {
-    sizes.sort((a: string, b: string) => (+a) - (+b))
+    return sizes.sort((a: string, b: string) => (+a) - (+b))
   }
 
   return sizes
