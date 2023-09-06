@@ -359,7 +359,7 @@
           <ion-item v-if="!Object.keys(shopListings).length">
             {{ $t('No shop listings found') }}
           </ion-item>
-          <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
+          <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
             <ion-label class="ion-text-wrap">
               <h5>{{ listData.name }}</h5>
               <!-- internationalized while preparation -->
@@ -992,7 +992,7 @@ export default defineComponent({
           return shopifyConfigsAndProductIds
         }, {})
 
-        await Promise.allSettled(Object.keys(configs).sort().map(async (shopId: any) => {
+        await Promise.allSettled(Object.keys(configs).map(async (shopId: any) => {
           const configAndIdData = shopifyConfigsAndProductIds[shopId];
           let listData = {
             ...configs[shopId], // adding shopify shop information to be available for showing name
@@ -1088,6 +1088,11 @@ export default defineComponent({
       }).then(() => {
         showToast(this.$t("Copied to clipboard"));
       })
+    },
+    getSortedShopListings(shopListings: any) {
+      // using return based sorting instead of localeCompare
+      // as localeCompare is slower
+      return shopListings.sort((a: any, b: any) => a.name < b.name ? -1 : 1)
     }
   },
   setup() {
