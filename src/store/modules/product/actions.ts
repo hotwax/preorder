@@ -304,7 +304,7 @@ const actions: ActionTree<ProductState, RootState> = {
 
       resp = await ProductService.getCatalogCategories({
         "inputFields": {
-          "productStoreId": payload.productStoreId,
+          "prodCatalogId": productStoreCatalogId,
           "prodCatalogCategoryTypeId": ["PCCT_PREORDR", "PCCT_BACKORDER"],
           "prodCatalogCategoryTypeId_op": "in"
         },
