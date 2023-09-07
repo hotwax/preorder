@@ -872,7 +872,7 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Adding to in", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          this.poSummary.header = this.$t("Adding to", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
         }
         this.poSummary.body = this.$t("This product will begin pre-selling because it is out of stock and purchase order is available.", { poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId });
       } else if (!this.poSummary.eligible && hasCategory) {
