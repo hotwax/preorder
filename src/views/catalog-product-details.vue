@@ -47,22 +47,22 @@
         </div>
         <div class="product-info" v-else>
           <div class="ion-padding">
-            <ion-skeleton-text animated style="width: 40%; height: 80%;" />
-            <ion-skeleton-text animated style="width: 60%;" />
+            <ion-skeleton-text animated style="width: 60%; height: 80%;" />
+            <ion-skeleton-text animated style="width: 40%; height: 40%;" />
           </div>
 
           <div class="product-features">
             <ion-list>
               <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 70%;" />
+                <ion-skeleton-text animated style="width: 60%;" />
               </ion-item>
             </ion-list>
 
             <ion-list>
               <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 70%;" />
+                <ion-skeleton-text animated style="width: 60%;" />
               </ion-item>
             </ion-list>
           </div>
@@ -71,19 +71,30 @@
         <div>
           <ion-card v-if="!poSummary.listingCountStatusMessage">
             <ion-item>
-              <ion-skeleton-text animated style="height: 60%; width: 90%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 20%;" />
             </ion-item>
             <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 40%;" />
             </ion-item>
             <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 50%;" />
             </ion-item>
+            <ion-item-divider color="light">
+              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+            </ion-item-divider>
             <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 70%;" />
-            </ion-item>
-            <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+              <ion-icon slot="start" :icon="shirtOutline" />
+              <ion-label>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 90%; height: 30%;" />
+                </ion-item>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 100%; height: 60%;" />
+                </ion-item>
+              </ion-label> 
             </ion-item>
           </ion-card>
           <ion-card v-else>
@@ -107,13 +118,10 @@
             </ion-item>
             <ion-item-divider color="light">
               <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
-              <ion-button v-if="poSummary.header || poSummary.body" color="medium" fill="clear" slot="end" @click="copyAuditMsg()">
-                <ion-icon slot="icon-only" :icon="copyOutline" />
-              </ion-button>
             </ion-item-divider>
             <!-- internationalized while preparaion -->
             <ion-item v-if="poSummary.header || poSummary.body">
-              <ion-icon slot="start" :icon="shirtOutline"></ion-icon>
+              <ion-icon slot="start" :icon="shirtOutline" />
               <ion-label class="ion-text-wrap">
                 <h2 v-if="poSummary.header">{{ poSummary.header }}</h2>
                 <p v-if="poSummary.body">{{ poSummary.body }}</p>
@@ -125,15 +133,9 @@
 
       <hr />
 
-      <div v-if="!Object.keys(poAndAtpDetails).length">
-        <ion-item lines="none">
-          <ion-skeleton-text animated style="width: 50%; height: 50%;" />
-        </ion-item>
-      </div>
-
       <section>
         <ion-card v-if="!Object.keys(poAndAtpDetails).length">
-          <ion-item>
+          <ion-item lines="none">
             <ion-skeleton-text animated style="height: 40%; width: 70%;" />
           </ion-item>
           <ion-item>
@@ -198,7 +200,6 @@
             <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
           </ion-item>
         </ion-card>
-
         <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
@@ -217,89 +218,74 @@
           </ion-item>
         </ion-card>
 
-        <ion-card v-if="!Object.keys(inventoryConfig).length">
-          <ion-item>
-            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-        </ion-card>
-        <ion-card v-else>
+        <ion-card>
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t("Online ATP calculation") }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item>
-            <ion-label>{{ $t("Online ATP") }}</ion-label>
-            <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Quantity on hand") }}</ion-label>
-            <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Excluded ATP") }}</ion-label>
-            <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateReserveInvConfig($event.detail.checked)"/>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @ionChange="updatePreOrdPhyInvHoldConfig($event.detail.checked)"/>
-          </ion-item>
+          <div v-if="!Object.keys(inventoryConfig).length">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+          </div>
+          <div v-else>
+            <ion-item>
+              <ion-label>{{ $t("Online ATP") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Quantity on hand") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Excluded ATP") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Reserve inventory") }}</ion-label>
+              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateReserveInvConfig($event.detail.checked)"/>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
+              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @ionChange="updatePreOrdPhyInvHoldConfig($event.detail.checked)"/>
+            </ion-item>
+          </div>
         </ion-card>
       </section>
 
       <hr />
 
       <section>
-        <ion-card v-if="!isCtgryAndBrkrngJobsLoaded">
-          <ion-item>
-            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-        </ion-card>
-        <ion-card v-else>
+        <ion-card>
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t('Category and brokering jobs') }}</h3>
             </ion-card-title>
           </ion-card-header>
-
-          <!-- in case jobs are not available -->
-          <div v-if="!Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length
-            && !Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length 
-            && !Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length">
-            <ion-item>{{ $t("No jobs found") }}</ion-item>
+          <div v-if="!isCtgryAndBrkrngJobsLoaded">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
           </div>
-
           <div v-else>
             <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
               <ion-label class="ion-text-wrap">
@@ -333,48 +319,44 @@
           </div>
         </ion-card>
 
-        <ion-card v-if="!poSummary.listingCountStatusMessage">
-          <ion-item>
-            <ion-skeleton-text animated style="height: 40%; width: 60%;" />
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-        </ion-card>
-        <ion-card v-else>
+        <ion-card>
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t('Shop listing status') }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item v-if="!Object.keys(shopListings).length">
-            {{ $t('No shop listings found') }}
-          </ion-item>
-          <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
-            <ion-label class="ion-text-wrap">
-              <h5>{{ listData.name }}</h5>
-              <!-- internationalized while preparation -->
-              <p>{{ listData.listingTimeAndStatus }}</p>
-            </ion-label>
-            <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
-              <h5>{{ $t(listData.listingStatus) }}</h5>
-            </ion-label>
-            <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
-              <h5>{{ $t("No listing data") }}</h5>
-            </ion-label>
-            <ion-label v-else color="medium" slot="end">
-              <h5>{{ $t("Not linked") }}</h5>
-            </ion-label>
-          </ion-item>
+          <div v-if="!poSummary.listingCountStatusMessage">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+          </div>
+          <div v-else>
+            <ion-item v-if="!Object.keys(shopListings).length">
+              {{ $t('No shop listings found') }}
+            </ion-item>
+            <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
+              <ion-label class="ion-text-wrap">
+                <h5>{{ listData.name }}</h5>
+                <!-- internationalized while preparation -->
+                <p>{{ listData.listingTimeAndStatus }}</p>
+              </ion-label>
+              <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
+                <h5>{{ $t(listData.listingStatus) }}</h5>
+              </ion-label>
+              <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
+                <h5>{{ $t("No listing data") }}</h5>
+              </ion-label>
+              <ion-label v-else color="medium" slot="end">
+                <h5>{{ $t("Not linked") }}</h5>
+              </ion-label>
+            </ion-item>
+          </div>
         </ion-card>
       </section>
     </ion-content>
@@ -383,7 +365,6 @@
 
 <script lang="ts">
 import {
-  IonButton,
   IonButtons,
   IonBackButton,
   IonCard,
@@ -434,7 +415,6 @@ export default defineComponent({
   name: "catalog-product-details",
   components: {
     Image,
-    IonButton,
     IonButtons,
     IonBackButton,
     IonCard,
@@ -847,7 +827,7 @@ export default defineComponent({
         } else {
           this.poSummary.header = this.$t("Added to", { categoryName });
         }
-        this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.totalPoAtp , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
+        this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.activePo.quantity , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
       } else if (!this.poSummary.eligible && !hasCategory) {
         const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
@@ -866,7 +846,7 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Adding to in", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          this.poSummary.header = this.$t("Adding to", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
         }
         this.poSummary.body = this.$t("This product will begin pre-selling because it is out of stock and purchase order is available.", { poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId });
       } else if (!this.poSummary.eligible && hasCategory) {
@@ -981,6 +961,7 @@ export default defineComponent({
         const shopifyConfigsAndProductIds = this.configsByStores.reduce((shopifyConfigsAndProductIds: any, config: any) => {
           const shopifyShop = shopifyConfigsAndProductIds[config.shopId] || {}
           !shopifyShop.variantProductId && (shopifyShop.variantProductId = this.getProductIdentificationId(this.currentVariant.goodIdentifications, 'ShopifyShopProduct/' + config.shopId))
+          !shopifyShop.hcVariantProductId && (shopifyShop.hcVariantProductId = this.currentVariant.productId)
           shopifyConfigsAndProductIds[config.shopId] = shopifyShop;
           configs[config.shopId] = config;
           return shopifyConfigsAndProductIds
@@ -991,7 +972,7 @@ export default defineComponent({
           let listData = {
             ...configs[shopId], // adding shopify shop information to be available for showing name
           } as any
-          if (!configAndIdData.variantProductId) {
+          if (!configAndIdData.variantProductId && !configAndIdData.hcVariantProductId) {
             this.shopListings = [...this.shopListings, listData]
             // TODO Find a better way
             return Promise.resolve(this.shopListings)
@@ -1005,7 +986,7 @@ export default defineComponent({
               } as any,
               "filter": `docType: BULKOPERATION
                   AND operation: 'SHOP_PREORDER_SYNC'
-                  AND data_productVariantUpdate_productVariant_id: "gid://shopify/ProductVariant/${configAndIdData.variantProductId}"
+                  AND data_productVariantUpdate_productVariant_id: ("gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}")
                   AND data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER"`,
               "query": "*:*",
             },
@@ -1107,7 +1088,7 @@ export default defineComponent({
 <style scoped>
 .header {
   display: grid;
-  grid-template-columns: 200px 1fr 375px;
+  grid-template-columns: 200px 1fr 400px;
   grid-gap: 16px;
   padding: 16px 16px 48px;
 }
