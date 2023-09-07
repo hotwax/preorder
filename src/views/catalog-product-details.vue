@@ -478,14 +478,8 @@ export default defineComponent({
       const productStoreCategories = await this.store.dispatch('product/getPreOrderBackorderCategory', { productStoreId })
       this.preOrderCategoryId = productStoreCategories["PCCT_PREORDR"];
       this.backorderCategoryId = productStoreCategories["PCCT_BACKORDER"];
-      if (!this.preOrderCategoryId) {
-        showToast(translate("No pre-order category found"))
-      }
-      if (!this.backorderCategoryId) {
-        showToast(translate("No backorder category found"))
-      }
     } catch (error) {
-      showToast(translate("Failed to get pre-order/backorder categories"))
+      console.error("Failed to get pre-order/backorder categories")
     }
     await this.getShopifyConfigsByStore()
     await this.getCtgryAndBrkrngJobs()
