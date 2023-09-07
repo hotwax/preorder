@@ -21,6 +21,12 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrentEComStore(state) {
         return state.currentEComStore
+    },
+    getVirtualFacilities(state) {
+        return state.virtualFacilities
+    },
+    getCurrentOrderParking(state) {
+        return state.currentOrderParking
     }
 }
 export default getters;

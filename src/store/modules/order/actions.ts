@@ -47,6 +47,13 @@ const actions: ActionTree<OrderState, RootState> = {
     if (rootState.user.currentEComStore) {
       payload.filters.push('productStoreId: ' + rootState.user.currentEComStore.productStoreId);
     }
+
+    if(rootState.user.currentOrderParking.length) {
+      payload.filters.push(`facilityId: (${rootState.user.currentOrderParking.join(' OR ')})`)
+    } else {
+      payload.filters.push(`facilityId: (PRE_ORDER_PARKING OR BACKORDER_PARKING)`)
+    }
+
     return dispatch("findOrder", payload).finally(() => {
       query.hasUpdated = true;
       commit(types.ORDER_QUERY_UPDATED, { query } );
