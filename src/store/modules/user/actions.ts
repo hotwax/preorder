@@ -8,6 +8,7 @@ import { translate } from '@/i18n'
 import { Settings } from 'luxon'
 import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import { useAuthStore } from '@hotwax/dxp-components';
+import { getServerPermissionsFromRules, prepareAppPermissions, resetPermissions, setPermissions } from '@/authorization'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -18,36 +19,58 @@ const actions: ActionTree<UserState, RootState> = {
 
     const { token, oms } = payload;
     dispatch("setUserInstanceUrl", oms);
-
     try {
         if (token) {
+          // Getting the permissions list from server
           const permissionId = process.env.VUE_APP_PERMISSION_ID;
-          if (permissionId) {
-            const checkPermissionResponse = await UserService.checkPermission({
-              data: {
-                permissionId
-              },
-              headers: {
-                Authorization:  'Bearer ' + token,
-                'Content-Type': 'application/json'
-              }
-            });
 
-            if (checkPermissionResponse.status === 200 && !hasError(checkPermissionResponse) && checkPermissionResponse.data && checkPermissionResponse.data.hasPermission) {
-              commit(types.USER_TOKEN_CHANGED, { newToken: token })
-              updateToken(token)
-              await dispatch('getProfile')
-            } else {
+          // Prepare permissions list
+          const serverPermissionsFromRules = getServerPermissionsFromRules();
+          if (permissionId) serverPermissionsFromRules.push(permissionId);
+
+          const serverPermissions = await UserService.getUserPermissions({
+            permissionIds: serverPermissionsFromRules
+          }, token);
+          const appPermissions = prepareAppPermissions(serverPermissions);
+
+          // Checking if the user has permission to access the app
+          // If there is no configuration, the permission check is not enabled
+          if (permissionId) {
+            // As the token is not yet set in the state passing token headers explicitly
+            // TODO Abstract this out, how token is handled should be part of the method not the callee
+            const hasPermission = appPermissions.some((appPermissionId: any) => appPermissionId === permissionId );
+            // If there are any errors or permission check fails do not allow user to login
+            if (hasPermission) {
               const permissionError = 'You do not have permission to access the app.';
               showToast(translate(permissionError));
               console.error("error", permissionError);
               return Promise.reject(new Error(permissionError));
             }
-          } else {
-            commit(types.USER_TOKEN_CHANGED, { newToken: token })
-            updateToken(token)
-            await dispatch('getProfile')
           }
+
+          // Getting user profile
+          const userProfile = await UserService.getUserProfile(token);
+          userProfile.stores = await UserService.getEComStores(token, userProfile.partyId);
+          
+          // Getting user preferred store
+          let preferredStore = userProfile.stores[0];
+          const preferredStoreId =  await UserService.getPreferredStore(token);
+          if (preferredStoreId) {
+            const store = userProfile.stores.find((store: any) => store.productStoreId === preferredStoreId);
+            store && (preferredStore = store)
+          }
+
+          setPermissions(appPermissions);
+          if (userProfile.userTimeZone) {
+            Settings.defaultZone = userProfile.userTimeZone;
+          }
+
+          // TODO user single mutation
+          commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  preferredStore);
+          commit(types.USER_INFO_UPDATED, userProfile);
+          commit(types.USER_TOKEN_CHANGED, { newToken: token });
+          commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
+          updateToken(token);
         }
     } catch (err: any) {
       showToast(translate('Something went wrong'));
@@ -70,56 +93,10 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("order/resetOrderQuery")
     this.dispatch("job/clearCtgryAndBrkrngJobs")
     this.dispatch("util/clearInvConfigs")
+    resetPermissions();
 
     // reset plugin state on logout
     authStore.$reset()
-  },
-
-  /**
-   * Get User profile
-   */
-  async getProfile ( { commit }) {
-    const resp = await UserService.getProfile()
-    const userProfile = JSON.parse(JSON.stringify(resp.data));
-
-    if (resp.status === 200) {
-      if(userProfile.userTimeZone) {
-        Settings.defaultZone = userProfile.userTimeZone;
-      }
-      const payload = {
-        "inputFields": {
-          "storeName_op": "not-empty",
-          "partyId": userProfile.partyId
-        },
-        "fieldList": ["productStoreId", "storeName"],
-        "entityName": "ProductStoreAndRole",
-        "distinct": "Y",
-        "noConditionFind": "Y"
-      }
-
-      const storeResp = await UserService.getEComStores(payload);
-      let stores = [] as any;
-      if(!hasError(storeResp) ) {
-        stores = storeResp.data.docs
-      }
-      userProfile.stores = stores;
-
-      let userPrefStore = {} as any
-
-      if (stores.length > 0) {
-        userPrefStore = stores[0];
-        try {
-          const userPrefResponse =  await UserService.getUserPreference({
-            'userPrefTypeId': 'SELECTED_BRAND'
-          });
-          userPrefResponse.data.userPrefValue && (userPrefStore = stores.find((store: any) => store.productStoreId == userPrefResponse.data.userPrefValue))
-        } catch (err) {
-          console.error(err)
-        }
-      }
-      commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  userPrefStore);
-      commit(types.USER_INFO_UPDATED, userProfile);
-    }
   },
 
   /**

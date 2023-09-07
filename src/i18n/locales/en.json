@@ -203,6 +203,7 @@
     "sku selected": "sku selected",
     "Some listing data not available": "Some listing data not available",
     "Something went wrong": "Something went wrong",
+    "Something went wrong while login. Please contact administrator.": "Something went wrong while login. Please contact administrator.",
     "Something went wrong, could not fetch": "Something went wrong, could not fetch {data}",
     "Sorry, your username or password is incorrect. Please try again.": "Sorry, your username or password is incorrect. Please try again.",
     "Sort by": "Sort by",
@@ -238,5 +239,6 @@
     "When this product entered there was no sellable inventory and was available in": "When this product entered {categoryName} there was no sellable inventory and {poItemATP} was available in {poId}",
     "With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues": "With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues",
     "Would you like to update your time zone to . Your profile is currently set to . This setting can always be changed from the settings menu.": "Would you like to update your time zone to {localTimeZone}. Your profile is currently set to {profileTimeZone}. This setting can always be changed from the settings menu.",
-    "Yes": "Yes"
+    "Yes": "Yes",
+    "You do not have permission to access this page": "You do not have permission to access this page"
 }

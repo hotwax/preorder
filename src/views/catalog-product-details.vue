@@ -256,11 +256,11 @@
             </ion-item>
             <ion-item>
               <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)"/>
+              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)"/>
             </ion-item>
             <ion-item>
               <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)"/>
+              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)"/>
             </ion-item>
           </div>
         </ion-card>
@@ -411,6 +411,7 @@ import { StockService } from "@/services/StockService";
 import { UtilService } from "@/services/UtilService";
 import { useRouter } from "vue-router";
 import { Plugins } from "@capacitor/core";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
   name: "catalog-product-details",
@@ -1123,9 +1124,11 @@ export default defineComponent({
     const router = useRouter();
     return {
       alertCircleOutline,
+      Actions,
       checkmarkCircleOutline,
       chevronForwardOutline,
       copyOutline,
+      hasPermission,
       router,
       shirtOutline,
       store

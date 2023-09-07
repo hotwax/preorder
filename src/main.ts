@@ -30,6 +30,9 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
+import permissionPlugin from '@/authorization';
+import permissionRules from '@/authorization/Rules';
+import permissionActions from '@/authorization/Actions';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -38,6 +41,10 @@ const app = createApp(App)
   .use(router)
   .use(i18n)
   .use(store)
+  .use(permissionPlugin, {
+    rules: permissionRules,
+    actions: permissionActions
+  })
   .use(dxpComponents, {
     login,
     logout,
