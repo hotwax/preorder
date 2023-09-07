@@ -165,9 +165,9 @@ export default defineComponent({
       isCatalogScrollable: 'product/isCatalogScrollable'
     })
   },
-  mounted() {
-    this.getCatalogProducts()
-    this.preparePreordBckordComputationJob()
+  async ionViewWillEnter() {
+    await this.getCatalogProducts()
+    await this.preparePreordBckordComputationJob()
   },
   methods: {
     async getCatalogProducts(vSize?: any, vIndex?: any) {
@@ -191,7 +191,7 @@ export default defineComponent({
 
       if(this.queryString.trim().length) {
         payload.json.query = this.queryString + "*"
-        payload.json.params['qf'] = "productId productName upc sku internalName brandName parentProductName"
+        payload.json.params['qf'] = "productId productName upc sku internalName brandName parentProductName search_goodIdentifications"
         payload.json.params['defType'] = "edismax"
       }
 

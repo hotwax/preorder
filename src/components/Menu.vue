@@ -38,13 +38,13 @@ import {
   IonMenu,
   IonMenuToggle,
 } from "@ionic/vue";
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent} from "vue"
 import { mapGetters } from "vuex";
 
 import { albums ,shirt, pricetags, settings } from "ionicons/icons";
 import { useStore } from "@/store";
+import { useRouter } from "vue-router";
 import { hasPermission } from "@/authorization";
-import router from "@/router";
 
 export default defineComponent({
   name: "Menu",
@@ -67,15 +67,11 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const router = useRouter();
 
     const getValidMenuItems = (appPages: any) => {
       return appPages.filter((appPage: any) => (!appPage.meta || !appPage.meta.permissionId) || hasPermission(appPage.meta.permissionId));
     }
-
-    const selectedIndex = computed(() => {
-      const path = router.currentRoute.value.path
-      return getValidMenuItems(appPages).findIndex((screen: any) => screen.url === path)
-    })
 
     const appPages = [
       {
@@ -90,6 +86,7 @@ export default defineComponent({
       {
         title: "Products",
         url: "/products",
+        childRoutes: ["/product-details/"],
         iosIcon: shirt,
         mdIcon: shirt,
         meta: {
@@ -99,6 +96,7 @@ export default defineComponent({
       {
         title: "Catalog",
         url: "/catalog",
+        childRoutes: ["/catalog-product-details/"],
         iosIcon: albums,
         mdIcon: albums,
         meta: {
@@ -110,8 +108,14 @@ export default defineComponent({
         url: "/settings",
         iosIcon: settings,
         mdIcon: settings,
-      },
+      }
     ];
+
+    const selectedIndex = computed(() => {
+      const path = router.currentRoute.value.path
+      return getValidMenuItems(appPages).findIndex((screen: any) => screen.url === path || screen.childRoutes?.includes(path) || screen.childRoutes?.some((route: any)=> path.includes(route)))
+    })
+
     return {
       appPages,
       albums,
@@ -122,7 +126,7 @@ export default defineComponent({
       shirt,
       store
     };
-  },
+  }
 });
 </script>
 <style scoped>
