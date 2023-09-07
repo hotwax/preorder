@@ -441,7 +441,7 @@ export default defineComponent({
       backorderCategoryId: '',
       preOrderCategoryId: '',
       selectedVariant: {} as any,
-      selectedFeature: ''
+      selectedFeature: '',
       isCtgryAndBrkrngJobsLoaded: false
     }
   },
