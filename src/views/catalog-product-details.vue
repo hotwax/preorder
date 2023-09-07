@@ -987,6 +987,7 @@ export default defineComponent({
         const shopifyConfigsAndProductIds = this.configsByStores.reduce((shopifyConfigsAndProductIds: any, config: any) => {
           const shopifyShop = shopifyConfigsAndProductIds[config.shopId] || {}
           !shopifyShop.variantProductId && (shopifyShop.variantProductId = this.getProductIdentificationId(this.currentVariant.goodIdentifications, 'ShopifyShopProduct/' + config.shopId))
+          !shopifyShop.hcVariantProductId && (shopifyShop.hcVariantProductId = this.currentVariant.productId)
           shopifyConfigsAndProductIds[config.shopId] = shopifyShop;
           configs[config.shopId] = config;
           return shopifyConfigsAndProductIds
@@ -997,7 +998,7 @@ export default defineComponent({
           let listData = {
             ...configs[shopId], // adding shopify shop information to be available for showing name
           } as any
-          if (!configAndIdData.variantProductId) {
+          if (!configAndIdData.variantProductId && !configAndIdData.hcVariantProductId) {
             this.shopListings = [...this.shopListings, listData]
             // TODO Find a better way
             return Promise.resolve(this.shopListings)
@@ -1011,7 +1012,7 @@ export default defineComponent({
               } as any,
               "filter": `docType: BULKOPERATION
                   AND operation: 'SHOP_PREORDER_SYNC'
-                  AND data_productVariantUpdate_productVariant_id: "gid://shopify/ProductVariant/${configAndIdData.variantProductId}"
+                  AND data_productVariantUpdate_productVariant_id: ("gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}")
                   AND data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER"`,
               "query": "*:*",
             },
