@@ -137,7 +137,7 @@ import {
 import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
 import TimeZoneModal from '@/views/timezone-modal.vue'
-import Image from '@/components/Image.vue'
+import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
 
 export default defineComponent({

@@ -29,7 +29,7 @@
       <div v-else>
         <ion-item  v-bind:key="product.groupValue" v-for="product in products" lines="none" @click="() => router.push({ name: 'Product-details', params: { id: product.groupValue }})">
           <ion-thumbnail slot="start">
-            <Image :src="getProduct(product.groupValue).mainImageUrl"></Image>
+            <ShopifyImg :src="getProduct(product.groupValue).mainImageUrl" size="small"></ShopifyImg>
           </ion-thumbnail>
           <ion-label>
             <h2>{{ getProduct(product.groupValue).productName}}</h2>
@@ -72,7 +72,7 @@ import { useRouter } from "vue-router";
 import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
-import Image from '@/components/Image.vue';
+import { ShopifyImg } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "settings",
@@ -93,7 +93,7 @@ export default defineComponent({
     IonTitle,
     IonSearchbar,
     IonToolbar,
-    Image
+    ShopifyImg
   },
   data() {
     return {
