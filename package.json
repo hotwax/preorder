@@ -1,6 +1,6 @@
 {
   "name": "preorder-app",
-  "version": "1.11.0",
+  "version": "1.13.0",
   "private": true,
   "description": "HotWax Commece Pre-order App",
   "scripts": {
@@ -15,6 +15,7 @@
   "dependencies": {
     "@capacitor/android": "^2.5.0",
     "@capacitor/core": "^2.4.7",
+    "@casl/ability": "^6.0.0",
     "@capacitor/ios": "^2.5.0",
     "@hotwax/app-version-info": "^1.0.0",
     "@hotwax/apps-theme": "^1.2.3",
@@ -23,6 +24,7 @@
     "@ionic/core": "6.7.5",
     "@ionic/vue": "6.7.5",
     "@ionic/vue-router": "6.7.5",
+    "boon-js": "^2.0.3",
     "core-js": "^3.6.5",
     "luxon": "^3.2.0",
     "mitt": "^2.1.0",
