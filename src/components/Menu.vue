@@ -97,12 +97,6 @@ export default defineComponent({
         mdIcon: shirt,
       },
       {
-        title: "Catalog",
-        url: "/catalog",
-        iosIcon: albums,
-        mdIcon: albums,
-      },
-      {
         title: "Settings",
         url: "/settings",
         iosIcon: settings,

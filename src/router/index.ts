@@ -3,9 +3,7 @@ import { RouteRecordRaw } from 'vue-router';
 import Login from '../views/login.vue'
 import Products from '../views/products.vue'
 import ProductDetails from '../views/product-details.vue'
-import CatalogProductDetails from '../views/catalog-product-details.vue'
 import Orders from '../views/orders.vue'
-import Catalog from '../views/catalog.vue'
 import Settings from '../views/settings.vue'
 import store from '@/store'
 
@@ -54,18 +52,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/orders',
     name: 'Orders',
     component: Orders,
-    beforeEnter: authGuard
-  },
-  {
-    path: '/catalog',
-    name: 'Catalog',
-    component: Catalog,
-    beforeEnter: authGuard
-  },
-  {
-    path: '/catalog-product-details/:productId/',
-    name: 'Catalog-product-details',
-    component: CatalogProductDetails,
     beforeEnter: authGuard
   },
   {
