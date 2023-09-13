@@ -1059,24 +1059,27 @@ export default defineComponent({
               status: metafieldValue.status,
               promiseDate: metafieldValue["promise_date"]
             }
-            const listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
+            let listingTime = ''
+            if(listData.listingTime) {
+              listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
+            }
             if (!listData.containsError) {
               if (listData.status === 'inactive') {
-                // showing the job's runTime as listing time
-                listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime })
+                // showing the job's runTime as listing time, and not showing listing time if not present
+                listingTime && (listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Listed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               }
             } else {
               // If it failed to update, considered the status must old
               if (listData.status === 'inactive') {
                 // showing the job's runTime as listing time
-                listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               }
             }
