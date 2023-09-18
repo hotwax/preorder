@@ -151,7 +151,7 @@
     "preorder items will be released to the warehouse you have selected.": "{count} preorder items will be released to the warehouse you have selected.",
     "preorders will be cancelled. This action cannot be undone.": "{count} preorders will be cancelled. This action cannot be undone.",
     "Products": "Products",
-    "Product Audit": "Product audit",
+    "Product audit": "Product audit",
     "Product summary": "Product summary",
     "Product cannot be pre-sold because it does not have active purchase orders": "Product cannot be pre-sold because it does not have active purchase orders",
     "Product has been accepting from against PO #": "Product has been accepting {category}s from {fromDate} against PO #${POID}",
