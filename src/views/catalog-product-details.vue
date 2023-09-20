@@ -346,7 +346,10 @@
                 <!-- internationalized while preparation -->
                 <p>{{ listData.listingTimeAndStatus }}</p>
               </ion-label>
-              <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
+              <ion-label v-if="listData.shopifyShopProductId && listData.status === 'disconnected'" color="medium" slot="end">
+                <h5>{{ $t('Disconnected') }}</h5>
+              </ion-label>
+              <ion-label v-else-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
                 <h5>{{ $t(listData.listingStatus) }}</h5>
               </ion-label>
               <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
@@ -964,13 +967,11 @@ export default defineComponent({
       try {
         let payload = {
           "inputFields": {
-            "productStoreId": this.currentEComStore.productStoreId,
-            "accessScopeEnumId": "SHOP_NO_ACCESS",
-            'accessScopeEnumId_op': 'notEqual'
+            "productStoreId": this.currentEComStore.productStoreId
           },
           "orderBy": "name ASC",
           "entityName": "ShopifyShopAndConfig",
-          "fieldList": ["shopifyConfigId", "shopId", "name"],
+          "fieldList": ["accessScopeEnumId", "shopifyConfigId", "shopId", "name"],
           "viewSize": 20
         } as any
 
@@ -1060,10 +1061,12 @@ export default defineComponent({
               promiseDate: metafieldValue["promise_date"]
             }
             let listingTime = ''
-            if(listData.listingTime) {
+            if (listData.listingTime) {
               listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
             }
-            if (!listData.containsError) {
+            if (listData.accessScopeEnumId === 'SHOP_NO_ACCESS') {
+              listData.status = 'disconnected'
+            } else if (!listData.containsError) {
               if (listData.status === 'inactive') {
                 // showing the job's runTime as listing time, and not showing listing time if not present
                 listingTime && (listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime }))
