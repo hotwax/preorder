@@ -96,7 +96,7 @@ const actions: ActionTree<UserState, RootState> = {
       // Added logic to remove the `//` from the resp as in case of get request we are having the extra characters and in case of post we are having 403
       resp = JSON.parse(resp.startsWith('//') ? resp.replace('//', '') : resp)
 
-      if(resp.logoutAuthType === 'SAML2SSO') {
+      if(resp.logoutAuthType == 'SAML2SSO') {
         redirectionUrl = resp.logoutUrl
       }
     }
