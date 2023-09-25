@@ -89,6 +89,8 @@
       </div>
 
       <section>
+        <ProductIdentifier />
+
         <ion-card>
           <ion-card-header>
             <ion-card-title>
