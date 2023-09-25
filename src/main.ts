@@ -52,10 +52,10 @@ const app = createApp(App)
     logout,
     loader,
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
-    getConfig: getConfig,
-    getProductIdentificationPref: getProductIdentificationPref,
-    initialise: initialise,
-    setProductIdentificationPref: setProductIdentificationPref
+    getConfig,
+    getProductIdentificationPref,
+    initialise,
+    setProductIdentificationPref
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
