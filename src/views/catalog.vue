@@ -13,7 +13,11 @@
       <div class="header">
         <div class="filters ion-padding-top">
           <ion-toolbar>
-            <ion-searchbar :placeholder="$t('Search products')" v-model="queryString" @keyup.enter="queryString = $event.target.value; getCatalogProducts()" />
+            <Searchbar
+              :placeholder="$t('Search products')"
+              @updateQueryString="queryString = $event"
+              @onSearch="getCatalogProducts()"
+            />
             <ion-item lines="none">
               <ion-chip :outline="prodCatalogCategoryTypeId !== filter.value" v-for="filter in filters" :key="filter.value" @click="applyFilter(filter.value)">
                 <!-- Used v-show as v-if caused the ion-chip click animation to render weirdly -->
@@ -101,7 +105,6 @@ import {
   IonLabel,
   IonMenuButton,
   IonPage,
-  IonSearchbar,
   IonThumbnail,
   IonTitle,
   IonToolbar,
@@ -132,10 +135,9 @@ export default defineComponent({
     IonLabel,
     IonMenuButton,
     IonPage,
-    IonSearchbar,
     IonThumbnail,
     IonTitle,
-    IonToolbar,
+    IonToolbar
   },
   data() {
     return {

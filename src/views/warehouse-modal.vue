@@ -9,7 +9,12 @@
       <ion-title>{{ $t("Release preorder to a warehouse") }}</ion-title>
     </ion-toolbar>
     <ion-toolbar>
-      <ion-searchbar  @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search warehouses')"  v-model="queryString" v-on:keyup.enter="findFacility()"></ion-searchbar>
+      <Searchbar
+        :placeholder="$t('Search warehouses')"
+        @updateQueryString="queryString = $event"
+        @onSearch="findFacility()"
+        @onFocus="selectSearchBarText($event)"
+      />
     </ion-toolbar>
   </ion-header>
 
@@ -53,7 +58,6 @@ import {
   IonRadioGroup,
   IonRadio,
   IonList,
-  IonSearchbar,
   IonTitle,
   IonToolbar,
   modalController,
@@ -231,7 +235,6 @@ export default defineComponent({
     IonList,
     IonRadioGroup,
     IonRadio,
-    IonSearchbar,
     IonTitle,
     IonToolbar 
     },

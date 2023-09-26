@@ -21,7 +21,12 @@
     <ion-content>
       <div class="header">
         <div class="search">
-          <ion-searchbar @ionFocus="selectSearchBarText($event)" @ionClear="query.queryString = ''; updateQuery()" :value="query.queryString" v-on:keyup.enter="query.queryString = $event.target.value; updateQuery()"> </ion-searchbar>
+          <Searchbar
+            @updateQueryString="query.queryString = $event"
+            @onSearch="updateQuery()"
+            @onFocus="selectSearchBarText($event)"
+            @onClear="query.queryString = ''; updateQuery()"
+          />
         </div> 
 
         <div class="filters">
@@ -191,7 +196,6 @@ import {
   IonPage,
   IonSelect,
   IonSelectOption,
-  IonSearchbar,
   IonThumbnail,
   IonTitle,
   IonToggle,
@@ -248,7 +252,6 @@ export default defineComponent({
     IonPage,
     IonSelect,
     IonSelectOption,
-    IonSearchbar,
     IonThumbnail,
     IonTitle,
     IonToggle,

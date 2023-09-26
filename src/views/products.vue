@@ -15,7 +15,12 @@
     </ion-header>
 
     <ion-content>
-      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search products')" v-model="queryString" v-on:keyup.enter="getProducts()"></ion-searchbar>
+      <Searchbar
+        :placeholder="$t('Search products')"
+        @updateQueryString="queryString = $event"
+        @onSearch="getProducts()"
+        @onFocus="selectSearchBarText($event)"
+      />
 
       <!-- Empty state -->
       <div class="empty-state" v-if="products.length === 0">
@@ -62,7 +67,6 @@ import {
   IonPage,
   IonThumbnail,
   IonTitle,
-  IonSearchbar,
   IonToolbar,
   modalController,
 } from "@ionic/vue";
@@ -91,7 +95,6 @@ export default defineComponent({
     IonPage,
     IonThumbnail,
     IonTitle,
-    IonSearchbar,
     IonToolbar,
     ShopifyImg
   },
