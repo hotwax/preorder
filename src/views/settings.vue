@@ -145,7 +145,7 @@ export default defineComponent({
     IonTitle,
     IonToolbar,
     Image
-},
+  },
   setup() {
     const store = useStore();
     return { store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline, openOutline, saveOutline }
