@@ -121,7 +121,6 @@ import { mapGetters } from 'vuex'
 import TimeZoneModal from '@/views/timezone-modal.vue'
 import Image from '@/components/Image.vue';
 import { DateTime } from 'luxon';
-import { OmsInstanceNavigator } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "settings",
@@ -145,8 +144,7 @@ export default defineComponent({
     IonSelectOption,
     IonTitle,
     IonToolbar,
-    Image,
-    OmsInstanceNavigator
+    Image
 },
   setup() {
     const store = useStore();
