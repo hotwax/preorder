@@ -14,7 +14,7 @@ import {
   IonSplitPane
 } from "@ionic/vue";
 import Menu from '@/components/Menu.vue';
-import { defineComponent } from "vue";
+import { defineComponent, provide, ref } from "vue";
 import { useI18n } from 'vue-i18n'
 import TaskQueue from './task-queue';
 import OfflineHelper from "./offline-helper"
@@ -24,6 +24,7 @@ import { mapGetters, useStore } from 'vuex';
 import { Settings } from 'luxon'
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
+import { useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "App",
@@ -43,7 +44,8 @@ export default defineComponent({
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore'
     })
   },
   methods: {
@@ -101,6 +103,12 @@ export default defineComponent({
     if (this.userProfile && this.userProfile.userTimeZone) {
       Settings.defaultZone = this.userProfile.userTimeZone;
     }
+
+    // Get product identification from api using dxp-component and set the state if eComStore is defined
+    if (this.currentEComStore.productStoreId) {
+      await useProductIdentificationStore().getIdentificationPref(this.currentEComStore.productStoreId)
+        .catch((error) => console.error(error));
+    }
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
@@ -113,12 +121,29 @@ export default defineComponent({
     OfflineHelper.register();
     const { t, locale } = useI18n();
     const router = useRouter();
+
+    const productIdentificationStore = useProductIdentificationStore();
+
+    // Reactive state for productIdentificationPref
+    let productIdentificationPref = ref(
+      productIdentificationStore.$state.productIdentificationPref
+    );
+
+    // Providing productIdentificationPref to all child components.
+    provide('productIdentificationPref', productIdentificationPref);
+
+    // Subscribing to productIdentification state change and changing value productIdentificationPref
+    productIdentificationStore.$subscribe((mutation: any, state) => {
+        productIdentificationPref.value = state.productIdentificationPref;
+    });
+
     return {
       router,
       TaskQueue,
       OfflineHelper,
       t,
       locale,
+      productIdentificationPref,
       store
     };
   },

@@ -17,8 +17,8 @@
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
           <div class="ion-padding">
-            <h4>{{ currentVariant.parentProductName }}</h4>
-            <p>{{ currentVariant.sku }}</p>
+            <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h4>
+            <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</p>
           </div>
 
           <div class="product-features">
@@ -388,7 +388,7 @@ import {
   IonRow,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
@@ -397,7 +397,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import { ShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, ShopifyImg } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -436,7 +436,7 @@ export default defineComponent({
     IonToggle,
     IonToolbar,
     IonTitle,
-    IonRow,
+    IonRow
   },
   data() {
     return {
@@ -1125,13 +1125,19 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+
+    // Injected product preference from App.view
+    const productIdentificationPref: any = inject("productIdentificationPref")
+
     return {
       alertCircleOutline,
       Actions,
       checkmarkCircleOutline,
       chevronForwardOutline,
       copyOutline,
+      getProductIdentificationValue,
       hasPermission,
+      productIdentificationPref,
       router,
       shirtOutline,
       store

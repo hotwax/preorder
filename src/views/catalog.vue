@@ -52,8 +52,8 @@
               <ShopifyImg :src="product.mainImageUrl" size="small"/>
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
-              <h5>{{ product.parentProductName }}</h5>
-              <p>{{ product.sku }}</p>
+              <h5>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}</h5>
+              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
             </ion-label>
           </ion-item>
 
@@ -106,10 +106,10 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { defineComponent, inject } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import { ShopifyImg } from '@hotwax/dxp-components';
+import { getProductIdentificationValue, ShopifyImg } from '@hotwax/dxp-components';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
@@ -270,7 +270,12 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
 
+    // Injected product preference from App.view
+    const productIdentificationPref: any = inject("productIdentificationPref")
+
     return {
+      getProductIdentificationValue,
+      productIdentificationPref,
       router,
       store,
     };

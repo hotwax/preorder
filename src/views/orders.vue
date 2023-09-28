@@ -120,7 +120,7 @@
                   <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"></ShopifyImg>
                 </ion-thumbnail>
                 <ion-label>
-                  <h2>{{ item.parentProductName ? item.parentProductName :item.productName }}</h2>
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, item) }}</h2>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
                 </ion-label>
@@ -202,7 +202,7 @@ import {
   modalController,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
 import WarehouseModal from "./warehouse-modal.vue";
 import BackgroundJobModal from "./background-job-modal.vue";
 import PromiseDateModal from "./promise-date-modal.vue";
@@ -222,7 +222,7 @@ import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
-import { ShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, ShopifyImg } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
@@ -475,17 +475,24 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+
+    // Injected product preference from App.view
+    const productIdentificationPref: any = inject("productIdentificationPref")
+
+
     return {
-      store,
-      pricetag,
-      ribbon,
-      ellipsisVertical,
-      send,
       business,
       calendar,
-      closeCircle,
-      hourglass,
       close,
+      closeCircle,
+      ellipsisVertical,
+      getProductIdentificationValue,
+      hourglass,
+      pricetag,
+      productIdentificationPref,
+      ribbon,
+      send,
+      store
     };
   },
 });
