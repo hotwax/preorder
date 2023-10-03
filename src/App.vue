@@ -14,7 +14,7 @@ import {
   IonSplitPane
 } from "@ionic/vue";
 import Menu from '@/components/Menu.vue';
-import { defineComponent, provide, ref } from "vue";
+import { defineComponent } from "vue";
 import { useI18n } from 'vue-i18n'
 import TaskQueue from './task-queue';
 import OfflineHelper from "./offline-helper"

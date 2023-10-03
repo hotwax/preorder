@@ -463,7 +463,7 @@ export default defineComponent({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
-      getInventoryConfig: "util/getInventoryConfig",
+      getInventoryConfig: "util/getInventoryConfig"
     })
   },
   async ionViewWillEnter() {
