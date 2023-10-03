@@ -202,7 +202,7 @@ import {
   modalController,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent, inject } from "vue";
+import { computed, defineComponent } from "vue";
 import WarehouseModal from "./warehouse-modal.vue";
 import BackgroundJobModal from "./background-job-modal.vue";
 import PromiseDateModal from "./promise-date-modal.vue";
@@ -222,7 +222,7 @@ import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
-import { getProductIdentificationValue, ShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, ShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
@@ -475,10 +475,8 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-
-    // Injected product preference from App.view
-    const productIdentificationPref: any = inject("productIdentificationPref")
-
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
 
     return {
       business,

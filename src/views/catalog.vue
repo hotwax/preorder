@@ -106,10 +106,10 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent, inject } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import { getProductIdentificationValue, ShopifyImg } from '@hotwax/dxp-components';
+import { getProductIdentificationValue, ShopifyImg, useProductIdentificationStore } from '@hotwax/dxp-components';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
@@ -269,9 +269,8 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
-
-    // Injected product preference from App.view
-    const productIdentificationPref: any = inject("productIdentificationPref")
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
 
     return {
       getProductIdentificationValue,

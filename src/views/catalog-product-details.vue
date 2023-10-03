@@ -388,7 +388,7 @@ import {
   IonRow,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent, inject } from "vue";
+import { computed, defineComponent } from "vue";
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
@@ -397,7 +397,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import { getProductIdentificationValue, ShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, ShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -463,7 +463,7 @@ export default defineComponent({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
-      getInventoryConfig: "util/getInventoryConfig"
+      getInventoryConfig: "util/getInventoryConfig",
     })
   },
   async ionViewWillEnter() {
@@ -1125,10 +1125,9 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
-
-    // Injected product preference from App.view
-    const productIdentificationPref: any = inject("productIdentificationPref")
-
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    
     return {
       alertCircleOutline,
       Actions,
