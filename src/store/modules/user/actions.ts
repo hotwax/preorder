@@ -160,7 +160,7 @@ const actions: ActionTree<UserState, RootState> = {
       // Get product identification from api using dxp-component and set the state if eComStore is defined
       if (payload.eComStore.productStoreId) {
         await useProductIdentificationStore().getIdentificationPref(payload.eComStore.productStoreId)
-        .catch((error) => console.error(error));
+          .catch((error) => console.error(error));
       }
     },
 
