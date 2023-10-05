@@ -104,11 +104,9 @@ export default defineComponent({
       Settings.defaultZone = this.userProfile.userTimeZone;
     }
 
-    // Get product identification from api using dxp-component and set the state if eComStore is defined
-    if (this.currentEComStore.productStoreId) {
-      await useProductIdentificationStore().getIdentificationPref(this.currentEComStore.productStoreId)
-        .catch((error) => console.error(error));
-    }
+    // Get product identification from api using dxp-component
+    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
+      .catch((error) => console.error(error));
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);

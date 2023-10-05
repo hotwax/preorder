@@ -71,7 +71,7 @@ const actions: ActionTree<UserState, RootState> = {
         }
 
         // TODO user single mutation
-        commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  preferredStore);
+        commit(types.USER_CURRENT_ECOM_STORE_UPDATED, preferredStore);
         commit(types.USER_INFO_UPDATED, userProfile);
         commit(types.USER_TOKEN_CHANGED, { newToken: token });
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
