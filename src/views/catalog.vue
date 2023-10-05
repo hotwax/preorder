@@ -52,7 +52,7 @@
               <ShopifyImg :src="product.mainImageUrl" size="small"/>
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
-              <h5>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) }}</h5>
+              <h5>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) ? getProductIdentificationValue(productIdentificationPref.primaryId, product) : product.productName }}</h5>
               <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
             </ion-label>
           </ion-item>

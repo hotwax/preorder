@@ -59,6 +59,10 @@ const actions: ActionTree<UserState, RootState> = {
         if (preferredStoreId) {
           const store = userProfile.stores.find((store: any) => store.productStoreId === preferredStoreId);
           store && (preferredStore = store)
+
+          // Get product identification from api using dxp-component and set the state if eComStore is defined
+          await useProductIdentificationStore().getIdentificationPref(preferredStoreId)
+            .catch((error) => console.error(error));
         }
 
         setPermissions(appPermissions);
@@ -72,12 +76,6 @@ const actions: ActionTree<UserState, RootState> = {
         commit(types.USER_TOKEN_CHANGED, { newToken: token });
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
         updateToken(token);
-
-        // Get product identification from api using dxp-component and set the state if eComStore is defined
-        if (preferredStoreId){
-          await useProductIdentificationStore().getIdentificationPref(preferredStoreId)
-          .catch((error) => console.error(error));
-        }
       }
     } catch (err: any) {
       showToast(translate('Something went wrong'));

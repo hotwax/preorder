@@ -120,7 +120,7 @@
                   <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"></ShopifyImg>
                 </ion-thumbnail>
                 <ion-label>
-                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, item) }}</h2>
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, item) ? getProductIdentificationValue(productIdentificationPref.primaryId, item) : item.productName }}</h2>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
                 </ion-label>

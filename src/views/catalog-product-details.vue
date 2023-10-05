@@ -17,7 +17,7 @@
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
           <div class="ion-padding">
-            <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) }}</h4>
+            <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) ? getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) : currentVariant.productName }}</h4>
             <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</p>
           </div>
 
