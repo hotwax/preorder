@@ -733,7 +733,7 @@ export default defineComponent({
         if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
         else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
 
-        if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
+        if (typeof resp[0].data?.availableToPromiseTotal === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
           this.atpCalcDetails.excludedAtp = resp[0].data?.availableToPromiseTotal - resp[1].data?.onlineAtp
         }
       } catch (error) {
