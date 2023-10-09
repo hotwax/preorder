@@ -272,7 +272,7 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t('Category and brokering jobs') }}</h3>
+              <h3>{{ $t('Related jobs') }}</h3>
             </ion-card-title>
           </ion-card-header>
           <div v-if="!isCtgryAndBrkrngJobsLoaded">
