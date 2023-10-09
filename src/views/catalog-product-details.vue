@@ -340,7 +340,7 @@
             <ion-item v-if="!Object.keys(shopListings).length">
               {{ $t('No shop listings found') }}
             </ion-item>
-            <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
+            <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
               <ion-label class="ion-text-wrap">
                 <h5>{{ listData.name }}</h5>
                 <!-- internationalized while preparation -->
