@@ -163,7 +163,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      instanceUrl: 'user/getInstanceUrl',
       currentEComStore: 'user/getCurrentEComStore',
     })
   },
