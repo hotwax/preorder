@@ -32,7 +32,7 @@
             <ShopifyImg :src="getProduct(product.groupValue).mainImageUrl" size="small"></ShopifyImg>
           </ion-thumbnail>
           <ion-label>
-            <h2>{{ getProduct(product.groupValue).productName}}</h2>
+            <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(product.groupValue)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(product.groupValue)) : getProduct(product.groupValue).productName }}</h2>
             <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(product.groupValue).featureHierarchy))" :key="attribute" ><span class="sentence-case">{{ feature }}</span>: {{ attribute }}</p>
           </ion-label>
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
@@ -66,13 +66,13 @@ import {
   IonToolbar,
   modalController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { hourglass } from "ionicons/icons";
 import { useRouter } from "vue-router";
 import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
-import { ShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, ShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "settings",
@@ -159,10 +159,14 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
     return {
-      router,
-      store,
+      getProductIdentificationValue,
       hourglass,
+      productIdentificationPref,
+      router,
+      store
     };
   },
 });
