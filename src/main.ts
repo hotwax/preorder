@@ -30,6 +30,10 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
+import permissionPlugin from '@/authorization';
+import permissionRules from '@/authorization/Rules';
+import permissionActions from '@/authorization/Actions';
+import { getConfig, initialise } from '@/adapter'
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -38,11 +42,18 @@ const app = createApp(App)
   .use(router)
   .use(i18n)
   .use(store)
+  .use(permissionPlugin, {
+    rules: permissionRules,
+    actions: permissionActions
+  })
   .use(dxpComponents, {
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
     login,
     logout,
     loader,
-    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string
+    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
+    getConfig: getConfig,
+    initialise: initialise
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

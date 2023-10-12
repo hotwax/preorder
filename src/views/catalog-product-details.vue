@@ -5,14 +5,14 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/catalog"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ $t("Product summary") }}</ion-title>
+        <ion-title>{{ $t("Product audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
       <div class="header">
         <div class="product-image">
           <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
-          <Image v-else :src="currentVariant.mainImageUrl" />
+          <ShopifyImg v-else :src="currentVariant.mainImageUrl" />
         </div>
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
@@ -245,11 +245,11 @@
             </ion-item>
             <ion-item>
               <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateReserveInvConfig($event.detail.checked)"/>
+              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)"/>
             </ion-item>
             <ion-item>
               <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @ionChange="updatePreOrdPhyInvHoldConfig($event.detail.checked)"/>
+              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)"/>
             </ion-item>
           </div>
         </ion-card>
@@ -261,7 +261,7 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t('Category and brokering jobs') }}</h3>
+              <h3>{{ $t('Related jobs') }}</h3>
             </ion-card-title>
           </ion-card-header>
           <div v-if="!isCtgryAndBrkrngJobsLoaded">
@@ -329,7 +329,7 @@
             <ion-item v-if="!Object.keys(shopListings).length">
               {{ $t('No shop listings found') }}
             </ion-item>
-            <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
+            <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
               <ion-label class="ion-text-wrap">
                 <h5>{{ listData.name }}</h5>
                 <!-- internationalized while preparation -->
@@ -354,6 +354,7 @@
 
 <script lang="ts">
 import {
+  alertController,
   IonButtons,
   IonBackButton,
   IonCard,
@@ -385,7 +386,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import Image from '@/components/Image.vue';
+import { ShopifyImg } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -399,11 +400,12 @@ import { StockService } from "@/services/StockService";
 import { UtilService } from "@/services/UtilService";
 import { useRouter } from "vue-router";
 import { Plugins } from "@capacitor/core";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
   name: "catalog-product-details",
   components: {
-    Image,
+    ShopifyImg,
     IonButtons,
     IonBackButton,
     IonCard,
@@ -467,14 +469,8 @@ export default defineComponent({
       const productStoreCategories = await this.store.dispatch('product/getPreOrderBackorderCategory', { productStoreId })
       this.preOrderCategoryId = productStoreCategories["PCCT_PREORDR"];
       this.backorderCategoryId = productStoreCategories["PCCT_BACKORDER"];
-      if (!this.preOrderCategoryId) {
-        showToast(translate("No pre-order category found"))
-      }
-      if (!this.backorderCategoryId) {
-        showToast(translate("No backorder category found"))
-      }
     } catch (error) {
-      showToast(translate("Failed to get pre-order/backorder categories"))
+      console.error("Failed to get pre-order/backorder categories")
     }
     await this.getShopifyConfigsByStore()
     await this.getCtgryAndBrkrngJobs()
@@ -789,15 +785,46 @@ export default defineComponent({
         if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
         else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
 
-        if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
-          this.atpCalcDetails.excludedAtp = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineAtp
+        if (typeof resp[0].data?.availableToPromiseTotal === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
+          this.atpCalcDetails.excludedAtp = resp[0].data?.availableToPromiseTotal - resp[1].data?.onlineAtp
         }
       } catch (error) {
         showToast(translate('Something went wrong'))
         console.error(error)
       }
     },
-    async updateReserveInvConfig(value: boolean) {
+    async confirmInvConfigUpdate(header: string, message: string, successButtonLabel: string){
+      const alert = await alertController.create({
+        header: translate(header),
+        message: translate(message),
+        buttons: [{
+          text: translate('Cancel'),
+          role: 'cancel'
+        },
+        {
+          text: translate(successButtonLabel),
+          role: 'success',
+        }]
+      });
+
+      await alert.present();
+      const { role } = await alert.onDidDismiss();
+      return role === 'success';
+    },
+    async updateReserveInvConfig(event: any) {
+      // For preventing ion-toggle from toggling
+      event.stopImmediatePropagation();
+
+      const isChecked = event.target.checked;
+      const successButtonLabel = isChecked ? 'disable' : 'enable';
+      const header = isChecked ? 'Disable Reserve Inventory?' : 'Enable Reserve Inventory?';
+      const message = isChecked ? 'Disabling inventory reservations prevents committed inventory from being reduced until it has been shipped. Orders that are pending allocation or haven’t been shipped will not be reduced from sellable inventory.' : 'Enabling inventory reservations reduces inventory counts for committed inventory before it has been shipped. Committed inventory includes orders waiting to be brokered or waiting to be shipped.';
+
+      if (!(await this.confirmInvConfigUpdate(header, message, successButtonLabel))) {
+        return;
+      }
+
+      const value = !isChecked;
       const config = this.getInventoryConfig('reserveInv', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
@@ -806,6 +833,7 @@ export default defineComponent({
       try {
         const resp = await UtilService.updateReserveInvConfig({ value, config })
         if (!hasError(resp)) {
+          event.target.checked = value;
           showToast(translate('Configuration updated'))
           await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
         } else {
@@ -816,7 +844,20 @@ export default defineComponent({
         console.error(err)
       }
     },
-    async updatePreOrdPhyInvHoldConfig(value: boolean) {
+    async updatePreOrdPhyInvHoldConfig(event: any) {
+      // For preventing ion-toggle from toggling
+      event.stopImmediatePropagation();
+
+      const isChecked = event.target.checked;
+      const successButtonLabel = isChecked ? 'disable' : 'enable';
+      const header = isChecked ? 'Disable Hold Pre-order Physical Inventory?' : 'Enable Hold Pre-order Physical Inventory?';
+      const message = isChecked ? 'Disabling this setting will push excess physical inventory for pre-sell products online and start selling them as in-stock items.' : 'Enabling this setting will prevent pre-selling products from publishing physical inventory online until their pre-selling queue is cleared.';
+
+      if (!(await this.confirmInvConfigUpdate(header, message, successButtonLabel))) {
+        return;
+      }
+
+      const value = !isChecked;
       const config = this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       // TODO - update the usage from true/false to Y/N
@@ -837,9 +878,11 @@ export default defineComponent({
             showToast(translate('Failed to update configuration'))
             return
           }
+          event.target.checked = value;
         } else {
           const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
           if (!hasError(resp)) {
+            event.target.checked = value;
             showToast(translate('Configuration updated'))
           } else {
             showToast(translate('Failed to update configuration'))
@@ -1042,10 +1085,7 @@ export default defineComponent({
                 "rows": 1,
                 "sort": "_timestamp_ desc",
               } as any,
-              "filter": `docType: BULKOPERATION
-                  AND operation: 'SHOP_PREORDER_SYNC'
-                  AND data_productVariantUpdate_productVariant_id: ("gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}")
-                  AND data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER"`,
+              "filter": `docType: BULKOPERATION AND operation: 'SHOP_PREORDER_SYNC AND data_productVariantUpdate_productVariant_id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") AND data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER"`,
               "query": "*:*",
             },
             "coreName": "shopifyCore"
@@ -1068,24 +1108,27 @@ export default defineComponent({
               status: metafieldValue.status,
               promiseDate: metafieldValue["promise_date"]
             }
-            const listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
+            let listingTime = ''
+            if(listData.listingTime) {
+              listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
+            }
             if (!listData.containsError) {
               if (listData.status === 'inactive') {
-                // showing the job's runTime as listing time
-                listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime })
+                // showing the job's runTime as listing time, and not showing listing time if not present
+                listingTime && (listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Listed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               }
             } else {
               // If it failed to update, considered the status must old
               if (listData.status === 'inactive') {
                 // showing the job's runTime as listing time
-                listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               }
             }
@@ -1133,9 +1176,11 @@ export default defineComponent({
     const router = useRouter();
     return {
       alertCircleOutline,
+      Actions,
       checkmarkCircleOutline,
       chevronForwardOutline,
       copyOutline,
+      hasPermission,
       router,
       shirtOutline,
       store

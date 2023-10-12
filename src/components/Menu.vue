@@ -8,7 +8,7 @@
 
         <ion-content>
           <ion-list id="preorder-list">
-            <ion-menu-toggle auto-hide="false" v-for="(p, i) in appPages" :key="i">
+            <ion-menu-toggle auto-hide="false" v-for="(p, i) in getValidMenuItems(appPages)" :key="i">
               <ion-item
                 button
                 router-direction="root"
@@ -44,6 +44,7 @@ import { mapGetters } from "vuex";
 import { albums ,shirt, pricetags, settings } from "ionicons/icons";
 import { useStore } from "@/store";
 import { useRouter } from "vue-router";
+import { hasPermission } from "@/authorization";
 
 export default defineComponent({
   name: "Menu",
@@ -67,12 +68,20 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+
+    const getValidMenuItems = (appPages: any) => {
+      return appPages.filter((appPage: any) => (!appPage.meta || !appPage.meta.permissionId) || hasPermission(appPage.meta.permissionId));
+    }
+
     const appPages = [
       {
         title: "Orders",
         url: "/orders",
         iosIcon: pricetags,
         mdIcon: pricetags,
+        meta: {
+          permissionId: "APP_ORDERS_VIEW"
+        }
       },
       {
         title: "Products",
@@ -80,6 +89,9 @@ export default defineComponent({
         childRoutes: ["/product-details/"],
         iosIcon: shirt,
         mdIcon: shirt,
+        meta: {
+          permissionId: "APP_PRODUCTS_VIEW"
+        }
       },
       {
         title: "Catalog",
@@ -87,6 +99,9 @@ export default defineComponent({
         childRoutes: ["/catalog-product-details/"],
         iosIcon: albums,
         mdIcon: albums,
+        meta: {
+          permissionId: "APP_CATALOG_VIEW"
+        }
       },
       {
         title: "Settings",
@@ -98,17 +113,17 @@ export default defineComponent({
 
     const selectedIndex = computed(() => {
       const path = router.currentRoute.value.path
-      return appPages.findIndex((screen) => screen.url === path || screen.childRoutes?.includes(path) || screen.childRoutes?.some((route)=> path.includes(route)))
+      return getValidMenuItems(appPages).findIndex((screen: any) => screen.url === path || screen.childRoutes?.includes(path) || screen.childRoutes?.some((route: any)=> path.includes(route)))
     })
 
-
     return {
-      selectedIndex,
       appPages,
       albums,
-      shirt,
+      getValidMenuItems,
       pricetags,
       settings,
+      selectedIndex,
+      shirt,
       store
     };
   }

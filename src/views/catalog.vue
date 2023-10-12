@@ -49,7 +49,7 @@
         <div class="list-item" v-for="product in products" :key="product.productId" @click="viewProduct(product)">
           <ion-item lines="none" class="tablet">
             <ion-thumbnail slot="start">
-              <Image :src="product.mainImageUrl" />
+              <ShopifyImg :src="product.mainImageUrl" size="small"/>
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
               <h5>{{ product.parentProductName }}</h5>
@@ -109,7 +109,7 @@ import {
 import { defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import Image from '@/components/Image.vue';
+import { ShopifyImg } from '@hotwax/dxp-components';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
@@ -118,7 +118,7 @@ import { hasError } from '@/utils';
 export default defineComponent({
   name: 'Catalog',
   components: {
-    Image,
+    ShopifyImg,
     IonButtons,
     IonChip,
     IonCard,
@@ -191,7 +191,7 @@ export default defineComponent({
 
       if(this.queryString.trim().length) {
         payload.json.query = this.queryString + "*"
-        payload.json.params['qf'] = "productId productName upc sku internalName brandName parentProductName"
+        payload.json.params['qf'] = "productId productName upc sku internalName brandName parentProductName search_goodIdentifications"
         payload.json.params['defType'] = "edismax"
       }
 
