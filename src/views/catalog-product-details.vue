@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/catalog"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ $t("Product summary") }}</ion-title>
+        <ion-title>{{ $t("Product audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -272,7 +272,7 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t('Category and brokering jobs') }}</h3>
+              <h3>{{ $t('Related jobs') }}</h3>
             </ion-card-title>
           </ion-card-header>
           <div v-if="!isCtgryAndBrkrngJobsLoaded">
@@ -340,7 +340,7 @@
             <ion-item v-if="!Object.keys(shopListings).length">
               {{ $t('No shop listings found') }}
             </ion-item>
-            <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
+            <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
               <ion-label class="ion-text-wrap">
                 <h5>{{ listData.name }}</h5>
                 <!-- internationalized while preparation -->
@@ -733,8 +733,8 @@ export default defineComponent({
         if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
         else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
 
-        if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
-          this.atpCalcDetails.excludedAtp = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineAtp
+        if (typeof resp[0].data?.availableToPromiseTotal === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
+          this.atpCalcDetails.excludedAtp = resp[0].data?.availableToPromiseTotal - resp[1].data?.onlineAtp
         }
       } catch (error) {
         showToast(translate('Something went wrong'))
@@ -1031,10 +1031,7 @@ export default defineComponent({
                 "rows": 1,
                 "sort": "_timestamp_ desc",
               } as any,
-              "filter": `docType: BULKOPERATION
-                  AND operation: 'SHOP_PREORDER_SYNC'
-                  AND data_productVariantUpdate_productVariant_id: ("gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}")
-                  AND data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER"`,
+              "filter": `docType: BULKOPERATION AND operation: 'SHOP_PREORDER_SYNC AND data_productVariantUpdate_productVariant_id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") AND data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER"`,
               "query": "*:*",
             },
             "coreName": "shopifyCore"
