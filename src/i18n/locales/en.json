@@ -212,7 +212,7 @@
     "Store": "Store",
     "The order count in product cards will be updated based on the filters you select.": "The order count in product cards will be updated based on the filters you select.",
     "The timezone you select is used to ensure automations you schedule are always accurate to the time you select.": "The timezone you select is used to ensure automations you schedule are always accurate to the time you select.",
-    "There are no jobs running the in the background right now.": "There are no jobs running in the background right now.",
+    "There are no jobs running in the background right now.": "There are no jobs running in the background right now.",
     "There are no preorders for the filters you have applied and variants you have selected.": "There are no preorders for the filters you have applied and variants you have selected.",
     "There are jobs already pending.": "There are { count } jobs already pending.",
     "There is a job already pending.": "There is a job already pending.",
