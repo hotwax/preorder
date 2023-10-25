@@ -248,6 +248,18 @@ const actions: ActionTree<ProductState, RootState> = {
           product = resp.data.response.docs.find((product: any) => product.productId === payload.productId)
           variants = resp.data.response.docs.filter((product: any) => product.productId !== payload.productId)
         }
+        const features = [['0/COLOR/', '1/COLOR/Black/', '0/SIZE/', '1/SIZE/29/', '0/TYPE/', '1/TYPE/Z/'],
+        ['0/COLOR/', '1/COLOR/Black/', '0/SIZE/', '1/SIZE/28/', '0/TYPE/', '1/TYPE/X/'],
+        ['0/COLOR/', '1/COLOR/Black/', '0/SIZE/', '1/SIZE/28/', '0/TYPE/', '1/TYPE/Y/'],
+        ['0/COLOR/', '1/COLOR/Orange/', '0/SIZE/', '1/SIZE/28/', '0/TYPE/', '1/TYPE/Y/'],
+        ['0/COLOR/', '1/COLOR/Orange/', '0/SIZE/', '1/SIZE/29/', '0/TYPE/', '1/TYPE/Z/'],
+        ['0/COLOR/', '1/COLOR/White/', '0/SIZE/', '1/SIZE/29/', '0/TYPE/', '1/TYPE/Z/']]
+
+        let ind = 0
+        variants.map((variant: any) => {
+          variant.featureHierarchy = features[ind]
+          ind++
+        })
         product.variants = variants
         commit(types.PRODUCT_CURRENT_CTLGPRDCT_UPDATED, product)
         commit(types.PRODUCT_ADD_TO_CACHED_MULTIPLE, { products: [product, ...product.variants] })

@@ -21,13 +21,13 @@
             <p>{{ currentVariant.sku }}</p>
           </div>
 
-          <div class="product-features" :key="featureValues" v-for="[featureType, featureValues] in Object.entries(features)">
+          <div class="product-features" :key="featureCategory" v-for="[featureCategory, featureOptions] in Object.entries(features)">
             <ion-list>
-              <ion-list-header>{{ featureType.charAt(0) + featureType.substring(1).toLowerCase() }}</ion-list-header>
+              <ion-list-header>{{ featureCategory.charAt(0) + featureCategory.substring(1).toLowerCase() }}</ion-list-header>
               <ion-item lines="none">
                 <ion-row>
-                  <ion-chip :outline="selectedVariant[featureType] !== featureValue" :key="featureValue" v-for="featureValue in featureValues" @click="selectedVariant[featureType] !== featureValue && applyFeature(featureValue, featureType)">
-                    <ion-label class="ion-text-wrap">{{ featureValue }}</ion-label>
+                  <ion-chip :outline="selectedVariant[featureCategory] !== featureOption" :key="featureOption" v-for="featureOption in featureOptions" @click="selectedVariant[featureCategory] !== featureOption && applyFeature(featureOption, featureCategory)">
+                    <ion-label class="ion-text-wrap">{{ featureOption }}</ion-label>
                   </ion-chip>
                 </ion-row>
               </ion-item>
@@ -480,65 +480,17 @@ export default defineComponent({
     async getVariantDetails() {
       await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId})
       if (this.product.variants) {
-        
+        await this.getVariantFeature()
         await this.getFeatures()
-        this.updateFeatures()
       }
     },
-    applyFeature(featureValue: string, featureType: string) {
-      this.selectedFeature = featureType
-      this.selectedVariant[featureType] = featureValue
+    applyFeature(featureOption: string, featureCategory: string) {
+      this.selectedFeature = featureCategory
+      this.selectedVariant[featureCategory] = featureOption
 
-      this.updateFeatures()
+      this.getFeatures()
     },
-    updateFeatures() {    
-      Object.entries(this.selectedVariant).map((feature, featureIndex) => {
-        const nextFeature = Object.entries(this.selectedVariant).find((currentFeature, currentFeatureIndex) => currentFeatureIndex === featureIndex + 1)
-        
-        if(nextFeature){
-          const nextFeatureType = nextFeature[0]
-          const availableVariants = this.product.variants.filter((variant: any) => {
-            let isVariantAvailable = true
-            Object.entries(this.selectedVariant).map((currentFeature, currentFeatureIndex) => {
-              if(currentFeatureIndex <= featureIndex && getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
-                isVariantAvailable = false
-              }
-            })
-            return isVariantAvailable
-          })
-          
-          const nextFeatureAvailableValues = [] as any
-          availableVariants.map((variant: any) => {
-            if(!nextFeatureAvailableValues.includes(getFeature(variant.featureHierarchy , `1/${nextFeatureType}`))){
-              nextFeatureAvailableValues.push(getFeature(variant.featureHierarchy , `1/${nextFeatureType}`))
-            }
-          })
-          this.features[nextFeatureType] = nextFeatureType === 'SIZE' ? sortSizes(nextFeatureAvailableValues) : nextFeatureAvailableValues
-        }  
-      })
-      this.updateVariant()
-    },
-    getFeatures() {
-      let features = {} as any
-      this.product.variants.map((variant: any) => {
-        variant.featureHierarchy.map((featureItem: any) => {
-          if(featureItem.startsWith('1/')){
-            const featureType = featureItem.split('/')[1]
-            const featureValue = featureItem.split('/')[2]
-            
-            if (!features[featureType]) features[featureType] = [featureValue]
-            else if (!features[featureType].includes(featureValue)) features[featureType].push(featureValue) 
-          }
-        })
-      })
-
-      features = Object.keys(features).sort().reduce((result: any, key) => {
-        result[key] = features[key];
-        return result;
-      }, {});
-      
-      Object.keys(features).forEach((feature) => this.features[feature] = features[feature].sort())
-      
+    getVariantFeature() {
       let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)     
       let selectedVariantFeatures = {} as any
       
@@ -555,13 +507,52 @@ export default defineComponent({
             selectedVariantFeatures[featureItemSplitted[1]] = featureItemSplitted[2]
           }
         })
-
+  
         selectedVariantFeatures = Object.keys(selectedVariantFeatures).sort().reduce((result:any, key) => {
           result[key] = selectedVariantFeatures[key];
           return result;
         }, {});
         this.selectedVariant = selectedVariantFeatures
       }
+    },
+    async getFeatures() {
+      const selectedVariantFeatures = this.selectedVariant
+      const features = {} as any
+      Object.entries(selectedVariantFeatures).map((feature, featureIndex) => {
+        const featureCategory = feature[0]
+        if(featureIndex === 0){
+          this.product.variants.map((variant: any) => {
+            const featureOption = getFeature(variant.featureHierarchy, `1/${featureCategory}`)
+
+            if (!features[featureCategory]) features[featureCategory] = [featureOption]
+            else if (!features[featureCategory].includes(featureOption)) features[featureCategory].push(featureOption) 
+          })
+        }
+        const nextFeature = Object.entries(selectedVariantFeatures).find((currentFeature, currentFeatureIndex) => currentFeatureIndex === featureIndex + 1)
+        
+        if(nextFeature){
+          const nextFeatureCategory = nextFeature[0]
+          const availableVariants = this.product.variants.filter((variant: any) => {
+            let isVariantAvailable = true
+            Object.entries(this.selectedVariant).map((currentFeature, currentFeatureIndex) => {
+              if(currentFeatureIndex <= featureIndex && getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
+                isVariantAvailable = false
+              }
+            })
+            return isVariantAvailable
+          })
+          
+          const nextFeatureAvailableValues = [] as any
+          availableVariants.map((variant: any) => {
+            if(!nextFeatureAvailableValues.includes(getFeature(variant.featureHierarchy , `1/${nextFeatureCategory}`))){
+              nextFeatureAvailableValues.push(getFeature(variant.featureHierarchy , `1/${nextFeatureCategory}`))
+            }
+          })
+          features[nextFeatureCategory] = nextFeatureCategory === 'SIZE' ? sortSizes(nextFeatureAvailableValues) : nextFeatureAvailableValues
+        }   
+      })
+      this.features = features
+      await this.updateVariant()
     },
     async updateVariant() {
       let variant
