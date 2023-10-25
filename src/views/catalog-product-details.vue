@@ -509,7 +509,9 @@ export default defineComponent({
           
           const nextFeatureAvailableValues = [] as any
           availableVariants.map((variant: any) => {
-            nextFeatureAvailableValues.push(getFeature(variant.featureHierarchy , `1/${nextFeatureType}`))
+            if(!nextFeatureAvailableValues.includes(getFeature(variant.featureHierarchy , `1/${nextFeatureType}`))){
+              nextFeatureAvailableValues.push(getFeature(variant.featureHierarchy , `1/${nextFeatureType}`))
+            }
           })
           this.features[nextFeatureType] = nextFeatureType === 'SIZE' ? sortSizes(nextFeatureAvailableValues) : nextFeatureAvailableValues
         }  
