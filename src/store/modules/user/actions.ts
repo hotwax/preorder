@@ -137,13 +137,16 @@ const actions: ActionTree<UserState, RootState> = {
    * Update user timeZone
    */
      async setUserTimeZone ( { state, commit }, payload) {
-      const resp = await UserService.setUserTimeZone(payload)
-      if (resp.status === 200 && !hasError(resp)) {
-        const current: any = state.current;
-        current.userTimeZone = payload.timeZoneId;
-        commit(types.USER_INFO_UPDATED, current);
-        Settings.defaultZone = current.userTimeZone;
-        showToast(translate("Time zone updated successfully"));
+      const current: any = state.current;
+      // if set the same timezone again, no API call should happen
+      if(current.userTimeZone !== payload.tzId){
+        const resp = await UserService.setUserTimeZone(payload)
+        if (resp.status === 200 && !hasError(resp)) {
+          current.userTimeZone = payload.tzId;
+          commit(types.USER_INFO_UPDATED, current);
+          Settings.defaultZone = current.userTimeZone;
+          showToast(translate("Time zone updated successfully"));
+        }
       }
     },
 
