@@ -17,12 +17,12 @@
     <form @keyup.enter="setUserTimeZone">
       <div class="empty-state" v-if="isLoading">
         <ion-spinner name="crescent" />
-        <p>{{ $t("Fetching TimeZones")}}</p>
+        <p>{{ $t("Fetching TimeZones") }}</p>
       </div>
 
       <!-- Empty state -->
       <div class="empty-state" v-else-if="filteredTimeZones.length === 0">
-        <p>{{ $t("No time zone found")}}</p>
+        <p>{{ $t("No time zone found") }}</p>
       </div>
 
       <!-- Timezones -->
