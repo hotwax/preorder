@@ -617,7 +617,7 @@ export default defineComponent({
             "entityName": "ProductCategoryDcsnRsn",
             "fieldList": ["productId", "purchaseOrderId", "fromDate"],
             "viewSize": 1,
-            "orderBy": "createdDate DESC"
+            "orderBy": "estimatedDeliveryDate ASC"
           } as any;
           resp = await OrderService.getActivePoId(payload)
           if (!hasError(resp)) {
