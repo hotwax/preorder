@@ -139,7 +139,7 @@ export default defineComponent({
   },
   data() {
     return {
-      prodCatalogCategoryTypeId: 'PCCT_PREORDR', // selected filter
+      prodCatalogCategoryTypeId: '', // 'All' is selected by default
       filters: [{
         name: 'Pre-order',
         value: 'PCCT_PREORDR'
