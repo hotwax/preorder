@@ -27,35 +27,34 @@
         <div class="filters">
           <ion-item>
             <ion-label>{{ $t("Ordered after") }}</ion-label>
-            <ion-chip slot="end">
-              <!-- 
-                TODO Need to fix this
-                :value is a recommended way for vuex state but value is not working for date when resetting with close button used v-model instead of :value
-                https://vuex.vuejs.org/guide/forms.html#two-way-computed-property
-                -->
-              <ion-input v-model="query.orderedAfter" @ionChange="updateQuery()" type="date" />
-              <ion-icon @click='query.orderedAfter = ""' v-if="query.orderedAfter" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label>{{ query.orderedAfter ? $filters.formatDate(query.orderedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('orderedAfter')" class="ion-padding-start" :icon="calendarClearOutline"/>
+              <ion-icon @click='query.orderedAfter = ""; updateQuery()' v-if="query.orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
-            <ion-chip slot="end">
-              <ion-input v-model="query.orderedBefore" @ionChange="query.orderedBefore = $event.target.value; updateQuery()" type="date" />
-              <ion-icon @click='query.orderedBefore = ""' v-if="query.orderedBefore" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label>{{ query.orderedBefore ? $filters.formatDate(query.orderedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('orderedBefore')" class="ion-padding-start" :icon="calendarClearOutline"/>
+              <ion-icon @click='query.orderedBefore = ""; updateQuery()' v-if="query.orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
-            <ion-chip slot="end">
-              <ion-input v-model="query.promisedAfter" @ionChange="query.promisedAfter = $event.target.value; updateQuery()" type="date" />
-              <ion-icon @click='query.promisedAfter = ""' v-if="query.promisedAfter" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label>{{ query.promisedAfter ? $filters.formatDate(query.promisedAfter,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('promisedAfter')" class="ion-padding-start" :icon="calendarClearOutline"/>
+              <ion-icon @click='query.promisedAfter = ""; updateQuery()' v-if="query.promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
-            <ion-chip slot="end">
-              <ion-input v-model="query.promisedBefore" @ionChange="query.promisedBefore = $event.target.value; updateQuery()" type="date" />
-              <ion-icon @click='query.promisedBefore = ""' v-if="query.promisedBefore" :icon="close"/>
+            <ion-chip class="ion-padding-horizontal" slot="end">
+              <ion-label>{{ query.promisedBefore ? $filters.formatDate(query.promisedBefore,'yyyy-mm-dd', 'dd/mm/yyyy') : 'dd/mm/yyyy' }}</ion-label>
+              <ion-icon @click="openDateSelectionModal('promisedBefore')" class="ion-padding-start" :icon="calendarClearOutline"/>
+              <ion-icon @click='query.promisedBefore = ""; updateQuery()' v-if="query.promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
@@ -186,7 +185,6 @@ import {
   IonItem,
   IonLabel,
   IonMenuButton,
-  IonInput,
   IonNote,
   IonPage,
   IonSelect,
@@ -216,7 +214,8 @@ import {
   calendar,
   closeCircle,
   hourglass,
-  close
+  close,
+  calendarClearOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
@@ -224,6 +223,7 @@ import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import { ShopifyImg } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
+import DateSelectionModal from '@/components/DateSelectionModal.vue';
 
 const { Clipboard } = Plugins;
 
@@ -239,7 +239,6 @@ export default defineComponent({
     IonContent,
     IonFooter,
     IonHeader,
-    IonInput,
     IonItem,
     IonIcon,
     IonLabel,
@@ -281,7 +280,23 @@ export default defineComponent({
     }),
   },
   methods: {
-    updateQuery() {
+    async openDateSelectionModal(dateFilter: string) {
+      const dateSelectionModal = await modalController.create({
+        component: DateSelectionModal,
+        cssClass: 'date-selection-modal'
+      });
+
+      // Getting selected date from the modal on modal dismiss
+      dateSelectionModal.onDidDismiss().then((result) => {
+        if(result.data){
+          // Assigning value to dateFilters of this.query (orderedAfter, orderedBefore, promisedAfter, promisedBefore) the selected date from the modal
+          this.query[dateFilter] = result.data.split('T')[0];
+          this.updateQuery();
+        }
+      });
+      return dateSelectionModal.present();
+    },
+    updateQuery() {      
       this.query.viewSize = parseInt(process.env.VUE_APP_VIEW_SIZE);
       this.query.viewIndex = 0;
       this.store.dispatch("order/updateQuery", { query: this.query});
@@ -483,6 +498,7 @@ export default defineComponent({
       send,
       business,
       calendar,
+      calendarClearOutline,
       closeCircle,
       hourglass,
       close,
