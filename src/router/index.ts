@@ -2,9 +2,9 @@ import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
 import Products from '../views/products.vue'
 import ProductDetails from '../views/product-details.vue'
-import CatalogProductDetails from '../views/catalog-product-details.vue'
+import AuditProductDetails from '../views/audit-product-details.vue'
 import Orders from '../views/orders.vue'
-import Catalog from '../views/catalog.vue'
+import Audit from '../views/audit.vue'
 import Settings from '../views/settings.vue'
 import store from '@/store';
 import { DxpLogin, useAuthStore } from '@hotwax/dxp-components';
@@ -79,18 +79,18 @@ const routes: Array<RouteRecordRaw> = [
     }
   },
   {
-    path: '/catalog',
-    name: 'Catalog',
-    component: Catalog,
+    path: '/audit',
+    name: 'Audit',
+    component: Audit,
     beforeEnter: authGuard,
     meta: {
       permissionId: "APP_CATALOG_VIEW"
     }
   },
   {
-    path: '/catalog-product-details/:productId/',
-    name: 'Catalog-product-details',
-    component: CatalogProductDetails,
+    path: '/audit-product-details/:productId/',
+    name: 'Audit-product-details',
+    component: AuditProductDetails,
     beforeEnter: authGuard,
     meta: {
       permissionId: "APP_CTLG_PRDT_DTLS_VIEW"
