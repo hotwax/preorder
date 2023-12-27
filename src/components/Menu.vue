@@ -40,8 +40,7 @@ import {
 } from "@ionic/vue";
 import { computed, defineComponent} from "vue"
 import { mapGetters } from "vuex";
-
-import { albums ,shirt, pricetags, settings, flashlightOutline } from "ionicons/icons";
+import { shirt, pricetags, settings, flashlightOutline } from "ionicons/icons";
 import { useStore } from "@/store";
 import { useRouter } from "vue-router";
 import { hasPermission } from "@/authorization";
@@ -118,7 +117,6 @@ export default defineComponent({
 
     return {
       appPages,
-      albums,
       getValidMenuItems,
       pricetags,
       settings,
