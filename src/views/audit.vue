@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-menu-button />
         </ion-buttons>
-        <ion-title slot="start">{{ $t("Catalog") }}</ion-title>
+        <ion-title slot="start">{{ $t("Audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -116,7 +116,7 @@ import { JobService } from '@/services/JobService';
 import { hasError } from '@/utils';
 
 export default defineComponent({
-  name: 'Catalog',
+  name: 'Audit',
   components: {
     ShopifyImg,
     IonButtons,
@@ -211,7 +211,7 @@ export default defineComponent({
       this.getCatalogProducts()
     },
     viewProduct(product: any) {
-      this.router.push({ path: `/catalog-product-details/${product.groupId}`, query: { variantId: product.productId } });
+      this.router.push({ path: `/audit-product-details/${product.groupId}`, query: { variantId: product.productId } });
     },
     async preparePreordBckordComputationJob() {
       try {

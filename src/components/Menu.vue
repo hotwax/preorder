@@ -40,8 +40,7 @@ import {
 } from "@ionic/vue";
 import { computed, defineComponent} from "vue"
 import { mapGetters } from "vuex";
-
-import { albums ,shirt, pricetags, settings } from "ionicons/icons";
+import { shirt, pricetags, settings, flashlightOutline } from "ionicons/icons";
 import { useStore } from "@/store";
 import { useRouter } from "vue-router";
 import { hasPermission } from "@/authorization";
@@ -94,11 +93,11 @@ export default defineComponent({
         }
       },
       {
-        title: "Catalog",
-        url: "/catalog",
-        childRoutes: ["/catalog-product-details/"],
-        iosIcon: albums,
-        mdIcon: albums,
+        title: "Audit",
+        url: "/audit",
+        childRoutes: ["/audit-product-details/"],
+        iosIcon: flashlightOutline,
+        mdIcon: flashlightOutline,
         meta: {
           permissionId: "APP_CATALOG_VIEW"
         }
@@ -118,7 +117,6 @@ export default defineComponent({
 
     return {
       appPages,
-      albums,
       getValidMenuItems,
       pricetags,
       settings,
