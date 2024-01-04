@@ -141,12 +141,17 @@ export default defineComponent({
     return {
       prodCatalogCategoryTypeId: '', // 'All' is selected by default
       filters: [{
+        name: 'All',
+        value:''
+      }, 
+      {
         name: 'Pre-order',
         value: 'PCCT_PREORDR'
       }, {
         name: 'Back-order',
         value: 'PCCT_BACKORDER'
-      }, /*{
+      },
+      /*{
         name: 'Never in any category',
         value: 'NEVER'
       }, {
