@@ -401,39 +401,39 @@ export default defineComponent({
       return alert.present();
     },
     async openWarehouseList() {
-      const warehousemodal = await modalController.create({
+      const warehouseModal = await modalController.create({
         component: WarehouseModal,
         cssClass: "my-custom-class",
         componentProps: {
           items: this.selectedItems
         },
       });
-      warehousemodal.onDidDismiss().finally(() => {
+      warehouseModal.onDidDismiss().finally(() => {
         // TODO FIX this it should deselect only on successful action
         this.deselectSelectedItems();
       })
-      return warehousemodal.present();
+      return warehouseModal.present();
     },
     async openActiveJobs() {
-      const bgjobmodal = await modalController.create({
+      const bgjobModal = await modalController.create({
         component: BackgroundJobModal,
         cssClass: "my-custom-class",
       });
-      return bgjobmodal.present();
+      return bgjobModal.present();
     },
     async editPromiseDate() {
-      const datemodal = await modalController.create({
+      const dateModal = await modalController.create({
         component: PromiseDateModal,
         cssClass: "my-custom-class",
         componentProps: {
           items: this.selectedItems
         },
       });
-      datemodal.onDidDismiss().finally(() => {
+      dateModal.onDidDismiss().finally(() => {
         // TODO FIX this it should deselect only on successful action
         this.deselectSelectedItems();
       })
-      return datemodal.present();
+      return dateModal.present();
     },
     selectItem: function(event: any, item: any) {
       const existingItemIndex = this.selectedItems.findIndex((element: any) => element.orderId === item.orderId && element.orderItemSeqId === item.orderItemSeqId)
