@@ -195,7 +195,7 @@ export default defineComponent({
         payload.json.params['defType'] = "edismax"
       }
 
-      this.store.dispatch("product/findCatalogProducts", payload);
+      await this.store.dispatch("product/findCatalogProducts", payload);
     },
     async loadMoreProducts(event: any){
       this.getCatalogProducts(
