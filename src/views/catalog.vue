@@ -143,8 +143,7 @@ export default defineComponent({
       filters: [{
         name: 'All',
         value: ''
-      },
-        {
+      }, {
         name: 'Pre-order',
         value: 'PCCT_PREORDR'
       }, {
