@@ -141,6 +141,9 @@ export default defineComponent({
     return {
       prodCatalogCategoryTypeId: '', // 'All' is selected by default
       filters: [{
+        name: 'All',
+        value: ''
+      }, {
         name: 'Pre-order',
         value: 'PCCT_PREORDR'
       }, {
@@ -206,9 +209,10 @@ export default defineComponent({
       })
     },
     async applyFilter(value: string) {
-      if(value === this.prodCatalogCategoryTypeId) this.prodCatalogCategoryTypeId = ''
-      else this.prodCatalogCategoryTypeId = value
-      this.getCatalogProducts()
+      if(value !== this.prodCatalogCategoryTypeId) {
+        this.prodCatalogCategoryTypeId = value
+        this.getCatalogProducts()
+      }
     },
     viewProduct(product: any) {
       this.router.push({ path: `/catalog-product-details/${product.groupId}`, query: { variantId: product.productId } });
