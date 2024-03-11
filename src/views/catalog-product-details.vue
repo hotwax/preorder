@@ -12,7 +12,7 @@
       <div class="header">
         <div class="product-image">
           <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
-          <ShopifyImg v-else :src="currentVariant.mainImageUrl" />
+          <DxpShopifyImg v-else :src="currentVariant.mainImageUrl" />
         </div>
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
@@ -397,7 +397,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import { ShopifyImg } from "@hotwax/dxp-components";
+import { DxpShopifyImg } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -416,7 +416,7 @@ import { Actions, hasPermission } from '@/authorization'
 export default defineComponent({
   name: "catalog-product-details",
   components: {
-    ShopifyImg,
+    DxpShopifyImg,
     IonButtons,
     IonBackButton,
     IonCard,

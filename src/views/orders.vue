@@ -117,7 +117,7 @@
               <ion-item lines="none">
                 <ion-thumbnail slot="start">
                   <!-- TODO Create a separate component that handles default image -->
-                  <ShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"></ShopifyImg>
+                  <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"></DxpShopifyImg>
                 </ion-thumbnail>
                 <ion-label>
                   <h2>{{ item.parentProductName ? item.parentProductName :item.productName }}</h2>
@@ -222,7 +222,7 @@ import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
-import { ShopifyImg } from "@hotwax/dxp-components";
+import { DxpShopifyImg } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
@@ -255,7 +255,7 @@ export default defineComponent({
     IonToolbar,
     IonInfiniteScroll, 
     IonInfiniteScrollContent,
-    ShopifyImg
+    DxpShopifyImg
   },
   data() {
     return {

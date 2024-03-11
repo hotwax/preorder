@@ -27,6 +27,9 @@ const getters: GetterTree <UserState, RootState> = {
         if (!baseURL) baseURL = state.instanceUrl;
         return baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
     },
+    getPwaState(state) {
+        return state.pwaState;
+    },
     getCurrentEComStore(state) {
         return state.currentEComStore
     }
