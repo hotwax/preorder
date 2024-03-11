@@ -146,14 +146,10 @@ export default defineComponent({
   },
   data() {
     return {
-      baseURL: process.env.VUE_APP_BASE_URL,
-      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
-      appVersion: ""
+      baseURL: process.env.VUE_APP_BASE_URL
     }
   },
-  mounted() {
-    this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
-  },
+
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
@@ -185,9 +181,6 @@ export default defineComponent({
           'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event.detail.value)
         })
       }
-    },
-    getDateTime(time: any) {
-      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
     }
   }
 });
