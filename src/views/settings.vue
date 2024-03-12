@@ -148,7 +148,6 @@ export default defineComponent({
       baseURL: process.env.VUE_APP_BASE_URL
     }
   },
-
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
