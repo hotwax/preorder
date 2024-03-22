@@ -6,7 +6,7 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Edit shipping date") }}</ion-title>
+      <ion-title>{{ translate("Edit shipping date") }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
@@ -14,29 +14,29 @@
     <ion-radio-group>
       <ion-item lines="none">
         <ion-radio slot="start"></ion-radio>
-        <ion-label>{{ $t("Custom") }}</ion-label>
+        <ion-label>{{ translate("Custom") }}</ion-label>
       </ion-item>
     </ion-radio-group>
 
     <ion-item>
-      <ion-label position="stacked">{{ $t("Ships from date") }}</ion-label>
+      <ion-label position="stacked">{{ translate("Ships from date") }}</ion-label>
       <ion-input type="date"></ion-input>
     </ion-item>
 
     <ion-radio-group>
       <ion-item lines="none">
         <ion-radio slot="start"></ion-radio>
-        <ion-label>{{ $t("Auto") }}</ion-label>
+        <ion-label>{{ translate("Auto") }}</ion-label>
       </ion-item>
     </ion-radio-group>
 
     <ion-list>
-      <ion-list-header>{{ $t("Purchase orders") }}</ion-list-header>
+      <ion-list-header>{{ translate("Purchase orders") }}</ion-list-header>
 
       <ion-item>
         <ion-label>
           12345
-          <p>{{ $t("ATP") }}: 30</p>
+          <p>{{ translate("ATP") }}: 30</p>
         </ion-label>
         <ion-note slot="end">12 Feb 2021</ion-note>
       </ion-item>
@@ -44,7 +44,7 @@
       <ion-item>
         <ion-label>
           67890
-          <p>{{ $t("ATP") }}: 50</p>
+          <p>{{ translate("ATP") }}: 50</p>
         </ion-label>
         <ion-note slot="end">12 Feb 2021</ion-note>
       </ion-item>
@@ -81,6 +81,7 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { closeOutline, saveOutline } from 'ionicons/icons';
+import { translate } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: 'EditShippingModal',
@@ -112,6 +113,7 @@ export default defineComponent({
     return {
       closeOutline,
       saveOutline,
+      translate
     };
   },
 });

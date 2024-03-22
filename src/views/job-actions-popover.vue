@@ -4,21 +4,21 @@
     <ion-list v-if="job.statusId === 'SERVICE_DRAFT'">
       <ion-item lines="none" button @click="schdlInEvry15Mins()">
         <ion-icon slot="start" :icon="timerOutline" />
-        {{ $t("Schedule in every 15 minutes") }}
+        {{ translate("Schedule in every 15 minutes") }}
       </ion-item>
     </ion-list>
     <ion-list v-else>
       <ion-item lines="none" button @click="runNow()">
         <ion-icon slot="start" :icon="flashOutline" />
-        {{ $t("Run now") }}
+        {{ translate("Run now") }}
       </ion-item>
       <ion-item lines="none" button @click="openJobHistoryModal()">
         <ion-icon slot="start" :icon="timeOutline" />
-        {{ $t("History") }}
+        {{ translate("History") }}
       </ion-item>
       <ion-item lines="none" button @click="confirmJobCancellation()">
         <ion-icon slot="start" :icon="closeOutline" />
-        {{ $t("Cancel job") }}
+        {{ translate("Cancel job") }}
       </ion-item>
     </ion-list>
   </ion-content>
@@ -45,7 +45,7 @@ import { useStore } from "@/store";
 import JobHistoryModal from "./job-history-modal.vue";
 import { JobService } from "@/services/JobService";
 import { hasError, showToast } from "@/utils";
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "JobActionsPopover",
@@ -101,14 +101,14 @@ export default defineComponent({
     },
     async confirmJobCancellation() {
       const alert = await alertController.create({
-        header: this.$t("Cancel job"),
-        message: this.$t("The job is currently in progress. Are you sure that you want to cancel this job?"),
+        header: translate("Cancel job"),
+        message: translate("The job is currently in progress. Are you sure that you want to cancel this job?"),
         buttons: [{
-          text: this.$t('No'),
+          text: translate('No'),
           role: 'cancel',
         },
         {
-          text: this.$t('Yes'),
+          text: translate('Yes'),
           handler: async () => {
             this.cancelJob()
           }
@@ -140,7 +140,8 @@ export default defineComponent({
       flashOutline,
       store,
       timeOutline,
-      timerOutline
+      timerOutline,
+      translate
     }
   }
 });

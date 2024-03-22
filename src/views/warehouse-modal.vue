@@ -6,17 +6,17 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Release preorder to a warehouse") }}</ion-title>
+      <ion-title>{{ translate("Release preorder to a warehouse") }}</ion-title>
     </ion-toolbar>
     <ion-toolbar>
-      <ion-searchbar  @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search warehouses')"  v-model="queryString" v-on:keyup.enter="findFacility()"></ion-searchbar>
+      <ion-searchbar  @ionFocus="selectSearchBarText($event)" :placeholder="translate('Search warehouses')"  v-model="queryString" v-on:keyup.enter="findFacility()"></ion-searchbar>
     </ion-toolbar>
   </ion-header>
 
   <ion-content class="ion-padding">
     <!-- Empty state -->
     <div class="empty-state" v-if="facilities.length === 0">
-      <p>{{ $t("No warehouses found")}}</p>
+      <p>{{ translate("No warehouses found")}}</p>
     </div>
 
     <!-- Warehouse -->
@@ -65,6 +65,7 @@ import { useStore } from "@/store";
 import { ProductService } from '@/services/ProductService'
 import { mapGetters } from "vuex";
 import emitter from "@/event-bus";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "WarehouseModal",
@@ -89,20 +90,20 @@ export default defineComponent({
       modalController.dismiss({ dismissed: true });
     },
     async saveAlert() {
-      const message = this.item ? this.$t(
+      const message = this.item ? translate(
           'This item will be released to the warehouse you have selected.'
-        )  : (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") +  this.$t(
+        )  : (this.jobTotal > 0 ? (this.jobTotal === 1 ? translate("There is a job already pending.")  : translate("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") +  translate(
           'preorder items will be released to the warehouse you have selected.', { count: (this.selectedVariants ? this.variantItems : this.items).length }
         );
       const alert = await alertController.create({
-        header: this.$t("Release orders"),
+        header: translate("Release orders"),
         message,
         buttons: [
             {
-              text: this.$t("Cancel"),
+              text: translate("Cancel"),
             },
             {
-              text: this.$t("Confirm"),
+              text: translate("Confirm"),
               handler: () => {
                 (this.item ? this.releaseItemToWarehouse() : this.releaseItemsToWarehouse()).then(() => {
                     this.closeModal()
@@ -215,7 +216,8 @@ export default defineComponent({
     return {
       closeOutline,
       send,
-      store
+      store,
+      translate
     };
   },
   components: { 
