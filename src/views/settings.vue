@@ -38,7 +38,7 @@
         <h1>{{ $t('OMS') }}</h1>
       </div>
       <section>
-        <OmsInstanceNavigator />
+        <DxpOmsInstanceNavigator />
 
         <ion-card>
           <ion-card-header>
@@ -62,13 +62,7 @@
       </section>
       <hr />
 
-      <div class="section-header">
-        <h1>
-          {{ $t('App') }}
-          <p class="overline" >{{ "Version: " + appVersion }}</p>
-        </h1>
-        <p class="overline">{{ "Built: " + getDateTime(appInfo.builtTime) }}</p>
-      </div>
+      <DxpAppVersionInfo />
 
       <section>
         <ion-card>
@@ -120,7 +114,6 @@ import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
 import TimeZoneModal from '@/views/timezone-modal.vue'
 import Image from '@/components/Image.vue';
-import { DateTime } from 'luxon';
 
 export default defineComponent({
   name: "settings",
@@ -152,13 +145,8 @@ export default defineComponent({
   },
   data() {
     return {
-      baseURL: process.env.VUE_APP_BASE_URL,
-      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
-      appVersion: ""
+      baseURL: process.env.VUE_APP_BASE_URL
     }
-  },
-  mounted() {
-    this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
   computed: {
     ...mapGetters({
@@ -191,9 +179,6 @@ export default defineComponent({
           'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event.detail.value)
         })
       }
-    },
-    getDateTime(time: any) {
-      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
     }
   }
 });
