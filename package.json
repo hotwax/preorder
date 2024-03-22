@@ -20,7 +20,7 @@
     "@hotwax/app-version-info": "^1.0.0",
     "@hotwax/apps-theme": "^1.2.6",
     "@hotwax/dxp-components": "1.12.1",
-    "@hotwax/oms-api": "^1.10.0",
+    "@hotwax/oms-api": "^1.13.0",
     "@ionic/core": "6.7.5",
     "@ionic/vue": "6.7.5",
     "@ionic/vue-router": "6.7.5",
