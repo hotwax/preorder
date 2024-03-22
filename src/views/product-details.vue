@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/products"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ $t("Product details") }}</ion-title>
+        <ion-title>{{ translate("Product details") }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="infoAlert">
             <ion-icon :icon="informationCircle" slot="icon-only" />
@@ -30,7 +30,7 @@
           </ion-item>
           <div class="product-features">
             <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
-              <ion-list-header>{{ $t("Colors") }}</ion-list-header>
+              <ion-list-header>{{ translate("Colors") }}</ion-list-header>
               <ion-item lines="none">
                   <ion-row>
                     <ion-chip :outline="filters['color'] !== colorFeature" :key="colorFeature" v-for="colorFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/')" @click="filter(colorFeature, 'color')"> <ion-label>{{ colorFeature }}</ion-label></ion-chip>
@@ -38,7 +38,7 @@
               </ion-item>
             </ion-list>
             <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/').length">
-              <ion-list-header>{{ $t("Sizes") }} </ion-list-header>
+              <ion-list-header>{{ translate("Sizes") }} </ion-list-header>
               <ion-item lines="none">
                   <ion-row>
                     <ion-chip :outline="filters['size'] !== sizeFeature"  :key="sizeFeature" v-for="sizeFeature in $filters.getFeaturesList(current.product.featureHierarchy, '1/SIZE/')" @click="filter(sizeFeature, 'size')"> <ion-label>{{ sizeFeature }}</ion-label></ion-chip>
@@ -50,28 +50,28 @@
 
         <div class="filters">
           <ion-item>
-            <ion-label>{{ $t("Ordered after") }} </ion-label>
+            <ion-label>{{ translate("Ordered after") }} </ion-label>
             <ion-chip slot="end">
               <ion-input v-model="orderedAfter" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='orderedAfter = ""' v-if="orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
-            <ion-label>{{ $t("Ordered before") }}</ion-label>
+            <ion-label>{{ translate("Ordered before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input v-model="orderedBefore" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='orderedBefore = ""' v-if="orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
-            <ion-label>{{ $t("Promised after") }}</ion-label>
+            <ion-label>{{ translate("Promised after") }}</ion-label>
             <ion-chip slot="end">
               <ion-input v-model="promisedAfter" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='promisedAfter = ""' v-if="promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
-            <ion-label>{{ $t("Promised before") }}</ion-label>
+            <ion-label>{{ translate("Promised before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input v-model="promisedBefore" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='promisedBefore = ""' v-if="promisedBefore" :icon="close"/>
@@ -79,24 +79,24 @@
           </ion-item>
           <!-- TODO -->
           <!-- <ion-item>
-            <ion-label> {{ $t("Sort by") }}</ion-label>
+            <ion-label> {{ translate("Sort by") }}</ion-label>
             <ion-chip slot="end">
               <ion-icon :icon="list" />
               <ion-label>none</ion-label>
             </ion-chip>   
           </ion-item> -->
           <ion-item>
-            <ion-label>{{ $t("Loyalty status") }}</ion-label>
+            <ion-label>{{ translate("Loyalty status") }}</ion-label>
             <ion-chip slot="end">  
               <ion-icon :icon="ribbon"  />
-              <ion-select :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
+              <ion-select :placeholder="translate('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for="(key, value) in cusotmerLoyaltyOptions" :key="key" :value="value">{{key}}</ion-select-option>
               </ion-select> 
               <ion-icon @click='cusotmerLoyalty = ""' v-if="cusotmerLoyalty" :icon="close"/>
            </ion-chip>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Only orders without promise date") }}</ion-label>
+            <ion-label>{{ translate("Only orders without promise date") }}</ion-label>
             <ion-toggle slot="end" @ionChange="hasPromisedDate = !hasPromisedDate; getVariantProducts()" :checked="!hasPromisedDate"></ion-toggle>
           </ion-item>
         </div>
@@ -105,8 +105,8 @@
       <hr />
 
       <div class="results">
-        <ion-badge color="success"> {{ current.totalPreOrders }} {{ $t("pieces preordered") }}</ion-badge>
-        <ion-badge color="secondary"> {{ current.list.items.length ? current.list.items.length : 0 }} {{ current.list.items.length > 1 ? $t("variants") : $t("variant") }}</ion-badge>
+        <ion-badge color="success"> {{ current.totalPreOrders }} {{ translate("pieces preordered") }}</ion-badge>
+        <ion-badge color="secondary"> {{ current.list.items.length ? current.list.items.length : 0 }} {{ current.list.items.length > 1 ? translate("variants") : translate("variant") }}</ion-badge>
         <ion-button :disabled="isRefreshing" @click="isRefreshing = true; refreshProducts()" fill="outline" size="small" :color="isJobPending ? 'warning' : ''">
           <ion-icon v-if="!isRefreshing" slot="icon-only" :icon="refresh" />
           <ion-spinner v-if="isRefreshing" name="crescent" />
@@ -115,7 +115,7 @@
 
       <!-- Empty state -->
       <div class="empty-state" v-if="!filteredProducts(current.list.items).length">
-        <p>{{ $t("There are no preorders for the filters you have applied and variants you have selected.")}}</p>
+        <p>{{ translate("There are no preorders for the filters you have applied and variants you have selected.")}}</p>
       </div>
 
       <!-- Variant -->
@@ -128,19 +128,19 @@
               </ion-thumbnail>
               <ion-label>
                 <h2> {{ getProduct(item.groupValue).productName }}</h2>
-                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/')">{{ $t("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
-                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/')">{{ $t("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
+                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/')">{{ translate("Color") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/COLOR/') }}</p>
+                <p v-if="$filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/')">{{ translate("Size") }}: {{ $filters.getFeature(getProduct(item.groupValue).featureHierarchy, '1/SIZE/') }}</p>
               </ion-label>
             </ion-item>
           </div>
           <div class="order-info">
-            <ion-badge button color="success" @click="autoFillQuantity(item, item.doclist && item.doclist.numFound ? item.doclist.numFound : 0)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ $t("pieces preordered") }}</ion-badge>
-            <ion-badge button color="medium" @click="autoFillQuantity(item, getProductStock(item.groupValue))">{{ getProductStock(item.groupValue) }} {{ $t("in stock") }}</ion-badge>
-            <ion-badge color="medium"> {{ getBrokeringCountByProduct(item.groupValue) }} {{ $t("in brokering") }}</ion-badge>
+            <ion-badge button color="success" @click="autoFillQuantity(item, item.doclist && item.doclist.numFound ? item.doclist.numFound : 0)">{{ item.doclist && item.doclist.numFound ? item.doclist.numFound : 0 }} {{ translate("pieces preordered") }}</ion-badge>
+            <ion-badge button color="medium" @click="autoFillQuantity(item, getProductStock(item.groupValue))">{{ getProductStock(item.groupValue) }} {{ translate("in stock") }}</ion-badge>
+            <ion-badge color="medium"> {{ getBrokeringCountByProduct(item.groupValue) }} {{ translate("in brokering") }}</ion-badge>
           </div>
           <div class="order-select">
             <ion-item>
-              <ion-label position="floating">{{ $t("Pieces") }}</ion-label>
+              <ion-label position="floating">{{ translate("Pieces") }}</ion-label>
               <ion-input type="number" min="1" clear-input="true" v-model="selectedVariants[item.productId]"></ion-input>
             </ion-item>
           </div>
@@ -152,13 +152,13 @@
       <ion-toolbar>
         <ion-buttons slot="end">
           <ion-button :disabled="!isAnyVariantSelected()" @click="releaseAlert" fill="outline" color="primary" size="small">
-            <ion-icon slot="start" :icon="send" />{{ $t("Release") }}
+            <ion-icon slot="start" :icon="send" />{{ translate("Release") }}
           </ion-button>
           <ion-button :disabled="!isAnyVariantSelected()" @click="openWarehouseList" fill="outline" color="dark" size="small">
-            <ion-icon slot="start" :icon="business" />{{ $t("Release to a warehouse") }}
+            <ion-icon slot="start" :icon="business" />{{ translate("Release to a warehouse") }}
           </ion-button>
           <ion-button :disabled="!isAnyVariantSelected()" @click="cancelAlert" fill="outline" color="danger" size="small">
-            <ion-icon slot="start" :icon="closeCircle" />{{ $t("Cancel") }}
+            <ion-icon slot="start" :icon="closeCircle" />{{ translate("Cancel") }}
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -217,6 +217,7 @@ import { DxpShopifyImg } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "product-details",
@@ -343,11 +344,11 @@ export default defineComponent({
     },
     async infoAlert() {
       const alert = await alertController.create({
-        header: this.$t("How are orders released?"),
-        message: this.$t(
-          "Orders are released from oldest to newest. Use the Date filter to identify orders taken before a certain date.")+"<p>"+ this.$t("The order count in product cards will be updated based on the filters you select.")+"</p>"
+        header: translate("How are orders released?"),
+        message: translate(
+          "Orders are released from oldest to newest. Use the Date filter to identify orders taken before a certain date.")+"<p>"+ translate("The order count in product cards will be updated based on the filters you select.")+"</p>"
         ,
-        buttons: [this.$t("Dismiss")],
+        buttons: [translate("Dismiss")],
 
       });
       return alert.present();
@@ -358,21 +359,21 @@ export default defineComponent({
         // When using clear input the value is reset to '' and results to NaN when added without check
         return selectedVariantsCount ? count + parseInt(selectedVariantsCount) : count;
       }, 0)
-      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
+      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? translate("There is a job already pending.")  : translate("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + translate(
           'preorders will be automatically brokered and assigned for fulfillment.',{ count: itemCount }
         )
       const alert = await alertController.create({
-        header: this.$t("Release orders"),
+        header: translate("Release orders"),
         cssClass: "alert-message",
         message,
         buttons: [
           {
-            text: this.$t('Cancel'),
+            text: translate('Cancel'),
             role: 'cancel',
             cssClass: 'secondary'
           },
           {
-            text:this.$t('Release'),
+            text:translate('Release'),
             handler: () => {
               this.releaseItems();
             },
@@ -387,20 +388,20 @@ export default defineComponent({
         // When using clear input the value is reset to '' and results to NaN when added without check
         return selectedVariantsCount ? count + parseInt(selectedVariantsCount) : count;
       }, 0)
-      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
+      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? translate("There is a job already pending.")  : translate("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + translate(
           'preorders will be cancelled. This action cannot be undone.',{ count: itemCount }
         )
       const alert = await alertController.create({
-        header: this.$t("Cancel orders"),
+        header: translate("Cancel orders"),
         message,
         buttons: [
             {
-              text: this.$t("Don't cancel"),
+              text: translate("Don't cancel"),
               role: 'cancel',
               cssClass: 'secondary'
             },
             {
-              text: this.$t("Confirm"),
+              text: translate("Confirm"),
               handler: () => {
                 this.cancelItems();
               },
@@ -587,7 +588,8 @@ export default defineComponent({
       list,
       ribbon,
       refresh,
-      store
+      store,
+      translate
     };
   },
 });
