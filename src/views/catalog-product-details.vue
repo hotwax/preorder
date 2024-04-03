@@ -511,15 +511,9 @@ export default defineComponent({
           })
           return isVariantAvailable
         })
-        
-        availableVariants[0].featureHierarchy.map((featureItem: any) => {
-          if(featureItem.startsWith('1/')){
-            const featureItemSplitted = featureItem.split("/")
-            selectedFeatures[featureItemSplitted[1]] = featureItemSplitted[2]
-          }
-        })
+
+        this.updateSeletedFeatures(availableVariants[0])
         this.currentVariant = availableVariants[0]
-        this.selectedFeatures = selectedFeatures
         showToast(translate("Selected variant not available. Reseting to first variant."))
       }
 
@@ -528,7 +522,6 @@ export default defineComponent({
     },
     getVariant() {
       let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)     
-      let selectedFeatures = {} as any;
 
       if(!selectedVariant) {
         selectedVariant = this.product.variants[0]
@@ -536,19 +529,7 @@ export default defineComponent({
         this.$route.query.variantId !==  selectedVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: selectedVariant.productId } }));
       }
 
-      selectedVariant.featureHierarchy.map((featureItem: any) => {
-        if(featureItem.startsWith('1/')){
-          const featureItemSplitted = featureItem.split("/")
-          selectedFeatures[featureItemSplitted[1]] = featureItemSplitted[2]
-        }
-      })
-
-      selectedFeatures = Object.keys(selectedFeatures).sort().reduce((result:any, key) => {
-        result[key] = selectedFeatures[key];
-        return result;
-      }, {});
-
-      this.selectedFeatures = selectedFeatures
+      this.updateSeletedFeatures(selectedVariant)
       this.currentVariant = selectedVariant
     },
     getFeatures() {
@@ -594,6 +575,22 @@ export default defineComponent({
       })
 
       this.features = features
+    },
+    updateSeletedFeatures(variant: any) {
+      let selectedFeatures = {} as any;
+      variant.featureHierarchy.map((featureItem: any) => {
+        if(featureItem.startsWith('1/')){
+          const featureItemSplitted = featureItem.split("/")
+          selectedFeatures[featureItemSplitted[1]] = featureItemSplitted[2]
+        }
+      })
+
+      selectedFeatures = Object.keys(selectedFeatures).sort().reduce((result:any, key) => {
+        result[key] = selectedFeatures[key];
+        return result;
+      }, {});
+
+      this.selectedFeatures = selectedFeatures
     },
     async updateVariant() {
       this.variantId = this.currentVariant.variantId
