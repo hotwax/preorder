@@ -534,22 +534,22 @@ export default defineComponent({
     },
     getFeatures() {
       const selectedFeatures = this.selectedFeatures
-      const firstFeature = Object.keys(selectedFeatures)[0]
-
       const features = {} as any;
 
-      this.product.variants.map((variant: any) => {
-        const featureOption = getFeature(variant.featureHierarchy, `1/${firstFeature}`)
-        if(!features[firstFeature]){
-          features[firstFeature] = [featureOption]
-        } else{
-          if(!features[firstFeature].includes(featureOption)) features[firstFeature].push(featureOption)
-        }
-      })
-
       Object.entries(selectedFeatures).map((feature, featureIndex) => {
-        const nextFeature = Object.entries(selectedFeatures).find((currentFeature, currentFeatureIndex) => currentFeatureIndex === featureIndex + 1)
+        if(featureIndex === 0) {
+          const firstFeature = feature[0]
+          this.product.variants.map((variant: any) => {
+            const featureOption = getFeature(variant.featureHierarchy, `1/${firstFeature}`)
+            if(!features[firstFeature]){
+              features[firstFeature] = [featureOption]
+            } else{
+              if(!features[firstFeature].includes(featureOption)) features[firstFeature].push(featureOption)
+            }
+          })
+        }
 
+        const nextFeature = Object.entries(selectedFeatures).find((currentFeature, currentFeatureIndex) => currentFeatureIndex === featureIndex + 1)
         if(nextFeature) {
           const nextFeatureCategory = nextFeature[0]
 
