@@ -490,7 +490,7 @@ export default defineComponent({
 
       const variant = this.product.variants.find((variant: any) => {
         let isVariantAvailable = true
-        Object.entries(this.selectedFeatures).map((currentFeature, currentFeatureIndex) => {
+        Object.entries(this.selectedFeatures).map((currentFeature) => {
           if(getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
             isVariantAvailable = false
           }
@@ -604,56 +604,6 @@ export default defineComponent({
       await this.prepareShopListings()
       await this.preparePoSummary()
     },
-    // getFeatures() {
-    //   const features = {} as any
-    //   this.product.variants.map((variant: any) => {
-    //     const size = getFeature(variant.featureHierarchy, '1/SIZE/')
-    //     const color = getFeature(variant.featureHierarchy, '1/COLOR/')
-    //     if (!features[color]) features[color] = [size]
-    //     else if (!features[color].includes(size)) features[color].push(size)
-    //   })
-
-    //   Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
-
-    //   let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)
-
-    //   if (!selectedVariant) {
-    //       // if the variant does not have color or size as features
-    //       selectedVariant = this.product.variants[0]
-    //       showToast(translate("Selected variant not available. Reseting to first variant."))
-    //     }
-
-    //   if (selectedVariant) {
-    //     this.selectedColor = getFeature(selectedVariant.featureHierarchy, '1/COLOR/')
-    //     this.selectedSize = getFeature(selectedVariant.featureHierarchy, '1/SIZE/')
-    //   }
-    // },
-    // async updateVariant() {
-    //   let variant
-    //   if (this.selectedColor || this.selectedSize) {
-    //     variant = this.product.variants.find((variant: any) => {
-    //       const hasSize = !this.selectedSize || (this.selectedSize && getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
-    //       const hasColor = !this.selectedColor || (this.selectedColor && getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor)
-    //       return hasSize && hasColor
-    //     })
-
-    //     // if the selected size is not available for that color, default it to the first size available
-    //     if (!variant) {
-    //       this.selectedSize = this.features[this.selectedColor][0];
-    //       variant = this.product.variants.find((variant: any) => getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
-    //       showToast(translate("Selected variant not available"))
-    //     }
-    //   }
-    //   // if the variant does not have color or size as features
-    //   this.currentVariant = variant || this.product.variants[0]
-    //   this.variantId = this.currentVariant.variantId
-    //   this.$route.query.variantId !==  this.currentVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: this.currentVariant.productId } }));
-    //   await this.getPoDetails()
-    //   await this.getAtpCalcDetails()
-    //   await this.prepareInvConfig()
-    //   await this.prepareShopListings()
-    //   await this.preparePoSummary()
-    // },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
       this.store.dispatch('job/fetchCtgryAndBrkrngJobs', { systemJobEnumIds }).then(() => {
