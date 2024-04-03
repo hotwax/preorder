@@ -488,7 +488,7 @@ export default defineComponent({
       const selectedFeatures = this.selectedFeatures
       selectedFeatures[feature] = option
 
-      const variant = this.product.variants.find((variant: any) => {
+      let variant = this.product.variants.find((variant: any) => {
         let isVariantAvailable = true
         Object.entries(this.selectedFeatures).map((currentFeature) => {
           if(getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
@@ -513,10 +513,11 @@ export default defineComponent({
         })
 
         this.updateSeletedFeatures(availableVariants[0])
-        this.currentVariant = availableVariants[0]
+        variant = availableVariants[0]
         showToast(translate("Selected variant not available. Reseting to first variant."))
       }
 
+      this.currentVariant = variant;
       this.getFeatures()
       this.updateVariant();
     },
