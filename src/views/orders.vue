@@ -581,6 +581,10 @@ export default defineComponent({
   gap: 10px;
 }
 
+ion-chip {
+  height: 0%;
+}
+
 @media (max-width: 991px) {
 
   /* ==============

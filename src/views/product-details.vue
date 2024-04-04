@@ -627,7 +627,7 @@ export default defineComponent({
 .product-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: start;
 }
 
 .product-info > h1 {
@@ -660,7 +660,7 @@ hr {
 
 ion-card {
   display: grid;
-  grid-template-columns: max-content 1fr 200px;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
   align-items: center;
   padding: 16px;
 }
@@ -668,6 +668,10 @@ ion-card {
 .order-info {
   display: flex;
   justify-content: center;
+}
+
+ion-chip {
+  height: 0%;
 }
 
 @media (max-width: 991px) {
