@@ -581,8 +581,9 @@ export default defineComponent({
   gap: 10px;
 }
 
-ion-chip {
-  height: 0%;
+ion-chip > ion-input, ion-chip > ion-select {
+  /* In ionic 7, a min-height is getting set on the ion-chip hence removing it. */
+  min-height: unset !important;
 }
 
 @media (max-width: 991px) {
