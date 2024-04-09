@@ -2,7 +2,7 @@
     <ion-menu content-id="main-content" type="overlay" :disabled="!isUserAuthenticated">
         <ion-header>
           <ion-toolbar>
-            <ion-title>{{ $t("Preorder Management")}}</ion-title>
+            <ion-title>{{ translate("Preorder Management")}}</ion-title>
           </ion-toolbar>
         </ion-header>
 
@@ -40,7 +40,7 @@ import {
 } from "@ionic/vue";
 import { computed, defineComponent} from "vue"
 import { mapGetters } from "vuex";
-
+import { translate } from "@hotwax/dxp-components";
 import { albums ,shirt, pricetags, settings } from "ionicons/icons";
 import { useStore } from "@/store";
 import { useRouter } from "vue-router";
@@ -124,7 +124,8 @@ export default defineComponent({
       settings,
       selectedIndex,
       shirt,
-      store
+      store,
+      translate
     };
   }
 });

@@ -1,10 +1,10 @@
 <template>
   <ion-content>
     <ion-list>
-      <ion-item button @click="releaseAlert">{{ $t("Release") }}</ion-item>
-      <ion-item button @click="openWarehouseList"> {{ $t("Release to a warehouse") }}</ion-item>
-      <ion-item button @click="editPromiseDate"> {{ $t("Edit promise date") }}</ion-item>
-      <ion-item button lines="none" @click="cancelAlert">{{ $t("Cancel") }}</ion-item>
+      <ion-item button @click="releaseAlert">{{ translate("Release") }}</ion-item>
+      <ion-item button @click="openWarehouseList"> {{ translate("Release to a warehouse") }}</ion-item>
+      <ion-item button @click="editPromiseDate"> {{ translate("Edit promise date") }}</ion-item>
+      <ion-item button lines="none" @click="cancelAlert">{{ translate("Cancel") }}</ion-item>
     </ion-list>
   </ion-content>
 </template>
@@ -22,6 +22,7 @@ import { defineComponent } from "vue";
 import WarehouseModal from "@/views/warehouse-modal.vue";
 import { useStore } from "@/store";
 import PromiseDateModal from "@/views/promise-date-modal.vue";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "OrderPopover",
@@ -46,20 +47,20 @@ export default defineComponent({
     },
     releaseAlert: async function () {
       const alert = await alertController.create({
-        header: this.$t("Release item"),
+        header: translate("Release item"),
         cssClass: "alert-message",
 
-        message: this.$t(
+        message: translate(
           'This item will be automatically brokered and assigned for fulfillment.'
         ),
         buttons: [
             {
-              text: this.$t("Cancel"),
+              text: translate("Cancel"),
               role: 'cancel',
               cssClass: 'secondary'
             },
             {
-              text: this.$t("Release"),
+              text: translate("Release"),
               handler: () => {
                 this.releaseItem(this.item).then(() => {
                   this.store.dispatch("order/removeItem", { item: this.item });
@@ -97,18 +98,18 @@ export default defineComponent({
     },
     async cancelAlert() {
       const alert = await alertController.create({
-        header: this.$t("Cancel item"),
-        message: this.$t(
+        header: translate("Cancel item"),
+        message: translate(
           'This item will be cancelled. This action cannot be undone.'
         ),
         buttons: [
             {
-              text: this.$t("Don't cancel"),
+              text: translate("Don't cancel"),
               role: 'cancel',
               cssClass: 'secondary'
             },
             {
-              text: this.$t( "Confirm"),
+              text: translate( "Confirm"),
               handler: () => {
                 this.cancelItem(this.item).then(() => {
                   this.store.dispatch("order/removeItem", { item: this.item })
@@ -125,7 +126,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
     return {
-      store
+      store,
+      translate
     }
   },
   components: { 
