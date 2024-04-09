@@ -301,6 +301,14 @@ export default defineComponent({
   border-bottom: 1px solid var(--ion-color-medium);
   cursor: pointer;
 }
+
+
+/* Added width property as after updating to ionic7 min-width is getting applied on ion-label inside ion-item
+  which results in distorted label text and thus reduced ion-item width */
+.list-item > ion-item {
+  width: 100%;
+}
+
 @media (max-width: 991px) {
   /* ==============
    3. Mobile Header

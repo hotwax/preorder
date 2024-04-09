@@ -24,8 +24,7 @@
       <ion-list>
         <ion-radio-group value="rd" v-model="facilityId">
           <ion-item  v-bind:key="facility.facilityId" v-for="facility in facilities">
-            <ion-label>{{ facility.facilityName}}</ion-label>
-            <ion-radio :value="facility.facilityId" slot="start"></ion-radio>
+            <ion-radio :value="facility.facilityId" label-placement="end" justify="start">{{ facility.facilityName }}</ion-radio>
           </ion-item>
         </ion-radio-group>
       </ion-list>
@@ -49,7 +48,6 @@ import {
   IonHeader,
   IonItem,
   IonIcon,
-  IonLabel,
   IonRadioGroup,
   IonRadio,
   IonList,
@@ -227,7 +225,6 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
-    IonLabel,
     IonList,
     IonRadioGroup,
     IonRadio,

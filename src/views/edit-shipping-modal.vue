@@ -13,20 +13,17 @@
   <ion-content>
     <ion-radio-group>
       <ion-item lines="none">
-        <ion-radio slot="start"></ion-radio>
-        <ion-label>{{ $t("Custom") }}</ion-label>
+        <ion-radio justify="start" label-placement="end">{{ $t("Custom") }}</ion-radio>
       </ion-item>
     </ion-radio-group>
 
     <ion-item>
-      <ion-label position="stacked">{{ $t("Ships from date") }}</ion-label>
-      <ion-input type="date"></ion-input>
+      <ion-input :label="$t('Ships from date')" label-placement="stacked" type="date"></ion-input>
     </ion-item>
 
     <ion-radio-group>
       <ion-item lines="none">
-        <ion-radio slot="start"></ion-radio>
-        <ion-label>{{ $t("Auto") }}</ion-label>
+        <ion-radio label-placement="end" justify="start">{{ $t("Auto") }}</ion-radio>
       </ion-item>
     </ion-radio-group>
 

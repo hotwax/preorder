@@ -32,12 +32,13 @@ import { login, logout, loader } from './user-utils';
 import permissionPlugin from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
-import { getConfig, initialise,  setUserTimeZone, getAvailableTimeZones } from '@/adapter'
+import { getConfig, initialise,  setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
 import localeMessages from './i18n/locales';
 
 const app = createApp(App)
   .use(IonicVue, {
-    mode: 'md'
+    mode: 'md',
+    innerHTMLTemplatesEnabled: true
   })
   .use(router)
   .use(i18n)
@@ -55,6 +56,7 @@ const app = createApp(App)
     getConfig: getConfig,
     initialise: initialise,
     localeMessages,
+    setUserLocale,
     setUserTimeZone,
     getAvailableTimeZones
   });
