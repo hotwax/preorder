@@ -32,7 +32,7 @@ import { login, logout, loader } from './user-utils';
 import permissionPlugin from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
-import { getConfig, initialise, setUserLocale} from '@/adapter'
+import { getConfig, initialise,  setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
 import localeMessages from './i18n/locales';
 
 const app = createApp(App)
@@ -56,7 +56,9 @@ const app = createApp(App)
     getConfig: getConfig,
     initialise: initialise,
     localeMessages,
-    setUserLocale
+    setUserLocale,
+    setUserTimeZone,
+    getAvailableTimeZones
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
