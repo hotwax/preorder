@@ -13,20 +13,17 @@
   <ion-content>
     <ion-radio-group>
       <ion-item lines="none">
-        <ion-radio slot="start"></ion-radio>
-        <ion-label>{{ translate("Custom") }}</ion-label>
+        <ion-radio justify="start" label-placement="end">{{ translate("Custom") }}</ion-radio>
       </ion-item>
     </ion-radio-group>
 
     <ion-item>
-      <ion-label position="stacked">{{ translate("Ships from date") }}</ion-label>
-      <ion-input type="date"></ion-input>
+      <ion-input :label="translate('Ships from date')" label-placement="stacked" type="date"></ion-input>
     </ion-item>
 
     <ion-radio-group>
       <ion-item lines="none">
-        <ion-radio slot="start"></ion-radio>
-        <ion-label>{{ translate("Auto") }}</ion-label>
+        <ion-radio label-placement="end" justify="start">{{ translate("Auto") }}</ion-radio>
       </ion-item>
     </ion-radio-group>
 

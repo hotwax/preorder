@@ -13,8 +13,7 @@
       
     <ion-item>
       <ion-icon slot="start" :icon="calendar" />
-      <ion-label>{{ translate("Promised date") }}</ion-label>
-      <ion-input v-model="promisedDatetime" type="date" :placeholder="translate('Select date')" />
+      <ion-input :label="translate('Promised date')" v-model="promisedDatetime" type="date" :placeholder="translate('Select date')" />
     </ion-item>
     
     <ion-fab slot="fixed" vertical="bottom" horizontal="end">
@@ -37,7 +36,6 @@ import {
   IonIcon,
   IonInput,
   IonItem,
-  IonLabel,
   IonTitle,
   IonToolbar,
   modalController,
@@ -138,7 +136,6 @@ export default defineComponent({
     IonIcon,
     IonInput,
     IonItem,
-    IonLabel,
     IonTitle,
     IonToolbar 
     },
