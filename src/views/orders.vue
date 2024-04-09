@@ -33,28 +33,28 @@
                 :value is a recommended way for vuex state but value is not working for date when resetting with close button used v-model instead of :value
                 https://vuex.vuejs.org/guide/forms.html#two-way-computed-property
                 -->
-              <ion-input v-model="query.orderedAfter" @ionChange="updateQuery()" type="date" />
+              <ion-input aria-label="ordered-after" v-model="query.orderedAfter" @ionChange="updateQuery()" type="date" />
               <ion-icon @click='query.orderedAfter = ""' v-if="query.orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="query.orderedBefore" @ionChange="query.orderedBefore = $event.target.value; updateQuery()" type="date" />
+              <ion-input aria-label="ordered-before" v-model="query.orderedBefore" @ionChange="query.orderedBefore = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.orderedBefore = ""' v-if="query.orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="query.promisedAfter" @ionChange="query.promisedAfter = $event.target.value; updateQuery()" type="date" />
+              <ion-input aria-label="promised-after" v-model="query.promisedAfter" @ionChange="query.promisedAfter = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.promisedAfter = ""' v-if="query.promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="query.promisedBefore" @ionChange="query.promisedBefore = $event.target.value; updateQuery()" type="date" />
+              <ion-input aria-label="promised-before" v-model="query.promisedBefore" @ionChange="query.promisedBefore = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.promisedBefore = ""' v-if="query.promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -62,15 +62,14 @@
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
             <ion-chip slot="end">
               <ion-icon :icon="ribbon" />
-              <ion-select :placeholder="$t('select')" v-model="query.cusotmerLoyalty"  @ionChange="updateQuery()" interface="popover" interface-options="{showBackdrop:false}">
+              <ion-select aria-label="loyalty-status" :placeholder="$t('select')" v-model="query.cusotmerLoyalty"  @ionChange="updateQuery()" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for=" (key, value) in cusotmerLoyaltyOptions" v-bind:key="key" :value="value">{{key}}</ion-select-option>
               </ion-select>
               <ion-icon @click='query.cusotmerLoyalty = ""' v-if="query.cusotmerLoyalty" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item lines="none">
-             <ion-label>{{ $t("Only orders without promise date") }}</ion-label>
-             <ion-toggle slot="end" @ionChange="query.hasPromisedDate = !query.hasPromisedDate; updateQuery()" :checked="!query.hasPromisedDate"></ion-toggle>
+             <ion-toggle @ionChange="query.hasPromisedDate = !query.hasPromisedDate; updateQuery()" :checked="!query.hasPromisedDate">{{ $t("Only orders without promise date") }}</ion-toggle>
           </ion-item>
         </div>
 
@@ -134,8 +133,7 @@
                 <p slot="end"> {{ item.promisedDatetime ? $filters.formatUtcDate(item.promisedDatetime, "yyyy-MM-dd'T'HH:mm:ss'Z'") : '-'  }}</p>
               </ion-item>
               <ion-item button @click="item.isChecked = !item.isChecked" lines="none">
-                <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" slot="start"></ion-checkbox>
-                <ion-label>{{$t("Select item")}}</ion-label>
+                <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" label-placement="end" justify="start">{{ $t("Select item") }}</ion-checkbox>
                 <ion-button fill="clear" color="medium" @click.stop="openPopover($event, item)">
                   <ion-icon slot="icon-only" :icon="ellipsisVertical" />
                 </ion-button>
@@ -447,6 +445,7 @@ export default defineComponent({
       this.selectedItems.forEach((item: any) => {
           item.isChecked = false;
       })
+      this.store.dispatch("order/clearSelectedItems");
     },
     async openPopover(ev: Event, item: any) {
       const popover = await popoverController.create({
@@ -550,7 +549,7 @@ export default defineComponent({
 
 .order-header {
   display: grid;
-  grid:"id tags metadata" / max-content 1fr minmax(min-content, max-content);
+  grid:"id tags metadata" / 1fr 1fr minmax(min-content, max-content);
   align-items: center;
 }
 
@@ -581,6 +580,11 @@ export default defineComponent({
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
   gap: 10px;
+}
+
+ion-chip > ion-input, ion-chip > ion-select {
+  /* In ionic 7, a min-height is getting set on the ion-chip hence removing it. */
+  min-height: unset !important;
 }
 
 @media (max-width: 991px) {
