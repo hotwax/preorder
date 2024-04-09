@@ -445,6 +445,7 @@ export default defineComponent({
       this.selectedItems.forEach((item: any) => {
           item.isChecked = false;
       })
+      this.store.dispatch("order/clearSelectedItems");
     },
     async openPopover(ev: Event, item: any) {
       const popover = await popoverController.create({
