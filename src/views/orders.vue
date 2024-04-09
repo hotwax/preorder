@@ -548,7 +548,7 @@ export default defineComponent({
 
 .order-header {
   display: grid;
-  grid:"id tags metadata" / max-content 1fr minmax(min-content, max-content);
+  grid:"id tags metadata" / 1fr 1fr minmax(min-content, max-content);
   align-items: center;
 }
 
