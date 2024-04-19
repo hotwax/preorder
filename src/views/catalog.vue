@@ -77,7 +77,7 @@
           </ion-item> -->
         </div>
 
-        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" v-show="isScrollingEnabled && isCatalogScrollable" ref="infiniteScrollRef">
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" v-show="isCatalogScrollable" ref="infiniteScrollRef">
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
         </ion-infinite-scroll>
       </div>
@@ -214,6 +214,10 @@ export default defineComponent({
       }
     },
     async loadMoreProducts(event: any){
+      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+      if(!(this.isScrollingEnabled && this.isCatalogScrollable)) {
+        await event.target.complete();
+      }
       this.getCatalogProducts(
         undefined,
         Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()

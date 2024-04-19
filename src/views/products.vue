@@ -38,7 +38,7 @@
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
         </ion-item>
        
-        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" id="infinite-scroll"  v-show="isScrollingEnabled && isScrolleable" ref="infiniteScrollRef">
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" id="infinite-scroll"  v-show="isScrolleable" ref="infiniteScrollRef">
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       </div>
@@ -131,6 +131,10 @@ export default defineComponent({
       }
     },
     async loadMoreProducts(event: any) {
+       // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+       if(!(this.isScrollingEnabled && this.isScrolleable)) {
+        await event.target.complete();
+      }
       this.getProducts(
         undefined,
         Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
