@@ -14,7 +14,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content>
+    <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search products')" v-model="queryString" v-on:keyup.enter="getProducts()"></ion-searchbar>
 
       <!-- Empty state -->
@@ -38,7 +38,7 @@
           <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
         </ion-item>
        
-        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" id="infinite-scroll" :disabled="!isScrolleable">
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" id="infinite-scroll"  v-show="isScrolleable" ref="infiniteScrollRef">
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       </div>
@@ -101,7 +101,8 @@ export default defineComponent({
       orderedAfter: '',
       orderedBefore: '',
       selectedItems: [] as any,
-      hasQuery:  false
+      hasQuery:  false,
+      isScrollingEnabled: false
     }
   },
   computed: {
@@ -114,14 +115,32 @@ export default defineComponent({
       currentEComStore: 'user/getCurrentEComStore',
     })
   },
+  async ionViewWillEnter() {
+    this.isScrollingEnabled = false;
+  },
   methods: {
+    enableScrolling() {
+      const parentElement = (this as any).$refs.contentRef.$el
+      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+      if(distanceFromInfinite < 0) {
+        this.isScrollingEnabled = false;
+      } else {
+        this.isScrollingEnabled = true;
+      }
+    },
     async loadMoreProducts(event: any) {
+       // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+       if(!(this.isScrollingEnabled && this.isScrolleable)) {
+        await event.target.complete();
+      }
       this.getProducts(
         undefined,
         Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
-      ).then(() => {
-        event.target.complete();
-      })
+      ).then(async () => {
+        await event.target.complete();
+      });
     },
     async getProducts( vSize?: any, vIndex?: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
