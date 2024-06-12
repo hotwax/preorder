@@ -934,7 +934,10 @@ export default defineComponent({
       const shopListings = this.shopListings.filter((shopListing: any) => shopListing.shopifyShopProductId)
       // Checking if we have the data
       const shopListingsWithMissingData = shopListings.filter((shopifyListing: any) => !shopifyListing.status)
-      return !(shopListingsWithMissingData.length > 0) && ((this.poSummary.eligible && shopListings.length === this.poSummary.listedCount) || (!this.poSummary.eligible && shopListings.length !== this.poSummary.listedCount))
+      // returning true if no missing data is there and either the product is eligible and is listed on all stores
+      // or the product is not eligible and is not listed on any store (no need to check shop listing for that
+      // product as listing count check is enough)
+      return !(shopListingsWithMissingData.length > 0) && ((this.poSummary.eligible && shopListings.length === this.poSummary.listedCount) || (!this.poSummary.eligible && this.poSummary.listedCount === 0))
     },
     prepareListingCountStatusMsg() {
       // Checking if it is linked
