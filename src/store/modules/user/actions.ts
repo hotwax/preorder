@@ -49,9 +49,11 @@ const actions: ActionTree<UserState, RootState> = {
             }
           }
 
+          const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "MERCHANDISING_ADMIN");
+
           // Getting user profile
           const userProfile = await UserService.getUserProfile(token);
-          userProfile.stores = await UserService.getEComStores(token, userProfile.partyId);
+          userProfile.stores = await UserService.getEComStores(token, userProfile.partyId, isAdminUser);
           
           // Getting user preferred store
           let preferredStore = userProfile.stores[0];
