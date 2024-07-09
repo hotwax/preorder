@@ -15,7 +15,6 @@ import {
 } from "@ionic/vue";
 import Menu from '@/components/Menu.vue';
 import { defineComponent } from "vue";
-// import { useI18n } from 'vue-i18n'
 import TaskQueue from './task-queue';
 import OfflineHelper from "./offline-helper"
 import emitter from "@/event-bus"
@@ -112,14 +111,11 @@ export default defineComponent({
     const store = useStore();
     TaskQueue.init();
     OfflineHelper.register();
-    // const { t, locale } = useI18n();
     const router = useRouter();
     return {
       router,
       TaskQueue,
       OfflineHelper,
-      // t,
-      // locale,
       store
     };
   },
