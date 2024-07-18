@@ -7,7 +7,7 @@ import Orders from '../views/orders.vue'
 import Catalog from '../views/catalog.vue'
 import Settings from '../views/settings.vue'
 import store from '@/store';
-import { Login, useAuthStore } from '@hotwax/dxp-components';
+import { DxpLogin, useAuthStore } from '@hotwax/dxp-components';
 import { loader } from '@/user-utils';
 import { hasPermission } from '@/authorization';
 import { showToast } from '@/utils';
@@ -47,8 +47,8 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/login',
-    name: 'login',
-    component: Login,
+    name: 'dxp-login',
+    component: DxpLogin,
     beforeEnter: loginGuard
   },
   {

@@ -14,7 +14,7 @@
     <!-- Empty state -->
     <div class="empty-state" v-if="jobTotal === 0">
       <img src="../assets/images/JobsEmptyState.png" />
-      <p>{{ $t("There are no jobs running the in the background right now.") }}</p>
+      <p>{{ $t("There are no jobs running in the background right now.") }}</p>
     </div>
 
     <!-- Active jobs -->

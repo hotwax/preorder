@@ -21,7 +21,7 @@
       <div class="header">
         <div class="product-image">
           <!-- TODO Create a separate component to handled default image -->
-          <ShopifyImg :src="current.product.mainImageUrl"></ShopifyImg>
+          <DxpShopifyImg :src="current.product.mainImageUrl"></DxpShopifyImg>
         </div>
 
         <div class="product-info">
@@ -52,28 +52,28 @@
           <ion-item>
             <ion-label>{{ $t("Ordered after") }} </ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="orderedAfter" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="ordered-after" v-model="orderedAfter" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='orderedAfter = ""' v-if="orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="orderedBefore" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="ordered-before" v-model="orderedBefore" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='orderedBefore = ""' v-if="orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="promisedAfter" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="promised-after" v-model="promisedAfter" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='promisedAfter = ""' v-if="promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="promisedBefore" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="promised-before" v-model="promisedBefore" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='promisedBefore = ""' v-if="promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -89,15 +89,14 @@
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
             <ion-chip slot="end">  
               <ion-icon :icon="ribbon"  />
-              <ion-select :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
+              <ion-select aria-label="loyalty-status" :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for="(key, value) in cusotmerLoyaltyOptions" :key="key" :value="value">{{key}}</ion-select-option>
               </ion-select> 
               <ion-icon @click='cusotmerLoyalty = ""' v-if="cusotmerLoyalty" :icon="close"/>
            </ion-chip>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Only orders without promise date") }}</ion-label>
-            <ion-toggle slot="end" @ionChange="hasPromisedDate = !hasPromisedDate; getVariantProducts()" :checked="!hasPromisedDate"></ion-toggle>
+            <ion-toggle @ionChange="hasPromisedDate = !hasPromisedDate; getVariantProducts()" :checked="!hasPromisedDate">{{ $t("Only orders without promise date") }}</ion-toggle>
           </ion-item>
         </div>
       </div>
@@ -124,7 +123,7 @@
           <div class="variant-info">
             <ion-item lines="none">
               <ion-thumbnail slot="start">
-                <ShopifyImg :src="getProduct(item.groupValue).mainImageUrl" size="small"/>
+                <DxpShopifyImg :src="getProduct(item.groupValue).mainImageUrl" size="small"/>
               </ion-thumbnail>
               <ion-label>
                 <h2> {{ getProduct(item.groupValue).productName }}</h2>
@@ -140,8 +139,7 @@
           </div>
           <div class="order-select">
             <ion-item>
-              <ion-label position="floating">{{ $t("Pieces") }}</ion-label>
-              <ion-input type="number" min="1" clear-input="true" v-model="selectedVariants[item.productId]"></ion-input>
+              <ion-input :label="$t('Pieces')" label-placement="floating" type="number" min="1" clear-input="true" v-model="selectedVariants[item.productId]"></ion-input>
             </ion-item>
           </div>
         </ion-card>
@@ -213,7 +211,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import { ShopifyImg } from "@hotwax/dxp-components";
+import { DxpShopifyImg } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
@@ -245,7 +243,7 @@ export default defineComponent({
     IonTitle,
     IonToggle,
     IonToolbar,
-    ShopifyImg
+    DxpShopifyImg
   },
   beforeMount () {
     // TODO Handle if product id is invalid
@@ -629,7 +627,7 @@ export default defineComponent({
 .product-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: start;
 }
 
 .product-info > h1 {
@@ -662,7 +660,7 @@ hr {
 
 ion-card {
   display: grid;
-  grid-template-columns: max-content 1fr 200px;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
   align-items: center;
   padding: 16px;
 }
@@ -670,6 +668,11 @@ ion-card {
 .order-info {
   display: flex;
   justify-content: center;
+}
+
+ion-chip > ion-input, ion-chip > ion-select {
+  /* In ionic 7, a min-height is getting set on the ion-chip hence removing it. */
+  min-height: unset !important;
 }
 
 @media (max-width: 991px) {
