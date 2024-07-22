@@ -64,6 +64,7 @@
       <DxpAppVersionInfo />
 
       <section>
+        <DxpProductIdentifier />
         <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
       </section>
     </ion-content>
@@ -95,6 +96,7 @@ import {
 import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
 import Image from '@/components/Image.vue';
+import { DxpProductIdentifier } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "settings",
