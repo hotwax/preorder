@@ -285,6 +285,7 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
+      currentEComStore: 'user/getCurrentEComStore'
     }),
   },
   async ionViewWillEnter() {
@@ -319,7 +320,7 @@ export default defineComponent({
     },
     async releaseItems() {
       emitter.emit("presentLoader")
-      const selectedItems = this.getSelectedItemsToRelease("RELEASED_ORD_PARKING", "RELEASED"); // TODO Make it configurable
+      const selectedItems = this.getSelectedItemsToRelease(this.currentEComStore.productStoreId === "SM_STORE" ? "RELEASED_ORD_PARKING" : "_NA_", "RELEASED"); // TODO Make it configurable
       const json = JSON.stringify(selectedItems);
       const blob = new Blob([json], { type: 'application/json'});
       const formData = new FormData();
