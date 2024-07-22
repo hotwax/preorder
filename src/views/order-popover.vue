@@ -18,21 +18,27 @@ import {
   alertController,
   modalController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import WarehouseModal from "@/views/warehouse-modal.vue";
 import { useStore } from "@/store";
 import PromiseDateModal from "@/views/promise-date-modal.vue";
+import { mapGetters } from "vuex";
 
 export default defineComponent({
   name: "OrderPopover",
   props: ['item'],
+  computed: {
+    ...mapGetters({
+      currentEComStore: 'user/getCurrentEComStore'
+    })
+  },
   methods: {
     async releaseItem (item: any) {
       return this.store.dispatch("order/releaseItem", {
           orderId: item.orderId,
           orderItemSeqId: item.orderItemSeqId,
           changeReasonEnumId: "RELEASED",
-          toFacilityId: "RELEASED_ORD_PARKING" // TODO Make it configurable, currently this is for SM only
+          toFacilityId: this.currentEComStore.productStoreId === "SM_STORE" ? "RELEASED_ORD_PARKING" : "_NA_" // TODO Make it configurable, currently this is for SM only
         })
     },
     async cancelItem (item: any) {
