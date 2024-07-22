@@ -12,20 +12,6 @@ const login = async (username: string, password: string): Promise <any> => {
     }
   });
 }
-const getAvailableTimeZones = async (): Promise <any>  => {
-  return api({
-    url: "getAvailableTimeZones",
-    method: "get",
-    cache: true
-  });
-}
-const setUserTimeZone = async (payload: any): Promise <any>  => {
-  return api({
-    url: "setUserTimeZone",
-    method: "post",
-    data: payload
-  });
-}
 
 const setUserPreference = async (payload: any): Promise<any> => {
   return api({
@@ -204,12 +190,10 @@ const getUserProfile = async (token: any): Promise<any> => {
 }
 
 export const UserService = {
-  getAvailableTimeZones,
   getEComStores,
   getPreferredStore,
   getUserProfile,
   getUserPermissions,
   login,
   setUserPreference,
-  setUserTimeZone,
 }

@@ -29,25 +29,25 @@ const actions: ActionTree<UserState, RootState> = {
         const serverPermissionsFromRules = getServerPermissionsFromRules();
         if (permissionId) serverPermissionsFromRules.push(permissionId);
 
-        const serverPermissions = await UserService.getUserPermissions({
-          permissionIds: serverPermissionsFromRules
-        }, token);
-        const appPermissions = prepareAppPermissions(serverPermissions);
+          const serverPermissions = await UserService.getUserPermissions({
+            permissionIds: [...new Set(serverPermissionsFromRules)]
+          }, token);
+          const appPermissions = prepareAppPermissions(serverPermissions);
 
-        // Checking if the user has permission to access the app
-        // If there is no configuration, the permission check is not enabled
-        if (permissionId) {
-          // As the token is not yet set in the state passing token headers explicitly
-          // TODO Abstract this out, how token is handled should be part of the method not the callee
-          const hasPermission = appPermissions.some((appPermissionId: any) => appPermissionId === permissionId );
-          // If there are any errors or permission check fails do not allow user to login
-          if (hasPermission) {
-            const permissionError = 'You do not have permission to access the app.';
-            showToast(translate(permissionError));
-            console.error("error", permissionError);
-            return Promise.reject(new Error(permissionError));
+          // Checking if the user has permission to access the app
+          // If there is no configuration, the permission check is not enabled
+          if (permissionId) {
+            // As the token is not yet set in the state passing token headers explicitly
+            // TODO Abstract this out, how token is handled should be part of the method not the callee
+            const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId );
+            // If there are any errors or permission check fails do not allow user to login
+            if (!hasPermission) {
+              const permissionError = 'You do not have permission to access the app.';
+              showToast(translate(permissionError));
+              console.error("error", permissionError);
+              return Promise.reject(new Error(permissionError));
+            }
           }
-        }
 
         // Getting user profile
         const userProfile = await UserService.getUserProfile(token);
@@ -80,7 +80,7 @@ const actions: ActionTree<UserState, RootState> = {
     } catch (err: any) {
       showToast(translate('Something went wrong'));
       console.error("error", err);
-      return Promise.reject(new Error(err))
+      return Promise.reject(err instanceof Object ? err :new Error(err));
     }
   },
 
@@ -140,16 +140,12 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Update user timeZone
    */
-     async setUserTimeZone ( { state, commit }, payload) {
-      const resp = await UserService.setUserTimeZone(payload)
-      if (resp.status === 200 && !hasError(resp)) {
-        const current: any = state.current;
-        current.userTimeZone = payload.timeZoneId;
-        commit(types.USER_INFO_UPDATED, current);
-        Settings.defaultZone = current.userTimeZone;
-        showToast(translate("Time zone updated successfully"));
-      }
-    },
+  async setUserTimeZone ( { state, commit }, timeZoneId) {
+    const current: any = state.current;
+    current.userTimeZone = timeZoneId;
+    commit(types.USER_INFO_UPDATED, current);
+    Settings.defaultZone = current.userTimeZone;
+  },
 
   /**
    * Set user's selected Ecom store
@@ -176,5 +172,10 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_INSTANCE_URL_UPDATED, payload)
       updateInstanceUrl(payload)
     },
+
+    updatePwaState({ commit }, payload) {
+      commit(types.USER_PWA_STATE_UPDATED, payload);
+    }
+
 }
 export default actions;

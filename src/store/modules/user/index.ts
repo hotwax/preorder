@@ -12,7 +12,11 @@ const userModule: Module<UserState, RootState> = {
       permissions: [],
       current: {},
       instanceUrl: '',
-      currentEComStore: {}
+      currentEComStore: {},
+      pwaState: {
+        updateExists: false,
+        registration: null,
+      }
     },
     getters,
     actions,

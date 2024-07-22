@@ -12,7 +12,7 @@
       <div class="header">
         <div class="product-image">
           <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
-          <ShopifyImg v-else :src="currentVariant.mainImageUrl" />
+          <DxpShopifyImg v-else :src="currentVariant.mainImageUrl" />
         </div>
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
@@ -255,12 +255,10 @@
               <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)"/>
+              <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ $t("Reserve inventory") }}</ion-toggle>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)"/>
+              <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ $t("Hold pre-order physical inventory") }}</ion-toggle>
             </ion-item>
           </div>
         </ion-card>
@@ -397,7 +395,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import { getProductIdentificationValue, ShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -416,7 +414,7 @@ import { Actions, hasPermission } from '@/authorization'
 export default defineComponent({
   name: "catalog-product-details",
   components: {
-    ShopifyImg,
+    DxpShopifyImg,
     IonButtons,
     IonBackButton,
     IonCard,
@@ -617,7 +615,7 @@ export default defineComponent({
             "entityName": "ProductCategoryDcsnRsn",
             "fieldList": ["productId", "purchaseOrderId", "fromDate"],
             "viewSize": 1,
-            "orderBy": "createdDate DESC"
+            "orderBy": "estimatedDeliveryDate ASC"
           } as any;
           resp = await OrderService.getActivePoId(payload)
           if (!hasError(resp)) {
