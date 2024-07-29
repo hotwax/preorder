@@ -295,7 +295,7 @@ export default defineComponent({
     },
     async releaseItems() {
       emitter.emit("presentLoader")
-      const selectedItems = this.getSelectedItemsToRelease(this.currentEComStore.productStoreId === "SM_STORE" ? "RELEASED_ORD_PARKING" : "_NA_", "RELEASED"); // TODO Make it configurable, currently this is for SM only
+      const selectedItems = this.getSelectedItemsToRelease(this.currentEComStore.productStoreId === "SM_STORE" || this.currentEComStore.productStoreId === "DV_STORE" || this.currentEComStore.productStoreId === "BJ_STORE" ? "RELEASED_ORD_PARKING" : "_NA_", "RELEASED"); // TODO Make it configurable, currently this is for SM only
       const json = JSON.stringify(selectedItems);
       const blob = new Blob([json], { type: 'application/json'});
       const formData = new FormData();
