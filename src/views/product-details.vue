@@ -436,7 +436,7 @@ export default defineComponent({
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId,
               changeReasonEnumId: "RELEASED",
-              toFacilityId: this.currentEComStore.productStoreId === "SM_STORE" || this.currentEComStore.productStoreId === "DV_STORE" || this.currentEComStore.productStoreId === "BJ_STORE" ? "RELEASED_ORD_PARKING" : "_NA_" // TODO Make it configurable
+              toFacilityId: "RELEASED_ORD_PARKING" // TODO Make it configurable
             }
           })
           selectedItems = [...selectedItems, ...items];
