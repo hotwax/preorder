@@ -284,8 +284,7 @@ export default defineComponent({
       selectedItemsToCancel: 'order.getSelectedItemsToCancel',
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
-      query: 'order/getQuery',
-      currentEComStore: 'user/getCurrentEComStore'
+      query: 'order/getQuery'
     }),
   },
   async ionViewWillEnter() {
