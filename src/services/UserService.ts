@@ -217,6 +217,74 @@ const getUserProfile = async (token: any): Promise<any> => {
   }
 }
 
+const runNow = async (): Promise<any> => {
+  const omsRedirectionUrl = store.getters['user/getOmsRedirectionInfo'];
+  if(!omsRedirectionUrl.url || !omsRedirectionUrl.token) {
+    console.error("Maarg instance is not setup for this account.");
+    return;
+  }
+
+  const baseURL = omsRedirectionUrl.startsWith('http') ? omsRedirectionUrl.includes('/rest/s1/order-routing') ? omsRedirectionUrl : `${omsRedirectionUrl}/rest/s1/order-routing/` : `https://${omsRedirectionUrl}.hotwax.io/rest/s1/order-routing/`;
+  let isOmsConnectionExist = false, resp = {} as any;
+  let routingGroupId = "";
+
+  try {
+    resp = await client({
+        url: "checkOmsConnection",
+        method: "GET",
+        baseURL,
+        headers: {
+          "api_key": omsRedirectionUrl.token,
+          "Content-Type": "application/json"
+        }
+    });
+
+    if(!hasError(resp)) {
+      isOmsConnectionExist = true
+    } else {
+      throw resp.data;
+    }
+
+    const payload = {
+      "inputFields": {
+        "settingTypeEnumId": "RUN_GROUP_ID"
+      },
+      "filterByDate": 'Y',
+      "entityName": "ProductStoreSetting",
+      "fieldList": ["settingValue", "fromDate"],
+      "viewSize": 1
+    }
+
+    resp = await api({
+      url: "performFind",
+      method: "post",
+      data: payload
+    });
+
+    if(!hasError(resp)) {
+      routingGroupId = resp.data.docs[0].settingValue
+    } else {
+      throw resp.data;
+    }
+
+    resp = await client({
+      url: `groups/${routingGroupId}/runNow`,
+      method: "POST",
+      baseURL,
+      headers: {
+        "api_key": omsRedirectionUrl.token,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if(hasError(resp)) {
+      throw resp.data;
+    }
+  } catch(error: any) {
+    console.error(error)
+  }
+}
+
 export const UserService = {
   getEComStores,
   getPreferredStore,
@@ -224,5 +292,6 @@ export const UserService = {
   getUserPermissions,
   login,
   moquiLogin,
+  runNow,
   setUserPreference,
 }

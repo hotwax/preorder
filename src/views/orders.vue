@@ -230,6 +230,7 @@ import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import { DxpShopifyImg } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
+import { UserService } from '@/services/UserService'
 
 const { Clipboard } = Plugins;
 
@@ -335,6 +336,7 @@ export default defineComponent({
       }).then(() => {
         // TODO Find a better place to call this
         this.store.dispatch("order/removeItems", { items: selectedItems });
+        UserService.runNow();
       }).finally(() => emitter.emit("dismissLoader"))
     },
     async cancelItems() {

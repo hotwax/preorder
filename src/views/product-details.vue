@@ -215,6 +215,7 @@ import { DxpShopifyImg } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
+import { UserService } from '@/services/UserService'
 
 export default defineComponent({
   name: "product-details",
@@ -452,8 +453,9 @@ export default defineComponent({
               'Content-Type': 'multipart/form-data;'
           },
           data: formData
-      }).then(() => {
+      }).then(async () => {
         this.store.dispatch("order/removeItems", { items: selectedItems });
+        UserService.runNow();
       }).finally(() => emitter.emit("dismissLoader"))
     },
     async cancelItems() {
