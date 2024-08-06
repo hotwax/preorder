@@ -315,7 +315,7 @@ const runNow = async (): Promise<any> => {
       throw resp.data;
     }
   } catch(error: any) {
-    console.error(error)
+    console.error("Failed to schedule routing.", error)
   }
 }
 
