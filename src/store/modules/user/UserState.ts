@@ -5,4 +5,8 @@ export default interface UserState {
     pwaState: any;
     instanceUrl: string;
     currentEComStore: object;
+    omsRedirectionInfo: {
+      url: string;
+      token: string;
+    }
 }
