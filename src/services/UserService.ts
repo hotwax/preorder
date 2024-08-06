@@ -268,6 +268,39 @@ const runNow = async (): Promise<any> => {
       throw resp.data;
     }
 
+    let job;
+    resp = await client({
+      url: `groups/${routingGroupId}/schedule`,
+      method: "GET",
+      baseURL,
+      headers: {
+        "api_key": omsRedirectionInfo.token,
+        "Content-Type": "application/json"
+      }
+    })
+
+    if(!hasError(resp)) {
+      job = resp.data.schedule
+      console.log(job);
+    } else {
+      throw resp.data;
+    }
+
+    if(!job.jobName) {
+      resp = await client({
+        url: `groups/${routingGroupId}/schedule`,
+        method: "POST",
+        baseURL,
+        headers: {
+          "api_key": omsRedirectionInfo.token,
+          "Content-Type": "application/json"
+        }
+      });
+      if(hasError(resp)) {
+        throw resp.data;
+      }
+    }
+
     resp = await client({
       url: `groups/${routingGroupId}/runNow`,
       method: "POST",
