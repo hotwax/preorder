@@ -226,7 +226,7 @@ const runNow = async (): Promise<any> => {
 
   const url = omsRedirectionInfo.url
   const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
-  let isOmsConnectionExist = false, resp = {} as any;
+  let resp = {} as any, payload = {};
   let routingGroupId = "";
 
   try {
@@ -240,13 +240,11 @@ const runNow = async (): Promise<any> => {
         }
     });
 
-    if(!hasError(resp)) {
-      isOmsConnectionExist = true
-    } else {
+    if(hasError(resp)) {
       throw resp.data;
     }
 
-    const payload = {
+    payload = {
       "inputFields": {
         "settingTypeEnumId": "RUN_GROUP_ID"
       },
@@ -281,15 +279,20 @@ const runNow = async (): Promise<any> => {
 
     if(!hasError(resp)) {
       job = resp.data.schedule
-      console.log(job);
     } else {
       throw resp.data;
+    }
+
+    payload = {
+      routingGroupId,
+      paused: "Y",  // passing Y as we just need to configure the scheduler and do not need to schedule it in active state
     }
 
     if(!job.jobName) {
       resp = await client({
         url: `groups/${routingGroupId}/schedule`,
         method: "POST",
+        data: payload,
         baseURL,
         headers: {
           "api_key": omsRedirectionInfo.token,
