@@ -218,13 +218,14 @@ const getUserProfile = async (token: any): Promise<any> => {
 }
 
 const runNow = async (): Promise<any> => {
-  const omsRedirectionUrl = store.getters['user/getOmsRedirectionInfo'];
-  if(!omsRedirectionUrl.url || !omsRedirectionUrl.token) {
+  const omsRedirectionInfo = store.getters['user/getOmsRedirectionInfo'];
+  if(!omsRedirectionInfo.url || !omsRedirectionInfo.token) {
     console.error("Maarg instance is not setup for this account.");
     return;
   }
 
-  const baseURL = omsRedirectionUrl.startsWith('http') ? omsRedirectionUrl.includes('/rest/s1/order-routing') ? omsRedirectionUrl : `${omsRedirectionUrl}/rest/s1/order-routing/` : `https://${omsRedirectionUrl}.hotwax.io/rest/s1/order-routing/`;
+  const url = omsRedirectionInfo.url
+  const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
   let isOmsConnectionExist = false, resp = {} as any;
   let routingGroupId = "";
 
@@ -234,7 +235,7 @@ const runNow = async (): Promise<any> => {
         method: "GET",
         baseURL,
         headers: {
-          "api_key": omsRedirectionUrl.token,
+          "api_key": omsRedirectionInfo.token,
           "Content-Type": "application/json"
         }
     });
@@ -272,7 +273,7 @@ const runNow = async (): Promise<any> => {
       method: "POST",
       baseURL,
       headers: {
-        "api_key": omsRedirectionUrl.token,
+        "api_key": omsRedirectionInfo.token,
         "Content-Type": "application/json"
       }
     });
