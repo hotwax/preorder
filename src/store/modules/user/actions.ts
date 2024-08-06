@@ -70,6 +70,8 @@ const actions: ActionTree<UserState, RootState> = {
             const api_key = await UserService.moquiLogin(omsRedirectionUrl, token)
             if(api_key) {
               dispatch("setOmsRedirectionInfo", { url: omsRedirectionUrl, token: api_key })
+            } else {
+              showToast(translate("Some functionality of this app might not work properly, Since moqui is not setup for this account."))
             }
           } else {
             showToast(translate("Some functionality of this app might not work properly, Since moqui is not setup for this account."))

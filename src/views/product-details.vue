@@ -453,7 +453,7 @@ export default defineComponent({
               'Content-Type': 'multipart/form-data;'
           },
           data: formData
-      }).then(async () => {
+      }).then(() => {
         this.store.dispatch("order/removeItems", { items: selectedItems });
         UserService.runNow();
       }).finally(() => emitter.emit("dismissLoader"))
