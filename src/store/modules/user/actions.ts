@@ -71,10 +71,10 @@ const actions: ActionTree<UserState, RootState> = {
             if(api_key) {
               dispatch("setOmsRedirectionInfo", { url: omsRedirectionUrl, token: api_key })
             } else {
-              showToast(translate("Some functionality of this app might not work properly, Since moqui is not setup for this account."))
+              console.error("Some of the configuration of the app is missing.");
             }
           } else {
-            showToast(translate("Some functionality of this app might not work properly, Since moqui is not setup for this account."))
+            console.error("Some of the configuration of the app is missing.")
           }
 
           // TODO user single mutation

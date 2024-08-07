@@ -231,13 +231,13 @@ const runNow = async (): Promise<any> => {
 
   try {
     resp = await client({
-        url: "checkOmsConnection",
-        method: "GET",
-        baseURL,
-        headers: {
-          "api_key": omsRedirectionInfo.token,
-          "Content-Type": "application/json"
-        }
+      url: "checkOmsConnection",
+      method: "GET",
+      baseURL,
+      headers: {
+        "api_key": omsRedirectionInfo.token,
+        "Content-Type": "application/json"
+      }
     });
 
     if(hasError(resp)) {
@@ -260,7 +260,7 @@ const runNow = async (): Promise<any> => {
       data: payload
     });
 
-    if(!hasError(resp)) {
+    if(!hasError(resp) && resp.data.docs[0].settingValue) {
       routingGroupId = resp.data.docs[0].settingValue
     } else {
       throw resp.data;
