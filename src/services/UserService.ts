@@ -283,16 +283,14 @@ const runNow = async (): Promise<any> => {
       throw resp.data;
     }
 
-    payload = {
-      routingGroupId,
-      paused: "Y",  // passing Y as we just need to configure the scheduler and do not need to schedule it in active state
-    }
-
     if(!job.jobName) {
       resp = await client({
         url: `groups/${routingGroupId}/schedule`,
         method: "POST",
-        data: payload,
+        data: {
+          routingGroupId,
+          paused: "Y",  // passing Y as we just need to configure the scheduler and do not need to schedule it in active state
+        },
         baseURL,
         headers: {
           "api_key": omsRedirectionInfo.token,
