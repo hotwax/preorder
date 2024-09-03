@@ -1,5 +1,4 @@
 import { api } from '@/adapter';
-import store from '@/store';
 
 const findOrder = async (payload: any): Promise<any> => {
   return api({
@@ -21,7 +20,7 @@ const releaseItems = async (payload: any): Promise<any> => {
   return api({
     url: "uploadJsonFile",
     method: "post",
-    data: {...payload.data, "productStoreId": store.state.user.currentEComStore.productStoreId},
+    data: payload.data,
     headers: payload.headers
   });
 }
@@ -30,7 +29,7 @@ const cancelItems = async (payload: any): Promise<any> => {
   return api({
     url: "uploadJsonFile",
     method: "post",
-    data: {...payload.data, "productStoreId": store.state.user.currentEComStore.productStoreId},
+    data: payload.data,
     headers: payload.headers
   });
 }
@@ -39,7 +38,7 @@ const updatePromiseDateItems = async (payload: any): Promise<any> => {
   return api({
     url: "uploadJsonFile",
     method: "post",
-    data: {...payload.data, "productStoreId": store.state.user.currentEComStore.productStoreId},
+    data: payload.data,
     headers: payload.headers
   });
 }
