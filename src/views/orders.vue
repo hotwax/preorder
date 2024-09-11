@@ -18,7 +18,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content>
+    <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div class="header">
         <div class="search">
           <ion-searchbar @ionFocus="selectSearchBarText($event)" @ionClear="query.queryString = ''; updateQuery()" :value="query.queryString" v-on:keyup.enter="query.queryString = $event.target.value; updateQuery()"> </ion-searchbar>
@@ -33,28 +33,28 @@
                 :value is a recommended way for vuex state but value is not working for date when resetting with close button used v-model instead of :value
                 https://vuex.vuejs.org/guide/forms.html#two-way-computed-property
                 -->
-              <ion-input v-model="query.orderedAfter" @ionChange="updateQuery()" type="date" />
+              <ion-input aria-label="ordered-after" v-model="query.orderedAfter" @ionChange="updateQuery()" type="date" />
               <ion-icon @click='query.orderedAfter = ""' v-if="query.orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="query.orderedBefore" @ionChange="query.orderedBefore = $event.target.value; updateQuery()" type="date" />
+              <ion-input aria-label="ordered-before" v-model="query.orderedBefore" @ionChange="query.orderedBefore = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.orderedBefore = ""' v-if="query.orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="query.promisedAfter" @ionChange="query.promisedAfter = $event.target.value; updateQuery()" type="date" />
+              <ion-input aria-label="promised-after" v-model="query.promisedAfter" @ionChange="query.promisedAfter = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.promisedAfter = ""' v-if="query.promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="query.promisedBefore" @ionChange="query.promisedBefore = $event.target.value; updateQuery()" type="date" />
+              <ion-input aria-label="promised-before" v-model="query.promisedBefore" @ionChange="query.promisedBefore = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.promisedBefore = ""' v-if="query.promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -62,15 +62,14 @@
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
             <ion-chip slot="end">
               <ion-icon :icon="ribbon" />
-              <ion-select :placeholder="$t('select')" v-model="query.cusotmerLoyalty"  @ionChange="updateQuery()" interface="popover" interface-options="{showBackdrop:false}">
+              <ion-select aria-label="loyalty-status" :placeholder="$t('select')" v-model="query.cusotmerLoyalty"  @ionChange="updateQuery()" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for=" (key, value) in cusotmerLoyaltyOptions" v-bind:key="key" :value="value">{{key}}</ion-select-option>
               </ion-select>
               <ion-icon @click='query.cusotmerLoyalty = ""' v-if="query.cusotmerLoyalty" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item lines="none">
-             <ion-label>{{ $t("Only orders without promise date") }}</ion-label>
-             <ion-toggle slot="end" @ionChange="query.hasPromisedDate = !query.hasPromisedDate; updateQuery()" :checked="!query.hasPromisedDate"></ion-toggle>
+             <ion-toggle @ionChange="query.hasPromisedDate = !query.hasPromisedDate; updateQuery()" :checked="!query.hasPromisedDate">{{ $t("Only orders without promise date") }}</ion-toggle>
           </ion-item>
         </div>
 
@@ -134,8 +133,7 @@
                 <p slot="end"> {{ item.promisedDatetime ? $filters.formatUtcDate(item.promisedDatetime, "yyyy-MM-dd'T'HH:mm:ss'Z'") : '-'  }}</p>
               </ion-item>
               <ion-item button @click="item.isChecked = !item.isChecked" lines="none">
-                <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" slot="start"></ion-checkbox>
-                <ion-label>{{$t("Select item")}}</ion-label>
+                <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" label-placement="end" justify="start">{{ $t("Select item") }}</ion-checkbox>
                 <ion-button fill="clear" color="medium" @click.stop="openPopover($event, item)">
                   <ion-icon slot="icon-only" :icon="ellipsisVertical" />
                 </ion-button>
@@ -143,8 +141,16 @@
             </ion-card>
           </div>
         </div>
-        
-        <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" id="infinite-scroll" :disabled="!isScrolleable">
+          <!--
+            When searching for a keyword, and if the user moves to the last item, then the didFire value inside infinite scroll becomes true and thus the infinite scroll does not trigger again on the same page(https://github.com/hotwax/users/issues/84).
+            Also if we are at the section that has been loaded by infinite-scroll and then move to the details page then the list infinite scroll does not work after coming back to the page
+            In ionic v7.6.0, an issue related to infinite scroll has been fixed that when more items can be added to the DOM, but infinite scroll does not fire as the window is not completely filled with the content(https://github.com/ionic-team/ionic-framework/issues/18071).
+            The above fix in ionic 7.6.0 is resulting in the issue of infinite scroll not being called again.
+            To fix this we have maintained another variable `isScrollingEnabled` to check whether the scrolling can be performed or not.
+            If we do not define an extra variable and just use v-show to check for `isScrollable` then when coming back to the page infinite-scroll is called programatically.
+            We have added an ionScroll event on ionContent to check whether the infiniteScroll can be enabled or not by toggling the value of isScrollingEnabled whenever the height < 0.
+          -->
+        <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" id="infinite-scroll" v-show="isScrolleable" ref="infiniteScrollRef">
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       </div>  
@@ -260,6 +266,7 @@ export default defineComponent({
   data() {
     return {
       cusotmerLoyaltyOptions : JSON.parse(process.env?.VUE_APP_CUST_LOYALTY_OPTIONS),
+      isScrollingEnabled: false
     }
   },
   computed: {
@@ -278,7 +285,11 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
+      currentEComStore: 'user/getCurrentEComStore',
     }),
+  },
+  async ionViewWillEnter() {
+    this.isScrollingEnabled = false;
   },
   methods: {
     updateQuery() {
@@ -286,11 +297,26 @@ export default defineComponent({
       this.query.viewIndex = 0;
       this.store.dispatch("order/updateQuery", { query: this.query});
     },
+    enableScrolling() {
+      const parentElement = (this as any).$refs.contentRef.$el
+      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+      if(distanceFromInfinite < 0) {
+        this.isScrollingEnabled = false;
+      } else {
+        this.isScrollingEnabled = true;
+      }
+    },
     async loadMoreOrders(event: any) {
+      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+      if(!(this.isScrollingEnabled && this.isScrolleable)) {
+        await event.target.complete();
+      }
       this.query.viewIndex = Math.ceil(this.orders.length / process.env.VUE_APP_VIEW_SIZE);
-      this.store.dispatch("order/updateQuery", { query: this.query}).then(() => {
-        event.target.complete();
-      })
+      this.store.dispatch("order/updateQuery", { query: this.query}).then(async () => {
+        await event.target.complete();
+      });
     },
     async releaseItems() {
       emitter.emit("presentLoader")
@@ -301,6 +327,7 @@ export default defineComponent({
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/releaseItems", {
           headers: {
@@ -321,6 +348,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/cancelItems", {
           headers: {
@@ -447,6 +475,7 @@ export default defineComponent({
       this.selectedItems.forEach((item: any) => {
           item.isChecked = false;
       })
+      this.store.dispatch("order/clearSelectedItems");
     },
     async openPopover(ev: Event, item: any) {
       const popover = await popoverController.create({
@@ -550,7 +579,7 @@ export default defineComponent({
 
 .order-header {
   display: grid;
-  grid:"id tags metadata" / max-content 1fr minmax(min-content, max-content);
+  grid:"id tags metadata" / 1fr 1fr minmax(min-content, max-content);
   align-items: center;
 }
 
@@ -581,6 +610,11 @@ export default defineComponent({
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
   gap: 10px;
+}
+
+ion-chip > ion-input, ion-chip > ion-select {
+  /* In ionic 7, a min-height is getting set on the ion-chip hence removing it. */
+  min-height: unset !important;
 }
 
 @media (max-width: 991px) {

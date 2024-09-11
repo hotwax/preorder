@@ -255,12 +255,10 @@
               <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)"/>
+              <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ $t("Reserve inventory") }}</ion-toggle>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)"/>
+              <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ $t("Hold pre-order physical inventory") }}</ion-toggle>
             </ion-item>
           </div>
         </ion-card>
