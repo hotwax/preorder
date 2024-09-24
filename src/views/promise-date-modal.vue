@@ -4,16 +4,16 @@
       <ion-buttons slot="start">
         <ion-button @click="closeModal"> <ion-icon slot="icon-only" :icon="closeOutline" /></ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Edit promise date") }}</ion-title>
+      <ion-title>{{ translate("Edit promise date") }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <ion-content>
-    <p>{{ $t("Select a new promise date for these orders. This new date will be used for allocating inventory and fulfilling these orders.")}}</p>
+    <p>{{ translate("Select a new promise date for these orders. This new date will be used for allocating inventory and fulfilling these orders.")}}</p>
       
     <ion-item>
       <ion-icon slot="start" :icon="calendar" />
-      <ion-input :label="$t('Promised date')" v-model="promisedDatetime" type="date" :placeholder="$t('Select date')" />
+      <ion-input :label="translate('Promised date')" v-model="promisedDatetime" type="date" :placeholder="translate('Select date')" />
     </ion-item>
     
     <ion-fab slot="fixed" vertical="bottom" horizontal="end">
@@ -45,6 +45,7 @@ import { closeOutline, calendar, save} from "ionicons/icons";
 import { useStore } from "@/store";
 import { DateTime } from 'luxon'
 import { mapGetters } from "vuex";
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "PromiseDateModal",
@@ -65,16 +66,16 @@ export default defineComponent({
     },
     async saveAlert() {
       const alert = await alertController.create({
-        header: this.$t("Update promise date"),
-        message: this.$t(
+        header: translate("Update promise date"),
+        message: translate(
           "Are you sure you want to update the promise date for these orders?"
         ),
         buttons: [
             {
-              text: this.$t("Cancel"),
+              text: translate("Cancel"),
             },
             {
-              text: this.$t("Confirm"),
+              text: translate("Confirm"),
               handler: () => {
                 (this.item ? this.updatePromisedDateItem() : this.updatePromiseDateItems()).then(() => {
                     this.closeModal()
@@ -123,7 +124,8 @@ export default defineComponent({
       closeOutline,
       calendar,
       save,
-      store
+      store,
+      translate
     };
   },
   components: { 
