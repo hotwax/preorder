@@ -38,7 +38,7 @@ export default defineComponent({
           orderId: item.orderId,
           orderItemSeqId: item.orderItemSeqId,
           changeReasonEnumId: "RELEASED",
-          toFacilityId: this.currentEComStore.productStoreId === "SM_STORE" || this.currentEComStore.productStoreId === "DV_STORE" || this.currentEComStore.productStoreId === "BJ_STORE" ? "RELEASED_ORD_PARKING" : "_NA_" // TODO Make it configurable, currently this is for SM only
+          toFacilityId: "RELEASED_ORD_PARKING"
         })
     },
     async cancelItem (item: any) {
