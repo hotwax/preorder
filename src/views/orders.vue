@@ -302,6 +302,7 @@ export default defineComponent({
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/releaseItems", {
           headers: {
@@ -322,6 +323,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/cancelItems", {
           headers: {
