@@ -13,6 +13,34 @@ const login = async (username: string, password: string): Promise <any> => {
   });
 }
 
+const moquiLogin = async (omsRedirectionUrl: string, token: string): Promise <any> => {
+  const baseURL = omsRedirectionUrl.startsWith('http') ? omsRedirectionUrl.includes('/rest/s1/order-routing') ? omsRedirectionUrl : `${omsRedirectionUrl}/rest/s1/order-routing/` : `https://${omsRedirectionUrl}.hotwax.io/rest/s1/order-routing/`;
+  let api_key = ""
+
+  try {
+    const resp = await client({
+      url: "login",
+      method: "post",
+      baseURL,
+      params: {
+        token
+      },
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }) as any;
+
+    if(!hasError(resp) && (resp.data.api_key || resp.data.token)) {
+      api_key = resp.data.api_key || resp.data.token
+    } else {
+      throw "Sorry, login failed. Please try again";
+    }
+  } catch(err) {
+    return Promise.resolve("");
+  }
+  return Promise.resolve(api_key)
+}
+
 const setUserPreference = async (payload: any): Promise<any> => {
   return api({
     url: "service/setUserPreference",
@@ -195,5 +223,6 @@ export const UserService = {
   getUserProfile,
   getUserPermissions,
   login,
+  moquiLogin,
   setUserPreference,
 }
