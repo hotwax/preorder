@@ -1,14 +1,14 @@
 <template>
   <ion-content>
     <!-- Show "Schedule in every 15 minutes" option for draft jobs only -->
-    <ion-list v-if="job.statusId === 'SERVICE_DRAFT'">
+    <ion-list v-if="(job.statusId === 'SERVICE_DRAFT') || (job.paused === 'Y' && job.nextExecutionDateTime)">
       <ion-item lines="none" button @click="schdlInEvry15Mins()">
         <ion-icon slot="start" :icon="timerOutline" />
         {{ $t("Schedule in every 15 minutes") }}
       </ion-item>
     </ion-list>
     <ion-list v-else>
-      <ion-item lines="none" button @click="runNow()">
+      <ion-item lines="none" button @click="runNow(job)">
         <ion-icon slot="start" :icon="flashOutline" />
         {{ $t("Run now") }}
       </ion-item>
@@ -49,7 +49,7 @@ import { translate } from "@/i18n";
 
 export default defineComponent({
   name: "JobActionsPopover",
-  props: ["job"],
+  props: ["job", "isMaargJob"],
   components: { 
     IonContent,
     IonIcon,
@@ -60,12 +60,28 @@ export default defineComponent({
     closeJobActionsPopover() {
       popoverController.dismiss({ dismissed: true });
     },
-    async runNow() {
+    async runNow(job: any) {
+      let resp;
+
       try {
-        const resp = await JobService.runJobNow(this.job)
+        if(this.isMaargJob) {
+          if(!job.jobName) {
+            resp = await JobService.scheduleMaargJob({ routingGroupId: job.routingGroupId, paused: 'Y' })
+            if(hasError(resp)) {
+              throw resp.data;
+            }
+            // Updating jobName as if the user again clicks the runNow button then in that we don't want to call the scheduleBrokering service
+            job.jobName = resp.data.jobName
+          }
+
+          resp = await JobService.runMaargJobNow(job.routingGroupId)
+        } else {
+          resp = await JobService.runJobNow(job)
+        }
+
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'))
-          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCategoryJobs')])
         } else {
           showToast(translate('Something went wrong'))
         }
@@ -79,16 +95,17 @@ export default defineComponent({
     async openJobHistoryModal() {
       const jobHistoryModal = await modalController.create({
         component: JobHistoryModal,
-        componentProps: { job: this.job }
+        componentProps: { job: this.job, isMaargJob: this.isMaargJob }
       });
       return await jobHistoryModal.present();
     },
     async cancelJob() {
       try {
-        const resp = await JobService.cancelJob(this.job.jobId)
+        const resp = await (this.isMaargJob ? JobService.scheduleMaargJob({ routingGroupId: this.job.routingGroupId, paused: 'Y' }) : JobService.cancelJob(this.job.jobId))
+
         if (!hasError(resp)) {
           showToast(translate('Job cancelled successfully'))
-          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCategoryJobs')])
         } else {
           showToast(translate('Something went wrong, could not cancel the job'))
         }
@@ -118,10 +135,11 @@ export default defineComponent({
     },
     async schdlInEvry15Mins() {
       try {
-        const resp = await JobService.scheduleJob({ job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
+        const resp = this.isMaargJob ?  await JobService.scheduleMaargJob({ routingGroupId: this.job.routingGroupId, paused: 'N', cronExpression: '0 */15 * ? * *' }) : await JobService.scheduleJob({ job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
+
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'));
-          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCategoryJobs')])
         } else {
           showToast(translate('Something went wrong'))
         }

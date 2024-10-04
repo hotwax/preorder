@@ -32,6 +32,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrentEComStore(state) {
         return state.currentEComStore
+    },
+    getOmsRedirectionInfo(state) {
+        return state.omsRedirectionInfo
     }
 }
 export default getters;

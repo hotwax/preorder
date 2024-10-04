@@ -1,4 +1,4 @@
-import { api } from '@/adapter';
+import { api, client } from '@/adapter';
 import store from '@/store'
 import { DateTime } from 'luxon';
 
@@ -153,15 +153,117 @@ const scheduleJob = async (payload: any): Promise<any> => {
   });
 }
 
+const fetchBrokeringJobId = async (payload: any): Promise<any> => {
+  return api({
+    url: "performFind",
+    method: "get",
+    params: payload
+  });
+}
+
+const fetchBrokeringJobSchedule = async (routingGroupId: string): Promise<any> => {
+  const omsRedirectionInfo = store.getters['user/getOmsRedirectionInfo'];
+
+  const url = omsRedirectionInfo.url
+  const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
+
+  return client({
+    url: `groups/${routingGroupId}/schedule`,
+    method: "GET",
+    baseURL,
+    headers: {
+      "api_key": omsRedirectionInfo.token,
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+const fetchBrokeringJobActiveRun = async (jobName: string): Promise<any> => {
+  const omsRedirectionInfo = store.getters['user/getOmsRedirectionInfo'];
+
+  const url = omsRedirectionInfo.url
+  const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
+
+  return client({
+    url: `serviceJobRuns/${jobName}/activeJobRun`,
+    method: "GET",
+    baseURL,
+    headers: {
+      "api_key": omsRedirectionInfo.token,
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+const scheduleMaargJob = async (payload: any): Promise<any> => {
+  const omsRedirectionInfo = store.getters['user/getOmsRedirectionInfo'];
+
+  const url = omsRedirectionInfo.url
+  const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
+
+  return client({
+    url: `groups/${payload.routingGroupId}/schedule`,
+    method: "POST",
+    baseURL,
+    data: payload,
+    headers: {
+      "api_key": omsRedirectionInfo.token,
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+
+const runMaargJobNow = async (routingGroupId: string): Promise<any> => {
+  const omsRedirectionInfo = store.getters['user/getOmsRedirectionInfo'];
+
+  const url = omsRedirectionInfo.url
+  const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
+
+  return client({
+    url: `groups/${routingGroupId}/runNow`,
+    method: "POST",
+    baseURL,
+    headers: {
+      "api_key": omsRedirectionInfo.token,
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+const fetchRoutingHistory = async (routingGroupId: string, params: any): Promise<any> => {
+  const omsRedirectionInfo = store.getters['user/getOmsRedirectionInfo'];
+
+  const url = omsRedirectionInfo.url
+  const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
+
+  return client({
+    url: `groups/${routingGroupId}/routingRuns`,
+    method: "GET",
+    params,
+    baseURL,
+    headers: {
+      "api_key": omsRedirectionInfo.token,
+      "Content-Type": "application/json"
+    }
+  });
+}
+
 export const JobService = {
   cancelJob,
   fetchBackgroundJobs,
+  fetchBrokeringJobActiveRun,
+  fetchBrokeringJobId,
+  fetchBrokeringJobSchedule,
   fetchJobLogs,
   fetchJobs,
   fetchJobInformation,
+  fetchRoutingHistory,
   pollJobs,
   prepareFetchJobsQuery,
   prepareFetchLogsQuery,
   scheduleJob,
+  scheduleMaargJob,
+  runMaargJobNow,
   runJobNow
 }

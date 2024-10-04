@@ -16,6 +16,10 @@ const userModule: Module<UserState, RootState> = {
       pwaState: {
         updateExists: false,
         registration: null,
+      },
+      omsRedirectionInfo: {
+        url: "",
+        token: ""
       }
     },
     getters,
