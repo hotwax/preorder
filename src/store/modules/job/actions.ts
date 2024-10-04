@@ -175,6 +175,51 @@ const actions: ActionTree<JobState, RootState> = {
     }
     return jobs;
   },
+
+  async fetchBrokeringJob ({ commit }) {
+    let resp = {} as any, jobId;
+    let jobInfo = {} as any;
+
+    try {
+      resp = await JobService.fetchBrokeringJobId({
+        "inputFields": {
+          "settingTypeEnumId": "JOB_BKR_ORD",
+          "productStoreId": this.state.user.currentEComStore?.productStoreId,
+        },
+        "fieldList": ["settingTypeEnumId", "settingValue", "fromDate", "productStoreId"],
+        "entityName": "ProductStoreSetting",
+        "viewSize": 1,
+        "noConditionFind": "Y"
+      })
+
+      if(!hasError(resp)) {
+        jobId = resp.data.docs?.length ? resp.data.docs[0]?.settingValue : ""
+        
+        if(jobId) {
+          resp = await JobService.fetchBrokeringJobSchedule(jobId)
+
+          if(!hasError(resp) && resp.data?.schedule) {
+            jobInfo = resp.data.schedule
+            resp = await JobService.fetchBrokeringJobActiveRun(jobInfo.jobName)
+  
+            if(!hasError(resp)) {
+              jobInfo["lastRunTime"] = resp.data.lastRunTime
+              jobInfo["routingGroupId"] = jobId
+            } else {
+              throw resp.data;
+            }
+          } else {
+            throw resp.data;
+          }
+        }
+      }
+    } catch(error: any) {
+      console.error(error);
+    }
+
+    commit(types.JOB_BROKERING_JOB_UPDATED, jobInfo)
+  },
+
   clearCtgryAndBrkrngJobs({commit}) {
     commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, { jobs: [] })
   }

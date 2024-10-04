@@ -295,13 +295,13 @@
               </ion-label>
             </ion-item>
 
-            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length " detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
+            <ion-item v-if="Object.keys(brokeringJob).length" detail button @click="openJobActionsPopover($event, brokeringJob, 'Order brokering', true)">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Order brokering') }}</h3>
-                <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime) }}</p>
+                <p>{{ brokeringJob.lastRunTime && timeTillJob(brokeringJob.lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
-                <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime) : $t('disabled')}}</p>
+                <p>{{ (brokeringJob.paused === "N" && brokeringJob.nextExecutionDateTime) ? timeTillJob(brokeringJob.nextExecutionDateTime) : $t('disabled')}}</p>
               </ion-label>
             </ion-item>
 
@@ -461,7 +461,8 @@ export default defineComponent({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
-      getInventoryConfig: "util/getInventoryConfig"
+      getInventoryConfig: "util/getInventoryConfig",
+      brokeringJob: "job/getBrokeringJob"
     })
   },
   async ionViewWillEnter() {
@@ -550,15 +551,16 @@ export default defineComponent({
     },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
+      this.store.dispatch('job/fetchBrokeringJob')
       this.store.dispatch('job/fetchCtgryAndBrkrngJobs', { systemJobEnumIds }).then(() => {
         this.isCtgryAndBrkrngJobsLoaded = true
       })
     },
-    async openJobActionsPopover(event: Event, job: any, jobTitle: string) {
+    async openJobActionsPopover(event: Event, job: any, jobTitle: string, isMaargJob = false) {
       job.jobTitle = jobTitle
       const popover = await popoverController.create({
         component: JobActionsPopover,
-        componentProps: { job },
+        componentProps: { job, isMaargJob },
         event,
         showBackdrop: false
       });

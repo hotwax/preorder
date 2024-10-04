@@ -18,11 +18,20 @@
     <div v-else>
       <ion-list>
         <ion-item v-for="(job, index) in jobHistory" :key="index">
-          <ion-label>
-            {{ job.runTime ? getTime(job.runTime) : "-" }}
-            <p v-if="job.runTime">{{ getDate(job.runTime) }}</p>
-          </ion-label>
-          <ion-badge v-if="job.statusId" :color="job.statusId === 'SERVICE_FINISHED' ? 'success' : 'danger'">{{ getStatusDesc(job.statusId) }}</ion-badge>
+          <template v-if="isMaargJob">
+            <ion-label>
+              {{ getTime(job.startDate) }}
+              <p>{{ getDate(job.startDate) }}</p>
+            </ion-label>
+            <ion-badge color="dark" v-if="job.endDate">{{ timeTillRun(job.endDate) }}</ion-badge>
+          </template>
+          <template v-else>
+            <ion-label>
+              {{ job.runTime ? getTime(job.runTime) : "-" }}
+              <p v-if="job.runTime">{{ getDate(job.runTime) }}</p>
+            </ion-label>
+            <ion-badge v-if="job.statusId" :color="job.statusId === 'SERVICE_FINISHED' ? 'success' : 'danger'">{{ getStatusDesc(job.statusId) }}</ion-badge>
+          </template>
         </ion-item>
       </ion-list>
     </div>
@@ -71,7 +80,7 @@ export default defineComponent({
       jobHistory: [] as any
     }
   },
-  props: ['job'],
+  props: ['job', 'isMaargJob'],
   computed: {
     ...mapGetters({
       currentEComStore: 'user/getCurrentEComStore',
@@ -112,11 +121,34 @@ export default defineComponent({
       } catch(err) {
         console.error(err);
       }
+    },
+    async fetchMaargJobHistory() {
+      try {
+        const resp = await JobService.fetchRoutingHistory(this.job.routingGroupId, { orderByField: "startDate DESC", pageSize: 500 })
+        if(!hasError(resp)) {
+          const sortedRoutingHistory = resp.data.sort((a: any, b: any) => b.startDate - a.startDate)
+          this.jobHistory = sortedRoutingHistory
+        } else {
+          throw resp.data;
+        }
+      } catch(error: any) {
+        console.error(error)
+      }
+    },
+    timeTillRun(endTime: any) {
+      const timeDiff = DateTime.fromMillis(endTime).diff(DateTime.local());
+      return DateTime.local().plus(timeDiff).toRelative();
     }
   },
   async mounted() {
-    this.store.dispatch('util/getServiceStatusDesc')
-    await this.fetchJobHistory()
+    if(this.isMaargJob) {
+      await this.fetchMaargJobHistory();
+    } else {
+      this.store.dispatch('util/getServiceStatusDesc')
+      await this.fetchJobHistory()
+    }
+    console.log(this.jobHistory);
+    
   },
   setup() {
     const store = useStore();

@@ -20,6 +20,9 @@ const getters: GetterTree <JobState, RootState> = {
     },
     getCtgryAndBrkrngJob: (state) => (systemJobEnumId: string) => {
         return state.ctgryAndBrkrngJobs[systemJobEnumId] ? state.ctgryAndBrkrngJobs[systemJobEnumId] : {};
+    },
+    getBrokeringJob(state) {
+        return state.brokeringJob;
     }
 }
 export default getters;

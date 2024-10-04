@@ -8,5 +8,6 @@ export default interface JobState {
         items: any[];
     },
     polling: boolean,
-    ctgryAndBrkrngJobs: any
+    ctgryAndBrkrngJobs: any,
+    brokeringJob: any
 }
