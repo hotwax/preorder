@@ -17,7 +17,7 @@ const jobModule: Module<JobState, RootState> = {
         total: 0
       },
       polling: false,
-      ctgryAndBrkrngJobs: {},
+      categoryJobs: {},
       brokeringJob: {}
     },
     getters,

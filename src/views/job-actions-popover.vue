@@ -81,7 +81,7 @@ export default defineComponent({
 
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'))
-          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCtgryAndBrkrngJobs')])
+          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCategoryJobs')])
         } else {
           showToast(translate('Something went wrong'))
         }
@@ -105,7 +105,7 @@ export default defineComponent({
 
         if (!hasError(resp)) {
           showToast(translate('Job cancelled successfully'))
-          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCtgryAndBrkrngJobs')])
+          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCategoryJobs')])
         } else {
           showToast(translate('Something went wrong, could not cancel the job'))
         }
@@ -139,7 +139,7 @@ export default defineComponent({
 
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'));
-          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCtgryAndBrkrngJobs')])
+          await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCategoryJobs')])
         } else {
           showToast(translate('Something went wrong'))
         }

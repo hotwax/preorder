@@ -127,7 +127,7 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("product/resetProductList")
     this.dispatch("product/resetCatalogProducts")
     this.dispatch("order/resetOrderQuery")
-    this.dispatch("job/clearCtgryAndBrkrngJobs")
+    this.dispatch("job/clearCategoryJobs")
     this.dispatch("util/clearInvConfigs")
     dispatch("setOmsRedirectionInfo", { url: "", token: "" })
     resetPermissions();

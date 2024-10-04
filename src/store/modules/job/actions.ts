@@ -79,10 +79,10 @@ const actions: ActionTree<JobState, RootState> = {
       return { jobResponse, logResponse };
     }
   },
-  async fetchCtgryAndBrkrngJobs ({ commit }) {
+  async fetchCategoryJobs ({ commit }) {
     let resp, jobs = {} as any
     const requests = []
-    const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
+    const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_JOB)
 
     try {
       let params = {
@@ -171,7 +171,7 @@ const actions: ActionTree<JobState, RootState> = {
     } catch (error) {
       console.error(error)
     } finally {
-      commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, jobs)
+      commit(types.JOB_CATEGORY_JOBS_UPDATED, jobs)
     }
     return jobs;
   },
@@ -220,8 +220,8 @@ const actions: ActionTree<JobState, RootState> = {
     commit(types.JOB_BROKERING_JOB_UPDATED, jobInfo)
   },
 
-  clearCtgryAndBrkrngJobs({commit}) {
-    commit(types.JOB_CTGRY_AND_BRKRNG_UPDATED, { jobs: [] })
+  clearCategoryJobs({commit}) {
+    commit(types.JOB_CATEGORY_JOBS_UPDATED, { jobs: [] })
   }
 }
 export default actions;

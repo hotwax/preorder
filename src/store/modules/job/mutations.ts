@@ -19,8 +19,8 @@ const mutations: MutationTree <JobState> = {
         state.list.total = payload.total
         state.polling = payload.polling
     },
-    [types.JOB_CTGRY_AND_BRKRNG_UPDATED] (state, payload) {
-        state.ctgryAndBrkrngJobs = payload;
+    [types.JOB_CATEGORY_JOBS_UPDATED] (state, payload) {
+        state.categoryJobs = payload;
     },
     [types.JOB_BROKERING_JOB_UPDATED] (state, payload) {
         state.brokeringJob = payload;

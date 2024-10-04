@@ -273,7 +273,7 @@
               <h3>{{ $t('Related jobs') }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <div v-if="!isCtgryAndBrkrngJobsLoaded">
+          <div v-if="!isCategoryJobsLoaded">
             <ion-item>
               <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
             </ion-item>
@@ -285,13 +285,13 @@
             </ion-item>
           </div>
           <div v-else>
-            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click.stop="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
+            <ion-item v-if="Object.keys(getCategoryJob('JOB_REL_PREODR_CAT')).length" detail button @click.stop="openJobActionsPopover($event, getCategoryJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Pre-sell computation') }}</h3>
-                <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
+                <p>{{ getCategoryJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCategoryJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
-                <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime) : $t('disabled')}}</p>
+                <p>{{ getCategoryJob('JOB_REL_PREODR_CAT').runTime ? timeTillJob(getCategoryJob('JOB_REL_PREODR_CAT').runTime) : $t('disabled')}}</p>
               </ion-label>
             </ion-item>
 
@@ -305,13 +305,13 @@
               </ion-label>
             </ion-item>
 
-            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
+            <ion-item v-if="Object.keys(getCategoryJob('JOB_RLS_ORD_DTE')).length" detail button @click="openJobActionsPopover($event, getCategoryJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Auto releasing') }}</h3>
-                <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
+                <p>{{ getCategoryJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCategoryJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
-                <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime) : $t('disabled')}}</p>
+                <p>{{ getCategoryJob('JOB_RLS_ORD_DTE').runTime ? timeTillJob(getCategoryJob('JOB_RLS_ORD_DTE').runTime) : $t('disabled')}}</p>
               </ion-label>
             </ion-item>
           </div>
@@ -453,14 +453,14 @@ export default defineComponent({
       listingJobRunTime: 0,
       backorderCategoryId: '',
       preOrderCategoryId: '',
-      isCtgryAndBrkrngJobsLoaded: false
+      isCategoryJobsLoaded: false
     }
   },
   computed: {
     ...mapGetters({
       product: "product/getCurrentCatalogProduct",
       currentEComStore: 'user/getCurrentEComStore',
-      getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
+      getCategoryJob: "job/getCategoryJob",
       getInventoryConfig: "util/getInventoryConfig",
       brokeringJob: "job/getBrokeringJob"
     })
@@ -483,7 +483,7 @@ export default defineComponent({
       console.error("Failed to get pre-order/backorder categories")
     }
     await this.getShopifyConfigsByStore()
-    await this.getCtgryAndBrkrngJobs()
+    await this.getCategoryJobs()
     await this.getVariantDetails()
   },
   methods: {
@@ -549,11 +549,11 @@ export default defineComponent({
       await this.prepareShopListings()
       await this.preparePoSummary()
     },
-    async getCtgryAndBrkrngJobs() {
-      const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
+    async getCategoryJobs() {
+      const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_JOB)
       this.store.dispatch('job/fetchBrokeringJob')
-      this.store.dispatch('job/fetchCtgryAndBrkrngJobs', { systemJobEnumIds }).then(() => {
-        this.isCtgryAndBrkrngJobsLoaded = true
+      this.store.dispatch('job/fetchCategoryJobs', { systemJobEnumIds }).then(() => {
+        this.isCategoryJobsLoaded = true
       })
     },
     async openJobActionsPopover(event: Event, job: any, jobTitle: string, isMaargJob = false) {
@@ -878,7 +878,7 @@ export default defineComponent({
         }
         this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.activePo.quantity , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
       } else if (!this.poSummary.eligible && !hasCategory) {
-        const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
+        const presellingJob = this.getCategoryJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
@@ -891,7 +891,7 @@ export default defineComponent({
         }
       } else if (this.poSummary.eligible && !hasCategory) {
         const categoryName = this.poAndAtpDetails.activePo?.isNewProduct === "Y" ? 'pre-order' : 'back-order';      
-        const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
+        const presellingJob = this.getCategoryJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
@@ -900,7 +900,7 @@ export default defineComponent({
         this.poSummary.body = this.$t("This product will begin pre-selling because it is out of stock and purchase order is available.", { poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId });
       } else if (!this.poSummary.eligible && hasCategory) {
         const categoryName = hasPreOrderCategory ? 'pre-order' : 'back-order';
-        const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
+        const presellingJob = this.getCategoryJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {

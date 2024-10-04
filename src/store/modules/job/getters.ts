@@ -18,8 +18,8 @@ const getters: GetterTree <JobState, RootState> = {
     isJobPending(state) {
         return (state.list.total + state.logs.total) > 0;
     },
-    getCtgryAndBrkrngJob: (state) => (systemJobEnumId: string) => {
-        return state.ctgryAndBrkrngJobs[systemJobEnumId] ? state.ctgryAndBrkrngJobs[systemJobEnumId] : {};
+    getCategoryJob: (state) => (systemJobEnumId: string) => {
+        return state.categoryJobs[systemJobEnumId] ? state.categoryJobs[systemJobEnumId] : {};
     },
     getBrokeringJob(state) {
         return state.brokeringJob;
