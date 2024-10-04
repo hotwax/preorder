@@ -285,7 +285,7 @@
             </ion-item>
           </div>
           <div v-else>
-            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click.stop="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Pre-sell computation') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>

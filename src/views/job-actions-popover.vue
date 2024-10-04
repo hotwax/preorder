@@ -1,16 +1,10 @@
 <template>
   <ion-content>
     <!-- Show "Schedule in every 15 minutes" option for draft jobs only -->
-    <ion-list v-if="job.statusId === 'SERVICE_DRAFT'">
+    <ion-list v-if="(job.statusId === 'SERVICE_DRAFT') || (job.paused === 'Y' && job.nextExecutionDateTime)">
       <ion-item lines="none" button @click="schdlInEvry15Mins()">
         <ion-icon slot="start" :icon="timerOutline" />
         {{ $t("Schedule in every 15 minutes") }}
-      </ion-item>
-    </ion-list>
-    <ion-list v-else-if="job.paused === 'Y' && job.nextExecutionDateTime">
-      <ion-item lines="none" button @click="schdlInEvry15Mins()">
-        <ion-icon slot="start" :icon="timerOutline" />
-        {{ $t("schedule") }}
       </ion-item>
     </ion-list>
     <ion-list v-else>
@@ -62,9 +56,6 @@ export default defineComponent({
     IonItem,
     IonList
   },
-  mounted() {
-    console.log(this.job);
-  },
   methods: {
     closeJobActionsPopover() {
       popoverController.dismiss({ dismissed: true });
@@ -109,15 +100,8 @@ export default defineComponent({
       return await jobHistoryModal.present();
     },
     async cancelJob() {
-      let resp;
-      console.log(this.isMaargJob);
-
       try {
-        if(this.isMaargJob) {
-          resp = await JobService.scheduleMaargJob({ routingGroupId: this.job.routingGroupId, paused: 'Y' })
-        } else {
-          resp = await JobService.cancelJob(this.job.jobId)
-        }
+        const resp = await (this.isMaargJob ? JobService.scheduleMaargJob({ routingGroupId: this.job.routingGroupId, paused: 'Y' }) : JobService.cancelJob(this.job.jobId))
 
         if (!hasError(resp)) {
           showToast(translate('Job cancelled successfully'))
@@ -150,13 +134,9 @@ export default defineComponent({
       await alert.present();
     },
     async schdlInEvry15Mins() {
-      let resp;
       try {
-        if(this.isMaargJob) {
-          resp = await JobService.scheduleMaargJob({ routingGroupId: this.job.routingGroupId, paused: 'N' })
-        } else {
-          resp = await JobService.scheduleJob({ job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
-        }
+        const resp = this.isMaargJob ?  await JobService.scheduleMaargJob({ routingGroupId: this.job.routingGroupId, paused: 'N', cronExpression: '0 */15 * ? * *' }) : await JobService.scheduleJob({ job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
+
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'));
           await Promise.allSettled([this.store.dispatch('job/fetchBrokeringJob'), this.store.dispatch('job/fetchCtgryAndBrkrngJobs')])

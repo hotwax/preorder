@@ -147,8 +147,6 @@ export default defineComponent({
       this.store.dispatch('util/getServiceStatusDesc')
       await this.fetchJobHistory()
     }
-    console.log(this.jobHistory);
-    
   },
   setup() {
     const store = useStore();
