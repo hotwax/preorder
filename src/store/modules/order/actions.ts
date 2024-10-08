@@ -290,6 +290,13 @@ const actions: ActionTree<OrderState, RootState> = {
     commit(types.ORDER_SELECTED_ITEMS_UPDATED, { selectedItems: state.selectedItems } );
   },
 
+  /**
+   * Clear selected items list
+   */
+   clearSelectedItems  ( { commit }) {
+    commit(types.ORDER_SELECTED_ITEMS_UPDATED, { selectedItems: [] } );
+  },
+
     /**
    * Remove items from selected items
    */

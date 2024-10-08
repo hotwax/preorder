@@ -30,7 +30,7 @@ const actions: ActionTree<UserState, RootState> = {
           if (permissionId) serverPermissionsFromRules.push(permissionId);
 
           const serverPermissions = await UserService.getUserPermissions({
-            permissionIds: serverPermissionsFromRules
+            permissionIds: [...new Set(serverPermissionsFromRules)]
           }, token);
           const appPermissions = prepareAppPermissions(serverPermissions);
 
@@ -78,7 +78,7 @@ const actions: ActionTree<UserState, RootState> = {
     } catch (err: any) {
       showToast(translate('Something went wrong'));
       console.error("error", err);
-      return Promise.reject(new Error(err))
+      return Promise.reject(err instanceof Object ? err :new Error(err));
     }
   },
 
@@ -138,16 +138,12 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Update user timeZone
    */
-     async setUserTimeZone ( { state, commit }, payload) {
-      const resp = await UserService.setUserTimeZone(payload)
-      if (resp.status === 200 && !hasError(resp)) {
-        const current: any = state.current;
-        current.userTimeZone = payload.timeZoneId;
-        commit(types.USER_INFO_UPDATED, current);
-        Settings.defaultZone = current.userTimeZone;
-        showToast(translate("Time zone updated successfully"));
-      }
-    },
+  async setUserTimeZone ( { state, commit }, timeZoneId) {
+    const current: any = state.current;
+    current.userTimeZone = timeZoneId;
+    commit(types.USER_INFO_UPDATED, current);
+    Settings.defaultZone = current.userTimeZone;
+  },
 
   /**
    * Set user's selected Ecom store
@@ -170,5 +166,10 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_INSTANCE_URL_UPDATED, payload)
       updateInstanceUrl(payload)
     },
+
+    updatePwaState({ commit }, payload) {
+      commit(types.USER_PWA_STATE_UPDATED, payload);
+    }
+
 }
 export default actions;
