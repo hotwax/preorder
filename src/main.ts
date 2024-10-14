@@ -3,7 +3,6 @@ import App from './App.vue'
 import router from './router';
 
 import { IonicVue } from '@ionic/vue';
-import i18n from './i18n'
 import store from './store'
 import { DateTime } from 'luxon';
 import { sortSizes } from "@/apparel-sorter"
@@ -33,7 +32,7 @@ import permissionPlugin, { Actions, hasPermission } from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 import { getConfig, initialise,  setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
-import localeMessages from './i18n/locales';
+import localeMessages from './locales';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -41,7 +40,6 @@ const app = createApp(App)
     innerHTMLTemplatesEnabled: true
   })
   .use(router)
-  .use(i18n)
   .use(store)
   .use(permissionPlugin, {
     rules: permissionRules,
