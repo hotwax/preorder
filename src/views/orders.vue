@@ -285,6 +285,7 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
+      currentEComStore: 'user/getCurrentEComStore',
     }),
   },
   async ionViewWillEnter() {
@@ -319,13 +320,14 @@ export default defineComponent({
     },
     async releaseItems() {
       emitter.emit("presentLoader")
-      const selectedItems = this.getSelectedItemsToRelease("_NA_", "RELEASED"); // TODO Make it configurable
+      const selectedItems = this.getSelectedItemsToRelease("RELEASED_ORD_PARKING", "RELEASED"); // TODO Make it configurable
       const json = JSON.stringify(selectedItems);
       const blob = new Blob([json], { type: 'application/json'});
       const formData = new FormData();
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/releaseItems", {
           headers: {
@@ -346,6 +348,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/cancelItems", {
           headers: {
