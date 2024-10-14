@@ -13,6 +13,34 @@ const login = async (username: string, password: string): Promise <any> => {
   });
 }
 
+const moquiLogin = async (omsRedirectionUrl: string, token: string): Promise <any> => {
+  const baseURL = omsRedirectionUrl.startsWith('http') ? omsRedirectionUrl.includes('/rest/s1/order-routing') ? omsRedirectionUrl : `${omsRedirectionUrl}/rest/s1/order-routing/` : `https://${omsRedirectionUrl}.hotwax.io/rest/s1/order-routing/`;
+  let api_key = ""
+
+  try {
+    const resp = await client({
+      url: "login",
+      method: "post",
+      baseURL,
+      params: {
+        token
+      },
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }) as any;
+
+    if(!hasError(resp) && (resp.data.api_key || resp.data.token)) {
+      api_key = resp.data.api_key || resp.data.token
+    } else {
+      throw "Sorry, login failed. Please try again";
+    }
+  } catch(err) {
+    return Promise.resolve("");
+  }
+  return Promise.resolve(api_key)
+}
+
 const setUserPreference = async (payload: any): Promise<any> => {
   return api({
     url: "service/setUserPreference",
@@ -193,11 +221,116 @@ const getUserProfile = async (token: any): Promise<any> => {
   }
 }
 
+const runNow = async (): Promise<any> => {
+  const omsRedirectionInfo = store.getters['user/getOmsRedirectionInfo'];
+  if(!omsRedirectionInfo.url || !omsRedirectionInfo.token) {
+    console.error("Maarg instance is not setup for this account.");
+    return;
+  }
+
+  const url = omsRedirectionInfo.url
+  const baseURL = url.startsWith('http') ? url.includes('/rest/s1/order-routing') ? url : `${url}/rest/s1/order-routing/` : `https://${url}.hotwax.io/rest/s1/order-routing/`;
+  let resp = {} as any, payload = {};
+  let routingGroupId = "";
+
+  try {
+    resp = await client({
+      url: "checkOmsConnection",
+      method: "GET",
+      baseURL,
+      headers: {
+        "api_key": omsRedirectionInfo.token,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if(hasError(resp)) {
+      throw resp.data;
+    }
+
+    payload = {
+      "inputFields": {
+        "settingTypeEnumId": "RUN_GROUP_ID"
+      },
+      "filterByDate": 'Y',
+      "entityName": "ProductStoreSetting",
+      "fieldList": ["settingValue", "fromDate"],
+      "viewSize": 1
+    }
+
+    resp = await api({
+      url: "performFind",
+      method: "post",
+      data: payload
+    });
+
+    if(!hasError(resp) && resp.data.docs[0].settingValue) {
+      routingGroupId = resp.data.docs[0].settingValue
+    } else {
+      throw resp.data;
+    }
+
+    let job;
+    resp = await client({
+      url: `groups/${routingGroupId}/schedule`,
+      method: "GET",
+      baseURL,
+      headers: {
+        "api_key": omsRedirectionInfo.token,
+        "Content-Type": "application/json"
+      }
+    })
+
+    if(!hasError(resp)) {
+      job = resp.data.schedule
+    } else {
+      throw resp.data;
+    }
+
+    if(!job.jobName) {
+      resp = await client({
+        url: `groups/${routingGroupId}/schedule`,
+        method: "POST",
+        data: {
+          routingGroupId,
+          paused: "Y",  // passing Y as we just need to configure the scheduler and do not need to schedule it in active state
+        },
+        baseURL,
+        headers: {
+          "api_key": omsRedirectionInfo.token,
+          "Content-Type": "application/json"
+        }
+      });
+      if(hasError(resp)) {
+        throw resp.data;
+      }
+    }
+
+    resp = await client({
+      url: `groups/${routingGroupId}/runNow`,
+      method: "POST",
+      baseURL,
+      headers: {
+        "api_key": omsRedirectionInfo.token,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if(hasError(resp)) {
+      throw resp.data;
+    }
+  } catch(error: any) {
+    console.error("Failed to schedule routing.", error)
+  }
+}
+
 export const UserService = {
   getEComStores,
   getPreferredStore,
   getUserProfile,
   getUserPermissions,
   login,
+  moquiLogin,
+  runNow,
   setUserPreference,
 }

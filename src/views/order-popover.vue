@@ -22,6 +22,7 @@ import { defineComponent } from "vue";
 import WarehouseModal from "@/views/warehouse-modal.vue";
 import { useStore } from "@/store";
 import PromiseDateModal from "@/views/promise-date-modal.vue";
+import { UserService } from '@/services/UserService'
 
 export default defineComponent({
   name: "OrderPopover",
@@ -63,6 +64,7 @@ export default defineComponent({
               handler: () => {
                 this.releaseItem(this.item).then(() => {
                   this.store.dispatch("order/removeItem", { item: this.item });
+                  UserService.runNow();
                 })
               },
             }
