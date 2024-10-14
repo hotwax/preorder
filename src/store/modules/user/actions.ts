@@ -18,7 +18,7 @@ const actions: ActionTree<UserState, RootState> = {
  */
   async login ({ commit, dispatch }, payload) {
 
-    const { token, oms } = payload;
+    const { token, oms, omsRedirectionUrl } = payload;
     dispatch("setUserInstanceUrl", oms);
     try {
         if (token) {
@@ -68,6 +68,17 @@ const actions: ActionTree<UserState, RootState> = {
             Settings.defaultZone = userProfile.userTimeZone;
           }
 
+          if(omsRedirectionUrl) {
+            const api_key = await UserService.moquiLogin(omsRedirectionUrl, token)
+            if(api_key) {
+              dispatch("setOmsRedirectionInfo", { url: omsRedirectionUrl, token: api_key })
+            } else {
+              console.error("Some of the configuration of the app is missing.");
+            }
+          } else {
+            console.error("Some of the configuration of the app is missing.")
+          }
+
           // TODO user single mutation
           commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  preferredStore);
           commit(types.USER_INFO_UPDATED, userProfile);
@@ -85,7 +96,7 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Logout user
    */
-  async logout ({ commit }, payload) {
+  async logout ({ commit, dispatch }, payload) {
     // store the url on which we need to redirect the user after logout api completes in case of SSO enabled
     let redirectionUrl = ''
 
@@ -118,8 +129,9 @@ const actions: ActionTree<UserState, RootState> = {
     this.dispatch("product/resetProductList")
     this.dispatch("product/resetCatalogProducts")
     this.dispatch("order/resetOrderQuery")
-    this.dispatch("job/clearCtgryAndBrkrngJobs")
+    this.dispatch("job/clearCategoryJobs")
     this.dispatch("util/clearInvConfigs")
+    dispatch("setOmsRedirectionInfo", { url: "", token: "" })
     resetPermissions();
 
     // reset plugin state on logout
@@ -169,7 +181,11 @@ const actions: ActionTree<UserState, RootState> = {
 
     updatePwaState({ commit }, payload) {
       commit(types.USER_PWA_STATE_UPDATED, payload);
-    }
+    },
+
+    setOmsRedirectionInfo({ commit }, payload) {
+      commit(types.USER_OMS_REDIRECTION_INFO_UPDATED, payload)
+    },
 
 }
 export default actions;
