@@ -146,6 +146,7 @@ export default defineComponent({
       const fileName = "ReleaseItemsToWarehouse_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       return this.store.dispatch("order/releaseItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'

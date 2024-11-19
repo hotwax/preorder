@@ -33,7 +33,7 @@ export default defineComponent({
           orderId: item.orderId,
           orderItemSeqId: item.orderItemSeqId,
           changeReasonEnumId: "RELEASED",
-          toFacilityId: "_NA_" // TODO Make it configurable
+          toFacilityId: "RELEASED_ORD_PARKING" // TODO Make it configurable
         })
     },
     async cancelItem (item: any) {
