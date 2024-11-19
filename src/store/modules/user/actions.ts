@@ -49,17 +49,31 @@ const actions: ActionTree<UserState, RootState> = {
             }
           }
 
-        // Getting user profile
-        const userProfile = await UserService.getUserProfile(token);
-        userProfile.stores = await UserService.getEComStores(token, userProfile.partyId);
-        
-        // Getting user preferred store
-        let preferredStore = userProfile.stores[0];
-        const preferredStoreId =  await UserService.getPreferredStore(token);
-        if (preferredStoreId) {
-          const store = userProfile.stores.find((store: any) => store.productStoreId === preferredStoreId);
-          store && (preferredStore = store)
-        }
+          const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "MERCHANDISING_ADMIN");
+
+          // Getting user profile
+          const userProfile = await UserService.getUserProfile(token);
+          userProfile.stores = await UserService.getEComStores(token, userProfile.partyId, isAdminUser);
+          
+          // Getting user preferred store
+          let preferredStore = userProfile.stores[0];
+          const preferredStoreId =  await UserService.getPreferredStore(token);
+          if (preferredStoreId) {
+            const store = userProfile.stores.find((store: any) => store.productStoreId === preferredStoreId);
+            store && (preferredStore = store)
+          }
+
+          setPermissions(appPermissions);
+          if (userProfile.userTimeZone) {
+            Settings.defaultZone = userProfile.userTimeZone;
+          }
+
+          // TODO user single mutation
+          commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  preferredStore);
+          commit(types.USER_INFO_UPDATED, userProfile);
+          commit(types.USER_TOKEN_CHANGED, { newToken: token });
+          commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
+          updateToken(token);
 
         // Get product identification from api using dxp-component
         await useProductIdentificationStore().getIdentificationPref(preferredStoreId)

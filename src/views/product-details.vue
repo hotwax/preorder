@@ -436,7 +436,7 @@ export default defineComponent({
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId,
               changeReasonEnumId: "RELEASED",
-              toFacilityId: "_NA_" // TODO Make it configurable
+              toFacilityId: "RELEASED_ORD_PARKING" // TODO Make it configurable
             }
           })
           selectedItems = [...selectedItems, ...items];
@@ -447,6 +447,8 @@ export default defineComponent({
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
+
       return this.store.dispatch("order/releaseItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -475,6 +477,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       return this.store.dispatch("order/cancelItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'

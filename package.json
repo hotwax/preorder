@@ -1,6 +1,6 @@
 {
   "name": "preorder-app",
-  "version": "1.17.0",
+  "version": "1.19.0",
   "private": true,
   "description": "HotWax Commece Pre-order App",
   "scripts": {
@@ -19,7 +19,7 @@
     "@casl/ability": "^6.0.0",
     "@hotwax/app-version-info": "^1.0.0",
     "@hotwax/apps-theme": "^1.2.6",
-    "@hotwax/dxp-components": "1.13.0",
+    "@hotwax/dxp-components": "^1.15.4",
     "@hotwax/oms-api": "1.14.0",
     "@ionic/core": "^7.6.0",
     "@ionic/vue": "^7.6.0",
