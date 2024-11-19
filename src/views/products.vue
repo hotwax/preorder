@@ -163,11 +163,11 @@ export default defineComponent({
 
     },
     async openActiveJobs() {
-      const bgjobmodal = await modalController.create({
+      const bgjobModal = await modalController.create({
         component: BackgroundJobModal,
         cssClass: "my-custom-class",
       });
-      return bgjobmodal.present();
+      return bgjobModal.present();
     },
     selectSearchBarText(event: any) {
       event.target.getInputElement().then((element: any) => {
