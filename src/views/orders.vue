@@ -119,7 +119,7 @@
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"></DxpShopifyImg>
                 </ion-thumbnail>
                 <ion-label>
-                  <h2>{{ item.parentProductName ? item.parentProductName :item.productName }}</h2>
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, item) ? getProductIdentificationValue(productIdentificationPref.primaryId, item) : item.productName }}</h2>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
                 </ion-label>
@@ -208,7 +208,7 @@ import {
   modalController,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import WarehouseModal from "./warehouse-modal.vue";
 import BackgroundJobModal from "./background-job-modal.vue";
 import PromiseDateModal from "./promise-date-modal.vue";
@@ -228,7 +228,7 @@ import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
-import { DxpShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
@@ -504,17 +504,22 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+
     return {
-      store,
-      pricetag,
-      ribbon,
-      ellipsisVertical,
-      send,
       business,
       calendar,
-      closeCircle,
-      hourglass,
       close,
+      closeCircle,
+      ellipsisVertical,
+      getProductIdentificationValue,
+      hourglass,
+      pricetag,
+      productIdentificationPref,
+      ribbon,
+      send,
+      store
     };
   },
 });

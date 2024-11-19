@@ -32,8 +32,9 @@ import { login, logout, loader } from './user-utils';
 import permissionPlugin, { Actions, hasPermission } from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
-import { getConfig, initialise,  setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
+import { setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
 import localeMessages from './i18n/locales';
+import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@/adapter'
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -60,6 +61,8 @@ const app = createApp(App)
     setUserLocale,
     setUserTimeZone,
     getAvailableTimeZones,
+    getProductIdentificationPref,
+    setProductIdentificationPref,
     hasPermission
   });
  

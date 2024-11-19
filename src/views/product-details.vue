@@ -26,7 +26,7 @@
 
         <div class="product-info">
           <ion-item lines="none" class="product-title">
-            <h1>{{ current.product.productName }}</h1>
+            <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, current.product) ? getProductIdentificationValue(productIdentificationPref.primaryId, current.product) : current.product.productName }}</h1>
           </ion-item>
           <div class="product-features">
             <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
@@ -193,7 +193,7 @@ import {
   alertController,
   modalController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import {
   informationCircle,
   send,
@@ -211,7 +211,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import { DxpShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
@@ -577,15 +577,19 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
     return {
       informationCircle,
       send,
       business,
       closeCircle,
+      getProductIdentificationValue,
       hourglass,
       calendar,
       close,
       list,
+      productIdentificationPref,
       ribbon,
       refresh,
       store
