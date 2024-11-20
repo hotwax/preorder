@@ -3,7 +3,7 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/catalog"></ion-back-button>
+          <ion-back-button default-href="/audit"></ion-back-button>
         </ion-buttons>
         <ion-title>{{ $t("Product audit") }}</ion-title>
       </ion-toolbar>
@@ -412,7 +412,7 @@ import { Plugins } from "@capacitor/core";
 import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
-  name: "catalog-product-details",
+  name: "AuditProductDetails",
   components: {
     DxpShopifyImg,
     IonButtons,
