@@ -657,7 +657,7 @@ export default defineComponent({
               "estimatedDeliveryDate_op": "greaterThanFromDayStart",
             },
             "entityName": "PreOrderPOItem",
-            "sortBy": "estimatedDeliveryDate ASC",
+            "orderBy": "estimatedDeliveryDate ASC",
             "fieldList": ["orderId", "orderExternalId", "estimatedDeliveryDate", "isNewProduct", "quantity", "availableToPromise"],
             "viewSize": 1
           } as any;
