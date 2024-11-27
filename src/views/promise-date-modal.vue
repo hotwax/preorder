@@ -13,8 +13,7 @@
       
     <ion-item>
       <ion-icon slot="start" :icon="calendar" />
-      <ion-label>{{ $t("Promised date") }}</ion-label>
-      <ion-input v-model="promisedDatetime" type="date" :placeholder="$t('Select date')" />
+      <ion-input :label="$t('Promised date')" v-model="promisedDatetime" type="date" :placeholder="$t('Select date')" />
     </ion-item>
     
     <ion-fab slot="fixed" vertical="bottom" horizontal="end">
@@ -37,7 +36,6 @@ import {
   IonIcon,
   IonInput,
   IonItem,
-  IonLabel,
   IonTitle,
   IonToolbar,
   modalController,
@@ -55,6 +53,7 @@ export default defineComponent({
     ...mapGetters({
       jobTotal: 'job/getTotal',
       getSelectedItemsToUpdatePromiseDate: 'order/getSelectedItemsToUpdatePromiseDate',
+      currentEComStore: 'user/getCurrentEComStore',
     }),
     disableUpdate(): boolean {
       return this.promisedDatetime === '' || (this.item && this.item.promisedDatetime && DateTime.fromFormat(this.item.promisedDatetime, "yyyy-MM-dd hh:mm:ss.SSS").toFormat("yyyy-MM-dd") === this.promisedDatetime);
@@ -96,6 +95,7 @@ export default defineComponent({
       const fileName = "UpdatePromiseDateItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_UPD_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       return this.store.dispatch("order/updatePromiseDateItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -136,7 +136,6 @@ export default defineComponent({
     IonIcon,
     IonInput,
     IonItem,
-    IonLabel,
     IonTitle,
     IonToolbar 
     },

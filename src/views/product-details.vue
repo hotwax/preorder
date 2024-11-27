@@ -26,7 +26,7 @@
 
         <div class="product-info">
           <ion-item lines="none" class="product-title">
-            <h1>{{ current.product.productName }}</h1>
+            <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, current.product) ? getProductIdentificationValue(productIdentificationPref.primaryId, current.product) : current.product.productName }}</h1>
           </ion-item>
           <div class="product-features">
             <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
@@ -52,28 +52,28 @@
           <ion-item>
             <ion-label>{{ $t("Ordered after") }} </ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="orderedAfter" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="ordered-after" v-model="orderedAfter" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='orderedAfter = ""' v-if="orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="orderedBefore" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="ordered-before" v-model="orderedBefore" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='orderedBefore = ""' v-if="orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="promisedAfter" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="promised-after" v-model="promisedAfter" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='promisedAfter = ""' v-if="promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip slot="end">
-              <ion-input v-model="promisedBefore" @ionChange="getVariantProducts()" type="date" />
+              <ion-input aria-label="promised-before" v-model="promisedBefore" @ionChange="getVariantProducts()" type="date" />
               <ion-icon @click='promisedBefore = ""' v-if="promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
@@ -89,15 +89,14 @@
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
             <ion-chip slot="end">  
               <ion-icon :icon="ribbon"  />
-              <ion-select :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
+              <ion-select aria-label="loyalty-status" :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for="(key, value) in cusotmerLoyaltyOptions" :key="key" :value="value">{{key}}</ion-select-option>
               </ion-select> 
               <ion-icon @click='cusotmerLoyalty = ""' v-if="cusotmerLoyalty" :icon="close"/>
            </ion-chip>
           </ion-item>
           <ion-item lines="none">
-            <ion-label>{{ $t("Only orders without promise date") }}</ion-label>
-            <ion-toggle slot="end" @ionChange="hasPromisedDate = !hasPromisedDate; getVariantProducts()" :checked="!hasPromisedDate"></ion-toggle>
+            <ion-toggle @ionChange="hasPromisedDate = !hasPromisedDate; getVariantProducts()" :checked="!hasPromisedDate">{{ $t("Only orders without promise date") }}</ion-toggle>
           </ion-item>
         </div>
       </div>
@@ -140,8 +139,7 @@
           </div>
           <div class="order-select">
             <ion-item>
-              <ion-label position="floating">{{ $t("Pieces") }}</ion-label>
-              <ion-input type="number" min="1" clear-input="true" v-model="selectedVariants[item.productId]"></ion-input>
+              <ion-input :label="$t('Pieces')" label-placement="floating" type="number" min="1" clear-input="true" v-model="selectedVariants[item.productId]"></ion-input>
             </ion-item>
           </div>
         </ion-card>
@@ -195,7 +193,7 @@ import {
   alertController,
   modalController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import {
   informationCircle,
   send,
@@ -213,7 +211,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import { DxpShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
@@ -438,7 +436,7 @@ export default defineComponent({
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId,
               changeReasonEnumId: "RELEASED",
-              toFacilityId: "_NA_" // TODO Make it configurable
+              toFacilityId: "RELEASED_ORD_PARKING" // TODO Make it configurable
             }
           })
           selectedItems = [...selectedItems, ...items];
@@ -449,6 +447,8 @@ export default defineComponent({
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
+
       return this.store.dispatch("order/releaseItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -477,6 +477,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       return this.store.dispatch("order/cancelItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -576,15 +577,19 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
     return {
       informationCircle,
       send,
       business,
       closeCircle,
+      getProductIdentificationValue,
       hourglass,
       calendar,
       close,
       list,
+      productIdentificationPref,
       ribbon,
       refresh,
       store
@@ -629,7 +634,7 @@ export default defineComponent({
 .product-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: start;
 }
 
 .product-info > h1 {
@@ -662,7 +667,7 @@ hr {
 
 ion-card {
   display: grid;
-  grid-template-columns: max-content 1fr 200px;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
   align-items: center;
   padding: 16px;
 }
@@ -670,6 +675,11 @@ ion-card {
 .order-info {
   display: flex;
   justify-content: center;
+}
+
+ion-chip > ion-input, ion-chip > ion-select {
+  /* In ionic 7, a min-height is getting set on the ion-chip hence removing it. */
+  min-height: unset !important;
 }
 
 @media (max-width: 991px) {

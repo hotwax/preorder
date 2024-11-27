@@ -29,15 +29,17 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
-import permissionPlugin from '@/authorization';
+import permissionPlugin, { Actions, hasPermission } from '@/authorization';
 import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
-import { getConfig, initialise } from '@/adapter'
+import { setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
 import localeMessages from './i18n/locales';
+import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@/adapter'
 
 const app = createApp(App)
   .use(IonicVue, {
-    mode: 'md'
+    mode: 'md',
+    innerHTMLTemplatesEnabled: true
   })
   .use(router)
   .use(i18n)
@@ -47,6 +49,7 @@ const app = createApp(App)
     actions: permissionActions
   })
   .use(dxpComponents, {
+    Actions,
     defaultImgUrl: require("@/assets/images/defaultImage.png"),
     login,
     logout,
@@ -54,7 +57,13 @@ const app = createApp(App)
     appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
     getConfig: getConfig,
     initialise: initialise,
-    localeMessages
+    localeMessages,
+    setUserLocale,
+    setUserTimeZone,
+    getAvailableTimeZones,
+    getProductIdentificationPref,
+    setProductIdentificationPref,
+    hasPermission
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

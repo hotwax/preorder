@@ -3,7 +3,7 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/catalog"></ion-back-button>
+          <ion-back-button default-href="/audit"></ion-back-button>
         </ion-buttons>
         <ion-title>{{ $t("Product audit") }}</ion-title>
       </ion-toolbar>
@@ -17,8 +17,8 @@
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
           <div class="ion-padding">
-            <h4>{{ currentVariant.parentProductName }}</h4>
-            <p>{{ currentVariant.sku }}</p>
+            <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) ? getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) : currentVariant.productName }}</h4>
+            <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</p>
           </div>
 
           <div class="product-features">
@@ -244,12 +244,10 @@
               <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)"/>
+              <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ $t("Reserve inventory") }}</ion-toggle>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-              <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)"/>
+              <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ $t("Hold pre-order physical inventory") }}</ion-toggle>
             </ion-item>
           </div>
         </ion-card>
@@ -377,7 +375,7 @@ import {
   IonRow,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
@@ -386,7 +384,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import { DxpShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -403,7 +401,7 @@ import { Plugins } from "@capacitor/core";
 import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
-  name: "catalog-product-details",
+  name: "AuditProductDetails",
   components: {
     DxpShopifyImg,
     IonButtons,
@@ -425,7 +423,7 @@ export default defineComponent({
     IonToggle,
     IonToolbar,
     IonTitle,
-    IonRow,
+    IonRow
   },
   data() {
     return {
@@ -1174,13 +1172,18 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    
     return {
       alertCircleOutline,
       Actions,
       checkmarkCircleOutline,
       chevronForwardOutline,
       copyOutline,
+      getProductIdentificationValue,
       hasPermission,
+      productIdentificationPref,
       router,
       shirtOutline,
       store

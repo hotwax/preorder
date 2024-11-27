@@ -12,20 +12,6 @@ const login = async (username: string, password: string): Promise <any> => {
     }
   });
 }
-const getAvailableTimeZones = async (): Promise <any>  => {
-  return api({
-    url: "getAvailableTimeZones",
-    method: "get",
-    cache: true
-  });
-}
-const setUserTimeZone = async (payload: any): Promise <any>  => {
-  return api({
-    url: "setUserTimeZone",
-    method: "post",
-    data: payload
-  });
-}
 
 const setUserPreference = async (payload: any): Promise<any> => {
   return api({
@@ -35,17 +21,21 @@ const setUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
-const getEComStores = async (token: any, partyId: any): Promise<any> => {
+const getEComStores = async (token: any, partyId: any, isAdminUser = false): Promise<any> => {
   try {
     const params = {
       "inputFields": {
-        "storeName_op": "not-empty",
-        "partyId": partyId
+        "storeName_op": "not-empty"
       },
       "fieldList": ["productStoreId", "storeName"],
       "entityName": "ProductStoreAndRole",
       "distinct": "Y",
-      "noConditionFind": "Y"
+      "noConditionFind": "Y",
+      "filterByDate": 'Y'
+    } as any;
+
+    if(!isAdminUser) {
+      params.inputFields['partyId'] = partyId
     }
 
     const baseURL = store.getters['user/getBaseUrl'];
@@ -204,12 +194,10 @@ const getUserProfile = async (token: any): Promise<any> => {
 }
 
 export const UserService = {
-  getAvailableTimeZones,
   getEComStores,
   getPreferredStore,
   getUserProfile,
   getUserPermissions,
   login,
   setUserPreference,
-  setUserTimeZone,
 }

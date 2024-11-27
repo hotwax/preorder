@@ -53,8 +53,7 @@
             {{ $t('A store represents a company or a unique catalog of products. If your OMS is connected to multiple eCommerce stores sellling different collections of products, you may have multiple Product Stores set up in HotWax Commerce.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Select store") }}</ion-label>
-            <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
+            <ion-select :label="$t('Select store')" interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
               <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -65,22 +64,8 @@
       <DxpAppVersionInfo />
 
       <section>
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ $t('Timezone') }}
-            </ion-card-title>
-          </ion-card-header>
-
-          <ion-card-content>
-            {{ $t('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
-          </ion-card-content>
-
-          <ion-item lines="none">
-            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
-          </ion-item>
-        </ion-card>
+        <DxpProductIdentifier />
+        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
       </section>
     </ion-content>
   </ion-page>
@@ -102,18 +87,16 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonMenuButton,
   IonPage,
   IonSelect,
   IonSelectOption,
   IonTitle,
-  IonToolbar,
-  modalController } from "@ionic/vue";
+  IonToolbar } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
-import TimeZoneModal from '@/views/timezone-modal.vue'
 import Image from '@/components/Image.vue';
+import { DxpProductIdentifier } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "settings",
@@ -130,7 +113,6 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
-    IonLabel,
     IonMenuButton,
     IonPage,
     IonSelect,
@@ -167,11 +149,8 @@ export default defineComponent({
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
     },
-    async changeTimeZone() {
-      const timeZoneModal = await modalController.create({
-        component: TimeZoneModal,
-      });
-      return timeZoneModal.present();
+    async timeZoneUpdated(tzId: string) {
+      await this.store.dispatch("user/setUserTimeZone", tzId)
     },
     updateBrand(event: any) {
       if(event.detail.value && this.userProfile && this.currentEComStore?.productStoreId !== event.detail.value) {

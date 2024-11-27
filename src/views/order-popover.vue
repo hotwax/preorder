@@ -32,7 +32,7 @@ export default defineComponent({
           orderId: item.orderId,
           orderItemSeqId: item.orderItemSeqId,
           changeReasonEnumId: "RELEASED",
-          toFacilityId: "_NA_" // TODO Make it configurable
+          toFacilityId: "RELEASED_ORD_PARKING" // TODO Make it configurable
         })
     },
     async cancelItem (item: any) {
@@ -72,28 +72,28 @@ export default defineComponent({
       return alert.present();
     },
     async openWarehouseList() {
-      const warehousemodal = await modalController.create({
+      const warehouseModal = await modalController.create({
         component: WarehouseModal,
         componentProps: {
           item: this.item,
         },
       });
-      warehousemodal.onDidDismiss().finally(() => {
+      warehouseModal.onDidDismiss().finally(() => {
         this.closePopover();
       });
-      return warehousemodal.present();
+      return warehouseModal.present();
     },
      async editPromiseDate() {
-      const datemodal = await modalController.create({
+      const dateModal = await modalController.create({
         component: PromiseDateModal,
         componentProps: {
           item: this.item
         },
       });
-      datemodal.onDidDismiss().finally(() => {
+      dateModal.onDidDismiss().finally(() => {
         this.closePopover();
       });
-      return datemodal.present();
+      return dateModal.present();
     },
     async cancelAlert() {
       const alert = await alertController.create({
