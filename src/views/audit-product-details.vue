@@ -542,8 +542,8 @@ export default defineComponent({
             const featureOption = getFeature(variant.featureHierarchy, `1/${firstFeature}`)
             if(!features[firstFeature]){
               features[firstFeature] = [featureOption]
-            } else{
-              if(!features[firstFeature].includes(featureOption)) features[firstFeature].push(featureOption)
+            } else if(!features[firstFeature].includes(featureOption)){
+              features[firstFeature].push(featureOption)
             }
           })
         }
