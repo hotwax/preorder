@@ -22,23 +22,12 @@
           </div>
 
           <div class="product-features">
-            <ion-list v-if="selectedColor">
-              <ion-list-header>{{ $t("Colors") }}</ion-list-header>
+            <ion-list v-for="[feature, featureOptions] in Object.entries(features)" :key="feature">
+              <ion-list-header>{{ feature }}</ion-list-header>
               <ion-item lines="none">
                 <ion-row>
-                  <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
-                    <ion-label class="ion-text-wrap">{{ colorFeature }}</ion-label>
-                  </ion-chip>
-                </ion-row>
-              </ion-item>
-            </ion-list>
-
-            <ion-list v-if="selectedSize">
-              <ion-list-header>{{ $t("Sizes") }}</ion-list-header>
-              <ion-item lines="none">
-                <ion-row>
-                  <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
-                    <ion-label class="ion-text-wrap">{{ sizeFeature }}</ion-label>
+                  <ion-chip :outline="selectedFeatures[feature] !== option" :key="option" v-for="option in featureOptions" @click="selectedFeatures[feature] !== option && applyFeature(option, feature)">
+                    <ion-label class="ion-text-wrap">{{ option }}</ion-label>
                   </ion-chip>
                 </ion-row>
               </ion-item>
@@ -440,8 +429,6 @@ export default defineComponent({
     return {
       variantId: '',
       productId: '',
-      selectedColor: '',
-      selectedSize: '',
       features: [] as any,
       currentVariant: {} as any,
       poAndAtpDetails: {} as any,
@@ -453,7 +440,8 @@ export default defineComponent({
       listingJobRunTime: 0,
       backorderCategoryId: '',
       preOrderCategoryId: '',
-      isCtgryAndBrkrngJobsLoaded: false
+      isCtgryAndBrkrngJobsLoaded: false,
+      selectedFeatures: {} as any
     }
   },
   computed: {
@@ -489,57 +477,121 @@ export default defineComponent({
     async getVariantDetails() {
       await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId})
       if (this.product.variants) {
+        this.getVariant()
         this.getFeatures()
         await this.updateVariant()
       }
     },
-    applyFeature(feature: string, type: string) {
-      if (type === 'color') this.selectedColor = feature
-      else if (type === 'size') this.selectedSize = feature
-      this.updateVariant();
-    },
-    getFeatures() {
-      const features = {} as any
-      this.product.variants.map((variant: any) => {
-        const size = getFeature(variant.featureHierarchy, '1/SIZE/')
-        const color = getFeature(variant.featureHierarchy, '1/COLOR/')
-        if (!features[color]) features[color] = [size]
-        else if (!features[color].includes(size)) features[color].push(size)
+    applyFeature(option: string, feature: string) {
+      const selectedFeatures = this.selectedFeatures
+      selectedFeatures[feature] = option
+
+      let variant = this.product.variants.find((variant: any) => {
+        let isVariantAvailable = true
+        Object.entries(this.selectedFeatures).map((currentFeature) => {
+          if(getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
+            isVariantAvailable = false
+          }
+        })
+        return isVariantAvailable
       })
 
-      Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
 
-      let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)
+      if(!variant) {
+        const index = Object.keys(selectedFeatures).indexOf(feature)
 
-      if (!selectedVariant) {
-          // if the variant does not have color or size as features
-          selectedVariant = this.product.variants[0]
-          showToast(translate("Selected variant not available. Reseting to first variant."))
-        }
-
-      if (selectedVariant) {
-        this.selectedColor = getFeature(selectedVariant.featureHierarchy, '1/COLOR/')
-        this.selectedSize = getFeature(selectedVariant.featureHierarchy, '1/SIZE/')
-      }
-    },
-    async updateVariant() {
-      let variant
-      if (this.selectedColor || this.selectedSize) {
-        variant = this.product.variants.find((variant: any) => {
-          const hasSize = !this.selectedSize || (this.selectedSize && getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
-          const hasColor = !this.selectedColor || (this.selectedColor && getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor)
-          return hasSize && hasColor
+        const availableVariants = this.product.variants.filter((variant: any) => {
+          let isVariantAvailable = true
+          Object.entries(selectedFeatures).map((currentFeature, currentFeatureIndex) => {
+            if(currentFeatureIndex <= index && getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
+              isVariantAvailable = false
+            }
+          })
+          return isVariantAvailable
         })
 
-        // if the selected size is not available for that color, default it to the first size available
-        if (!variant) {
-          this.selectedSize = this.features[this.selectedColor][0];
-          variant = this.product.variants.find((variant: any) => getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
-          showToast(translate("Selected variant not available"))
-        }
+        this.updateSeletedFeatures(availableVariants[0])
+        variant = availableVariants[0]
+        showToast(translate("Selected variant not available. Reseting to first variant."))
       }
-      // if the variant does not have color or size as features
-      this.currentVariant = variant || this.product.variants[0]
+
+      this.currentVariant = variant;
+      this.getFeatures()
+      this.updateVariant();
+    },
+    getVariant() {
+      let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)     
+
+      if(!selectedVariant) {
+        selectedVariant = this.product.variants[0]
+        showToast(translate("Selected variant not available. Reseting to first variant."))
+        this.$route.query.variantId !==  selectedVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: selectedVariant.productId } }));
+      }
+
+      this.updateSeletedFeatures(selectedVariant)
+      this.currentVariant = selectedVariant
+    },
+    getFeatures() {
+      const selectedFeatures = this.selectedFeatures
+      const features = {} as any;
+
+      Object.entries(selectedFeatures).map((feature, featureIndex) => {
+        if(featureIndex === 0) {
+          const firstFeature = feature[0]
+          this.product.variants.map((variant: any) => {
+            const featureOption = getFeature(variant.featureHierarchy, `1/${firstFeature}`)
+            if(!features[firstFeature]){
+              features[firstFeature] = [featureOption]
+            } else if(!features[firstFeature].includes(featureOption)){
+              features[firstFeature].push(featureOption)
+            }
+          })
+        }
+
+        const nextFeature = Object.entries(selectedFeatures).find((currentFeature, currentFeatureIndex) => currentFeatureIndex === featureIndex + 1)
+        if(nextFeature) {
+          const nextFeatureCategory = nextFeature[0]
+
+          const availableVariants = this.product.variants.filter((variant: any) => {
+            let isVariantAvailable = true
+            Object.entries(this.selectedFeatures).map((currentFeature, currentFeatureIndex) => {
+              if(currentFeatureIndex <= featureIndex && getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
+                isVariantAvailable = false
+              }
+            })
+            return isVariantAvailable
+          })
+
+          const nextFeatureOptions = [] as any
+          availableVariants.map((variant: any) => {
+            if(!nextFeatureOptions.includes(getFeature(variant.featureHierarchy , `1/${nextFeatureCategory}`))){
+              nextFeatureOptions.push(getFeature(variant.featureHierarchy , `1/${nextFeatureCategory}`))
+            }
+          })
+
+          features[nextFeatureCategory] = nextFeatureCategory === 'SIZE' ? sortSizes(nextFeatureOptions) : nextFeatureOptions
+        }        
+      })
+
+      this.features = features
+    },
+    updateSeletedFeatures(variant: any) {
+      let selectedFeatures = {} as any;
+      variant.featureHierarchy.map((featureItem: any) => {
+        if(featureItem.startsWith('1/')){
+          const featureItemSplitted = featureItem.split("/")
+          selectedFeatures[featureItemSplitted[1]] = featureItemSplitted[2]
+        }
+      })
+
+      selectedFeatures = Object.keys(selectedFeatures).sort().reduce((result:any, key) => {
+        result[key] = selectedFeatures[key];
+        return result;
+      }, {});
+
+      this.selectedFeatures = selectedFeatures
+    },
+    async updateVariant() {
       this.variantId = this.currentVariant.variantId
       this.$route.query.variantId !==  this.currentVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: this.currentVariant.productId } }));
       await this.getPoDetails()
