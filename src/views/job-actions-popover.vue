@@ -46,6 +46,7 @@ import JobHistoryModal from "./job-history-modal.vue";
 import { JobService } from "@/services/JobService";
 import { hasError, showToast } from "@/utils";
 import { translate } from "@/i18n";
+import { DateTime } from 'luxon';
 
 export default defineComponent({
   name: "JobActionsPopover",
@@ -57,11 +58,19 @@ export default defineComponent({
     IonList
   },
   methods: {
+    isRuntimePassed() {
+      return this.job.runTime <= DateTime.now().toMillis()
+    },
     closeJobActionsPopover() {
       popoverController.dismiss({ dismissed: true });
     },
     async runNow() {
       try {
+        if (this.isRuntimePassed()) {
+          showToast(translate("Job runtime has passed. Please refresh to get the latest job data in order to perform any action."))
+          this.closeJobActionsPopover()
+          return;
+        }
         const resp = await JobService.runJobNow(this.job)
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'))
@@ -85,6 +94,12 @@ export default defineComponent({
     },
     async cancelJob() {
       try {
+        if (this.isRuntimePassed()) {
+          showToast(translate("Job runtime has passed. Please refresh to get the latest job data in order to perform any action."))
+          this.closeJobActionsPopover()
+          return;
+        }
+        
         const resp = await JobService.cancelJob(this.job.jobId)
         if (!hasError(resp)) {
           showToast(translate('Job cancelled successfully'))
