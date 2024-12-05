@@ -15,7 +15,6 @@ import {
 } from "@ionic/vue";
 import Menu from '@/components/Menu.vue';
 import { defineComponent } from "vue";
-import { useI18n } from 'vue-i18n'
 import TaskQueue from './task-queue';
 import OfflineHelper from "./offline-helper"
 import emitter from "@/event-bus"
@@ -24,7 +23,7 @@ import { mapGetters, useStore } from 'vuex';
 import { Settings } from 'luxon'
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
-import { useProductIdentificationStore } from "@hotwax/dxp-components";
+import { useProductIdentificationStore, translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "App",
@@ -53,7 +52,7 @@ export default defineComponent({
       if (!this.loader) {
         this.loader = await loadingController
           .create({
-            message: this.$t("Click the backdrop to dismiss."),
+            message: translate("Click the backdrop to dismiss."),
             translucent: true,
             backdropDismiss: true
           });
@@ -92,7 +91,7 @@ export default defineComponent({
   async mounted() {
     this.loader = await loadingController
       .create({
-        message: this.$t("Click the backdrop to dismiss."),
+        message: translate("Click the backdrop to dismiss."),
         translucent: true,
         backdropDismiss: true
       });
@@ -117,14 +116,11 @@ export default defineComponent({
     const store = useStore();
     TaskQueue.init();
     OfflineHelper.register();
-    const { t, locale } = useI18n();
     const router = useRouter();
     return {
       router,
       TaskQueue,
       OfflineHelper,
-      t,
-      locale,
       store
     };
   },
