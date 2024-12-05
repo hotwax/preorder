@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-menu-button />
         </ion-buttons>
-        <ion-title slot="start">{{ translate("Catalog") }}</ion-title>
+        <ion-title slot="start">{{ translate("Audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -117,7 +117,7 @@ import { hasError } from '@/utils';
 import { translate } from '@hotwax/dxp-components';
 
 export default defineComponent({
-  name: 'Catalog',
+  name: 'Audit',
   components: {
     DxpShopifyImg,
     IonButtons,
@@ -233,7 +233,7 @@ export default defineComponent({
       }
     },
     viewProduct(product: any) {
-      this.router.push({ path: `/catalog-product-details/${product.groupId}`, query: { variantId: product.productId } });
+      this.router.push({ path: `/audit-product-details/${product.groupId}`, query: { variantId: product.productId } });
     },
     async preparePreordBckordComputationJob() {
       try {

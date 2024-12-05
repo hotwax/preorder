@@ -94,13 +94,13 @@ export default defineComponent({
         }
       },
       {
-        title: "Catalog",
-        url: "/catalog",
-        childRoutes: ["/catalog-product-details/"],
+        title: "Audit",
+        url: "/audit",
+        childRoutes: ["/audit-product-details/"],
         iosIcon: albums,
         mdIcon: albums,
         meta: {
-          permissionId: "APP_CATALOG_VIEW"
+          permissionId: "APP_AUDIT_VIEW"
         }
       },
       {
