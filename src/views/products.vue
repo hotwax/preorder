@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-menu-button></ion-menu-button>
         </ion-buttons>
-        <ion-title>{{ $t("Products") }}</ion-title>
+        <ion-title>{{ translate("Products") }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="openActiveJobs">
             <ion-icon :color='isJobPending ? "warning" : ""' :icon="hourglass" slot="icon-only" />
@@ -15,14 +15,14 @@
     </ion-header>
 
     <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
-      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="$t('Search products')" v-model="queryString" v-on:keyup.enter="getProducts()"></ion-searchbar>
+      <ion-searchbar @ionFocus="selectSearchBarText($event)" :placeholder="translate('Search products')" v-model="queryString" v-on:keyup.enter="getProducts()"></ion-searchbar>
 
       <!-- Empty state -->
       <div class="empty-state" v-if="products.length === 0">
         <!-- No result -->
-        <p v-if="hasQuery">{{ $t("No results found")}}</p>
+        <p v-if="hasQuery">{{ translate("No results found")}}</p>
         <img src="../assets/images/Productsemptystate.png"/> 
-        <p>{{ $t("Enter a product name, style name, SKU, UPCA or external ID.")}}</p>
+        <p>{{ translate("Enter a product name, style name, SKU, UPCA or external ID.")}}</p>
       </div>
     
       <!-- Products -->
@@ -35,11 +35,11 @@
             <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(product.groupValue)) ? getProductIdentificationValue(productIdentificationPref.primaryId, getProduct(product.groupValue)) : getProduct(product.groupValue).productName }}</h2>
             <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(product.groupValue).featureHierarchy))" :key="attribute" ><span class="sentence-case">{{ feature }}</span>: {{ attribute }}</p>
           </ion-label>
-          <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ $t("pieces preordered") }}</ion-badge>
+          <ion-badge slot="end" color="success">{{ product.doclist.numFound }} {{ translate("pieces preordered") }}</ion-badge>
         </ion-item>
        
         <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" id="infinite-scroll"  v-show="isScrolleable" ref="infiniteScrollRef">
-          <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
+          <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')"></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       </div>
     </ion-content>
@@ -72,7 +72,7 @@ import { useRouter } from "vue-router";
 import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
-import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore, translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "settings",
@@ -185,7 +185,8 @@ export default defineComponent({
       hourglass,
       productIdentificationPref,
       router,
-      store
+      store,
+      translate
     };
   },
 });
