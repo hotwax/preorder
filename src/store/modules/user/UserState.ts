@@ -4,5 +4,4 @@ export default interface UserState {
     permissions: any;
     pwaState: any;
     instanceUrl: string;
-    currentEComStore: object;
 }

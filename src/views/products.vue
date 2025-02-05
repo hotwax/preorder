@@ -72,7 +72,7 @@ import { useRouter } from "vue-router";
 import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
-import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "settings",
@@ -112,7 +112,6 @@ export default defineComponent({
       getProductStock: 'stock/getProductStock',
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
-      currentEComStore: 'user/getCurrentEComStore',
     })
   },
   async ionViewWillEnter() {
@@ -178,9 +177,13 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
+    const userStore = useUserStore();
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
+
     return {
+      currentEComStore,
       getProductIdentificationValue,
       hourglass,
       productIdentificationPref,
