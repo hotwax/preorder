@@ -54,6 +54,7 @@ const actions: ActionTree<UserState, RootState> = {
           // Getting user profile
           const userProfile = await UserService.getUserProfile(token);
           userProfile.stores = await useUserStore().getEComStores()
+          if(!userProfile.stores.length) throw "Unable to login. User is not associated with any product store"
           const preferredStore: any = useUserStore().getCurrentEComStore
 
           setPermissions(appPermissions);
