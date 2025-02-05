@@ -228,7 +228,7 @@ import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
-import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
@@ -285,7 +285,6 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
-      currentEComStore: 'user/getCurrentEComStore',
     }),
   },
   async ionViewWillEnter() {
@@ -504,14 +503,17 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const userStore = useUserStore();
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
 
     return {
       business,
       calendar,
       close,
       closeCircle,
+      currentEComStore,
       ellipsisVertical,
       getProductIdentificationValue,
       hourglass,

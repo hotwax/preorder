@@ -3,7 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import OrderState from './OrderState'
 import * as types from './mutation-types'
-import { hasError, showToast } from '@/utils'
+import { hasError, getProductStoreId, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { DateTime } from 'luxon';
 import emitter from '@/event-bus'
@@ -13,7 +13,7 @@ const actions: ActionTree<OrderState, RootState> = {
   /**
    * Update query
    */
-  updateQuery  ( { commit, dispatch, rootState } , { query }) {
+  updateQuery  ( { commit, dispatch } , { query }) {
     commit(types.ORDER_QUERY_UPDATED, { query } );
     const userProfile = this.getters['user/getUserProfile'];
     const payload = {
@@ -44,8 +44,8 @@ const actions: ActionTree<OrderState, RootState> = {
     if (!query.hasPromisedDate) {
       payload.filters.push("-promisedDatetime: *");
     }
-    if (rootState.user.currentEComStore) {
-      payload.filters.push('productStoreId: ' + rootState.user.currentEComStore.productStoreId);
+    if (getProductStoreId()) {
+      payload.filters.push('productStoreId: ' + getProductStoreId());
     }
     return dispatch("findOrder", payload).finally(() => {
       query.hasUpdated = true;
@@ -56,12 +56,12 @@ const actions: ActionTree<OrderState, RootState> = {
   /**
    * Find Order
    */
-  async findOrder ( { rootState, commit, state, dispatch }, payload) {
+  async findOrder ( { commit, state, dispatch }, payload) {
     // If there is not current product store setup query should not be allowed
     // TODO  
     // Need a permanent fix through login action
     // Will be done as per the GitHub app changes once done
-    if (!rootState.user.currentEComStore?.productStoreId) {
+    if (!getProductStoreId()) {
       return;
     }
 
@@ -310,7 +310,7 @@ const actions: ActionTree<OrderState, RootState> = {
   /**
  * Fetch brokering count based upon product
  */
-  async fetchBrokeringCountByProducts({ state, commit, rootState }, { productIds }) {
+  async fetchBrokeringCountByProducts({ state, commit }, { productIds }) {
     const brokeringCountByProduct = JSON.parse(JSON.stringify(state.brokeringCountByProduct));
     // If product Ids are not provided, return
     if (!productIds || productIds.length === 0) {
@@ -324,8 +324,8 @@ const actions: ActionTree<OrderState, RootState> = {
       groupLimit: 0,
       filters: ["productId: " + productIds.join(" OR "), ...JSON.parse(process.env.VUE_APP_ORDER_IN_BRKRNG_FILTERS)] as any
     }
-    if (rootState.user.selectedBrand) {
-      payload.filters.push('productStoreId: ' + rootState.user.selectedBrand);
+    if (getProductStoreId()) {
+      payload.filters.push('productStoreId: ' + getProductStoreId());
     }
 
     try {

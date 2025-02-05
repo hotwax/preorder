@@ -109,7 +109,7 @@ import {
 import { computed, defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore, useUserStore } from '@hotwax/dxp-components';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
@@ -163,7 +163,6 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      currentEComStore: 'user/getCurrentEComStore',
       products: 'product/getCatalogProducts',
       getProduct: 'product/getProduct',
       isCatalogScrollable: 'product/isCatalogScrollable'
@@ -290,10 +289,13 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
+    const userStore = useUserStore();
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
 
     return {
+      currentEComStore,
       getProductIdentificationValue,
       productIdentificationPref,
       router,

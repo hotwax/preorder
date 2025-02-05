@@ -1,5 +1,6 @@
 import { toastController } from '@ionic/vue';
 import { DateTime } from "luxon";
+import { useUserStore } from "@hotwax/dxp-components";
 // TODO Use separate files for specific utilities
 
 // TODO Remove it when HC APIs are fully REST compliant
@@ -34,4 +35,9 @@ const getFeature = (featureHierarchy: any, featureKey: string) => {
   return featureValue;
 }
 
-export { handleDateTimeInput, showToast, hasError, getFeature }
+const getProductStoreId = () => {
+  const currentEComStore: any = useUserStore().getCurrentEComStore;
+  return currentEComStore.productStoreId
+};
+
+export { handleDateTimeInput, getProductStoreId, showToast, hasError, getFeature }
