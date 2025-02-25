@@ -6,7 +6,7 @@
           <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Background jobs") }}</ion-title>
+      <ion-title>{{ translate("Background jobs") }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
@@ -14,13 +14,13 @@
     <!-- Empty state -->
     <div class="empty-state" v-if="jobTotal === 0">
       <img src="../assets/images/JobsEmptyState.png" />
-      <p>{{ $t("There are no jobs running in the background right now.") }}</p>
+      <p>{{ translate("There are no jobs running in the background right now.") }}</p>
     </div>
 
     <!-- Active jobs -->
     <div v-else>
       <ion-list>
-        <ion-list-header>{{ $t("Active jobs") }}</ion-list-header>
+        <ion-list-header>{{ translate("Active jobs") }}</ion-list-header>
         <ion-item v-bind:key="log.jobId" v-for="log in logs">
           <ion-icon slot="start" :icon="cloudUpload" />
           <ion-label>{{ log.scriptTitle ? log.scriptTitle : log.description }}</ion-label>
@@ -28,7 +28,7 @@
         </ion-item>
         <ion-item v-bind:key="job.jobId" v-for="job in jobs">
           <ion-icon slot="start" :icon="cloudUpload" />
-          <ion-label>{{ $t("Broker orders") }}</ion-label>
+          <ion-label>{{ translate("Broker orders") }}</ion-label>
           <ion-note slot="end"> {{ job.runTime ? getDateTime(job.runTime) : '-' }}</ion-note>
         </ion-item>
       </ion-list>
@@ -57,6 +57,7 @@ import { JobService } from '@/services/JobService'
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { DateTime } from 'luxon';
+import { translate } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "BackgroundJobModal",
@@ -104,7 +105,8 @@ export default defineComponent({
       cloudDownload,
       build,
       closeOutline,
-      store
+      store,
+      translate
     };
   },
 });
