@@ -24,12 +24,12 @@ const handleDateTimeInput = (dateTimeValue: any) => {
   return DateTime.fromISO(dateTime).toMillis()
 }
 
-const getFeature = (featureHierarchy: any, featureKey: string) => {
+const getFeature = (productFeatures: any, featureKey: string) => {
   let  featureValue = ''
-  if (featureHierarchy) {
-    const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
+  if (productFeatures) {
+    const feature = productFeatures.find((featureItem: any) => featureItem.startsWith(featureKey))
     const featureSplit = feature ? feature.split('/') : [];
-    featureValue = featureSplit[2] ? featureSplit[2] : '';
+    featureValue = featureSplit[1] ? featureSplit[1] : '';
   }
   return featureValue;
 }

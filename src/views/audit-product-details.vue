@@ -493,7 +493,7 @@ export default defineComponent({
       let variant = this.product.variants.find((variant: any) => {
         let isVariantAvailable = true
         Object.entries(this.selectedFeatures).map((currentFeature) => {
-          if(getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
+          if(getFeature(variant.productFeatures, currentFeature[0]) != currentFeature[1]){
             isVariantAvailable = false
           }
         })
@@ -507,7 +507,7 @@ export default defineComponent({
         const availableVariants = this.product.variants.filter((variant: any) => {
           let isVariantAvailable = true
           Object.entries(selectedFeatures).map((currentFeature, currentFeatureIndex) => {
-            if(currentFeatureIndex <= index && getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
+            if(currentFeatureIndex <= index && getFeature(variant.productFeatures, currentFeature[0]) != currentFeature[1]){
               isVariantAvailable = false
             }
           })
@@ -543,7 +543,7 @@ export default defineComponent({
         if(featureIndex === 0) {
           const firstFeature = feature[0]
           this.product.variants.map((variant: any) => {
-            const featureOption = getFeature(variant.featureHierarchy, `1/${firstFeature}`)
+            const featureOption = getFeature(variant.productFeatures, firstFeature)
             if(!features[firstFeature]){
               features[firstFeature] = [featureOption]
             } else if(!features[firstFeature].includes(featureOption)){
@@ -558,8 +558,8 @@ export default defineComponent({
 
           const availableVariants = this.product.variants.filter((variant: any) => {
             let isVariantAvailable = true
-            Object.entries(this.selectedFeatures).map((currentFeature, currentFeatureIndex) => {
-              if(currentFeatureIndex <= featureIndex && getFeature(variant.featureHierarchy, `1/${currentFeature[0]}`) != currentFeature[1]){
+            Object.entries(this.selectedFeatures).map((currentFeature, currentFeatureIndex) => {              
+              if(currentFeatureIndex <= featureIndex && getFeature(variant.productFeatures, currentFeature[0]) != currentFeature[1]){
                 isVariantAvailable = false
               }
             })
@@ -568,12 +568,12 @@ export default defineComponent({
 
           const nextFeatureOptions = [] as any
           availableVariants.map((variant: any) => {
-            if(!nextFeatureOptions.includes(getFeature(variant.featureHierarchy , `1/${nextFeatureCategory}`))){
-              nextFeatureOptions.push(getFeature(variant.featureHierarchy , `1/${nextFeatureCategory}`))
+            if(!nextFeatureOptions.includes(getFeature(variant.productFeatures , nextFeatureCategory))){
+              nextFeatureOptions.push(getFeature(variant.productFeatures , nextFeatureCategory))
             }
           })
 
-          features[nextFeatureCategory] = nextFeatureCategory === 'SIZE' ? sortSizes(nextFeatureOptions) : nextFeatureOptions
+          features[nextFeatureCategory] = nextFeatureCategory === 'Size' ? sortSizes(nextFeatureOptions) : nextFeatureOptions
         }        
       })
 
@@ -581,11 +581,9 @@ export default defineComponent({
     },
     updateSeletedFeatures(variant: any) {
       let selectedFeatures = {} as any;
-      variant.featureHierarchy.map((featureItem: any) => {
-        if(featureItem.startsWith('1/')){
+      variant.productFeatures.map((featureItem: any) => {
           const featureItemSplitted = featureItem.split("/")
-          selectedFeatures[featureItemSplitted[1]] = featureItemSplitted[2]
-        }
+          selectedFeatures[featureItemSplitted[0]] = featureItemSplitted[1]
       })
 
       selectedFeatures = Object.keys(selectedFeatures).sort().reduce((result:any, key) => {
