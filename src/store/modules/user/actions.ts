@@ -42,7 +42,7 @@ const actions: ActionTree<UserState, RootState> = {
             const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId );
             // If there are any errors or permission check fails do not allow user to login
             if (!hasPermission) {
-              const permissionError = 'You do not have permission to access the app.';
+              const permissionError = `You do not have permission to access the app. Missing permission: ${permissionId}`;
               showToast(translate(permissionError));
               console.error("error", permissionError);
               return Promise.reject(new Error(permissionError));
