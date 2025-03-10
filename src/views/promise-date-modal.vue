@@ -40,11 +40,12 @@ import {
   IonToolbar,
   modalController,
   alertController } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { closeOutline, calendar, save} from "ionicons/icons";
 import { useStore } from "@/store";
 import { DateTime } from 'luxon'
 import { mapGetters } from "vuex";
+import { useUserStore } from "@hotwax/dxp-components"
 
 export default defineComponent({
   name: "PromiseDateModal",
@@ -53,7 +54,6 @@ export default defineComponent({
     ...mapGetters({
       jobTotal: 'job/getTotal',
       getSelectedItemsToUpdatePromiseDate: 'order/getSelectedItemsToUpdatePromiseDate',
-      currentEComStore: 'user/getCurrentEComStore',
     }),
     disableUpdate(): boolean {
       return this.promisedDatetime === '' || (this.item && this.item.promisedDatetime && DateTime.fromFormat(this.item.promisedDatetime, "yyyy-MM-dd hh:mm:ss.SSS").toFormat("yyyy-MM-dd") === this.promisedDatetime);
@@ -119,9 +119,13 @@ export default defineComponent({
   },
   setup() {
    const store = useStore();
+   const userStore = useUserStore();
+   let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
+
     return {
       closeOutline,
       calendar,
+      currentEComStore,
       save,
       store
     };

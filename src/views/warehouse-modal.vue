@@ -56,13 +56,14 @@ import {
   IonToolbar,
   modalController,
   alertController } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { closeOutline, send } from "ionicons/icons";
 import { FacilityService } from '@/services/FacilityService'
 import { useStore } from "@/store";
 import { ProductService } from '@/services/ProductService'
 import { mapGetters } from "vuex";
 import emitter from "@/event-bus";
+import { useUserStore } from "@hotwax/dxp-components"
 
 export default defineComponent({
   name: "WarehouseModal",
@@ -79,7 +80,6 @@ export default defineComponent({
     ...mapGetters({
       jobTotal: 'job/getTotal',
       getSelectedItemsToRelease: 'order/getSelectedItemsToRelease',
-      currentEComStore: 'user/getCurrentEComStore'
     }),
   },
   methods: {
@@ -211,8 +211,12 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const userStore = useUserStore();
+    let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
+
     return {
       closeOutline,
+      currentEComStore,
       send,
       store
     };
