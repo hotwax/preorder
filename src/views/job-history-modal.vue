@@ -12,7 +12,7 @@
 
   <ion-content>
     <div v-if="jobHistory?.length === 0">
-      <p class="ion-text-center">{{ $t("No jobs have run yet")}}</p>
+      <p class="ion-text-center">{{ translate("No jobs have run yet")}}</p>
     </div>
 
     <div v-else>
@@ -50,6 +50,7 @@ import { mapGetters, useStore } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService'
 import { hasError } from '@/utils';
+import { translate } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: 'JobHistoryModal',
@@ -123,7 +124,8 @@ export default defineComponent({
 
     return {
       closeOutline,
-      store
+      store,
+      translate
     };
   },
 });

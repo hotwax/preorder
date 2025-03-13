@@ -5,10 +5,10 @@
         <ion-buttons slot="start">
           <ion-menu-button></ion-menu-button>
         </ion-buttons>
-        <ion-title>{{ $t("Orders") }}</ion-title>
+        <ion-title>{{ translate("Orders") }}</ion-title>
         <ion-buttons slot="secondary">
           <!-- TODO Add internationalisation -->
-          <ion-button @click="deselectAlert()">{{ selectedItemsCount}} {{ $t("item selected")}} </ion-button>
+          <ion-button @click="deselectAlert()">{{ selectedItemsCount}} {{ translate("item selected")}} </ion-button>
         </ion-buttons>
         <ion-buttons slot="end">
           <ion-button @click="openActiveJobs">
@@ -26,7 +26,7 @@
 
         <div class="filters">
           <ion-item>
-            <ion-label>{{ $t("Ordered after") }}</ion-label>
+            <ion-label>{{ translate("Ordered after") }}</ion-label>
             <ion-chip slot="end">
               <!-- 
                 TODO Need to fix this
@@ -38,52 +38,52 @@
             </ion-chip>
           </ion-item>
           <ion-item>
-            <ion-label>{{ $t("Ordered before") }}</ion-label>
+            <ion-label>{{ translate("Ordered before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="ordered-before" v-model="query.orderedBefore" @ionChange="query.orderedBefore = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.orderedBefore = ""' v-if="query.orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
-            <ion-label>{{ $t("Promised after") }}</ion-label>
+            <ion-label>{{ translate("Promised after") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="promised-after" v-model="query.promisedAfter" @ionChange="query.promisedAfter = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.promisedAfter = ""' v-if="query.promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
-            <ion-label>{{ $t("Promised before") }}</ion-label>
+            <ion-label>{{ translate("Promised before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="promised-before" v-model="query.promisedBefore" @ionChange="query.promisedBefore = $event.target.value; updateQuery()" type="date" />
               <ion-icon @click='query.promisedBefore = ""' v-if="query.promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
-            <ion-label>{{ $t("Loyalty status") }}</ion-label>
+            <ion-label>{{ translate("Loyalty status") }}</ion-label>
             <ion-chip slot="end">
               <ion-icon :icon="ribbon" />
-              <ion-select aria-label="loyalty-status" :placeholder="$t('select')" v-model="query.cusotmerLoyalty"  @ionChange="updateQuery()" interface="popover" interface-options="{showBackdrop:false}">
+              <ion-select aria-label="loyalty-status" :placeholder="translate('select')" v-model="query.cusotmerLoyalty"  @ionChange="updateQuery()" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for=" (key, value) in cusotmerLoyaltyOptions" v-bind:key="key" :value="value">{{key}}</ion-select-option>
               </ion-select>
               <ion-icon @click='query.cusotmerLoyalty = ""' v-if="query.cusotmerLoyalty" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item lines="none">
-             <ion-toggle @ionChange="query.hasPromisedDate = !query.hasPromisedDate; updateQuery()" :checked="!query.hasPromisedDate">{{ $t("Only orders without promise date") }}</ion-toggle>
+             <ion-toggle @ionChange="query.hasPromisedDate = !query.hasPromisedDate; updateQuery()" :checked="!query.hasPromisedDate">{{ translate("Only orders without promise date") }}</ion-toggle>
           </ion-item>
         </div>
 
          <div class="results">
-          <ion-badge color="success">{{ preorderCount }} {{ $t("items preordered")}}</ion-badge>
-          <ion-badge color="secondary">{{ ordersTotal }} {{ $t("orders")}}</ion-badge>
+          <ion-badge color="success">{{ preorderCount }} {{ translate("items preordered")}}</ion-badge>
+          <ion-badge color="secondary">{{ ordersTotal }} {{ translate("orders")}}</ion-badge>
         </div> 
       </div>
 
       <!-- Empty state -->
       <div class="empty-state" v-if="orders.length === 0">
         <!-- No result -->
-        <p v-if="query.hasUpdated">{{ $t("No results found")}}</p>
-        <p>{{ $t("Enter an order ID, product name, style name, SKU, customer name, UPCA or external ID")}}</p>
+        <p v-if="query.hasUpdated">{{ translate("No results found")}}</p>
+        <p>{{ translate("Enter an order ID, product name, style name, SKU, customer name, UPCA or external ID")}}</p>
       </div>
 
       <!-- Orders -->
@@ -107,7 +107,7 @@
             </div>
 
             <div class="order-metadata">
-              <ion-note>{{ $t("Order placed on") }} {{ $filters.formatUtcDate(order.doclist.docs[0].orderDate, 'YYYY-MM-DDTHH:mm:ssZ') }}</ion-note>
+              <ion-note>{{ translate("Order placed on") }} {{ $filters.formatUtcDate(order.doclist.docs[0].orderDate, 'YYYY-MM-DDTHH:mm:ssZ') }}</ion-note>
             </div>
           </div> 
 
@@ -120,20 +120,20 @@
                 </ion-thumbnail>
                 <ion-label>
                   <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, item) ? getProductIdentificationValue(productIdentificationPref.primaryId, item) : item.productName }}</h2>
-                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ translate("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
+                  <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ translate("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
                 </ion-label>
               </ion-item>
               <ion-item lines="none">
-                <ion-label>{{ $t ("Available to promise") }}</ion-label>
+                <ion-label>{{ translate ("Available to promise") }}</ion-label>
                 <p slot="end">{{ getProductStock(item.productId) }}</p>
               </ion-item>
               <ion-item lines="full">
-                <ion-label>{{ $t("Promised date") }}</ion-label>
+                <ion-label>{{ translate("Promised date") }}</ion-label>
                 <p slot="end"> {{ item.promisedDatetime ? $filters.formatUtcDate(item.promisedDatetime, "yyyy-MM-dd'T'HH:mm:ss'Z'") : '-'  }}</p>
               </ion-item>
               <ion-item button @click="item.isChecked = !item.isChecked" lines="none">
-                <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" label-placement="end" justify="start">{{ $t("Select item") }}</ion-checkbox>
+                <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" label-placement="end" justify="start">{{ translate("Select item") }}</ion-checkbox>
                 <ion-button fill="clear" color="medium" @click.stop="openPopover($event, item)">
                   <ion-icon slot="icon-only" :icon="ellipsisVertical" />
                 </ion-button>
@@ -151,7 +151,7 @@
             We have added an ionScroll event on ionContent to check whether the infiniteScroll can be enabled or not by toggling the value of isScrollingEnabled whenever the height < 0.
           -->
         <ion-infinite-scroll @ionInfinite="loadMoreOrders($event)" threshold="100px" id="infinite-scroll" v-show="isScrolleable" ref="infiniteScrollRef">
-          <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')"></ion-infinite-scroll-content>
+          <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading')"></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       </div>  
     </ion-content>
@@ -160,16 +160,16 @@
       <ion-toolbar>
         <ion-buttons slot="end">
           <ion-button :disabled="!selectedItemsCount" @click="releaseAlert" fill="outline" color="primary" size="small">
-            <ion-icon slot="start" :icon="send" />{{ $t("Release") }}
+            <ion-icon slot="start" :icon="send" />{{ translate("Release") }}
           </ion-button>
           <ion-button :disabled="!selectedItemsCount" @click="openWarehouseList(selectedItems)" fill="outline" color="dark" size="small">
-            <ion-icon slot="start" :icon="business" />{{ $t("Release to a warehouse") }}
+            <ion-icon slot="start" :icon="business" />{{ translate("Release to a warehouse") }}
           </ion-button>
           <ion-button :disabled="!selectedItemsCount" @click=" editPromiseDate" fill="outline" color="dark" size="small">
-            <ion-icon slot="start" :icon="calendar" />{{ $t("Edit promise date") }}
+            <ion-icon slot="start" :icon="calendar" />{{ translate("Edit promise date") }}
           </ion-button>
           <ion-button :disabled="!selectedItemsCount" @click="cancelAlert" fill="outline" color="danger" size="small">
-            <ion-icon slot="start" :icon="closeCircle" /> {{ $t("Cancel") }}
+            <ion-icon slot="start" :icon="closeCircle" /> {{ translate("Cancel") }}
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -230,6 +230,7 @@ import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
 import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
+import { translate } from "@hotwax/dxp-components";
 
 const { Clipboard } = Plugins;
 
@@ -362,16 +363,16 @@ export default defineComponent({
     },
     async deselectAlert() {
       const alert = await alertController.create({
-        header: this.$t("Deselect items"),
-        message: this.$t('Deselect the selected order items', { count: this.selectedItems.length }),
+        header: translate("Deselect items"),
+        message: translate('Deselect the selected order items', { count: this.selectedItems.length }),
         buttons: [
             {
-              text: this.$t("Cancel"),
+              text: translate("Cancel"),
               role: 'cancel',
               cssClass: 'secondary'
             },
             {
-              text: this.$t("Deselect"),
+              text: translate("Deselect"),
               handler: () => {
                 this.deselectSelectedItems();
               },
@@ -381,21 +382,21 @@ export default defineComponent({
       return alert.present();
     },
     async releaseAlert() {
-      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
+      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? translate("There is a job already pending.")  : translate("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + translate(
           'preorders will be automatically brokered and assigned for fulfillment.', { count: this.selectedItems.length }
         );
       const alert = await alertController.create({
-        header: this.$t("Release orders"),
+        header: translate("Release orders"),
         cssClass: "alert-message",
         message,
         buttons: [
             {
-              text: this.$t('Cancel'),
+              text: translate('Cancel'),
               role: 'cancel',
               cssClass: 'secondary'
             },
             {
-              text:this.$t('Release'),
+              text:translate('Release'),
               handler: () => {
                 this.releaseItems();
                 
@@ -406,20 +407,20 @@ export default defineComponent({
       return alert.present();
     },
     async cancelAlert() {
-      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? this.$t("There is a job already pending.")  : this.$t("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + this.$t(
+      const message = (this.jobTotal > 0 ? (this.jobTotal === 1 ? translate("There is a job already pending.")  : translate("There are jobs already pending.",  { count: this.jobTotal })) + " " : "") + translate(
           'preorders will be cancelled. This action cannot be undone.',{ count: this.selectedItems.length }
         )
       const alert = await alertController.create({
-        header:this.$t("Cancel orders"),
+        header:translate("Cancel orders"),
         message,
         buttons: [
             {
-              text: this.$t("Don't cancel"),
+              text: translate("Don't cancel"),
               role: 'cancel',
               cssClass: 'secondary'
             },
             {
-              text: this.$t("Confirm"),
+              text: translate("Confirm"),
               handler: () => {
                 this.cancelItems();
               },
@@ -493,7 +494,7 @@ export default defineComponent({
       await Clipboard.write({
         string: text
       }).then(() => {
-        showToast(this.$t('Copied', { text }));
+        showToast(translate('Copied', { text }));
       })
     },
     selectSearchBarText(event: any) {
@@ -519,7 +520,8 @@ export default defineComponent({
       productIdentificationPref,
       ribbon,
       send,
-      store
+      store,
+      translate
     };
   },
 });

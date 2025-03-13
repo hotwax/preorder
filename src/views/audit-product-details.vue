@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/audit"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ $t("Product audit") }}</ion-title>
+        <ion-title>{{ translate("Product audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -60,19 +60,19 @@
         <div>
           <ion-card v-if="!poSummary.listingCountStatusMessage">
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ translate("Eligible") }}</ion-label>
               <ion-skeleton-text slot="end" animated style="height: 30%; width: 20%;" />
             </ion-item>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ translate("Category") }}</ion-label>
               <ion-skeleton-text slot="end" animated style="height: 30%; width: 40%;" />
             </ion-item>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ translate("Shopify listing") }}</ion-label>
               <ion-skeleton-text slot="end" animated style="height: 30%; width: 50%;" />
             </ion-item>
             <ion-item-divider color="light">
-              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+              <ion-label color="medium">{{ translate("Timeline") }}</ion-label>
             </ion-item-divider>
             <ion-item>
               <ion-icon slot="start" :icon="shirtOutline" />
@@ -88,25 +88,25 @@
           </ion-card>
           <ion-card v-else>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-              <ion-label slot="end">{{ poSummary.eligible ? $t("Yes") : $t("No") }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ translate("Eligible") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.eligible ? translate("Yes") : translate("No") }}</ion-label>
             </ion-item>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-              <ion-label slot="end">{{ poSummary.categoryId === preOrderCategoryId ? $t('Pre-order') : poSummary.categoryId === backorderCategoryId ? $t('Back-order') : $t('None') }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ translate("Category") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.categoryId === preOrderCategoryId ? translate('Pre-order') : poSummary.categoryId === backorderCategoryId ? translate('Back-order') : translate('None') }}</ion-label>
               <ion-icon slot="end" :icon="isCategoryValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isCategoryValid() ? 'success' : 'warning'" />
             </ion-item>
             <ion-item>
-              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ translate("Shopify listing") }}</ion-label>
               <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
               <ion-icon slot="end" :icon="isShopifyListingValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isShopifyListingValid() ? 'success' : 'warning'" />
             </ion-item>
             <ion-item v-if="poSummary.promiseDate">
-              <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ translate("Promise date") }}</ion-label>
               <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
             </ion-item>
             <ion-item-divider color="light">
-              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+              <ion-label color="medium">{{ translate("Timeline") }}</ion-label>
             </ion-item-divider>
             <!-- internationalized while preparaion -->
             <ion-item v-if="poSummary.header || poSummary.body">
@@ -149,8 +149,8 @@
         <ion-card v-else-if="Object.keys(poAndAtpDetails.activePo).length">
           <ion-card-header>
             <ion-card-title>
-              <h3 v-if="hasCategory()">{{ $t("Active purchase order") }}</h3>
-              <h3 v-else>{{ $t("Available purchase order") }}</h3>
+              <h3 v-if="hasCategory()">{{ translate("Active purchase order") }}</h3>
+              <h3 v-else>{{ translate("Available purchase order") }}</h3>
             </ion-card-title>
           </ion-card-header>
           <!-- TODO Show orderName -->
@@ -160,49 +160,49 @@
           </ion-item>
 
           <ion-item>
-            <ion-label>{{ $t('Pre-selling category') }}</ion-label>
-            <ion-label slot="end">{{ poAndAtpDetails.activePo?.isNewProduct === "Y" ? $t('Pre-order') : $t('Back-order') }}</ion-label>
+            <ion-label>{{ translate('Pre-selling category') }}</ion-label>
+            <ion-label slot="end">{{ poAndAtpDetails.activePo?.isNewProduct === "Y" ? translate('Pre-order') : translate('Back-order') }}</ion-label>
           </ion-item>
 
           <ion-item>
-            <ion-label>{{ $t("Ordered") }}</ion-label>
+            <ion-label>{{ translate("Ordered") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0) ? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
-            <ion-label>{{ $t("Available") }}</ion-label>
+            <ion-label>{{ translate("Available") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.activePo?.availableToPromise >= 0) ? poAndAtpDetails.activePo?.availableToPromise : '-' }}</ion-label>
           </ion-item>
 
           <ion-item lines="full">
-            <ion-label>{{ $t("Corresponding sales orders") }}</ion-label>
+            <ion-label>{{ translate("Corresponding sales orders") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.crspndgSalesOrdr >= 0) ? poAndAtpDetails.crspndgSalesOrdr : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
-            <ion-label>{{ $t("Total PO items") }}</ion-label>
+            <ion-label>{{ translate("Total PO items") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.totalPoItems >= 0) ? poAndAtpDetails.totalPoItems : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
-            <ion-label>{{ $t("Total PO ATP") }}</ion-label>
+            <ion-label>{{ translate("Total PO ATP") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
           </ion-item>
         </ion-card>
         <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t("Purchase orders")  }}</h3>
+              <h3>{{ translate("Purchase orders")  }}</h3>
             </ion-card-title>
           </ion-card-header>
 
           <ion-item>
-            <ion-label>{{ $t("Total PO items") }}</ion-label>
+            <ion-label>{{ translate("Total PO items") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.totalPoItems >= 0) ? poAndAtpDetails.totalPoItems : '-' }}</ion-label>
           </ion-item>
 
           <ion-item>
-            <ion-label>{{ $t("Total PO ATP") }}</ion-label>
+            <ion-label>{{ translate("Total PO ATP") }}</ion-label>
             <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
           </ion-item>
         </ion-card>
@@ -210,7 +210,7 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t("Online ATP calculation") }}</h3>
+              <h3>{{ translate("Online ATP calculation") }}</h3>
             </ion-card-title>
           </ion-card-header>
           <div v-if="!Object.keys(inventoryConfig).length">
@@ -232,22 +232,22 @@
           </div>
           <div v-else>
             <ion-item>
-              <ion-label>{{ $t("Online ATP") }}</ion-label>
+              <ion-label>{{ translate("Online ATP") }}</ion-label>
               <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Quantity on hand") }}</ion-label>
+              <ion-label>{{ translate("Quantity on hand") }}</ion-label>
               <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
             </ion-item>
             <ion-item>
-              <ion-label>{{ $t("Excluded ATP") }}</ion-label>
+              <ion-label>{{ translate("Excluded ATP") }}</ion-label>
               <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
             </ion-item>
             <ion-item>
-              <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ $t("Reserve inventory") }}</ion-toggle>
+              <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ translate("Reserve inventory") }}</ion-toggle>
             </ion-item>
             <ion-item>
-              <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ $t("Hold pre-order physical inventory") }}</ion-toggle>
+              <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ translate("Hold pre-order physical inventory") }}</ion-toggle>
             </ion-item>
           </div>
         </ion-card>
@@ -258,7 +258,7 @@
       <section>
         <ion-card>
           <ion-item lines="none">
-            <h3>{{ $t('Related jobs') }}</h3>
+            <h3>{{ translate('Related jobs') }}</h3>
             <ion-button fill="outline" slot="end" @click="refreshRelatedJobs">
               <ion-icon :icon="refreshOutline" slot="icon-only" />
             </ion-button>
@@ -277,31 +277,31 @@
           <div v-else>
             <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
               <ion-label class="ion-text-wrap">
-                <h3>{{ $t('Pre-sell computation') }}</h3>
+                <h3>{{ translate('Pre-sell computation') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
-                <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime) : $t('disabled')}}</p>
+                <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime) : translate('disabled')}}</p>
               </ion-label>
             </ion-item>
 
             <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length " detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
               <ion-label class="ion-text-wrap">
-                <h3>{{ $t('Order brokering') }}</h3>
+                <h3>{{ translate('Order brokering') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
-                <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime) : $t('disabled')}}</p>
+                <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime) : translate('disabled')}}</p>
               </ion-label>
             </ion-item>
 
             <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
               <ion-label class="ion-text-wrap">
-                <h3>{{ $t('Auto releasing') }}</h3>
+                <h3>{{ translate('Auto releasing') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
               </ion-label>
               <ion-label slot="end">
-                <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime) : $t('disabled')}}</p>
+                <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime) : translate('disabled')}}</p>
               </ion-label>
             </ion-item>
           </div>
@@ -310,7 +310,7 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t('Shop listing status') }}</h3>
+              <h3>{{ translate('Shop listing status') }}</h3>
             </ion-card-title>
           </ion-card-header>
           <div v-if="!poSummary.listingCountStatusMessage">
@@ -326,7 +326,7 @@
           </div>
           <div v-else>
             <ion-item v-if="!Object.keys(shopListings).length">
-              {{ $t('No shop listings found') }}
+              {{ translate('No shop listings found') }}
             </ion-item>
             <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
               <ion-label class="ion-text-wrap">
@@ -335,13 +335,13 @@
                 <p>{{ listData.listingTimeAndStatus }}</p>
               </ion-label>
               <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
-                <h5>{{ $t(listData.listingStatus) }}</h5>
+                <h5>{{ translate(listData.listingStatus) }}</h5>
               </ion-label>
               <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
-                <h5>{{ $t("No listing data") }}</h5>
+                <h5>{{ translate("No listing data") }}</h5>
               </ion-label>
               <ion-label v-else color="medium" slot="end">
-                <h5>{{ $t("Not linked") }}</h5>
+                <h5>{{ translate("Not linked") }}</h5>
               </ion-label>
             </ion-item>
           </div>
@@ -390,7 +390,7 @@ import { useStore } from "@/store";
 import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
-import { translate } from "@/i18n";
+import { translate } from "@hotwax/dxp-components";
 import { sortSizes } from '@/apparel-sorter';
 import { DateTime } from "luxon";
 import JobActionsPopover from "./job-actions-popover.vue";
@@ -658,7 +658,7 @@ export default defineComponent({
         if (!hasError(resp)) {
           this.poAndAtpDetails.totalPoAtp = resp.data?.futureAtp
         } else if (hasError(resp) && resp?.data?.error !== "No record found") {
-          showToast(this.$t("Something went wrong, could not fetch", { data: 'total ATP' }))
+          showToast(translate("Something went wrong, could not fetch", { data: 'total ATP' }))
         }
 
         const hasPreOrderCategory = productCategories?.includes(this.preOrderCategoryId);
@@ -700,7 +700,7 @@ export default defineComponent({
 
           resp = await OrderService.getActivePoDetails(payload)
 
-          if (hasError(resp) && resp?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
+          if (hasError(resp) && resp?.data?.error !== "No record found") showToast(translate("Something went wrong, could not fetch", { data: 'active PO details' }))
           else this.poAndAtpDetails.activePo = resp.data?.error ? {}: resp.data?.docs[0]
 
         } else if (this.poAndAtpDetails.totalPoAtp > 0) {
@@ -723,7 +723,7 @@ export default defineComponent({
 
           resp = await OrderService.getActivePoDetails(payload)
 
-          if (hasError(resp) && resp?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'active PO details' }))
+          if (hasError(resp) && resp?.data?.error !== "No record found") showToast(translate("Something went wrong, could not fetch", { data: 'active PO details' }))
           else {
             this.poAndAtpDetails.activePo = resp.data?.error ? {}: resp.data?.docs[0]
             this.poAndAtpDetails.activePoId = this.poAndAtpDetails.activePo.orderId
@@ -741,7 +741,7 @@ export default defineComponent({
             }
           }
           resp = await OrderService.getCrspndgSalesOrdr(payload)
-          if (resp && hasError(resp)) showToast(this.$t("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
+          if (resp && hasError(resp)) showToast(translate("Something went wrong, could not fetch", { data: 'corresponding sales order count' }))
           else this.poAndAtpDetails.crspndgSalesOrdr = resp?.data?.response.numFound
         }
 
@@ -760,7 +760,7 @@ export default defineComponent({
           "viewSize": 1
         }
         resp = await OrderService.getPoItemCount(payload)
-        if (hasError(resp) && resp?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'total PO items' }))
+        if (hasError(resp) && resp?.data?.error !== "No record found") showToast(translate("Something went wrong, could not fetch", { data: 'total PO items' }))
         else this.poAndAtpDetails.totalPoItems = resp.data?.error === "No record found" ? 0 : resp.data?.count // count is zero if not records are found
 
         
@@ -784,10 +784,10 @@ export default defineComponent({
         const promiseResult = await Promise.allSettled(requests)
         // promise.allSettled returns an array of result with status and value fields
         let resp = promiseResult.map((respone: any) => respone.value) as any
-        if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'quantity on hand' }))
+        if (hasError(resp[0]) && resp[0]?.data?.error !== "No record found") showToast(translate("Something went wrong, could not fetch", { data: 'quantity on hand' }))
         else this.atpCalcDetails.totalQOH = resp[0].data?.quantityOnHandTotal
 
-        if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
+        if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(translate("Something went wrong, could not fetch", { data: 'online ATP' }))
         else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
 
         if (typeof resp[0].data?.availableToPromiseTotal === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
@@ -929,45 +929,45 @@ export default defineComponent({
       if (this.poSummary.eligible && hasCategory) {
         const categoryName = hasPreOrderCategory ? 'pre-order' : 'back-order';
         if (this.poAndAtpDetails.activePoFromDate) {
-          this.poSummary.header = this.$t("Added to at", { categoryName, addedDateTime: this.getDateTime(this.poAndAtpDetails.activePoFromDate) });
+          this.poSummary.header = translate("Added to at", { categoryName, addedDateTime: this.getDateTime(this.poAndAtpDetails.activePoFromDate) });
         } else {
-          this.poSummary.header = this.$t("Added to", { categoryName });
+          this.poSummary.header = translate("Added to", { categoryName });
         }
-        this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.activePo.quantity , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
+        this.poSummary.body = translate("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.activePo.quantity , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
       } else if (!this.poSummary.eligible && !hasCategory) {
         const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
-          this.poSummary.header = this.$t("Pre-sell processing disabled");
+          this.poSummary.header = translate("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Preselling processed at", { processingDateTime: this.getDateTime(presellingJob.runTime) });
+          this.poSummary.header = translate("Preselling processed at", { processingDateTime: this.getDateTime(presellingJob.runTime) });
         }
         if (this.atpCalcDetails.onlineAtp > 0) {
-          this.poSummary.body = this.$t("This product is not preselling because it is in stock.");
+          this.poSummary.body = translate("This product is not preselling because it is in stock.");
         } else {
-          this.poSummary.body = this.$t("This product is not preselling because there is no active PO available for it.");
+          this.poSummary.body = translate("This product is not preselling because there is no active PO available for it.");
         }
       } else if (this.poSummary.eligible && !hasCategory) {
         const categoryName = this.poAndAtpDetails.activePo?.isNewProduct === "Y" ? 'pre-order' : 'back-order';      
         const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
-          this.poSummary.header = this.$t("Pre-sell processing disabled");
+          this.poSummary.header = translate("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Adding to", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          this.poSummary.header = translate("Adding to", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
         }
-        this.poSummary.body = this.$t("This product will begin pre-selling because it is out of stock and purchase order is available.", { poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId });
+        this.poSummary.body = translate("This product will begin pre-selling because it is out of stock and purchase order is available.", { poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId });
       } else if (!this.poSummary.eligible && hasCategory) {
         const categoryName = hasPreOrderCategory ? 'pre-order' : 'back-order';
         const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
-          this.poSummary.header = this.$t("Pre-sell processing disabled");
+          this.poSummary.header = translate("Pre-sell processing disabled");
         } else {
           const headerMessage = this.isPastTime(presellingJob.runTime) ? "Removed from" : "Removing from";
-          this.poSummary.header = this.$t(headerMessage, { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
+          this.poSummary.header = translate(headerMessage, { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
         }
         if (this.atpCalcDetails.onlineAtp > 0) {
-          this.poSummary.body = this.$t("This product will be removed from because it is in stock", { categoryName });
+          this.poSummary.body = translate("This product will be removed from because it is in stock", { categoryName });
         } else {
-          this.poSummary.body = this.$t("This product will be removed from because it doesn’t have active purchase orders", { categoryName });
+          this.poSummary.body = translate("This product will be removed from because it doesn’t have active purchase orders", { categoryName });
         }
       }
 
@@ -1001,17 +1001,17 @@ export default defineComponent({
       // Checking if we have the data
       const shopListingsWithMissingData = shopListings.filter((shopifyListing: any) => !shopifyListing.status)
       if (shopListingsWithMissingData.length === shopListings.length) {
-        this.poSummary.listingCountStatusMessage = this.$t("Listing data not available")
+        this.poSummary.listingCountStatusMessage = translate("Listing data not available")
       } else if (shopListingsWithMissingData.length > 0) {
-        this.poSummary.listingCountStatusMessage = this.$t("Some listing data not available")
+        this.poSummary.listingCountStatusMessage = translate("Some listing data not available")
       } else if (!this.poSummary.listedCount) {
-        this.poSummary.listingCountStatusMessage = this.$t("Not listed on any stores")
+        this.poSummary.listingCountStatusMessage = translate("Not listed on any stores")
       } else if (shopListings.length === this.poSummary.listedCount) {
-        this.poSummary.listingCountStatusMessage = this.$t("Listed on all stores")
+        this.poSummary.listingCountStatusMessage = translate("Listed on all stores")
       } else if (shopListings.length > this.poSummary.listedCount) {
         this.poSummary.eligible 
-          ? this.poSummary.listingCountStatusMessage = this.$t("Not listed on store(s)", { count: this.configsByStores.length - this.poSummary.listedCount })
-          : this.poSummary.listingCountStatusMessage = this.$t("Listed on store(s)", { count: this.poSummary.listedCount })
+          ? this.poSummary.listingCountStatusMessage = translate("Not listed on store(s)", { count: this.configsByStores.length - this.poSummary.listedCount })
+          : this.poSummary.listingCountStatusMessage = translate("Listed on store(s)", { count: this.poSummary.listedCount })
       }
       // Get the first record with promise date
       const shopListingWithPromiseDate = shopListings.find((shopifyListing: any) => shopifyListing.status === 'active' && shopifyListing.promiseDate)
@@ -1120,20 +1120,20 @@ export default defineComponent({
             if (!listData.containsError) {
               if (listData.status === 'inactive') {
                 // showing the job's runTime as listing time, and not showing listing time if not present
-                listingTime && (listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime }))
+                listingTime && (listData.listingTimeAndStatus = translate("Delisted at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               } else {
-                listingTime && (listData.listingTimeAndStatus = this.$t("Listed at", { listingTime }))
+                listingTime && (listData.listingTimeAndStatus = translate("Listed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               }
             } else {
               // If it failed to update, considered the status must old
               if (listData.status === 'inactive') {
                 // showing the job's runTime as listing time
-                listingTime && (listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime }))
+                listingTime && (listData.listingTimeAndStatus = translate("Delisting failed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               } else {
-                listingTime && (listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime }))
+                listingTime && (listData.listingTimeAndStatus = translate("Listing failed at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               }
             }
@@ -1167,7 +1167,7 @@ export default defineComponent({
       await Clipboard.write({
         string: auditMsg
       }).then(() => {
-        showToast(this.$t("Copied to clipboard"));
+        showToast(translate("Copied to clipboard"));
       })
     },
     getSortedShopListings(shopListings: any) {
@@ -1194,7 +1194,8 @@ export default defineComponent({
       refreshOutline,
       router,
       shirtOutline,
-      store
+      store,
+      translate
     };
   },
 });

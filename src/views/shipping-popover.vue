@@ -2,7 +2,7 @@
   <ion-content>
     <ion-list>
       <ion-list-header>SKU</ion-list-header>
-      <ion-item button @click="editShippingDate()" lines="none">{{ $t("Edit shipping date") }}</ion-item>
+      <ion-item button @click="editShippingDate()" lines="none">{{ translate("Edit shipping date") }}</ion-item>
     </ion-list>
   </ion-content>
 </template>
@@ -18,6 +18,7 @@ import {
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import ShippingModal from '@/views/edit-shipping-modal.vue';
+import { translate } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: 'ShippingPopover',
@@ -39,5 +40,10 @@ export default defineComponent({
     IonList,
     IonListHeader,
   },
+  setup(){
+    return {
+      translate,
+    }
+  }
 });
 </script>
