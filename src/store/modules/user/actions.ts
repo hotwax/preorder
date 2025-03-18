@@ -42,7 +42,7 @@ const actions: ActionTree<UserState, RootState> = {
             const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId );
             // If there are any errors or permission check fails do not allow user to login
             if (!hasPermission) {
-              const permissionError = 'You do not have permission to access the app.';
+              const permissionError = "You do not have permission to access the app.";
               showToast(translate(permissionError));
               console.error("error", permissionError);
               return Promise.reject(new Error(permissionError));
@@ -51,9 +51,16 @@ const actions: ActionTree<UserState, RootState> = {
 
           const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "MERCHANDISING_ADMIN");
 
-          // Getting user profile
+          // Getting user profile & if user is not associated with any product store, then showing this error
           const userProfile = await UserService.getUserProfile(token);
-          userProfile.stores = await UserService.getEComStores(token, userProfile.partyId, isAdminUser);
+          try {
+            userProfile.stores = await UserService.getEComStores(token, userProfile.partyId, isAdminUser);
+          } catch (error) {
+            const reason = "Unable to login. User is not associated with any product store.";
+            console.error(reason, error);
+            showToast(translate(reason));
+            return Promise.reject(new Error(reason));
+          }
           
           // Getting user preferred store
           let preferredStore = userProfile.stores[0];
