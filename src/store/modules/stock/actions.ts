@@ -3,7 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import StockState from './StockState'
 import * as types from './mutation-types'
-import { hasError } from '@/utils'
+import { hasError, getProductStoreId } from '@/utils'
 
 const actions: ActionTree<StockState, RootState> = {
 
@@ -29,7 +29,7 @@ const actions: ActionTree<StockState, RootState> = {
       "filters": {
         "productId": productIds,
         "productId_op": "in",
-        "productStoreId": this.state.user.currentEComStore.productStoreId
+        "productStoreId": getProductStoreId()
       },
       "fieldsToSelect": ["productId","atp"], 
     });

@@ -387,7 +387,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -451,7 +451,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       product: "product/getCurrentCatalogProduct",
-      currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
       getInventoryConfig: "util/getInventoryConfig"
     })
@@ -1179,8 +1178,10 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+    const userStore = useUserStore()
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
     
     return {
       alertCircleOutline,
@@ -1188,6 +1189,7 @@ export default defineComponent({
       checkmarkCircleOutline,
       chevronForwardOutline,
       copyOutline,
+      currentEComStore,
       getProductIdentificationValue,
       hasPermission,
       productIdentificationPref,

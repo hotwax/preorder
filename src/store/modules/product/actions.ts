@@ -3,7 +3,7 @@ import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
 import ProductState from './ProductState'
 import * as types from './mutation-types'
-import { hasError, showToast } from '@/utils'
+import { hasError, getProductStoreId, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import emitter from '@/event-bus'
 
@@ -67,12 +67,12 @@ const actions: ActionTree<ProductState, RootState> = {
   /**
    * Find Products in Orders
    */
-   async findProducts ( { rootState, commit, state, dispatch }, payload) {
+   async findProducts ( { commit, state, dispatch }, payload) {
     // If there is not current product store setup query should not be allowed
     // TODO  
     // Need a permanent fix through login action
     // Will be done as per the GitHub app changes once done
-    if (!rootState.user.currentEComStore?.productStoreId) {
+    if (!getProductStoreId()) {
       return;
     }
     // Show loader only when new query and not the infinite scroll
@@ -129,12 +129,12 @@ const actions: ActionTree<ProductState, RootState> = {
     }
   },
 
-  async loadCurrent ({ rootState, dispatch, commit} , { productId }) {
+  async loadCurrent ({ dispatch, commit} , { productId }) {
     // If there is not current product store setup query should not be allowed
     // TODO  
     // Need a permanent fix through login action
     // Will be done as per the GitHub app changes once done
-    if (!rootState.user.currentEComStore?.productStoreId) {
+    if (!getProductStoreId()) {
       return;
     }
     const current = {

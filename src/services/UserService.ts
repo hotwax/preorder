@@ -21,44 +21,6 @@ const setUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
-const getEComStores = async (token: any, partyId: any, isAdminUser = false): Promise<any> => {
-  try {
-    const params = {
-      "inputFields": {
-        "storeName_op": "not-empty"
-      },
-      "fieldList": ["productStoreId", "storeName"],
-      "entityName": "ProductStoreAndRole",
-      "distinct": "Y",
-      "noConditionFind": "Y",
-      "filterByDate": 'Y'
-    } as any;
-
-    if(!isAdminUser) {
-      params.inputFields['partyId'] = partyId
-    }
-
-    const baseURL = store.getters['user/getBaseUrl'];
-    const resp = await client({
-      url: "performFind",
-      method: "get",
-      baseURL,
-      params,
-      headers: {
-        Authorization:  'Bearer ' + token,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (hasError(resp)) {
-      return Promise.reject(resp.data);
-    } else {
-      return Promise.resolve(resp.data.docs);
-    }
-  } catch(error: any) {
-    return Promise.reject(error)
-  }
-}
-
 const getPreferredStore = async (token: any): Promise<any> => {
   const baseURL = store.getters['user/getBaseUrl'];
   try {
@@ -194,7 +156,6 @@ const getUserProfile = async (token: any): Promise<any> => {
 }
 
 export const UserService = {
-  getEComStores,
   getPreferredStore,
   getUserProfile,
   getUserPermissions,

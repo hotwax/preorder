@@ -211,7 +211,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore, useUserStore } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
@@ -284,7 +284,6 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore'
     })
   },
   methods: {
@@ -577,13 +576,17 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const userStore = useUserStore();
     const productIdentificationStore = useProductIdentificationStore();
     let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
+
     return {
       informationCircle,
       send,
       business,
       closeCircle,
+      currentEComStore,
       getProductIdentificationValue,
       hourglass,
       calendar,

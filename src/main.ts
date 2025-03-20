@@ -34,7 +34,7 @@ import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 import { setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
 import localeMessages from './i18n/locales';
-import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@/adapter'
+import { getConfig, getEComStores, getUserPreference, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserPreference } from '@/adapter'
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -63,6 +63,9 @@ const app = createApp(App)
     getAvailableTimeZones,
     getProductIdentificationPref,
     setProductIdentificationPref,
+    getEComStores,
+    getUserPreference,
+    setUserPreference,
     hasPermission
   });
  

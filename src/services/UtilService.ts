@@ -1,5 +1,5 @@
 import { api } from '@/adapter';
-import store from '@/store';
+import { getProductStoreId } from '@/utils'
 
 const getServiceStatusDesc = async (payload: any): Promise<any> => {
   return api({
@@ -31,7 +31,7 @@ const updatePreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
     "fromDate": payload.config.fromDate,
     "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',
     "settingValue": payload.value,
-    "productStoreId": store.state.user.currentEComStore.productStoreId
+    "productStoreId": getProductStoreId()
   }
 
   return await api({
@@ -44,7 +44,7 @@ const updatePreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
 const updateReserveInvConfig = async (payload: any): Promise<any> => {
   const params = {
     "reserveInventory": payload.value ? "Y" : "N",
-    "productStoreId": store.state.user.currentEComStore.productStoreId
+    "productStoreId": getProductStoreId()
   }
 
   return await api({
@@ -59,7 +59,7 @@ const createPreOrdPhyInvHoldConfig = async (): Promise<any> => {
     "fromDate": Date.now(),
     "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',
     "settingValue": 'true',
-    "productStoreId": store.state.user.currentEComStore.productStoreId
+    "productStoreId": getProductStoreId()
   }
 
   return await api({
