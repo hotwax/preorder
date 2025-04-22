@@ -257,12 +257,11 @@
 
       <section>
         <ion-card>
-          <ion-item lines="none">
-            <h3>{{ $t('Related jobs') }}</h3>
-            <ion-button fill="outline" slot="end" @click="refreshRelatedJobs">
-              <ion-icon :icon="refreshOutline" slot="icon-only" />
-            </ion-button>
-          </ion-item>
+          <ion-card-header>
+            <ion-card-title>
+              <h3>{{ $t('Related jobs') }}</h3>
+            </ion-card-title>
+          </ion-card-header>
           <div v-if="!isCtgryAndBrkrngJobsLoaded">
             <ion-item>
               <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
@@ -354,7 +353,6 @@
 <script lang="ts">
 import {
   alertController,
-  IonButton,
   IonButtons,
   IonBackButton,
   IonCard,
@@ -383,7 +381,6 @@ import {
   checkmarkCircleOutline,
   chevronForwardOutline,
   copyOutline,
-  refreshOutline,
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
@@ -407,7 +404,6 @@ export default defineComponent({
   name: "AuditProductDetails",
   components: {
     DxpShopifyImg,
-    IonButton,
     IonButtons,
     IonBackButton,
     IonCard,
@@ -601,11 +597,6 @@ export default defineComponent({
       await this.prepareInvConfig()
       await this.prepareShopListings()
       await this.preparePoSummary()
-    },
-    async refreshRelatedJobs() {
-      this.store.dispatch('job/fetchCtgryAndBrkrngJobs').then(() => {
-        showToast(translate('The job data has been refreshed successfully.'))
-      })
     },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
@@ -1191,7 +1182,6 @@ export default defineComponent({
       getProductIdentificationValue,
       hasPermission,
       productIdentificationPref,
-      refreshOutline,
       router,
       shirtOutline,
       store
