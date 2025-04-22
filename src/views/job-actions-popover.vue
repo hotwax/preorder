@@ -158,7 +158,7 @@ export default defineComponent({
     },
     async schdlInEvry15Mins() {
       try {
-        const resp = await JobService.scheduleJob({ job: this.job, frequency: 'EVERY_1_MIN', runTime: '' })
+        const resp = await JobService.scheduleJob({ job: this.job, frequency: 'EVERY_15_MIN', runTime: '' })
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'));
           await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
