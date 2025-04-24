@@ -809,6 +809,7 @@ export default defineComponent({
     },
     async updateReserveInvConfig(event: any) {
       // For preventing ion-toggle from toggling
+      event.preventDefault();
       event.stopImmediatePropagation();
 
       const isChecked = event.target.checked;
@@ -842,6 +843,7 @@ export default defineComponent({
     },
     async updatePreOrdPhyInvHoldConfig(event: any) {
       // For preventing ion-toggle from toggling
+      event.preventDefault();
       event.stopImmediatePropagation();
 
       const isChecked = event.target.checked;
