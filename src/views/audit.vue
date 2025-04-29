@@ -57,7 +57,7 @@
             </ion-label>
           </ion-item>
 
-          <ion-chip v-if="product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER')" class="tablet" outline>
+          <ion-chip v-if="product.prodCatalogCategoryTypeIds?.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds?.includes('PCCT_BACKORDER')" class="tablet" outline>
             <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER') ? $t('Back-order') : '-' }}</ion-label>
           </ion-chip>
 
