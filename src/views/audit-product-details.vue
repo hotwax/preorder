@@ -592,6 +592,7 @@ export default defineComponent({
     async updateVariant() {
       this.variantId = this.currentVariant.variantId
       this.$route.query.variantId !==  this.currentVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: this.currentVariant.productId } }));
+      this.currentVariant.productCategories = await this.getProductCategories(this.currentVariant.productId);
       await this.getPoDetails()
       await this.getAtpCalcDetails()
       await this.prepareInvConfig()
@@ -1167,6 +1168,27 @@ export default defineComponent({
       // using return based sorting instead of localeCompare
       // as localeCompare is slower
       return shopListings.sort((a: any, b: any) => a.name < b.name ? -1 : 1)
+    },
+    async getProductCategories(productId: string) {
+      let productCategories: Array<string> = [];
+      try {
+        let payload = {
+          "inputFields": {
+            productId
+          },
+          "entityName": "ProductCategoryMember",
+          "fieldList": ["productId", "productCategoryId", "fromDate"],
+          "viewSize": 250,
+          filterByDate: "Y"
+        } as any;
+        const resp = await OrderService.getActivePoId(payload)
+        if(!hasError(resp) && resp.data.docs?.length) {
+          productCategories = resp.data.docs.map((category: any) => category.productCategoryId)
+        }
+      } catch(err) {
+        console.error(err)
+      }
+      return productCategories;
     }
   },
   setup() {
