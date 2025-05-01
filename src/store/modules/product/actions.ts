@@ -227,8 +227,8 @@ const actions: ActionTree<ProductState, RootState> = {
     }
 
     let resp;
-    let productFilterCondition: any = `docType: PRODUCT AND groupId: ${payload.productId}`;
-    if (!isProductCached) productFilterCondition = `docType: PRODUCT AND (productId: ${payload.productId} OR groupId: ${payload.productId})`
+    let productFilterCondition: any = `docType: PRODUCT AND productStoreIds: ${payload.productStoreId} AND groupId: ${payload.productId}`;
+    if (!isProductCached) productFilterCondition = `docType: PRODUCT AND productStoreIds: ${payload.productStoreId} AND (productId: ${payload.productId} OR groupId: ${payload.productId})`
 
     try {
       const params = {
