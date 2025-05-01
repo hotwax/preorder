@@ -392,6 +392,7 @@ import { sortSizes } from '@/apparel-sorter';
 import { DateTime } from "luxon";
 import JobActionsPopover from "./job-actions-popover.vue";
 import { OrderService } from "@/services/OrderService";
+import { ProductService } from '@/services/ProductService'
 import { ShopifyService } from "@/services/ShopifyService";
 import { JobService } from "@/services/JobService";
 import { StockService } from "@/services/StockService";
@@ -1181,9 +1182,11 @@ export default defineComponent({
           "viewSize": 250,
           filterByDate: "Y"
         } as any;
-        const resp = await OrderService.getActivePoId(payload)
+        const resp = await ProductService.getProductCategories(payload)
         if(!hasError(resp) && resp.data.docs?.length) {
           productCategories = resp.data.docs.map((category: any) => category.productCategoryId)
+        } else {
+          throw resp.data;
         }
       } catch(err) {
         console.error(err)
