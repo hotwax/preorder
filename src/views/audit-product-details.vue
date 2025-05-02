@@ -10,343 +10,343 @@
     </ion-header>
     <ion-content>
       <template v-if="product?.productId">
-        <div class="header">
-          <div class="product-image">
-            <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
-            <DxpShopifyImg v-else :src="currentVariant.mainImageUrl" />
+      <div class="header">
+        <div class="product-image">
+          <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
+          <DxpShopifyImg v-else :src="currentVariant.mainImageUrl" />
+        </div>
+
+        <div class="product-info" v-if="Object.keys(currentVariant).length">
+          <div class="ion-padding">
+            <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) ? getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) : currentVariant.productName }}</h4>
+            <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</p>
           </div>
-  
-          <div class="product-info" v-if="Object.keys(currentVariant).length">
-            <div class="ion-padding">
-              <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) ? getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) : currentVariant.productName }}</h4>
-              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</p>
-            </div>
-  
-            <div class="product-features">
-              <ion-list v-for="[feature, featureOptions] in Object.entries(features)" :key="feature">
-                <ion-list-header>{{ feature }}</ion-list-header>
-                <ion-item lines="none">
-                  <ion-row>
-                    <ion-chip :outline="selectedFeatures[feature] !== option" :key="option" v-for="option in featureOptions" @click="selectedFeatures[feature] !== option && applyFeature(option, feature)">
-                      <ion-label class="ion-text-wrap">{{ option }}</ion-label>
-                    </ion-chip>
-                  </ion-row>
-                </ion-item>
-              </ion-list>
-            </div>
-          </div>
-          <div class="product-info" v-else>
-            <div class="ion-padding">
-              <ion-skeleton-text animated style="width: 60%; height: 80%;" />
-              <ion-skeleton-text animated style="width: 40%; height: 40%;" />
-            </div>
-  
-            <div class="product-features">
-              <ion-list>
-                <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
-                <ion-item lines="none">
-                  <ion-skeleton-text animated style="width: 60%;" />
-                </ion-item>
-              </ion-list>
-  
-              <ion-list>
-                <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
-                <ion-item lines="none">
-                  <ion-skeleton-text animated style="width: 60%;" />
-                </ion-item>
-              </ion-list>
-            </div>
-          </div>
-  
-          <div>
-            <ion-card v-if="!poSummary.listingCountStatusMessage">
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-                <ion-skeleton-text slot="end" animated style="height: 30%; width: 20%;" />
+
+          <div class="product-features">
+            <ion-list v-for="[feature, featureOptions] in Object.entries(features)" :key="feature">
+              <ion-list-header>{{ feature }}</ion-list-header>
+              <ion-item lines="none">
+                <ion-row>
+                  <ion-chip :outline="selectedFeatures[feature] !== option" :key="option" v-for="option in featureOptions" @click="selectedFeatures[feature] !== option && applyFeature(option, feature)">
+                    <ion-label class="ion-text-wrap">{{ option }}</ion-label>
+                  </ion-chip>
+                </ion-row>
               </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-                <ion-skeleton-text slot="end" animated style="height: 30%; width: 40%;" />
-              </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
-                <ion-skeleton-text slot="end" animated style="height: 30%; width: 50%;" />
-              </ion-item>
-              <ion-item-divider color="light">
-                <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
-              </ion-item-divider>
-              <ion-item>
-                <ion-icon slot="start" :icon="shirtOutline" />
-                <ion-label>
-                  <ion-item lines="none">
-                    <ion-skeleton-text animated style="width: 90%; height: 30%;" />
-                  </ion-item>
-                  <ion-item lines="none">
-                    <ion-skeleton-text animated style="width: 100%; height: 60%;" />
-                  </ion-item>
-                </ion-label> 
-              </ion-item>
-            </ion-card>
-            <ion-card v-else>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.eligible ? $t("Yes") : $t("No") }}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.categoryId === preOrderCategoryId ? $t('Pre-order') : poSummary.categoryId === backorderCategoryId ? $t('Back-order') : $t('None') }}</ion-label>
-                <ion-icon slot="end" :icon="isCategoryValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isCategoryValid() ? 'success' : 'warning'" />
-              </ion-item>
-              <ion-item>
-                <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
-                <ion-icon slot="end" :icon="isShopifyListingValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isShopifyListingValid() ? 'success' : 'warning'" />
-              </ion-item>
-              <ion-item v-if="poSummary.promiseDate">
-                <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
-                <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
-              </ion-item>
-              <ion-item-divider color="light">
-                <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
-              </ion-item-divider>
-              <!-- internationalized while preparaion -->
-              <ion-item v-if="poSummary.header || poSummary.body">
-                <ion-icon slot="start" :icon="shirtOutline" />
-                <ion-label class="ion-text-wrap">
-                  <h2 v-if="poSummary.header">{{ poSummary.header }}</h2>
-                  <p v-if="poSummary.body">{{ poSummary.body }}</p>
-                </ion-label>
-              </ion-item>
-            </ion-card>
+            </ion-list>
           </div>
         </div>
-  
-        <hr />
-  
-        <section>
-          <ion-card v-if="!Object.keys(poAndAtpDetails).length">
-            <ion-item lines="none">
-              <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+        <div class="product-info" v-else>
+          <div class="ion-padding">
+            <ion-skeleton-text animated style="width: 60%; height: 80%;" />
+            <ion-skeleton-text animated style="width: 40%; height: 40%;" />
+          </div>
+
+          <div class="product-features">
+            <ion-list>
+              <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
+              <ion-item lines="none">
+                <ion-skeleton-text animated style="width: 60%;" />
+              </ion-item>
+            </ion-list>
+
+            <ion-list>
+              <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
+              <ion-item lines="none">
+                <ion-skeleton-text animated style="width: 60%;" />
+              </ion-item>
+            </ion-list>
+          </div>
+        </div>
+
+        <div>
+          <ion-card v-if="!poSummary.listingCountStatusMessage">
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 20%;" />
             </ion-item>
             <ion-item>
-              <ion-skeleton-text animated style="height: 30%; width: 40%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 40%;" />
             </ion-item>
             <ion-item>
-              <ion-skeleton-text animated style="height: 30%; width: 50%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 50%;" />
             </ion-item>
+            <ion-item-divider color="light">
+              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+            </ion-item-divider>
             <ion-item>
-              <ion-skeleton-text animated style="height: 30%; width: 40%;" />
-            </ion-item>
-            <ion-item>
-              <ion-skeleton-text animated style="height: 30%; width: 50%;" />
-            </ion-item>
-            <ion-item>
-              <ion-skeleton-text animated style="height: 30%; width: 40%;" />
-            </ion-item>
-            <ion-item>
-              <ion-skeleton-text animated style="height: 30%; width: 50%;" />
-            </ion-item>
-          </ion-card>
-          <ion-card v-else-if="Object.keys(poAndAtpDetails.activePo).length">
-            <ion-card-header>
-              <ion-card-title>
-                <h3 v-if="hasCategory()">{{ $t("Active purchase order") }}</h3>
-                <h3 v-else>{{ $t("Available purchase order") }}</h3>
-              </ion-card-title>
-            </ion-card-header>
-            <!-- TODO Show orderName -->
-            <ion-item>
-              <ion-label>{{ poAndAtpDetails.activePo.orderExternalId ? poAndAtpDetails.activePo?.orderExternalId :  poAndAtpDetails.activePoId }}</ion-label>
-              <ion-label slot="end">{{ poAndAtpDetails.activePo?.estimatedDeliveryDate ? getTime(poAndAtpDetails.activePo.estimatedDeliveryDate) : '-' }}</ion-label>
-            </ion-item>
-  
-            <ion-item>
-              <ion-label>{{ $t('Pre-selling category') }}</ion-label>
-              <ion-label slot="end">{{ poAndAtpDetails.activePo?.isNewProduct === "Y" ? $t('Pre-order') : $t('Back-order') }}</ion-label>
-            </ion-item>
-  
-            <ion-item>
-              <ion-label>{{ $t("Ordered") }}</ion-label>
-              <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0) ? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
-            </ion-item>
-  
-            <ion-item>
-              <ion-label>{{ $t("Available") }}</ion-label>
-              <ion-label slot="end">{{ (poAndAtpDetails.activePo?.availableToPromise >= 0) ? poAndAtpDetails.activePo?.availableToPromise : '-' }}</ion-label>
-            </ion-item>
-  
-            <ion-item lines="full">
-              <ion-label>{{ $t("Corresponding sales orders") }}</ion-label>
-              <ion-label slot="end">{{ (poAndAtpDetails.crspndgSalesOrdr >= 0) ? poAndAtpDetails.crspndgSalesOrdr : '-' }}</ion-label>
-            </ion-item>
-  
-            <ion-item>
-              <ion-label>{{ $t("Total PO items") }}</ion-label>
-              <ion-label slot="end">{{ (poAndAtpDetails.totalPoItems >= 0) ? poAndAtpDetails.totalPoItems : '-' }}</ion-label>
-            </ion-item>
-  
-            <ion-item>
-              <ion-label>{{ $t("Total PO ATP") }}</ion-label>
-              <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
+              <ion-icon slot="start" :icon="shirtOutline" />
+              <ion-label>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 90%; height: 30%;" />
+                </ion-item>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 100%; height: 60%;" />
+                </ion-item>
+              </ion-label> 
             </ion-item>
           </ion-card>
           <ion-card v-else>
-            <ion-card-header>
-              <ion-card-title>
-                <h3>{{ $t("Purchase orders")  }}</h3>
-              </ion-card-title>
-            </ion-card-header>
-  
             <ion-item>
-              <ion-label>{{ $t("Total PO items") }}</ion-label>
-              <ion-label slot="end">{{ (poAndAtpDetails.totalPoItems >= 0) ? poAndAtpDetails.totalPoItems : '-' }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.eligible ? $t("Yes") : $t("No") }}</ion-label>
             </ion-item>
-  
             <ion-item>
-              <ion-label>{{ $t("Total PO ATP") }}</ion-label>
-              <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
+              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.categoryId === preOrderCategoryId ? $t('Pre-order') : poSummary.categoryId === backorderCategoryId ? $t('Back-order') : $t('None') }}</ion-label>
+              <ion-icon slot="end" :icon="isCategoryValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isCategoryValid() ? 'success' : 'warning'" />
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.listingCountStatusMessage }}</ion-label>
+              <ion-icon slot="end" :icon="isShopifyListingValid() ? checkmarkCircleOutline : alertCircleOutline" :color="isShopifyListingValid() ? 'success' : 'warning'" />
+            </ion-item>
+            <ion-item v-if="poSummary.promiseDate">
+              <ion-label class="ion-text-wrap">{{ $t("Promise date") }}</ion-label>
+              <ion-label slot="end">{{ poSummary.promiseDate }}</ion-label>
+            </ion-item>
+            <ion-item-divider color="light">
+              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+            </ion-item-divider>
+            <!-- internationalized while preparaion -->
+            <ion-item v-if="poSummary.header || poSummary.body">
+              <ion-icon slot="start" :icon="shirtOutline" />
+              <ion-label class="ion-text-wrap">
+                <h2 v-if="poSummary.header">{{ poSummary.header }}</h2>
+                <p v-if="poSummary.body">{{ poSummary.body }}</p>
+              </ion-label>
             </ion-item>
           </ion-card>
-  
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>
-                <h3>{{ $t("Online ATP calculation") }}</h3>
-              </ion-card-title>
-            </ion-card-header>
-            <div v-if="!Object.keys(inventoryConfig).length">
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-              </ion-item>
-            </div>
-            <div v-else>
-              <ion-item>
-                <ion-label>{{ $t("Online ATP") }}</ion-label>
-                <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label>{{ $t("Quantity on hand") }}</ion-label>
-                <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label>{{ $t("Excluded ATP") }}</ion-label>
-                <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ $t("Reserve inventory") }}</ion-toggle>
-              </ion-item>
-              <ion-item>
-                <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ $t("Hold pre-order physical inventory") }}</ion-toggle>
-              </ion-item>
-            </div>
-          </ion-card>
-        </section>
-  
-        <hr />
-  
-        <section>
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>
-                <h3>{{ $t('Related jobs') }}</h3>
-              </ion-card-title>
-            </ion-card-header>
-            <div v-if="!isCtgryAndBrkrngJobsLoaded">
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-              </ion-item>
-            </div>
-            <div v-else>
-              <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
-                <ion-label class="ion-text-wrap">
-                  <h3>{{ $t('Pre-sell computation') }}</h3>
-                  <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
-                </ion-label>
-                <ion-label slot="end">
-                  <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime) : $t('disabled')}}</p>
-                </ion-label>
-              </ion-item>
-  
-              <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length " detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
-                <ion-label class="ion-text-wrap">
-                  <h3>{{ $t('Order brokering') }}</h3>
-                  <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime) }}</p>
-                </ion-label>
-                <ion-label slot="end">
-                  <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime) : $t('disabled')}}</p>
-                </ion-label>
-              </ion-item>
-  
-              <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
-                <ion-label class="ion-text-wrap">
-                  <h3>{{ $t('Auto releasing') }}</h3>
-                  <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
-                </ion-label>
-                <ion-label slot="end">
-                  <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime) : $t('disabled')}}</p>
-                </ion-label>
-              </ion-item>
-            </div>
-          </ion-card>
-  
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>
-                <h3>{{ $t('Shop listing status') }}</h3>
-              </ion-card-title>
-            </ion-card-header>
-            <div v-if="!poSummary.listingCountStatusMessage">
-              <ion-item>
-                <ion-skeleton-text animated style="height: 40%; width: 60%;" />
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-              </ion-item>
-              <ion-item>
-                <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-              </ion-item>
-            </div>
-            <div v-else>
-              <ion-item v-if="!Object.keys(shopListings).length">
-                {{ $t('No shop listings found') }}
-              </ion-item>
-              <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
-                <ion-label class="ion-text-wrap">
-                  <h5>{{ listData.name }}</h5>
-                  <!-- internationalized while preparation -->
-                  <p>{{ listData.listingTimeAndStatus }}</p>
-                </ion-label>
-                <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
-                  <h5>{{ $t(listData.listingStatus) }}</h5>
-                </ion-label>
-                <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
-                  <h5>{{ $t("No listing data") }}</h5>
-                </ion-label>
-                <ion-label v-else color="medium" slot="end">
-                  <h5>{{ $t("Not linked") }}</h5>
-                </ion-label>
-              </ion-item>
-            </div>
-          </ion-card>
-        </section>
+        </div>
+      </div>
+
+      <hr />
+
+      <section>
+        <ion-card v-if="!Object.keys(poAndAtpDetails).length">
+          <ion-item lines="none">
+            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 40%;" />
+          </ion-item>
+          <ion-item>
+            <ion-skeleton-text animated style="height: 30%; width: 50%;" />
+          </ion-item>
+        </ion-card>
+        <ion-card v-else-if="Object.keys(poAndAtpDetails.activePo).length">
+          <ion-card-header>
+            <ion-card-title>
+              <h3 v-if="hasCategory()">{{ $t("Active purchase order") }}</h3>
+              <h3 v-else>{{ $t("Available purchase order") }}</h3>
+            </ion-card-title>
+          </ion-card-header>
+          <!-- TODO Show orderName -->
+          <ion-item>
+            <ion-label>{{ poAndAtpDetails.activePo.orderExternalId ? poAndAtpDetails.activePo?.orderExternalId :  poAndAtpDetails.activePoId }}</ion-label>
+            <ion-label slot="end">{{ poAndAtpDetails.activePo?.estimatedDeliveryDate ? getTime(poAndAtpDetails.activePo.estimatedDeliveryDate) : '-' }}</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>{{ $t('Pre-selling category') }}</ion-label>
+            <ion-label slot="end">{{ poAndAtpDetails.activePo?.isNewProduct === "Y" ? $t('Pre-order') : $t('Back-order') }}</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>{{ $t("Ordered") }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.activePo?.quantity >= 0) ? poAndAtpDetails.activePo?.quantity : '-' }}</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>{{ $t("Available") }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.activePo?.availableToPromise >= 0) ? poAndAtpDetails.activePo?.availableToPromise : '-' }}</ion-label>
+          </ion-item>
+
+          <ion-item lines="full">
+            <ion-label>{{ $t("Corresponding sales orders") }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.crspndgSalesOrdr >= 0) ? poAndAtpDetails.crspndgSalesOrdr : '-' }}</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>{{ $t("Total PO items") }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.totalPoItems >= 0) ? poAndAtpDetails.totalPoItems : '-' }}</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>{{ $t("Total PO ATP") }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
+          </ion-item>
+        </ion-card>
+        <ion-card v-else>
+          <ion-card-header>
+            <ion-card-title>
+              <h3>{{ $t("Purchase orders")  }}</h3>
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-item>
+            <ion-label>{{ $t("Total PO items") }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.totalPoItems >= 0) ? poAndAtpDetails.totalPoItems : '-' }}</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>{{ $t("Total PO ATP") }}</ion-label>
+            <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
+          </ion-item>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              <h3>{{ $t("Online ATP calculation") }}</h3>
+            </ion-card-title>
+          </ion-card-header>
+          <div v-if="!Object.keys(inventoryConfig).length">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+          </div>
+          <div v-else>
+            <ion-item>
+              <ion-label>{{ $t("Online ATP") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Quantity on hand") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Excluded ATP") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ $t("Reserve inventory") }}</ion-toggle>
+            </ion-item>
+            <ion-item>
+              <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ $t("Hold pre-order physical inventory") }}</ion-toggle>
+            </ion-item>
+          </div>
+        </ion-card>
+      </section>
+
+      <hr />
+
+      <section>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              <h3>{{ $t('Related jobs') }}</h3>
+            </ion-card-title>
+          </ion-card-header>
+          <div v-if="!isCtgryAndBrkrngJobsLoaded">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+          </div>
+          <div v-else>
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
+              <ion-label class="ion-text-wrap">
+                <h3>{{ $t('Pre-sell computation') }}</h3>
+                <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
+              </ion-label>
+              <ion-label slot="end">
+                <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').runTime) : $t('disabled')}}</p>
+              </ion-label>
+            </ion-item>
+
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length " detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
+              <ion-label class="ion-text-wrap">
+                <h3>{{ $t('Order brokering') }}</h3>
+                <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime) }}</p>
+              </ion-label>
+              <ion-label slot="end">
+                <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').runTime) : $t('disabled')}}</p>
+              </ion-label>
+            </ion-item>
+
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
+              <ion-label class="ion-text-wrap">
+                <h3>{{ $t('Auto releasing') }}</h3>
+                <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
+              </ion-label>
+              <ion-label slot="end">
+                <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime ? timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').runTime) : $t('disabled')}}</p>
+              </ion-label>
+            </ion-item>
+          </div>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              <h3>{{ $t('Shop listing status') }}</h3>
+            </ion-card-title>
+          </ion-card-header>
+          <div v-if="!poSummary.listingCountStatusMessage">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+          </div>
+          <div v-else>
+            <ion-item v-if="!Object.keys(shopListings).length">
+              {{ $t('No shop listings found') }}
+            </ion-item>
+            <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
+              <ion-label class="ion-text-wrap">
+                <h5>{{ listData.name }}</h5>
+                <!-- internationalized while preparation -->
+                <p>{{ listData.listingTimeAndStatus }}</p>
+              </ion-label>
+              <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
+                <h5>{{ $t(listData.listingStatus) }}</h5>
+              </ion-label>
+              <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
+                <h5>{{ $t("No listing data") }}</h5>
+              </ion-label>
+              <ion-label v-else color="medium" slot="end">
+                <h5>{{ $t("Not linked") }}</h5>
+              </ion-label>
+            </ion-item>
+          </div>
+        </ion-card>
+      </section>
       </template>
       <div v-else class="empty-state">
         <p>{{ $t("No product found") }}</p>
