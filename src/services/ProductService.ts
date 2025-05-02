@@ -31,6 +31,14 @@ const getCatalogProducts = async (payload: any): Promise<any> => {
   })
 }
 
+const getProductCategories = async (query: any): Promise <any> => {
+  return api({
+    url: 'performFind',
+    method: "get",
+    params: query
+  });
+}
+
 const getProductStoreCatalog = async (payload: any): Promise<any> => {
   return api({
     url: "performFind",
@@ -55,5 +63,6 @@ export const ProductService = {
   fetchCurrentList,
   getCatalogCategories,
   getCatalogProducts,
+  getProductCategories,
   getProductStoreCatalog
 }
