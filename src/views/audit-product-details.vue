@@ -9,6 +9,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <template v-if="product?.productId">
       <div class="header">
         <div class="product-image">
           <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
@@ -346,6 +347,10 @@
           </div>
         </ion-card>
       </section>
+      </template>
+      <div v-else class="empty-state">
+        <p>{{ $t("No product found") }}</p>
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -476,7 +481,7 @@ export default defineComponent({
   },
   methods: {
     async getVariantDetails() {
-      await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId})
+      await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId, productStoreId: this.currentEComStore.productStoreId })
       if (this.product.variants) {
         this.getVariant()
         this.getFeatures()
