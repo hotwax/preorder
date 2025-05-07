@@ -10,6 +10,7 @@
     "Are you sure you want to update the promise date for these orders?": "Are you sure you want to update the promise date for these orders?",
     "Are you sure you want to change the time zone to?": "Are you sure you want to change the time zone to {timeZoneId}?",
     "ATP": "ATP",
+    "Audit": "Audit",
     "Auto": "Auto",
     "Auto releasing": "Auto releasing",
     "Authenticating": "Authenticating",
@@ -29,7 +30,6 @@
     "Cancel item": "Cancel item",
     "Cancel job": "Cancel job",
     "Cancel orders": "Cancel orders",
-    "Catalog": "Catalog",
     "Category": "Category",
     "Change": "Change",
     "Change time zone": "Change time zone",
@@ -108,6 +108,7 @@
     "No jobs found": "No jobs found",
     "No jobs have run yet": "No jobs have run yet",
     "No listing data": "No listing data",
+    "No product found": "No product found",
     "No products found": "No products found",
     "No results found": "No results found",
     "No selected store found.": "No selected store found.",
@@ -238,6 +239,7 @@
     "Time zone updated successfully": "Time zone updated successfully",
     "Total PO ATP": "Total PO ATP",
     "Total PO items": "Total PO items",
+    "Unable to login. User is not associated with any product store.": "Unable to login. User is not associated with any product store.",
     "Update promise date": "Update promise date",
     "Update time zone": "Update time zone",
     "Username": "Username",
@@ -248,5 +250,6 @@
     "With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues": "With Hold Pre-order Queue Physical Inventory disabled, the excess inventory is now available for sale online after deducting the queues",
     "Would you like to update your time zone to . Your profile is currently set to . This setting can always be changed from the settings menu.": "Would you like to update your time zone to {localTimeZone}. Your profile is currently set to {profileTimeZone}. This setting can always be changed from the settings menu.",
     "Yes": "Yes",
-    "You do not have permission to access this page": "You do not have permission to access this page"
+    "You do not have permission to access this page": "You do not have permission to access this page",
+    "You do not have permission to access the app.": "You do not have permission to access the app."
 }

@@ -119,7 +119,7 @@
                   <DxpShopifyImg :src="getProduct(item.productId).mainImageUrl" size="small"></DxpShopifyImg>
                 </ion-thumbnail>
                 <ion-label>
-                  <h2>{{ item.parentProductName ? item.parentProductName :item.productName }}</h2>
+                  <h2>{{ getProductIdentificationValue(productIdentificationPref.primaryId, item) ? getProductIdentificationValue(productIdentificationPref.primaryId, item) : item.productName }}</h2>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/')">{{ $t("Color") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
                   <p v-if="$filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/')">{{ $t("Size") }} : {{ $filters.getFeature(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
                 </ion-label>
@@ -208,7 +208,7 @@ import {
   modalController,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import WarehouseModal from "./warehouse-modal.vue";
 import BackgroundJobModal from "./background-job-modal.vue";
 import PromiseDateModal from "./promise-date-modal.vue";
@@ -228,7 +228,7 @@ import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { showToast } from '@/utils'
 import { Plugins } from '@capacitor/core';
-import { DxpShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import emitter from "@/event-bus";
 
 const { Clipboard } = Plugins;
@@ -285,6 +285,7 @@ export default defineComponent({
       selectedItemsCount: 'order/getSelectedItemsCount',
       userProfile: 'user/getUserProfile',
       query: 'order/getQuery',
+      currentEComStore: 'user/getCurrentEComStore',
     }),
   },
   async ionViewWillEnter() {
@@ -319,13 +320,14 @@ export default defineComponent({
     },
     async releaseItems() {
       emitter.emit("presentLoader")
-      const selectedItems = this.getSelectedItemsToRelease("_NA_", "RELEASED"); // TODO Make it configurable
+      const selectedItems = this.getSelectedItemsToRelease("RELEASED_ORD_PARKING", "RELEASED"); // TODO Make it configurable
       const json = JSON.stringify(selectedItems);
       const blob = new Blob([json], { type: 'application/json'});
       const formData = new FormData();
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/releaseItems", {
           headers: {
@@ -346,6 +348,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       this.deselectSelectedItems();
       return this.store.dispatch("order/cancelItems", {
           headers: {
@@ -426,39 +429,39 @@ export default defineComponent({
       return alert.present();
     },
     async openWarehouseList() {
-      const warehousemodal = await modalController.create({
+      const warehouseModal = await modalController.create({
         component: WarehouseModal,
         cssClass: "my-custom-class",
         componentProps: {
           items: this.selectedItems
         },
       });
-      warehousemodal.onDidDismiss().finally(() => {
+      warehouseModal.onDidDismiss().finally(() => {
         // TODO FIX this it should deselect only on successful action
         this.deselectSelectedItems();
       })
-      return warehousemodal.present();
+      return warehouseModal.present();
     },
     async openActiveJobs() {
-      const bgjobmodal = await modalController.create({
+      const bgjobModal = await modalController.create({
         component: BackgroundJobModal,
         cssClass: "my-custom-class",
       });
-      return bgjobmodal.present();
+      return bgjobModal.present();
     },
     async editPromiseDate() {
-      const datemodal = await modalController.create({
+      const dateModal = await modalController.create({
         component: PromiseDateModal,
         cssClass: "my-custom-class",
         componentProps: {
           items: this.selectedItems
         },
       });
-      datemodal.onDidDismiss().finally(() => {
+      dateModal.onDidDismiss().finally(() => {
         // TODO FIX this it should deselect only on successful action
         this.deselectSelectedItems();
       })
-      return datemodal.present();
+      return dateModal.present();
     },
     selectItem: function(event: any, item: any) {
       const existingItemIndex = this.selectedItems.findIndex((element: any) => element.orderId === item.orderId && element.orderItemSeqId === item.orderItemSeqId)
@@ -501,17 +504,22 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+
     return {
-      store,
-      pricetag,
-      ribbon,
-      ellipsisVertical,
-      send,
       business,
       calendar,
-      closeCircle,
-      hourglass,
       close,
+      closeCircle,
+      ellipsisVertical,
+      getProductIdentificationValue,
+      hourglass,
+      pricetag,
+      productIdentificationPref,
+      ribbon,
+      send,
+      store
     };
   },
 });

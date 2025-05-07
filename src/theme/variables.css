@@ -80,7 +80,7 @@ http://ionicframework.com/docs/theming/ */
 In order to disable dark theme renamed it to void.
 Kept the orignal styling for future use if any
 */
-@media (prefers-color-scheme: void) {
+@media (prefers-color-scheme: dark) {
   /*
    * Dark Colors
    * -------------------------------------------

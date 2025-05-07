@@ -7,7 +7,7 @@ import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { Settings } from 'luxon'
 import { updateInstanceUrl, updateToken, resetConfig, logout } from '@/adapter'
-import { useAuthStore } from '@hotwax/dxp-components';
+import { useAuthStore, useProductIdentificationStore } from '@hotwax/dxp-components';
 import { getServerPermissionsFromRules, prepareAppPermissions, resetPermissions, setPermissions } from '@/authorization'
 import emitter from '@/event-bus'
 
@@ -21,13 +21,13 @@ const actions: ActionTree<UserState, RootState> = {
     const { token, oms } = payload;
     dispatch("setUserInstanceUrl", oms);
     try {
-        if (token) {
-          // Getting the permissions list from server
-          const permissionId = process.env.VUE_APP_PERMISSION_ID;
+      if (token) {
+        // Getting the permissions list from server
+        const permissionId = process.env.VUE_APP_PERMISSION_ID;
 
-          // Prepare permissions list
-          const serverPermissionsFromRules = getServerPermissionsFromRules();
-          if (permissionId) serverPermissionsFromRules.push(permissionId);
+        // Prepare permissions list
+        const serverPermissionsFromRules = getServerPermissionsFromRules();
+        if (permissionId) serverPermissionsFromRules.push(permissionId);
 
           const serverPermissions = await UserService.getUserPermissions({
             permissionIds: [...new Set(serverPermissionsFromRules)]
@@ -42,16 +42,25 @@ const actions: ActionTree<UserState, RootState> = {
             const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId );
             // If there are any errors or permission check fails do not allow user to login
             if (!hasPermission) {
-              const permissionError = 'You do not have permission to access the app.';
+              const permissionError = "You do not have permission to access the app.";
               showToast(translate(permissionError));
               console.error("error", permissionError);
               return Promise.reject(new Error(permissionError));
             }
           }
 
-          // Getting user profile
+          const isAdminUser = appPermissions.some((appPermission: any) => appPermission?.action === "MERCHANDISING_ADMIN");
+
+          // Getting user profile & if user is not associated with any product store, then showing this error
           const userProfile = await UserService.getUserProfile(token);
-          userProfile.stores = await UserService.getEComStores(token, userProfile.partyId);
+          try {
+            userProfile.stores = await UserService.getEComStores(token, userProfile.partyId, isAdminUser);
+          } catch (error) {
+            const reason = "Unable to login. User is not associated with any product store.";
+            console.error(reason, error);
+            showToast(translate(reason));
+            return Promise.reject(new Error(reason));
+          }
           
           // Getting user preferred store
           let preferredStore = userProfile.stores[0];
@@ -72,7 +81,23 @@ const actions: ActionTree<UserState, RootState> = {
           commit(types.USER_TOKEN_CHANGED, { newToken: token });
           commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
           updateToken(token);
+
+        // Get product identification from api using dxp-component
+        await useProductIdentificationStore().getIdentificationPref(preferredStoreId)
+          .catch((error) => console.error(error));
+
+        setPermissions(appPermissions);
+        if (userProfile.userTimeZone) {
+          Settings.defaultZone = userProfile.userTimeZone;
         }
+
+        // TODO user single mutation
+        commit(types.USER_CURRENT_ECOM_STORE_UPDATED, preferredStore);
+        commit(types.USER_INFO_UPDATED, userProfile);
+        commit(types.USER_TOKEN_CHANGED, { newToken: token });
+        commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
+        updateToken(token);
+      }
     } catch (err: any) {
       showToast(translate('Something went wrong'));
       console.error("error", err);
@@ -155,6 +180,10 @@ const actions: ActionTree<UserState, RootState> = {
         'userPrefTypeId': 'SELECTED_BRAND',
         'userPrefValue': payload.eComStore.productStoreId
       });
+    
+      // Get product identification from api using dxp-component
+      await useProductIdentificationStore().getIdentificationPref(payload.eComStore.productStoreId)
+        .catch((error) => console.error(error));
     },
 
   /**

@@ -41,6 +41,7 @@ import {
   timerOutline,
 } from "ionicons/icons";
 import { defineComponent } from "vue";
+import { mapGetters } from "vuex";
 import { useStore } from "@/store";
 import JobHistoryModal from "./job-history-modal.vue";
 import { JobService } from "@/services/JobService";
@@ -56,13 +57,21 @@ export default defineComponent({
     IonItem,
     IonList
   },
+  computed: {
+    ...mapGetters({
+      getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob"
+    })
+  },
   methods: {
     closeJobActionsPopover() {
       popoverController.dismiss({ dismissed: true });
     },
-    async runNow() {
+    async retryRunNow(job: any) {
+      //fetch latest job
+      await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+      job = await this.getCtgryAndBrkrngJob(job.systemJobEnumId)
       try {
-        const resp = await JobService.runJobNow(this.job)
+        const resp = await JobService.runJobNow(job)
         if (!hasError(resp)) {
           showToast(translate('Service has been scheduled'))
           await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
@@ -72,6 +81,20 @@ export default defineComponent({
       } catch (error) {
         console.error(error)
         showToast(translate('Something went wrong'))
+      }
+    },
+    async runNow() {
+      try {
+        const resp = await JobService.runJobNow(this.job)
+        if (!hasError(resp)) {
+          showToast(translate('Service has been scheduled'))
+          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+        } else {
+          await this.retryRunNow(this.job)
+        }
+      } catch (error) {
+        console.error(error)
+        await this.retryRunNow(this.job)
       } finally {
         this.closeJobActionsPopover()
       }
@@ -83,9 +106,12 @@ export default defineComponent({
       });
       return await jobHistoryModal.present();
     },
-    async cancelJob() {
+    async retryCancelJob(job: any) {
+      //fetch latest job
+      await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+      job = await this.getCtgryAndBrkrngJob(job.systemJobEnumId)
       try {
-        const resp = await JobService.cancelJob(this.job.jobId)
+        const resp = await JobService.cancelJob(job.jobId)
         if (!hasError(resp)) {
           showToast(translate('Job cancelled successfully'))
           await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
@@ -95,6 +121,20 @@ export default defineComponent({
       } catch (error) {
         console.error(error)
         showToast(translate('Something went wrong, could not cancel the job'))
+      }
+    },
+    async cancelJob() {
+      try {
+        const resp = await JobService.cancelJob(this.job.jobId)
+        if (!hasError(resp)) {
+          showToast(translate('Job cancelled successfully'))
+          await this.store.dispatch('job/fetchCtgryAndBrkrngJobs')
+        } else {
+          await this.retryCancelJob(this.job)
+        }
+      } catch (error) {
+        console.error(error)
+        await this.retryCancelJob(this.job)
       } finally {
         this.closeJobActionsPopover()
       }

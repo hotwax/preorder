@@ -26,7 +26,7 @@
 
         <div class="product-info">
           <ion-item lines="none" class="product-title">
-            <h1>{{ current.product.productName }}</h1>
+            <h1>{{ getProductIdentificationValue(productIdentificationPref.primaryId, current.product) ? getProductIdentificationValue(productIdentificationPref.primaryId, current.product) : current.product.productName }}</h1>
           </ion-item>
           <div class="product-features">
             <ion-list v-if="$filters.getFeaturesList(current.product.featureHierarchy, '1/COLOR/').length">
@@ -193,7 +193,7 @@ import {
   alertController,
   modalController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import {
   informationCircle,
   send,
@@ -211,7 +211,7 @@ import BackgroundJobModal from "./background-job-modal.vue";
 import { useStore } from "@/store";
 import { mapGetters } from "vuex";
 import { ProductService } from '@/services/ProductService'
-import { DxpShopifyImg } from "@hotwax/dxp-components";
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { sizeIndex } from "@/apparel-sorter"
 import { DateTime } from 'luxon';
 import emitter from "@/event-bus";
@@ -436,7 +436,7 @@ export default defineComponent({
               orderId: item.orderId,
               orderItemSeqId: item.orderItemSeqId,
               changeReasonEnumId: "RELEASED",
-              toFacilityId: "_NA_" // TODO Make it configurable
+              toFacilityId: "RELEASED_ORD_PARKING" // TODO Make it configurable
             }
           })
           selectedItems = [...selectedItems, ...items];
@@ -447,6 +447,8 @@ export default defineComponent({
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
+
       return this.store.dispatch("order/releaseItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -475,6 +477,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       return this.store.dispatch("order/cancelItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -574,15 +577,19 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
     return {
       informationCircle,
       send,
       business,
       closeCircle,
+      getProductIdentificationValue,
       hourglass,
       calendar,
       close,
       list,
+      productIdentificationPref,
       ribbon,
       refresh,
       store

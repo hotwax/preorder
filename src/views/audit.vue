@@ -5,7 +5,7 @@
         <ion-buttons slot="start">
           <ion-menu-button />
         </ion-buttons>
-        <ion-title slot="start">{{ $t("Catalog") }}</ion-title>
+        <ion-title slot="start">{{ $t("Audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -52,12 +52,12 @@
               <DxpShopifyImg :src="product.mainImageUrl" size="small"/>
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
-              <h5>{{ product.parentProductName }}</h5>
-              <p>{{ product.sku }}</p>
+              <h5>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) ? getProductIdentificationValue(productIdentificationPref.primaryId, product) : product.productName }}</h5>
+              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
             </ion-label>
           </ion-item>
 
-          <ion-chip v-if="product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER')" class="tablet" outline>
+          <ion-chip v-if="product.prodCatalogCategoryTypeIds?.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds?.includes('PCCT_BACKORDER')" class="tablet" outline>
             <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER') ? $t('Back-order') : '-' }}</ion-label>
           </ion-chip>
 
@@ -106,17 +106,17 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import { DxpShopifyImg } from '@hotwax/dxp-components';
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from '@hotwax/dxp-components';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
 import { hasError } from '@/utils';
 
 export default defineComponent({
-  name: 'Catalog',
+  name: 'Audit',
   components: {
     DxpShopifyImg,
     IonButtons,
@@ -232,7 +232,7 @@ export default defineComponent({
       }
     },
     viewProduct(product: any) {
-      this.router.push({ path: `/catalog-product-details/${product.groupId}`, query: { variantId: product.productId } });
+      this.router.push({ path: `/audit-product-details/${product.groupId}`, query: { variantId: product.productId } });
     },
     async preparePreordBckordComputationJob() {
       try {
@@ -290,8 +290,12 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
 
     return {
+      getProductIdentificationValue,
+      productIdentificationPref,
       router,
       store,
     };
