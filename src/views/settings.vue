@@ -38,25 +38,7 @@
         <h1>{{ $t('OMS') }}</h1>
       </div>
       <section>
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>
-              {{ $t("OMS instance") }}
-            </ion-card-subtitle>
-            <ion-card-title>
-              {{ baseURL ? baseURL : instanceUrl }}
-            </ion-card-title>
-          </ion-card-header>
-
-          <ion-card-content>
-            {{ $t('This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.') }}
-          </ion-card-content>
-
-          <ion-button @click="goToOms" fill="clear">
-            {{ $t('Go to OMS') }}
-            <ion-icon slot="end" :icon="openOutline" />
-          </ion-button>
-        </ion-card>
+        <DxpOmsInstanceNavigator />
 
         <ion-card>
           <ion-card-header>
@@ -71,8 +53,7 @@
             {{ $t('A store represents a company or a unique catalog of products. If your OMS is connected to multiple eCommerce stores sellling different collections of products, you may have multiple Product Stores set up in HotWax Commerce.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-label>{{ $t("Select store") }}</ion-label>
-            <ion-select interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
+            <ion-select :label="$t('Select store')" interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
               <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -80,31 +61,11 @@
       </section>
       <hr />
 
-      <div class="section-header">
-        <h1>
-          {{ $t('App') }}
-          <p class="overline" >{{ "Version: " + appVersion }}</p>
-        </h1>
-        <p class="overline">{{ "Built: " + getDateTime(appInfo.builtTime) }}</p>
-      </div>
+      <DxpAppVersionInfo />
 
       <section>
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>
-              {{ $t('Timezone') }}
-            </ion-card-title>
-          </ion-card-header>
-
-          <ion-card-content>
-            {{ $t('The timezone you select is used to ensure automations you schedule are always accurate to the time you select.') }}
-          </ion-card-content>
-
-          <ion-item lines="none">
-            <ion-label> {{ userProfile && userProfile.userTimeZone ? userProfile.userTimeZone : '-' }} </ion-label>
-            <ion-button @click="changeTimeZone()" slot="end" fill="outline" color="dark">{{ $t("Change") }}</ion-button>
-          </ion-item>
-        </ion-card>
+        <DxpProductIdentifier />
+        <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
 
         <ion-card>
           <ion-card-header>
@@ -145,19 +106,16 @@ import {
   IonHeader,
   IonIcon,
   IonItem,
-  IonLabel,
   IonMenuButton,
   IonPage,
   IonSelect,
   IonSelectOption,
   IonTitle,
-  IonToolbar,
-  modalController } from "@ionic/vue";
+  IonToolbar } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
-import TimeZoneModal from '@/views/timezone-modal.vue'
-import Image from '@/components/Image.vue'
-import { DateTime } from 'luxon';
+import Image from '@/components/Image.vue';
+import { DxpProductIdentifier } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "settings",
@@ -174,7 +132,6 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
-    IonLabel,
     IonMenuButton,
     IonPage,
     IonSelect,
@@ -189,18 +146,12 @@ export default defineComponent({
   },
   data() {
     return {
-      baseURL: process.env.VUE_APP_BASE_URL,
-      appInfo: (process.env.VUE_APP_VERSION_INFO ? JSON.parse(process.env.VUE_APP_VERSION_INFO) : {}) as any,
-      appVersion: ""
+      baseURL: process.env.VUE_APP_BASE_URL
     }
-  },
-  mounted() {
-    this.appVersion = this.appInfo.branch ? (this.appInfo.branch + "-" + this.appInfo.revision) : this.appInfo.tag;
   },
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      instanceUrl: 'user/getInstanceUrl',
       currentEComStore: 'user/getCurrentEComStore',
       currentOrderParking: 'user/getCurrentOrderParking',
       virtualFacilities: 'user/getVirtualFacilities'
@@ -208,19 +159,19 @@ export default defineComponent({
   },
   methods: {
     logout: function() {
-      this.store.dispatch("user/logout").then(() => {
-        const redirectUrl = window.location.origin + '/login'
-        window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
+      this.store.dispatch("user/logout", { isUserUnauthorised: false }).then((redirectionUrl) => {
+        // if not having redirection url then redirect the user to launchpad
+        if(!redirectionUrl) {
+          const redirectUrl = window.location.origin + '/login'
+          window.location.href = `${process.env.VUE_APP_LOGIN_URL}?isLoggedOut=true&redirectUrl=${redirectUrl}`
+        }
       })
     },
     goToLaunchpad() {
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}`
     },
-    async changeTimeZone() {
-      const timeZoneModal = await modalController.create({
-        component: TimeZoneModal,
-      });
-      return timeZoneModal.present();
+    async timeZoneUpdated(tzId: string) {
+      await this.store.dispatch("user/setUserTimeZone", tzId)
     },
     updateBrand(event: any) {
       if(event.detail.value && this.userProfile && this.currentEComStore?.productStoreId !== event.detail.value) {
@@ -229,17 +180,11 @@ export default defineComponent({
         })
       }
     },
-    goToOms(){
-      window.open(this.instanceUrl.startsWith('http') ? this.instanceUrl.replace('api/', "") : `https://${this.instanceUrl}.hotwax.io/`, '_blank', 'noopener, noreferrer');
-    },
-    getDateTime(time: any) {
-      return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_MED);
-    },
     updateOrderParking(event: any) {
       if(event.detail.value && this.userProfile && this.currentOrderParking !== event.detail.value) {
         this.store.dispatch('user/setOrderParking', event.detail.value)
       }
-    },
+    }
   }
 });
 </script>

@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router';
-import './registerServiceWorker'
 
 import { IonicVue } from '@ionic/vue';
 import i18n from './i18n'
@@ -30,19 +29,41 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 import { dxpComponents } from '@hotwax/dxp-components'
 import { login, logout, loader } from './user-utils';
+import permissionPlugin, { Actions, hasPermission } from '@/authorization';
+import permissionRules from '@/authorization/Rules';
+import permissionActions from '@/authorization/Actions';
+import { setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
+import localeMessages from './i18n/locales';
+import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@/adapter'
 
 const app = createApp(App)
   .use(IonicVue, {
-    mode: 'md'
+    mode: 'md',
+    innerHTMLTemplatesEnabled: true
   })
   .use(router)
   .use(i18n)
   .use(store)
+  .use(permissionPlugin, {
+    rules: permissionRules,
+    actions: permissionActions
+  })
   .use(dxpComponents, {
+    Actions,
+    defaultImgUrl: require("@/assets/images/defaultImage.png"),
     login,
     logout,
     loader,
-    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string
+    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
+    getConfig: getConfig,
+    initialise: initialise,
+    localeMessages,
+    setUserLocale,
+    setUserTimeZone,
+    getAvailableTimeZones,
+    getProductIdentificationPref,
+    setProductIdentificationPref,
+    hasPermission
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

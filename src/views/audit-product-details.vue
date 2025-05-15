@@ -3,42 +3,32 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/catalog"></ion-back-button>
+          <ion-back-button default-href="/audit"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ $t("Product details") }}</ion-title>
+        <ion-title>{{ $t("Product audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <template v-if="product?.productId">
       <div class="header">
         <div class="product-image">
           <ion-skeleton-text v-if="!Object.keys(currentVariant).length" animated />
-          <Image v-else :src="currentVariant.mainImageUrl" />
+          <DxpShopifyImg v-else :src="currentVariant.mainImageUrl" />
         </div>
 
         <div class="product-info" v-if="Object.keys(currentVariant).length">
           <div class="ion-padding">
-            <h4>{{ currentVariant.parentProductName }}</h4>
-            <p>{{ currentVariant.sku }}</p>
+            <h4>{{ getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) ? getProductIdentificationValue(productIdentificationPref.primaryId, currentVariant) : currentVariant.productName }}</h4>
+            <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, currentVariant) }}</p>
           </div>
 
           <div class="product-features">
-            <ion-list v-if="selectedColor">
-              <ion-list-header>{{ $t("Colors") }}</ion-list-header>
+            <ion-list v-for="[feature, featureOptions] in Object.entries(features)" :key="feature">
+              <ion-list-header>{{ feature }}</ion-list-header>
               <ion-item lines="none">
                 <ion-row>
-                  <ion-chip :outline="selectedColor !== colorFeature" :key="colorFeature" v-for="colorFeature in Object.keys(features)" @click="selectedColor !== colorFeature && applyFeature(colorFeature, 'color')">
-                    <ion-label class="ion-text-wrap">{{ colorFeature }}</ion-label>
-                  </ion-chip>
-                </ion-row>
-              </ion-item>
-            </ion-list>
-
-            <ion-list v-if="selectedSize">
-              <ion-list-header>{{ $t("Sizes") }}</ion-list-header>
-              <ion-item lines="none">
-                <ion-row>
-                  <ion-chip :outline="selectedSize !== sizeFeature" :key="sizeFeature" v-for="sizeFeature in features[selectedColor]" @click="selectedSize !== sizeFeature && applyFeature(sizeFeature, 'size')">
-                    <ion-label class="ion-text-wrap">{{ sizeFeature }}</ion-label>
+                  <ion-chip :outline="selectedFeatures[feature] !== option" :key="option" v-for="option in featureOptions" @click="selectedFeatures[feature] !== option && applyFeature(option, feature)">
+                    <ion-label class="ion-text-wrap">{{ option }}</ion-label>
                   </ion-chip>
                 </ion-row>
               </ion-item>
@@ -47,22 +37,22 @@
         </div>
         <div class="product-info" v-else>
           <div class="ion-padding">
-            <ion-skeleton-text animated style="width: 40%; height: 80%;" />
-            <ion-skeleton-text animated style="width: 60%;" />
+            <ion-skeleton-text animated style="width: 60%; height: 80%;" />
+            <ion-skeleton-text animated style="width: 40%; height: 40%;" />
           </div>
 
           <div class="product-features">
             <ion-list>
               <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 70%;" />
+                <ion-skeleton-text animated style="width: 60%;" />
               </ion-item>
             </ion-list>
 
             <ion-list>
               <ion-skeleton-text class="ion-margin" animated style="width: 30%" />
               <ion-item lines="none">
-                <ion-skeleton-text animated style="width: 70%;" />
+                <ion-skeleton-text animated style="width: 60%;" />
               </ion-item>
             </ion-list>
           </div>
@@ -71,19 +61,30 @@
         <div>
           <ion-card v-if="!poSummary.listingCountStatusMessage">
             <ion-item>
-              <ion-skeleton-text animated style="height: 60%; width: 90%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Eligible") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 20%;" />
             </ion-item>
             <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 70%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Category") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 40%;" />
             </ion-item>
             <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+              <ion-label class="ion-text-wrap">{{ $t("Shopify listing") }}</ion-label>
+              <ion-skeleton-text slot="end" animated style="height: 30%; width: 50%;" />
             </ion-item>
+            <ion-item-divider color="light">
+              <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
+            </ion-item-divider>
             <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 70%;" />
-            </ion-item>
-            <ion-item>
-              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+              <ion-icon slot="start" :icon="shirtOutline" />
+              <ion-label>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 90%; height: 30%;" />
+                </ion-item>
+                <ion-item lines="none">
+                  <ion-skeleton-text animated style="width: 100%; height: 60%;" />
+                </ion-item>
+              </ion-label> 
             </ion-item>
           </ion-card>
           <ion-card v-else>
@@ -107,13 +108,10 @@
             </ion-item>
             <ion-item-divider color="light">
               <ion-label color="medium">{{ $t("Timeline") }}</ion-label>
-              <ion-button v-if="poSummary.header || poSummary.body" color="medium" fill="clear" slot="end" @click="copyAuditMsg()">
-                <ion-icon slot="icon-only" :icon="copyOutline" />
-              </ion-button>
             </ion-item-divider>
             <!-- internationalized while preparaion -->
             <ion-item v-if="poSummary.header || poSummary.body">
-              <ion-icon slot="start" :icon="shirtOutline"></ion-icon>
+              <ion-icon slot="start" :icon="shirtOutline" />
               <ion-label class="ion-text-wrap">
                 <h2 v-if="poSummary.header">{{ poSummary.header }}</h2>
                 <p v-if="poSummary.body">{{ poSummary.body }}</p>
@@ -125,15 +123,9 @@
 
       <hr />
 
-      <div v-if="!Object.keys(poAndAtpDetails).length">
-        <ion-item lines="none">
-          <ion-skeleton-text animated style="width: 50%; height: 50%;" />
-        </ion-item>
-      </div>
-
       <section>
         <ion-card v-if="!Object.keys(poAndAtpDetails).length">
-          <ion-item>
+          <ion-item lines="none">
             <ion-skeleton-text animated style="height: 40%; width: 70%;" />
           </ion-item>
           <ion-item>
@@ -198,7 +190,6 @@
             <ion-label slot="end">{{ (poAndAtpDetails.totalPoAtp >= 0) ? poAndAtpDetails.totalPoAtp : '-' }}</ion-label>
           </ion-item>
         </ion-card>
-
         <ion-card v-else>
           <ion-card-header>
             <ion-card-title>
@@ -217,93 +208,74 @@
           </ion-item>
         </ion-card>
 
-        <ion-card v-if="!Object.keys(inventoryConfig).length">
-          <ion-item>
-            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-        </ion-card>
-        <ion-card v-else>
+        <ion-card>
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t("Online ATP calculation") }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item>
-            <ion-label>{{ $t("Online ATP") }}</ion-label>
-            <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Quantity on hand") }}</ion-label>
-            <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Excluded ATP") }}</ion-label>
-            <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Reserve inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!inventoryConfig.reserveInvStatus" :checked="inventoryConfig.reserveInvStatus === 'Y'" @ionChange="updateReserveInvConfig($event.detail.checked)"/>
-          </ion-item>
-          <ion-item>
-            <ion-label>{{ $t("Hold pre-order physical inventory") }}</ion-label>
-            <ion-toggle slot="end" :disabled="!inventoryConfig.preOrdPhyInvHoldStatus" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @ionChange="updatePreOrdPhyInvHoldConfig($event.detail.checked)"/>
-          </ion-item>
+          <div v-if="!Object.keys(inventoryConfig).length">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+          </div>
+          <div v-else>
+            <ion-item>
+              <ion-label>{{ $t("Online ATP") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.onlineAtp >= 0) ? atpCalcDetails.onlineAtp : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Quantity on hand") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.totalQOH >= 0) ? atpCalcDetails.totalQOH : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>{{ $t("Excluded ATP") }}</ion-label>
+              <ion-label slot="end">{{ (atpCalcDetails.excludedAtp || atpCalcDetails.excludedAtp === 0) ? atpCalcDetails.excludedAtp : '-' }}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-toggle :disabled="!inventoryConfig.reserveInvStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.reserveInvStatus === 'Y'" @click="updateReserveInvConfig($event)">{{ $t("Reserve inventory") }}</ion-toggle>
+            </ion-item>
+            <ion-item>
+              <ion-toggle :disabled="!inventoryConfig.preOrdPhyInvHoldStatus || !hasPermission(Actions.APP_INV_CNFG_UPDT)" :checked="inventoryConfig.preOrdPhyInvHoldStatus != 'false'" @click="updatePreOrdPhyInvHoldConfig($event)">{{ $t("Hold pre-order physical inventory") }}</ion-toggle>
+            </ion-item>
+          </div>
         </ion-card>
       </section>
 
       <hr />
 
       <section>
-        <ion-card v-if="!Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length
-          || !Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length
-          || !Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length">
-          <ion-item>
-            <ion-skeleton-text animated style="height: 40%; width: 70%;" />
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-        </ion-card>
-        <ion-card v-else>
+        <ion-card>
           <ion-card-header>
             <ion-card-title>
-              <h3>{{ $t('Category and brokering jobs') }}</h3>
+              <h3>{{ $t('Related jobs') }}</h3>
             </ion-card-title>
           </ion-card-header>
-
-          <!-- in case jobs are not available -->
-          <div v-if="!Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length
-            && !Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length 
-            && !Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length">
-            <ion-item>{{ $t("No jobs found") }}</ion-item>
+          <div v-if="!isCtgryAndBrkrngJobsLoaded">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
           </div>
-
           <div v-else>
-            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT'), 'Pre-sell computation')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Pre-sell computation') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT').lastRunTime) }}</p>
@@ -313,7 +285,7 @@
               </ion-label>
             </ion-item>
 
-            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_BKR_ORD')).length " detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_BKR_ORD'), 'Order brokering')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Order brokering') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_BKR_ORD').lastRunTime) }}</p>
@@ -323,7 +295,7 @@
               </ion-label>
             </ion-item>
 
-            <ion-item detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
+            <ion-item v-if="Object.keys(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE')).length" detail button @click="openJobActionsPopover($event, getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE'), 'Auto releasing')">
               <ion-label class="ion-text-wrap">
                 <h3>{{ $t('Auto releasing') }}</h3>
                 <p>{{ getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime && timeTillJob(getCtgryAndBrkrngJob('JOB_RLS_ORD_DTE').lastRunTime) }}</p>
@@ -335,57 +307,57 @@
           </div>
         </ion-card>
 
-        <ion-card v-if="!poSummary.listingCountStatusMessage">
-          <ion-item>
-            <ion-skeleton-text animated style="height: 40%; width: 60%;" />
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
-          </ion-item>
-          <ion-item>
-            <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
-          </ion-item>
-        </ion-card>
-        <ion-card v-else>
+        <ion-card>
           <ion-card-header>
             <ion-card-title>
               <h3>{{ $t('Shop listing status') }}</h3>
             </ion-card-title>
           </ion-card-header>
-          <ion-item v-if="!Object.keys(shopListings).length">
-            {{ $t('No shop listings found') }}
-          </ion-item>
-          <ion-item v-else v-for="(listData, index) in shopListings" :key="index">
-            <ion-label class="ion-text-wrap">
-              <h5>{{ listData.name }}</h5>
-              <!-- internationalized while preparation -->
-              <p>{{ listData.listingTimeAndStatus }}</p>
-            </ion-label>
-            <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
-              <h5>{{ $t(listData.listingStatus) }}</h5>
-            </ion-label>
-            <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
-              <h5>{{ $t("No listing data") }}</h5>
-            </ion-label>
-            <ion-label v-else color="medium" slot="end">
-              <h5>{{ $t("Not linked") }}</h5>
-            </ion-label>
-          </ion-item>
+          <div v-if="!poSummary.listingCountStatusMessage">
+            <ion-item>
+              <ion-skeleton-text animated style="height: 40%; width: 60%;" />
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 40%;" /> 
+            </ion-item>
+            <ion-item>
+              <ion-skeleton-text animated style="height: 30%; width: 50%;" /> 
+            </ion-item>
+          </div>
+          <div v-else>
+            <ion-item v-if="!Object.keys(shopListings).length">
+              {{ $t('No shop listings found') }}
+            </ion-item>
+            <ion-item v-else v-for="(listData, index) in getSortedShopListings(shopListings)" :key="index">
+              <ion-label class="ion-text-wrap">
+                <h5>{{ listData.name }}</h5>
+                <!-- internationalized while preparation -->
+                <p>{{ listData.listingTimeAndStatus }}</p>
+              </ion-label>
+              <ion-label v-if="listData.shopifyShopProductId && listData.status" :color="listData.containsError ? 'danger' : (listData.status === 'inactive' ? 'warning' : 'success')" slot="end">
+                <h5>{{ $t(listData.listingStatus) }}</h5>
+              </ion-label>
+              <ion-label v-else-if="listData.shopifyShopProductId" color="medium" slot="end">
+                <h5>{{ $t("No listing data") }}</h5>
+              </ion-label>
+              <ion-label v-else color="medium" slot="end">
+                <h5>{{ $t("Not linked") }}</h5>
+              </ion-label>
+            </ion-item>
+          </div>
         </ion-card>
       </section>
+      </template>
+      <div v-else class="empty-state">
+        <p>{{ $t("No product found") }}</p>
+      </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
 import {
-  IonButton,
+  alertController,
   IonButtons,
   IonBackButton,
   IonCard,
@@ -408,7 +380,7 @@ import {
   IonRow,
   popoverController,
 } from "@ionic/vue";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
@@ -417,7 +389,7 @@ import {
   shirtOutline
 } from "ionicons/icons";
 import { useStore } from "@/store";
-import Image from '@/components/Image.vue';
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from "@hotwax/dxp-components";
 import { mapGetters } from "vuex";
 import { showToast, getFeature, hasError } from "@/utils";
 import { translate } from "@/i18n";
@@ -425,18 +397,19 @@ import { sortSizes } from '@/apparel-sorter';
 import { DateTime } from "luxon";
 import JobActionsPopover from "./job-actions-popover.vue";
 import { OrderService } from "@/services/OrderService";
+import { ProductService } from '@/services/ProductService'
 import { ShopifyService } from "@/services/ShopifyService";
 import { JobService } from "@/services/JobService";
 import { StockService } from "@/services/StockService";
 import { UtilService } from "@/services/UtilService";
 import { useRouter } from "vue-router";
 import { Plugins } from "@capacitor/core";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
-  name: "catalog-product-details",
+  name: "AuditProductDetails",
   components: {
-    Image,
-    IonButton,
+    DxpShopifyImg,
     IonButtons,
     IonBackButton,
     IonCard,
@@ -456,14 +429,12 @@ export default defineComponent({
     IonToggle,
     IonToolbar,
     IonTitle,
-    IonRow,
+    IonRow
   },
   data() {
     return {
       variantId: '',
       productId: '',
-      selectedColor: '',
-      selectedSize: '',
       features: [] as any,
       currentVariant: {} as any,
       poAndAtpDetails: {} as any,
@@ -474,7 +445,9 @@ export default defineComponent({
       configsByStores: [] as any,
       listingJobRunTime: 0,
       backorderCategoryId: '',
-      preOrderCategoryId: ''
+      preOrderCategoryId: '',
+      isCtgryAndBrkrngJobsLoaded: false,
+      selectedFeatures: {} as any
     }
   },
   computed: {
@@ -499,14 +472,8 @@ export default defineComponent({
       const productStoreCategories = await this.store.dispatch('product/getPreOrderBackorderCategory', { productStoreId })
       this.preOrderCategoryId = productStoreCategories["PCCT_PREORDR"];
       this.backorderCategoryId = productStoreCategories["PCCT_BACKORDER"];
-      if (!this.preOrderCategoryId) {
-        showToast(translate("No pre-order category found"))
-      }
-      if (!this.backorderCategoryId) {
-        showToast(translate("No backorder category found"))
-      }
     } catch (error) {
-      showToast(translate("Failed to get pre-order/backorder categories"))
+      console.error("Failed to get pre-order/backorder categories")
     }
     await this.getShopifyConfigsByStore()
     await this.getCtgryAndBrkrngJobs()
@@ -514,61 +481,124 @@ export default defineComponent({
   },
   methods: {
     async getVariantDetails() {
-      await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId})
+      await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId, productStoreId: this.currentEComStore.productStoreId })
       if (this.product.variants) {
+        this.getVariant()
         this.getFeatures()
         await this.updateVariant()
       }
     },
-    applyFeature(feature: string, type: string) {
-      if (type === 'color') this.selectedColor = feature
-      else if (type === 'size') this.selectedSize = feature
-      this.updateVariant();
-    },
-    getFeatures() {
-      const features = {} as any
-      this.product.variants.map((variant: any) => {
-        const size = getFeature(variant.featureHierarchy, '1/SIZE/')
-        const color = getFeature(variant.featureHierarchy, '1/COLOR/')
-        if (!features[color]) features[color] = [size]
-        else if (!features[color].includes(size)) features[color].push(size)
+    applyFeature(option: string, feature: string) {
+      const selectedFeatures = this.selectedFeatures
+      selectedFeatures[feature] = option
+
+      let variant = this.product.variants.find((variant: any) => {
+        let isVariantAvailable = true
+        Object.entries(this.selectedFeatures).map((currentFeature) => {
+          if(getFeature(variant.productFeatures, currentFeature[0]) != currentFeature[1]){
+            isVariantAvailable = false
+          }
+        })
+        return isVariantAvailable
       })
 
-      Object.keys(features).forEach((color) => this.features[color] = sortSizes(features[color]))
 
-      let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)
+      if(!variant) {
+        const index = Object.keys(selectedFeatures).indexOf(feature)
 
-      if (!selectedVariant) {
-          // if the variant does not have color or size as features
-          selectedVariant = this.product.variants[0]
-          showToast(translate("Selected variant not available. Reseting to first variant."))
-        }
-
-      if (selectedVariant) {
-        this.selectedColor = getFeature(selectedVariant.featureHierarchy, '1/COLOR/')
-        this.selectedSize = getFeature(selectedVariant.featureHierarchy, '1/SIZE/')
-      }
-    },
-    async updateVariant() {
-      let variant
-      if (this.selectedColor || this.selectedSize) {
-        variant = this.product.variants.find((variant: any) => {
-          const hasSize = !this.selectedSize || (this.selectedSize && getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
-          const hasColor = !this.selectedColor || (this.selectedColor && getFeature(variant.featureHierarchy, '1/COLOR/') === this.selectedColor)
-          return hasSize && hasColor
+        const availableVariants = this.product.variants.filter((variant: any) => {
+          let isVariantAvailable = true
+          Object.entries(selectedFeatures).map((currentFeature, currentFeatureIndex) => {
+            if(currentFeatureIndex <= index && getFeature(variant.productFeatures, currentFeature[0]) != currentFeature[1]){
+              isVariantAvailable = false
+            }
+          })
+          return isVariantAvailable
         })
 
-        // if the selected size is not available for that color, default it to the first size available
-        if (!variant) {
-          this.selectedSize = this.features[this.selectedColor][0];
-          variant = this.product.variants.find((variant: any) => getFeature(variant.featureHierarchy, '1/SIZE/') === this.selectedSize)
-          showToast(translate("Selected variant not available"))
-        }
+        this.updateSeletedFeatures(availableVariants[0])
+        variant = availableVariants[0]
+        showToast(translate("Selected variant not available. Reseting to first variant."))
       }
-      // if the variant does not have color or size as features
-      this.currentVariant = variant || this.product.variants[0]
+
+      this.currentVariant = variant;
+      this.getFeatures()
+      this.updateVariant();
+    },
+    getVariant() {
+      let selectedVariant = this.product.variants.find((variant: any) => variant.productId === this.variantId)     
+
+      if(!selectedVariant) {
+        selectedVariant = this.product.variants[0]
+        showToast(translate("Selected variant not available. Reseting to first variant."))
+        this.$route.query.variantId !==  selectedVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: selectedVariant.productId } }));
+      }
+
+      this.updateSeletedFeatures(selectedVariant)
+      this.currentVariant = selectedVariant
+    },
+    getFeatures() {
+      const selectedFeatures = this.selectedFeatures
+      const features = {} as any;
+
+      Object.entries(selectedFeatures).map((feature, featureIndex) => {
+        if(featureIndex === 0) {
+          const firstFeature = feature[0]
+          this.product.variants.map((variant: any) => {
+            const featureOption = getFeature(variant.productFeatures, firstFeature)
+            if(!features[firstFeature]){
+              features[firstFeature] = [featureOption]
+            } else if(!features[firstFeature].includes(featureOption)){
+              features[firstFeature].push(featureOption)
+            }
+          })
+        }
+
+        const nextFeature = Object.entries(selectedFeatures).find((currentFeature, currentFeatureIndex) => currentFeatureIndex === featureIndex + 1)
+        if(nextFeature) {
+          const nextFeatureCategory = nextFeature[0]
+
+          const availableVariants = this.product.variants.filter((variant: any) => {
+            let isVariantAvailable = true
+            Object.entries(this.selectedFeatures).map((currentFeature, currentFeatureIndex) => {              
+              if(currentFeatureIndex <= featureIndex && getFeature(variant.productFeatures, currentFeature[0]) != currentFeature[1]){
+                isVariantAvailable = false
+              }
+            })
+            return isVariantAvailable
+          })
+
+          const nextFeatureOptions = [] as any
+          availableVariants.map((variant: any) => {
+            if(!nextFeatureOptions.includes(getFeature(variant.productFeatures , nextFeatureCategory))){
+              nextFeatureOptions.push(getFeature(variant.productFeatures , nextFeatureCategory))
+            }
+          })
+
+          features[nextFeatureCategory] = nextFeatureCategory === 'Size' ? sortSizes(nextFeatureOptions) : nextFeatureOptions
+        }        
+      })
+
+      this.features = features
+    },
+    updateSeletedFeatures(variant: any) {
+      let selectedFeatures = {} as any;
+      variant.productFeatures.map((featureItem: any) => {
+          const featureItemSplitted = featureItem.split("/")
+          selectedFeatures[featureItemSplitted[0]] = featureItemSplitted[1]
+      })
+
+      selectedFeatures = Object.keys(selectedFeatures).sort().reduce((result:any, key) => {
+        result[key] = selectedFeatures[key];
+        return result;
+      }, {});
+
+      this.selectedFeatures = selectedFeatures
+    },
+    async updateVariant() {
       this.variantId = this.currentVariant.variantId
       this.$route.query.variantId !==  this.currentVariant.productId && (this.router.replace({path: this.$route.path,  query: { variantId: this.currentVariant.productId } }));
+      this.currentVariant.productCategories = await this.getProductCategories(this.currentVariant.productId);
       await this.getPoDetails()
       await this.getAtpCalcDetails()
       await this.prepareInvConfig()
@@ -577,7 +607,9 @@ export default defineComponent({
     },
     async getCtgryAndBrkrngJobs() {
       const systemJobEnumIds = JSON.parse(process.env.VUE_APP_CTGRY_AND_BRKRNG_JOB)
-      await this.store.dispatch('job/fetchCtgryAndBrkrngJobs', { systemJobEnumIds })
+      this.store.dispatch('job/fetchCtgryAndBrkrngJobs', { systemJobEnumIds }).then(() => {
+        this.isCtgryAndBrkrngJobsLoaded = true
+      })
     },
     async openJobActionsPopover(event: Event, job: any, jobTitle: string) {
       job.jobTitle = jobTitle
@@ -640,7 +672,7 @@ export default defineComponent({
             "entityName": "ProductCategoryDcsnRsn",
             "fieldList": ["productId", "purchaseOrderId", "fromDate"],
             "viewSize": 1,
-            "orderBy": "createdDate DESC"
+            "orderBy": "estimatedDeliveryDate ASC"
           } as any;
           resp = await OrderService.getActivePoId(payload)
           if (!hasError(resp)) {
@@ -756,15 +788,47 @@ export default defineComponent({
         if (hasError(resp[1]) && resp[1]?.data?.error !== "No record found") showToast(this.$t("Something went wrong, could not fetch", { data: 'online ATP' }))
         else this.atpCalcDetails.onlineAtp = resp[1].data?.onlineAtp
 
-        if (typeof this.atpCalcDetails.totalQOH === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
-          this.atpCalcDetails.excludedAtp = resp[0].data?.quantityOnHandTotal - resp[1].data?.onlineAtp
+        if (typeof resp[0].data?.availableToPromiseTotal === 'number' && typeof this.atpCalcDetails.onlineAtp === 'number') {
+          this.atpCalcDetails.excludedAtp = resp[0].data?.availableToPromiseTotal - resp[1].data?.onlineAtp
         }
       } catch (error) {
         showToast(translate('Something went wrong'))
         console.error(error)
       }
     },
-    async updateReserveInvConfig(value: boolean) {
+    async confirmInvConfigUpdate(header: string, message: string, successButtonLabel: string){
+      const alert = await alertController.create({
+        header: translate(header),
+        message: translate(message),
+        buttons: [{
+          text: translate('Cancel'),
+          role: 'cancel'
+        },
+        {
+          text: translate(successButtonLabel),
+          role: 'success',
+        }]
+      });
+
+      await alert.present();
+      const { role } = await alert.onDidDismiss();
+      return role === 'success';
+    },
+    async updateReserveInvConfig(event: any) {
+      // For preventing ion-toggle from toggling
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const isChecked = event.target.checked;
+      const successButtonLabel = isChecked ? 'disable' : 'enable';
+      const header = isChecked ? 'Disable Reserve Inventory?' : 'Enable Reserve Inventory?';
+      const message = isChecked ? 'Disabling inventory reservations prevents committed inventory from being reduced until it has been shipped. Orders that are pending allocation or haven’t been shipped will not be reduced from sellable inventory.' : 'Enabling inventory reservations reduces inventory counts for committed inventory before it has been shipped. Committed inventory includes orders waiting to be brokered or waiting to be shipped.';
+
+      if (!(await this.confirmInvConfigUpdate(header, message, successButtonLabel))) {
+        return;
+      }
+
+      const value = !isChecked;
       const config = this.getInventoryConfig('reserveInv', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
@@ -773,6 +837,7 @@ export default defineComponent({
       try {
         const resp = await UtilService.updateReserveInvConfig({ value, config })
         if (!hasError(resp)) {
+          event.target.checked = value;
           showToast(translate('Configuration updated'))
           await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
         } else {
@@ -783,7 +848,21 @@ export default defineComponent({
         console.error(err)
       }
     },
-    async updatePreOrdPhyInvHoldConfig(value: boolean) {
+    async updatePreOrdPhyInvHoldConfig(event: any) {
+      // For preventing ion-toggle from toggling
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const isChecked = event.target.checked;
+      const successButtonLabel = isChecked ? 'disable' : 'enable';
+      const header = isChecked ? 'Disable Hold Pre-order Physical Inventory?' : 'Enable Hold Pre-order Physical Inventory?';
+      const message = isChecked ? 'Disabling this setting will push excess physical inventory for pre-sell products online and start selling them as in-stock items.' : 'Enabling this setting will prevent pre-selling products from publishing physical inventory online until their pre-selling queue is cleared.';
+
+      if (!(await this.confirmInvConfigUpdate(header, message, successButtonLabel))) {
+        return;
+      }
+
+      const value = !isChecked;
       const config = this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId)
       // Handled initial programmatical update
       // TODO - update the usage from true/false to Y/N
@@ -804,9 +883,11 @@ export default defineComponent({
             showToast(translate('Failed to update configuration'))
             return
           }
+          event.target.checked = value;
         } else {
           const resp = await UtilService.updatePreOrdPhyInvHoldConfig({ value, config })
           if (!hasError(resp)) {
+            event.target.checked = value;
             showToast(translate('Configuration updated'))
           } else {
             showToast(translate('Failed to update configuration'))
@@ -840,7 +921,6 @@ export default defineComponent({
     async preparePoSummary() {
       this.poSummary.eligible = this.poAndAtpDetails.totalPoAtp > 0 && this.atpCalcDetails.onlineAtp === 0;
 
-
       const productCategories = this.currentVariant.productCategories;
       const hasPreOrderCategory = productCategories?.includes(this.preOrderCategoryId);
       const hasBackorderCategory = productCategories?.includes(this.backorderCategoryId);
@@ -853,7 +933,7 @@ export default defineComponent({
         } else {
           this.poSummary.header = this.$t("Added to", { categoryName });
         }
-        this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.totalPoAtp , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
+        this.poSummary.body = this.$t("When this product entered there was no sellable inventory and was available in", { categoryName, poItemATP: this.poAndAtpDetails.activePo.quantity , poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId  });
       } else if (!this.poSummary.eligible && !hasCategory) {
         const presellingJob = this.getCtgryAndBrkrngJob('JOB_REL_PREODR_CAT');
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
@@ -872,7 +952,7 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Adding to in", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          this.poSummary.header = this.$t("Adding to", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
         }
         this.poSummary.body = this.$t("This product will begin pre-selling because it is out of stock and purchase order is available.", { poId: this.poAndAtpDetails.activePo.orderExternalId ? this.poAndAtpDetails.activePo.orderExternalId : this.poAndAtpDetails.activePo.orderId });
       } else if (!this.poSummary.eligible && hasCategory) {
@@ -881,7 +961,8 @@ export default defineComponent({
         if (Object.keys(presellingJob).length === 0 || !presellingJob.runTime) {
           this.poSummary.header = this.$t("Pre-sell processing disabled");
         } else {
-          this.poSummary.header = this.$t("Removing from in", { categoryName, addingTime: this.timeTillJob(presellingJob.runTime) });
+          const headerMessage = this.isPastTime(presellingJob.runTime) ? "Removed from" : "Removing from";
+          this.poSummary.header = this.$t(headerMessage, { categoryName, removeTime: this.timeTillJob(presellingJob.runTime) });
         }
         if (this.atpCalcDetails.onlineAtp > 0) {
           this.poSummary.body = this.$t("This product will be removed from because it is in stock", { categoryName });
@@ -959,7 +1040,6 @@ export default defineComponent({
       }
     },
     async prepareShopListings() {
-
       // TODO Use ShopifyShopProduct to check if product is associated
       this.shopListings = []
       try {
@@ -987,17 +1067,18 @@ export default defineComponent({
         const shopifyConfigsAndProductIds = this.configsByStores.reduce((shopifyConfigsAndProductIds: any, config: any) => {
           const shopifyShop = shopifyConfigsAndProductIds[config.shopId] || {}
           !shopifyShop.variantProductId && (shopifyShop.variantProductId = this.getProductIdentificationId(this.currentVariant.goodIdentifications, 'ShopifyShopProduct/' + config.shopId))
+          !shopifyShop.hcVariantProductId && (shopifyShop.hcVariantProductId = this.currentVariant.productId)
           shopifyConfigsAndProductIds[config.shopId] = shopifyShop;
           configs[config.shopId] = config;
           return shopifyConfigsAndProductIds
         }, {})
 
-        await Promise.allSettled(Object.keys(configs).sort().map(async (shopId: any) => {
+        await Promise.allSettled(Object.keys(configs).map(async (shopId: any) => {
           const configAndIdData = shopifyConfigsAndProductIds[shopId];
           let listData = {
             ...configs[shopId], // adding shopify shop information to be available for showing name
           } as any
-          if (!configAndIdData.variantProductId) {
+          if (!configAndIdData.variantProductId && !configAndIdData.hcVariantProductId) {
             this.shopListings = [...this.shopListings, listData]
             // TODO Find a better way
             return Promise.resolve(this.shopListings)
@@ -1009,10 +1090,7 @@ export default defineComponent({
                 "rows": 1,
                 "sort": "_timestamp_ desc",
               } as any,
-              "filter": `docType: BULKOPERATION
-                  AND operation: 'SHOP_PREORDER_SYNC'
-                  AND data_productVariantUpdate_productVariant_id: "gid://shopify/ProductVariant/${configAndIdData.variantProductId}"
-                  AND data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER"`,
+              "filter": `docType: BULKOPERATION AND operation: 'SHOP_PREORDER_SYNC AND data.productVariantUpdate.productVariant.id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") AND data.productVariantUpdate.productVariant.metafields.edges.node.namespace: "HC_PREORDER"`,
               "query": "*:*",
             },
             "coreName": "shopifyCore"
@@ -1026,7 +1104,7 @@ export default defineComponent({
               return Promise.resolve(this.shopListings)
             }
             const listDataDoc = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
-            const metafieldValueList  = listDataDoc.data_productVariantUpdate_productVariant_metafields_edges_node_value;
+            const metafieldValueList  = listDataDoc["data.productVariantUpdate.productVariant.metafields.edges.node.value"];
             const metafieldValue = metafieldValueList.length > 0 ? JSON.parse(metafieldValueList[0]): {};
             listData = {
               ...listData,
@@ -1035,24 +1113,27 @@ export default defineComponent({
               status: metafieldValue.status,
               promiseDate: metafieldValue["promise_date"]
             }
-            const listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
+            let listingTime = ''
+            if(listData.listingTime) {
+              listingTime = DateTime.fromFormat(listData.listingTime, "MMM dd,yyyy HH:mm:ss").toLocaleString(DateTime.DATETIME_MED);
+            }
             if (!listData.containsError) {
               if (listData.status === 'inactive') {
-                // showing the job's runTime as listing time
-                listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime })
+                // showing the job's runTime as listing time, and not showing listing time if not present
+                listingTime && (listData.listingTimeAndStatus = this.$t("Delisted at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Listed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               }
             } else {
               // If it failed to update, considered the status must old
               if (listData.status === 'inactive') {
                 // showing the job's runTime as listing time
-                listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Delisting failed at", { listingTime }))
                 listData.listingStatus = 'Listed'
               } else {
-                listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime })
+                listingTime && (listData.listingTimeAndStatus = this.$t("Listing failed at", { listingTime }))
                 listData.listingStatus = 'Not listed'
               }
             }
@@ -1075,6 +1156,10 @@ export default defineComponent({
       }
       return externalId;
     },
+    isPastTime(time: number) {
+      const timeDiff: any = DateTime.fromMillis(time).diff(DateTime.local());
+      return timeDiff.values.milliseconds <= 0;
+    },
     async copyAuditMsg() {
       const { Clipboard } = Plugins;
       const auditMsg = this.poSummary.header + '\n' + this.poSummary.body
@@ -1085,15 +1170,50 @@ export default defineComponent({
         showToast(this.$t("Copied to clipboard"));
       })
     },
+    getSortedShopListings(shopListings: any) {
+      // using return based sorting instead of localeCompare
+      // as localeCompare is slower
+      return shopListings.sort((a: any, b: any) => a.name < b.name ? -1 : 1)
+    },
+    async getProductCategories(productId: string) {
+      let productCategories: Array<string> = [];
+      try {
+        let payload = {
+          "inputFields": {
+            productId
+          },
+          "entityName": "ProductCategoryMember",
+          "fieldList": ["productId", "productCategoryId", "fromDate"],
+          "viewSize": 250,
+          filterByDate: "Y"
+        } as any;
+        const resp = await ProductService.getProductCategories(payload)
+        if(!hasError(resp) && resp.data.docs?.length) {
+          productCategories = resp.data.docs.map((category: any) => category.productCategoryId)
+        } else {
+          throw resp.data;
+        }
+      } catch(err) {
+        console.error(err)
+      }
+      return productCategories;
+    }
   },
   setup() {
     const store = useStore();
     const router = useRouter();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
+    
     return {
       alertCircleOutline,
+      Actions,
       checkmarkCircleOutline,
       chevronForwardOutline,
       copyOutline,
+      getProductIdentificationValue,
+      hasPermission,
+      productIdentificationPref,
       router,
       shirtOutline,
       store
@@ -1104,7 +1224,7 @@ export default defineComponent({
 <style scoped>
 .header {
   display: grid;
-  grid-template-columns: 200px 1fr 375px;
+  grid-template-columns: 200px 1fr 400px;
   grid-gap: 16px;
   padding: 16px 16px 48px;
 }

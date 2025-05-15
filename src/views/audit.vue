@@ -5,11 +5,11 @@
         <ion-buttons slot="start">
           <ion-menu-button />
         </ion-buttons>
-        <ion-title slot="start">{{ $t("Catalog") }}</ion-title>
+        <ion-title slot="start">{{ $t("Audit") }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content>
+    <ion-content ref="contentRef" :scroll-events="true" @ionScroll="enableScrolling()">
       <div class="header">
         <div class="filters ion-padding-top">
           <ion-toolbar>
@@ -49,15 +49,15 @@
         <div class="list-item" v-for="product in products" :key="product.productId" @click="viewProduct(product)">
           <ion-item lines="none" class="tablet">
             <ion-thumbnail slot="start">
-              <Image :src="product.mainImageUrl" />
+              <DxpShopifyImg :src="product.mainImageUrl" size="small"/>
             </ion-thumbnail>
             <ion-label class="ion-text-wrap">
-              <h5>{{ product.parentProductName }}</h5>
-              <p>{{ product.sku }}</p>
+              <h5>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) ? getProductIdentificationValue(productIdentificationPref.primaryId, product) : product.productName }}</h5>
+              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
             </ion-label>
           </ion-item>
 
-          <ion-chip v-if="product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER')" class="tablet" outline>
+          <ion-chip v-if="product.prodCatalogCategoryTypeIds?.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds?.includes('PCCT_BACKORDER')" class="tablet" outline>
             <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER') ? $t('Back-order') : '-' }}</ion-label>
           </ion-chip>
 
@@ -77,7 +77,7 @@
           </ion-item> -->
         </div>
 
-        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" :disabled="!isCatalogScrollable">
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" v-show="isCatalogScrollable" ref="infiniteScrollRef">
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
         </ion-infinite-scroll>
       </div>
@@ -106,19 +106,19 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import Image from '@/components/Image.vue';
+import { getProductIdentificationValue, DxpShopifyImg, useProductIdentificationStore } from '@hotwax/dxp-components';
 import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
 import { hasError } from '@/utils';
 
 export default defineComponent({
-  name: 'Catalog',
+  name: 'Audit',
   components: {
-    Image,
+    DxpShopifyImg,
     IonButtons,
     IonChip,
     IonCard,
@@ -139,8 +139,11 @@ export default defineComponent({
   },
   data() {
     return {
-      prodCatalogCategoryTypeId: 'PCCT_PREORDR', // selected filter
+      prodCatalogCategoryTypeId: '', // 'All' is selected by default
       filters: [{
+        name: 'All',
+        value: ''
+      }, {
         name: 'Pre-order',
         value: 'PCCT_PREORDR'
       }, {
@@ -154,7 +157,8 @@ export default defineComponent({
         value: 'REMOVED'
       }*/],
       queryString: '',
-      preordBckordComputationJob: {} as any
+      preordBckordComputationJob: {} as any,
+      isScrollingEnabled: false
     }
   },
   computed: {
@@ -165,9 +169,10 @@ export default defineComponent({
       isCatalogScrollable: 'product/isCatalogScrollable'
     })
   },
-  mounted() {
-    this.getCatalogProducts()
-    this.preparePreordBckordComputationJob()
+  async ionViewWillEnter() {
+    this.isScrollingEnabled = false;
+    await this.getCatalogProducts()
+    await this.preparePreordBckordComputationJob()
   },
   methods: {
     async getCatalogProducts(vSize?: any, vIndex?: any) {
@@ -191,27 +196,43 @@ export default defineComponent({
 
       if(this.queryString.trim().length) {
         payload.json.query = this.queryString + "*"
-        payload.json.params['qf'] = "productId productName upc sku internalName brandName parentProductName"
+        payload.json.params['qf'] = "productId productName upc sku internalName brandName parentProductName search_goodIdentifications"
         payload.json.params['defType'] = "edismax"
       }
 
-      this.store.dispatch("product/findCatalogProducts", payload);
+      await this.store.dispatch("product/findCatalogProducts", payload);
+    },
+    enableScrolling() {
+      const parentElement = (this as any).$refs.contentRef.$el
+      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
+      const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
+      if(distanceFromInfinite < 0) {
+        this.isScrollingEnabled = false;
+      } else {
+        this.isScrollingEnabled = true;
+      }
     },
     async loadMoreProducts(event: any){
+      // Added this check here as if added on infinite-scroll component the Loading content does not gets displayed
+      if(!(this.isScrollingEnabled && this.isCatalogScrollable)) {
+        await event.target.complete();
+      }
       this.getCatalogProducts(
         undefined,
         Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
-      ).then(() => {
-        event.target.complete();
-      })
+      ).then(async () => {
+        await event.target.complete();
+      });
     },
     async applyFilter(value: string) {
-      if(value === this.prodCatalogCategoryTypeId) this.prodCatalogCategoryTypeId = ''
-      else this.prodCatalogCategoryTypeId = value
-      this.getCatalogProducts()
+      if(value !== this.prodCatalogCategoryTypeId) {
+        this.prodCatalogCategoryTypeId = value
+        this.getCatalogProducts()
+      }
     },
     viewProduct(product: any) {
-      this.router.push({ path: `/catalog-product-details/${product.groupId}`, query: { variantId: product.productId } });
+      this.router.push({ path: `/audit-product-details/${product.groupId}`, query: { variantId: product.productId } });
     },
     async preparePreordBckordComputationJob() {
       try {
@@ -269,8 +290,12 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
+    const productIdentificationStore = useProductIdentificationStore();
+    let productIdentificationPref = computed(() => productIdentificationStore.getProductIdentificationPref)
 
     return {
+      getProductIdentificationValue,
+      productIdentificationPref,
       router,
       store,
     };
@@ -297,6 +322,14 @@ export default defineComponent({
   border-bottom: 1px solid var(--ion-color-medium);
   cursor: pointer;
 }
+
+
+/* Added width property as after updating to ionic7 min-width is getting applied on ion-label inside ion-item
+  which results in distorted label text and thus reduced ion-item width */
+.list-item > ion-item {
+  width: 100%;
+}
+
 @media (max-width: 991px) {
   /* ==============
    3. Mobile Header

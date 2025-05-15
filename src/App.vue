@@ -24,6 +24,7 @@ import { mapGetters, useStore } from 'vuex';
 import { Settings } from 'luxon'
 import { initialise, resetConfig } from '@/adapter'
 import { useRouter } from 'vue-router';
+import { useProductIdentificationStore } from "@hotwax/dxp-components";
 
 export default defineComponent({
   name: "App",
@@ -43,7 +44,8 @@ export default defineComponent({
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl'
+      instanceUrl: 'user/getInstanceUrl',
+      currentEComStore: 'user/getCurrentEComStore'
     })
   },
   methods: {
@@ -65,7 +67,8 @@ export default defineComponent({
       }
     },
     async unauthorised() {
-      this.store.dispatch("user/logout");
+      // Mark the user as unauthorised, this will help in not making the logout api call in actions
+      this.store.dispatch("user/logout", { isUserUnauthorised: true });
       const redirectUrl = window.location.origin + '/login';
       window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`;
     }
@@ -100,6 +103,10 @@ export default defineComponent({
     if (this.userProfile && this.userProfile.userTimeZone) {
       Settings.defaultZone = this.userProfile.userTimeZone;
     }
+
+    // Get product identification from api using dxp-component
+    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
+      .catch((error) => console.error(error));
   },
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);

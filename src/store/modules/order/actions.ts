@@ -221,7 +221,7 @@ const actions: ActionTree<OrderState, RootState> = {
         if (order) {
           const item = order.doclist.docs.find((orderItem: any) => orderItem.orderItemSeqId === payload.orderItemSeqId);
           // TODO Check if we can use the value from the response
-          item.promisedDatetime = DateTime.fromFormat(payload.promisedDatetime, "yyyy-MM-dd hh:mm:ss.SSS").toFormat("YYYY-MM-DD'T'hh:mm:ss'Z'");
+          item.promisedDatetime = DateTime.fromFormat(payload.promisedDatetime, "yyyy-MM-dd hh:mm:ss.SSS").toFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
         }
         commit(types.ORDER_LIST_UPDATED, state.list );
         showToast(translate("Item promise date updated successfully"));
@@ -295,6 +295,13 @@ const actions: ActionTree<OrderState, RootState> = {
    removeFromSelectedItems  ( { commit, state } , { index }) {
     state.selectedItems.splice(index, 1);
     commit(types.ORDER_SELECTED_ITEMS_UPDATED, { selectedItems: state.selectedItems } );
+  },
+
+  /**
+   * Clear selected items list
+   */
+   clearSelectedItems  ( { commit }) {
+    commit(types.ORDER_SELECTED_ITEMS_UPDATED, { selectedItems: [] } );
   },
 
     /**

@@ -24,8 +24,7 @@
       <ion-list>
         <ion-radio-group value="rd" v-model="facilityId">
           <ion-item  v-bind:key="facility.facilityId" v-for="facility in facilities">
-            <ion-label>{{ facility.facilityName}}</ion-label>
-            <ion-radio :value="facility.facilityId" slot="start"></ion-radio>
+            <ion-radio :value="facility.facilityId" label-placement="end" justify="start">{{ facility.facilityName }}</ion-radio>
           </ion-item>
         </ion-radio-group>
       </ion-list>
@@ -49,7 +48,6 @@ import {
   IonHeader,
   IonItem,
   IonIcon,
-  IonLabel,
   IonRadioGroup,
   IonRadio,
   IonList,
@@ -148,6 +146,7 @@ export default defineComponent({
       const fileName = "ReleaseItemsToWarehouse_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
+      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
       return this.store.dispatch("order/releaseItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -235,7 +234,6 @@ export default defineComponent({
     IonHeader,
     IonIcon,
     IonItem,
-    IonLabel,
     IonList,
     IonRadioGroup,
     IonRadio,
