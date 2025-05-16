@@ -13,6 +13,8 @@ const userModule: Module<UserState, RootState> = {
       current: {},
       instanceUrl: '',
       currentEComStore: {},
+      virtualFacilities: {},
+      currentOrderParking: [],
       pwaState: {
         updateExists: false,
         registration: null,

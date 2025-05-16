@@ -69,6 +69,14 @@ const createPreOrdPhyInvHoldConfig = async (): Promise<any> => {
   })
 }
 
+const fetchFacilities = async (payload: any): Promise<any> => {
+  return await api({
+    url: "performFind",
+    method: "get",
+    params: payload
+  })
+}
+
 
 export const UtilService = {
   getServiceStatusDesc,
@@ -76,5 +84,6 @@ export const UtilService = {
   getPreOrdPhyInvHoldConfig,
   updateReserveInvConfig,
   updatePreOrdPhyInvHoldConfig,
-  createPreOrdPhyInvHoldConfig
+  createPreOrdPhyInvHoldConfig,
+  fetchFacilities
 }

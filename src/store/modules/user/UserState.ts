@@ -5,4 +5,6 @@ export default interface UserState {
     pwaState: any;
     instanceUrl: string;
     currentEComStore: object;
+    virtualFacilities: object | null;
+    currentOrderParking: Array<string>;
 }

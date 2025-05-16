@@ -10,6 +10,8 @@ const mutations: MutationTree <UserState> = {
       state.token = ''
       state.current = {}
       state.currentEComStore = {}
+      state.currentOrderParking = []
+      state.virtualFacilities = {}
       state.permissions = []
     },
     [types.USER_INFO_UPDATED] (state, payload) {
@@ -23,6 +25,12 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
         state.currentEComStore = payload;
+    },
+    [types.USER_VIRTUAL_FACILITIES_UPDATED] (state, payload) {
+        state.virtualFacilities = payload;
+    },
+    [types.USER_CURRENT_PARKING_UPDATED] (state, payload) {
+        state.currentOrderParking = payload;
     },
     [types.USER_PWA_STATE_UPDATED](state, payload) {
         state.pwaState.registration = payload.registration;

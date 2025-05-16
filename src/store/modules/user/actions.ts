@@ -6,10 +6,12 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { Settings } from 'luxon'
-import { updateInstanceUrl, updateToken, resetConfig, logout } from '@/adapter'
+import { updateInstanceUrl, updateToken, resetConfig, logout, getUserPreference } from '@/adapter'
 import { useAuthStore, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { UtilService } from '@/services/UtilService'
 import { getServerPermissionsFromRules, prepareAppPermissions, resetPermissions, setPermissions } from '@/authorization'
 import emitter from '@/event-bus'
+import store from '@/store'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -81,6 +83,8 @@ const actions: ActionTree<UserState, RootState> = {
           commit(types.USER_TOKEN_CHANGED, { newToken: token });
           commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
           updateToken(token);
+
+          await dispatch("fetchVirtualFacilities", { token })
 
         // Get product identification from api using dxp-component
         await useProductIdentificationStore().getIdentificationPref(preferredStoreId)
@@ -194,6 +198,52 @@ const actions: ActionTree<UserState, RootState> = {
       updateInstanceUrl(payload)
     },
 
+  async fetchVirtualFacilities({ commit }, params) {
+    const payload = {
+      inputFields: {
+        parentTypeId: "VIRTUAL_FACILITY"
+      },
+      viewSize: 200, // expecting that there will be no more than 200 virtual facilities
+      fieldList: ["facilityId", "facilityName"],
+      entityName: "FacilityAndType"
+    }
+
+    try {
+      const resp = await UtilService.fetchFacilities(payload)
+
+      if(resp.status == 200 && !hasError(resp) && resp.data?.docs?.length) {
+        const facilities = resp.data.docs.reduce((facilities: any, facility: any) => {
+          facilities[facility.facilityId] = facility.facilityName
+          return facilities
+        }, {})
+
+        // Default parking from where the orders will be fetched
+        let currentOrderParking = ["PRE_ORDER_PARKING", "BACKORDER_PARKING"] as string[]
+
+        const userPreferredParking =  await getUserPreference(params.token, store.getters["user/getBaseUrl"], "SELECTED_ORDER_PARKING");
+
+        // if we already have a preference for order parking then updating it
+        if(userPreferredParking?.length) {
+          currentOrderParking = Object.keys(facilities).filter((facilityId: any) => userPreferredParking.includes(facilityId))
+        }
+
+        commit(types.USER_CURRENT_PARKING_UPDATED, currentOrderParking);
+        commit(types.USER_VIRTUAL_FACILITIES_UPDATED, facilities)
+      } else {
+        throw resp.data
+      }
+    } catch(err) {
+      console.error('Failed to fetch facilities for selection', err)
+    }
+  },
+
+  async setOrderParking({ commit }, payload) {
+    commit(types.USER_CURRENT_PARKING_UPDATED, payload);
+    await UserService.setUserPreference({
+      "userPrefTypeId": "SELECTED_ORDER_PARKING",
+      "userPrefValue": JSON.stringify(payload)
+    });
+  },
     updatePwaState({ commit }, payload) {
       commit(types.USER_PWA_STATE_UPDATED, payload);
     }

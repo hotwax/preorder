@@ -66,6 +66,24 @@
       <section>
         <DxpProductIdentifier />
         <DxpTimeZoneSwitcher @timeZoneUpdated="timeZoneUpdated" />
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ $t("Order parking") }}
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            {{ $t("Select which order parkings to view and manage orders for. When no parking is selected, orders are fetched for Preorder and Backorder parking.") }}
+          </ion-card-content>
+
+          <ion-item lines="none">
+            <ion-select :label="$t('Select parking')" multiple interface="popover" :value="currentOrderParking" @ionChange="updateOrderParking($event)" :placeholder="$t('Select parking')">
+              <ion-select-option v-for="(facility, id) in virtualFacilities" :key="id" :value="id" >{{ facility }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card>
       </section>
     </ion-content>
   </ion-page>
@@ -134,6 +152,8 @@ export default defineComponent({
     ...mapGetters({
       userProfile: 'user/getUserProfile',
       currentEComStore: 'user/getCurrentEComStore',
+      currentOrderParking: 'user/getCurrentOrderParking',
+      virtualFacilities: 'user/getVirtualFacilities'
     })
   },
   methods: {
@@ -157,6 +177,11 @@ export default defineComponent({
         this.store.dispatch('user/setEcomStore', {
           'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event.detail.value)
         })
+      }
+    },
+    updateOrderParking(event: any) {
+      if(event.detail.value && this.userProfile && this.currentOrderParking !== event.detail.value) {
+        this.store.dispatch("user/setOrderParking", event.detail.value)
       }
     }
   }

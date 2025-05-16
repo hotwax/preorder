@@ -79,7 +79,8 @@ export default defineComponent({
     ...mapGetters({
       jobTotal: 'job/getTotal',
       getSelectedItemsToRelease: 'order/getSelectedItemsToRelease',
-      currentEComStore: 'user/getCurrentEComStore'
+      currentEComStore: 'user/getCurrentEComStore',
+      currentOrderParking: 'user/getCurrentOrderParking'
     }),
   },
   methods: {
@@ -182,6 +183,13 @@ export default defineComponent({
         if (this.currentEComStore) {
           payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
         }
+
+        if(this.currentOrderParking.length) {
+          payload.filters.push(`facilityId: (${this.currentOrderParking.join(' OR ')})`)
+        } else {
+          payload.filters.push(`facilityId: (PRE_ORDER_PARKING OR BACKORDER_PARKING)`)
+        }
+
         variantRequests.push(ProductService.fetchCurrentList(payload));
       });
       Promise.all(variantRequests).then(async([...responses]) => {
