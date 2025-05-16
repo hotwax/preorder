@@ -223,7 +223,7 @@ const actions: ActionTree<UserState, RootState> = {
         const userPreferredParking =  await getUserPreference(params.token, store.getters["user/getBaseUrl"], "SELECTED_ORDER_PARKING");
 
         // if we already have a preference for order parking then updating it
-        if(userPreferredParking.length) {
+        if(userPreferredParking?.length) {
           currentOrderParking = Object.keys(facilities).filter((facilityId: any) => userPreferredParking.includes(facilityId))
         }
 
