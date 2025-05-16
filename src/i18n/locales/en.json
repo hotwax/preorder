@@ -199,7 +199,7 @@
     "Select a new promise date for these orders. This new date will be used for allocating inventory and fulfilling these orders.": "Select a new promise date for these orders. This new date will be used for allocating inventory and fulfilling these orders.",
     "Selected TimeZone": "Selected TimeZone",
     "Select time zone": "Select time zone",
-    "Select which order parkings to view and manage orders for.": "Select which order parkings to view and manage orders for.",
+    "Select which order parkings to view and manage orders for. When no parking is selected, orders are fetched for Preorder and Backorder parking.": "Select which order parkings to view and manage orders for. When no parking is selected, orders are fetched for Preorder and Backorder parking.",
     "Service has been scheduled": "Service has been scheduled",
     "Settings": "Settings",
     "Ships from date": "Ships from date",

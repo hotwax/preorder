@@ -70,17 +70,16 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ $t('Order parking') }}
+              {{ $t("Order parking") }}
             </ion-card-title>
           </ion-card-header>
 
           <ion-card-content>
-            {{ $t('Select which order parkings to view and manage orders for.') }}
+            {{ $t("Select which order parkings to view and manage orders for. When no parking is selected, orders are fetched for Preorder and Backorder parking.") }}
           </ion-card-content>
 
           <ion-item lines="none">
-            <ion-label>{{ $t("Select parking") }}</ion-label>
-            <ion-select multiple interface="popover" :value="currentOrderParking" @ionChange="updateOrderParking($event)">
+            <ion-select :label="$t('Select parking')" multiple interface="popover" :value="currentOrderParking" @ionChange="updateOrderParking($event)" :placeholder="$t('Select parking')">
               <ion-select-option v-for="(facility, id) in virtualFacilities" :key="id" :value="id" >{{ facility }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -182,7 +181,7 @@ export default defineComponent({
     },
     updateOrderParking(event: any) {
       if(event.detail.value && this.userProfile && this.currentOrderParking !== event.detail.value) {
-        this.store.dispatch('user/setOrderParking', event.detail.value)
+        this.store.dispatch("user/setOrderParking", event.detail.value)
       }
     }
   }

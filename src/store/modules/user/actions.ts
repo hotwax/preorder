@@ -6,11 +6,12 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { Settings } from 'luxon'
-import { updateInstanceUrl, updateToken, resetConfig, logout } from '@/adapter'
+import { updateInstanceUrl, updateToken, resetConfig, logout, getUserPreference } from '@/adapter'
 import { useAuthStore, useProductIdentificationStore } from '@hotwax/dxp-components';
 import { UtilService } from '@/services/UtilService'
 import { getServerPermissionsFromRules, prepareAppPermissions, resetPermissions, setPermissions } from '@/authorization'
 import emitter from '@/event-bus'
+import store from '@/store'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -83,7 +84,7 @@ const actions: ActionTree<UserState, RootState> = {
           commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
           updateToken(token);
 
-          await dispatch("fetchVirtualFacilities")
+          await dispatch("fetchVirtualFacilities", { token })
 
         // Get product identification from api using dxp-component
         await useProductIdentificationStore().getIdentificationPref(preferredStoreId)
@@ -197,12 +198,12 @@ const actions: ActionTree<UserState, RootState> = {
       updateInstanceUrl(payload)
     },
 
-  async fetchVirtualFacilities({ commit, dispatch }) {
+  async fetchVirtualFacilities({ commit }, params) {
     const payload = {
       inputFields: {
         parentTypeId: "VIRTUAL_FACILITY"
       },
-      viewSize: 20, // expecting that there will be no more than 20 virtual facilities
+      viewSize: 200, // expecting that there will be no more than 200 virtual facilities
       fieldList: ["facilityId", "facilityName"],
       entityName: "FacilityAndType"
     }
@@ -216,15 +217,14 @@ const actions: ActionTree<UserState, RootState> = {
           return facilities
         }, {})
 
-        let currentOrderParking = [Object.keys(facilities)[0]] as string[]
+        // Default parking from where the orders will be fetched
+        let currentOrderParking = ["PRE_ORDER_PARKING", "BACKORDER_PARKING"] as string[]
 
-        const userPrefResponse =  await UserService.getUserPreference({
-          'userPrefTypeId': 'SELECTED_ORDER_PARKING'
-        });
+        const userPreferredParking =  await getUserPreference(params.token, store.getters["user/getBaseUrl"], "SELECTED_ORDER_PARKING");
 
         // if we already have a preference for order parking then updating it
-        if(userPrefResponse.data.userPrefValue) {
-          currentOrderParking = Object.keys(facilities).filter((facilityId: any) => userPrefResponse.data.userPrefValue.includes(facilityId))
+        if(userPreferredParking.length) {
+          currentOrderParking = Object.keys(facilities).filter((facilityId: any) => userPreferredParking.includes(facilityId))
         }
 
         commit(types.USER_CURRENT_PARKING_UPDATED, currentOrderParking);
@@ -240,8 +240,8 @@ const actions: ActionTree<UserState, RootState> = {
   async setOrderParking({ commit }, payload) {
     commit(types.USER_CURRENT_PARKING_UPDATED, payload);
     await UserService.setUserPreference({
-      'userPrefTypeId': 'SELECTED_ORDER_PARKING',
-      'userPrefValue': JSON.stringify(payload)
+      "userPrefTypeId": "SELECTED_ORDER_PARKING",
+      "userPrefValue": JSON.stringify(payload)
     });
   },
     updatePwaState({ commit }, payload) {
