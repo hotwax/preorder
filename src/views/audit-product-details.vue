@@ -341,7 +341,7 @@
                 <h5>{{ $t("No listing data") }}</h5>
               </ion-label>
               <ion-label v-else color="medium" slot="end">
-                <h5>{{ $t("Not linked") }}</h5>
+                <h5>{{ $t("Product not sold on this shop") }}</h5>
               </ion-label>
             </ion-item>
           </div>
