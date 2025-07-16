@@ -1,19 +1,6 @@
 {
   "hosting": [
     {
-      "target": "dev",
-      "public": "dist",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ],
-      "rewrites": [ {
-        "source": "**",
-        "destination": "/index.html"
-      } ]
-    },
-    {
       "target": "prod",
       "public": "dist",
       "ignore": [
@@ -24,7 +11,64 @@
       "rewrites": [ {
         "source": "**",
         "destination": "/index.html"
-      } ]
+      } ],
+      "headers": [ {
+        "source": "**",
+        "headers": [ {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "NoSniff"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
+        },
+        {
+          "key": "strict-transport-security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },{
+          "key": "Permissions-Policy",
+          "value": "camera=self"
+        } ]
+      }]
+    },
+    {
+      "target": "dev",
+      "public": "dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [ {
+        "source": "**",
+        "destination": "/index.html"
+      } ],
+      "headers": [ {
+        "source": "**",
+        "headers": [ {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "NoSniff"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
+        },
+        {
+          "key": "strict-transport-security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },{
+          "key": "Permissions-Policy",
+          "value": "camera=self"
+        } ]
+      }]
     },
     {
       "target": "uat",
@@ -37,7 +81,29 @@
       "rewrites": [ {
         "source": "**",
         "destination": "/index.html"
-      } ]
+      } ],
+      "headers": [ {
+        "source": "**",
+        "headers": [ {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "NoSniff"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
+        },
+        {
+          "key": "strict-transport-security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },{
+          "key": "Permissions-Policy",
+          "value": "camera=self"
+        } ]
+      }]
     }
   ]
 }
