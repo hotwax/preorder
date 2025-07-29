@@ -1088,7 +1088,7 @@ export default defineComponent({
                 "rows": 1,
                 "sort": "_timestamp_ desc",
               } as any,
-              "filter": `docType: BULKOPERATION AND operation: SHOP_PREORDER_SYNC AND data.productVariantsBulkUpdate.productVariants.id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") AND data.productVariantsBulkUpdate.productVariants.metafields.edges.node.namespace: "HC_PREORDER"`,
+              "filter": `docType: BULKOPERATION AND operation: SHOP_PREORDER_SYNC AND (data.productVariantsBulkUpdate.productVariants.id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") OR data_productVariantUpdate_productVariant_id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}")) AND (data.productVariantsBulkUpdate.productVariants.metafields.edges.node.namespace: "HC_PREORDER" OR data_productVariantUpdate_productVariant_metafields_edges_node_namespace: "HC_PREORDER")`,
               "query": "*:*",
             },
             "coreName": "shopifyCore"
