@@ -1088,7 +1088,7 @@ export default defineComponent({
                 "rows": 1,
                 "sort": "_timestamp_ desc",
               } as any,
-              "filter": `docType: BULKOPERATION AND operation: 'SHOP_PREORDER_SYNC AND data.productVariantUpdate.productVariant.id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") AND data.productVariantUpdate.productVariant.metafields.edges.node.namespace: "HC_PREORDER"`,
+              "filter": `docType: BULKOPERATION AND operation: SHOP_PREORDER_SYNC AND data.productVariantsBulkUpdate.productVariants.id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") AND data.productVariantsBulkUpdate.productVariants.metafields.edges.node.namespace: "HC_PREORDER"`,
               "query": "*:*",
             },
             "coreName": "shopifyCore"
@@ -1102,7 +1102,7 @@ export default defineComponent({
               return Promise.resolve(this.shopListings)
             }
             const listDataDoc = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
-            const metafieldValueList  = listDataDoc["data.productVariantUpdate.productVariant.metafields.edges.node.value"];
+            const metafieldValueList = listDataDoc["data.productVariantsBulkUpdate.productVariants.metafields.edges.node.value"] ?? listDataDoc["data_productVariantUpdate_productVariant_metafields_edges_node_value"];
             const metafieldValue = metafieldValueList.length > 0 ? JSON.parse(metafieldValueList[0]): {};
             listData = {
               ...listData,
