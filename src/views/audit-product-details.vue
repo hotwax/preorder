@@ -1015,7 +1015,7 @@ export default defineComponent({
       }
       // Get the first record with promise date
       const shopListingWithPromiseDate = shopListings.find((shopifyListing: any) => shopifyListing.status === 'active' && shopifyListing.promiseDate)
-      shopListingWithPromiseDate && (this.poSummary.promiseDate = DateTime.fromFormat(shopListingWithPromiseDate.promiseDate, "MM/dd/yyyy").toLocaleString(DateTime.DATE_MED))
+      shopListingWithPromiseDate && shopListingWithPromiseDate.promiseDate !== "_NA_" && (this.poSummary.promiseDate = DateTime.fromFormat(shopListingWithPromiseDate.promiseDate, "MM/dd/yyyy").toLocaleString(DateTime.DATE_MED))
     },
     async getShopifyConfigsByStore() {
       try {
