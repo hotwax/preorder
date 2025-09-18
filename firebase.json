@@ -1,37 +1,6 @@
 {
   "hosting": [
     {
-      "target": "dev",
-      "public": "dist",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ],
-      "rewrites": [ {
-        "source": "**",
-        "destination": "/index.html"
-      } ],
-      "headers": [ {
-        "source": "**",
-        "headers": [ {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
-        },
-        {
-          "key": "strict-transport-security",
-          "value": "max-age=31536000; includeSubDomains"
-        },{
-          "key": "Permissions-Policy",
-          "value": "camera=self"
-        } ]
-      }]
-    },
-    {
       "target": "prod",
       "public": "dist",
       "ignore": [
@@ -50,12 +19,51 @@
           "value": "SAMEORIGIN"
         },
         {
+          "key": "X-Content-Type-Options",
+          "value": "NoSniff"
+        },
+        {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
+          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
         },
         {
           "key": "strict-transport-security",
-          "value": "max-age=31536000; includeSubDomains"
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },{
+          "key": "Permissions-Policy",
+          "value": "camera=self"
+        } ]
+      }]
+    },
+    {
+      "target": "dev",
+      "public": "dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [ {
+        "source": "**",
+        "destination": "/index.html"
+      } ],
+      "headers": [ {
+        "source": "**",
+        "headers": [ {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "NoSniff"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
+        },
+        {
+          "key": "strict-transport-security",
+          "value": "max-age=31536000; includeSubDomains; preload"
         },{
           "key": "Permissions-Policy",
           "value": "camera=self"
@@ -81,12 +89,16 @@
           "value": "SAMEORIGIN"
         },
         {
+          "key": "X-Content-Type-Options",
+          "value": "NoSniff"
+        },
+        {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *"
+          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
         },
         {
           "key": "strict-transport-security",
-          "value": "max-age=31536000; includeSubDomains"
+          "value": "max-age=31536000; includeSubDomains; preload"
         },{
           "key": "Permissions-Policy",
           "value": "camera=self"

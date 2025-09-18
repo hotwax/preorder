@@ -1102,7 +1102,7 @@ export default defineComponent({
               return Promise.resolve(this.shopListings)
             }
             const listDataDoc = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
-            const metafieldValueList  = listDataDoc["data.productVariantsBulkUpdate.productVariants.metafields.edges.node.value"];
+            const metafieldValueList = listDataDoc["data.productVariantsBulkUpdate.productVariants.metafields.edges.node.value"];
             const metafieldValue = metafieldValueList.length > 0 ? JSON.parse(metafieldValueList[0]): {};
             listData = {
               ...listData,
