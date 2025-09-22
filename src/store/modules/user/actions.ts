@@ -56,7 +56,7 @@ const actions: ActionTree<UserState, RootState> = {
           // Getting user profile & if user is not associated with any product store, then showing this error
           const userProfile = await UserService.getUserProfile(token);
           try {
-            userProfile.stores = await UserService.getEComStores(token, userProfile.partyId, isAdminUser);
+            userProfile.stores = await UserService.getProductStores(token, userProfile.partyId, isAdminUser);
           } catch (error) {
             const reason = "Unable to login. User is not associated with any product store.";
             console.error(reason, error);
@@ -78,7 +78,7 @@ const actions: ActionTree<UserState, RootState> = {
           }
 
           // TODO user single mutation
-          commit(types.USER_CURRENT_ECOM_STORE_UPDATED,  preferredStore);
+          commit(types.USER_CURRENT_PRODUCT_STORE_UPDATED,  preferredStore);
           commit(types.USER_INFO_UPDATED, userProfile);
           commit(types.USER_TOKEN_CHANGED, { newToken: token });
           commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
@@ -96,7 +96,7 @@ const actions: ActionTree<UserState, RootState> = {
         }
 
         // TODO user single mutation
-        commit(types.USER_CURRENT_ECOM_STORE_UPDATED, preferredStore);
+        commit(types.USER_CURRENT_PRODUCT_STORE_UPDATED, preferredStore);
         commit(types.USER_INFO_UPDATED, userProfile);
         commit(types.USER_TOKEN_CHANGED, { newToken: token });
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
@@ -175,18 +175,18 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Set user's selected Ecom store
    */
-    async setEcomStore({ commit }, payload) {
-      commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
+    async setProductStore({ commit }, payload) {
+      commit(types.USER_CURRENT_PRODUCT_STORE_UPDATED, payload.productStore);
       // Reset all the current queries
       this.dispatch("product/resetProductList")
       this.dispatch("order/resetOrderQuery")
       await UserService.setUserPreference({
         'userPrefTypeId': 'SELECTED_BRAND',
-        'userPrefValue': payload.eComStore.productStoreId
+        'userPrefValue': payload.productStore.productStoreId
       });
     
       // Get product identification from api using dxp-component
-      await useProductIdentificationStore().getIdentificationPref(payload.eComStore.productStoreId)
+      await useProductIdentificationStore().getIdentificationPref(payload.productStore.productStoreId)
         .catch((error) => console.error(error));
     },
 

@@ -29,7 +29,7 @@ const actions: ActionTree<StockState, RootState> = {
       "filters": {
         "productId": productIds,
         "productId_op": "in",
-        "productStoreId": this.state.user.currentEComStore.productStoreId
+        "productStoreId": this.state.user.currentProductStore.productStoreId
       },
       "fieldsToSelect": ["productId","atp"], 
     });

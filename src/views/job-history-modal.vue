@@ -74,7 +74,7 @@ export default defineComponent({
   props: ['job'],
   computed: {
     ...mapGetters({
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       getStatusDesc: 'util/getStatusDesc'
     })
   },
@@ -94,7 +94,7 @@ export default defineComponent({
       try {
         resp = await JobService.fetchJobInformation({
           "inputFields": {
-            "productStoreId": this.currentEComStore.productStoreId,
+            "productStoreId": this.currentProductStore.productStoreId,
             "statusId": ["SERVICE_CANCELLED", "SERVICE_CRASHED", "SERVICE_FAILED", "SERVICE_FINISHED"],
             "statusId_op": "in",
             "systemJobEnumId": this.job.systemJobEnumId

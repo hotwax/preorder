@@ -453,7 +453,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       product: "product/getCurrentCatalogProduct",
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
       getInventoryConfig: "util/getInventoryConfig"
     })
@@ -461,7 +461,7 @@ export default defineComponent({
   async ionViewWillEnter() {
     (this as any).productId = this.$route.params.productId;
     (this as any).variantId = this.$route.query.variantId;
-    const productStoreId = this.currentEComStore.productStoreId;
+    const productStoreId = this.currentProductStore.productStoreId;
     // TODO Handle it better
     if (!productStoreId) {
       showToast(translate("No selected store found."))
@@ -481,7 +481,7 @@ export default defineComponent({
   },
   methods: {
     async getVariantDetails() {
-      await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId, productStoreId: this.currentEComStore.productStoreId })
+      await this.store.dispatch('product/setCurrentCatalogProduct', { productId:  this.productId, productStoreId: this.currentProductStore.productStoreId })
       if (this.product.variants) {
         this.getVariant()
         this.getFeatures()
@@ -734,7 +734,7 @@ export default defineComponent({
               "params": {
                 "rows": 0,
               },
-              "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productId: ${variantId} AND productStoreId: ${this.currentEComStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId}`,
+              "filter": `docType: ORDER AND orderTypeId: SALES_ORDER AND productId: ${variantId} AND productStoreId: ${this.currentProductStore.productStoreId} AND correspondingPoId: ${this.poAndAtpDetails.activePoId}`,
               "query": "*:*",
             }
           }
@@ -775,7 +775,7 @@ export default defineComponent({
 
         payload = { 
           ...payload,
-          "productStoreId": this.currentEComStore.productStoreId
+          "productStoreId": this.currentProductStore.productStoreId
         }
         requests.push(StockService.getProductOnlineAtp(payload).catch((error: any) => error))
         
@@ -829,7 +829,7 @@ export default defineComponent({
       }
 
       const value = !isChecked;
-      const config = this.getInventoryConfig('reserveInv', this.currentEComStore.productStoreId)
+      const config = this.getInventoryConfig('reserveInv', this.currentProductStore.productStoreId)
       // Handled initial programmatical update
       if ((config.reserveInventory === "Y" && value) || (config.reserveInventory === "N" && !value)) {
         return
@@ -839,7 +839,7 @@ export default defineComponent({
         if (!hasError(resp)) {
           event.target.checked = value;
           showToast(translate('Configuration updated'))
-          await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
+          await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentProductStore.productStoreId, forceUpdate: true })
         } else {
           showToast(translate('Failed to update configuration'))
         }
@@ -863,7 +863,7 @@ export default defineComponent({
       }
 
       const value = !isChecked;
-      const config = this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId)
+      const config = this.getInventoryConfig('preOrdPhyInvHold', this.currentProductStore.productStoreId)
       // Handled initial programmatical update
       // TODO - update the usage from true/false to Y/N
       if ((config.settingValue === value) || (typeof value === 'boolean' && (config.settingValue == 'true') === value)) {
@@ -874,10 +874,10 @@ export default defineComponent({
         // fetching to handle case when config wasn't initially found on the serve
         // but has been created meanwhile by some other user
         // TODO Find a better way
-        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentProductStore.productStoreId, forceUpdate: true })
 
         // if fromDate is not present, it has not been created on the server
-        if (!this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId).fromDate) {
+        if (!this.getInventoryConfig('preOrdPhyInvHold', this.currentProductStore.productStoreId).fromDate) {
           const resp = await UtilService.createPreOrdPhyInvHoldConfig()
           if (hasError(resp)) {
             showToast(translate('Failed to update configuration'))
@@ -894,7 +894,7 @@ export default defineComponent({
           }
         }
         // TODO update value directly instead of get again
-        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: true })
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentProductStore.productStoreId, forceUpdate: true })
       } catch (err) {
         showToast(translate('Failed to update configuration'))
         console.error(err)
@@ -903,14 +903,14 @@ export default defineComponent({
     async prepareInvConfig() {
       this.inventoryConfig = {}
       try {
-        await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: false })
-        this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv', this.currentEComStore.productStoreId)?.reserveInventory
+        await this.store.dispatch('util/getReserveInvConfig', { productStoreId: this.currentProductStore.productStoreId, forceUpdate: false })
+        this.inventoryConfig.reserveInvStatus = this.getInventoryConfig('reserveInv', this.currentProductStore.productStoreId)?.reserveInventory
       } catch(error) {
         console.error(error);
       }
       try {
-        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentEComStore.productStoreId, forceUpdate: false })
-        this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold', this.currentEComStore.productStoreId)?.settingValue
+        await this.store.dispatch('util/getPreOrdPhyInvHoldConfig', { productStoreId: this.currentProductStore.productStoreId, forceUpdate: false })
+        this.inventoryConfig.preOrdPhyInvHoldStatus = this.getInventoryConfig('preOrdPhyInvHold', this.currentProductStore.productStoreId)?.settingValue
       } catch(error) {
         console.error(error);
       }
@@ -1021,7 +1021,7 @@ export default defineComponent({
       try {
         let payload = {
           "inputFields": {
-            "productStoreId": this.currentEComStore.productStoreId
+            "productStoreId": this.currentProductStore.productStoreId
           },
           "orderBy": "name ASC",
           "entityName": "ShopifyShopAndConfig",

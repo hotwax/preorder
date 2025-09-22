@@ -284,7 +284,7 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       currentOrderParking: 'user/getCurrentOrderParking'
     })
   },
@@ -333,8 +333,8 @@ export default defineComponent({
       if (!this.hasPromisedDate) {
         payload.filters.push("-promisedDatetime: *");
       }
-      if (this.currentEComStore) {
-        payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
+      if (this.currentProductStore) {
+        payload.filters.push('productStoreId: ' + this.currentProductStore.productStoreId);
       }
 
       if(this.currentOrderParking.length) {
@@ -455,7 +455,7 @@ export default defineComponent({
       const fileName = "ReleaseItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
-      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
+      formData.append("param_productStoreId", this.currentProductStore.productStoreId);
 
       return this.store.dispatch("order/releaseItems", {
           headers: {
@@ -485,7 +485,7 @@ export default defineComponent({
       const fileName = "CancelItems_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_CAN_ORD_ITM_JSON");
-      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
+      formData.append("param_productStoreId", this.currentProductStore.productStoreId);
       return this.store.dispatch("order/cancelItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -527,8 +527,8 @@ export default defineComponent({
         if (!this.hasPromisedDate) {
           payload.filters.push("-promisedDatetime: *");
         }
-        if (this.currentEComStore) {
-          payload.filters.push('productStoreId: ' +this.currentEComStore.productStoreId);
+        if (this.currentProductStore) {
+          payload.filters.push('productStoreId: ' +this.currentProductStore.productStoreId);
         }
 
         if(this.currentOrderParking.length) {

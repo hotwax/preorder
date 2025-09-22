@@ -21,7 +21,7 @@ const setUserPreference = async (payload: any): Promise<any> => {
   });
 }
 
-const getEComStores = async (token: any, partyId: any, isAdminUser = false): Promise<any> => {
+const getProductStores = async (token: any, partyId: any, isAdminUser = false): Promise<any> => {
   try {
     const params = {
       "inputFields": {
@@ -194,7 +194,7 @@ const getUserProfile = async (token: any): Promise<any> => {
 }
 
 export const UserService = {
-  getEComStores,
+  getProductStores,
   getPreferredStore,
   getUserProfile,
   getUserPermissions,

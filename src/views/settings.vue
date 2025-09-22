@@ -53,7 +53,7 @@
             {{ $t('A store represents a company or a unique catalog of products. If your OMS is connected to multiple eCommerce stores sellling different collections of products, you may have multiple Product Stores set up in HotWax Commerce.') }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-select :label="$t('Select store')" interface="popover" :value="currentEComStore.productStoreId" @ionChange="updateBrand($event)">
+            <ion-select :label="$t('Select store')" interface="popover" :value="currentProductStore.productStoreId" @ionChange="updateBrand($event)">
               <ion-select-option v-for="store in (userProfile ? userProfile.stores : [])" :key="store.productStoreId" :value="store.productStoreId" >{{ store.storeName }}</ion-select-option>
             </ion-select>
           </ion-item>
@@ -151,7 +151,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       currentOrderParking: 'user/getCurrentOrderParking',
       virtualFacilities: 'user/getVirtualFacilities'
     })
@@ -173,9 +173,9 @@ export default defineComponent({
       await this.store.dispatch("user/setUserTimeZone", tzId)
     },
     updateBrand(event: any) {
-      if(event.detail.value && this.userProfile && this.currentEComStore?.productStoreId !== event.detail.value) {
-        this.store.dispatch('user/setEcomStore', {
-          'eComStore': this.userProfile.stores.find((store: any) => store.productStoreId == event.detail.value)
+      if(event.detail.value && this.userProfile && this.currentProductStore?.productStoreId !== event.detail.value) {
+        this.store.dispatch('user/setProductStore', {
+          'productStore': this.userProfile.stores.find((store: any) => store.productStoreId == event.detail.value)
         })
       }
     },

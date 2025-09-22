@@ -112,7 +112,7 @@ export default defineComponent({
       getProductStock: 'stock/getProductStock',
       getProduct: 'product/getProduct',
       isJobPending: 'job/isJobPending',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       currentOrderParking: 'user/getCurrentOrderParking'
     })
   },
@@ -155,8 +155,8 @@ export default defineComponent({
         groupLimit: 0,
         filters: JSON.parse(process.env.VUE_APP_ORDER_FILTERS)
       }
-      if (this.currentEComStore) {
-        payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
+      if (this.currentProductStore) {
+        payload.filters.push('productStoreId: ' + this.currentProductStore.productStoreId);
       }
 
       if(this.currentOrderParking.length) {
