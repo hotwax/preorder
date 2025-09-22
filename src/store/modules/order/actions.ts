@@ -44,8 +44,8 @@ const actions: ActionTree<OrderState, RootState> = {
     if (!query.hasPromisedDate) {
       payload.filters.push("-promisedDatetime: *");
     }
-    if (rootState.user.currentEComStore) {
-      payload.filters.push('productStoreId: ' + rootState.user.currentEComStore.productStoreId);
+    if (rootState.user.currentProductStore) {
+      payload.filters.push('productStoreId: ' + rootState.user.currentProductStore.productStoreId);
     }
 
     if(rootState.user.currentOrderParking.length) {
@@ -68,7 +68,7 @@ const actions: ActionTree<OrderState, RootState> = {
     // TODO  
     // Need a permanent fix through login action
     // Will be done as per the GitHub app changes once done
-    if (!rootState.user.currentEComStore?.productStoreId) {
+    if (!rootState.user.currentProductStore?.productStoreId) {
       return;
     }
 

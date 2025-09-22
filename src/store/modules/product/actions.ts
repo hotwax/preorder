@@ -72,7 +72,7 @@ const actions: ActionTree<ProductState, RootState> = {
     // TODO  
     // Need a permanent fix through login action
     // Will be done as per the GitHub app changes once done
-    if (!rootState.user.currentEComStore?.productStoreId) {
+    if (!rootState.user.currentProductStore?.productStoreId) {
       return;
     }
     // Show loader only when new query and not the infinite scroll
@@ -134,7 +134,7 @@ const actions: ActionTree<ProductState, RootState> = {
     // TODO  
     // Need a permanent fix through login action
     // Will be done as per the GitHub app changes once done
-    if (!rootState.user.currentEComStore?.productStoreId) {
+    if (!rootState.user.currentProductStore?.productStoreId) {
       return;
     }
     const current = {

@@ -79,7 +79,7 @@ export default defineComponent({
     ...mapGetters({
       jobTotal: 'job/getTotal',
       getSelectedItemsToRelease: 'order/getSelectedItemsToRelease',
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       currentOrderParking: 'user/getCurrentOrderParking'
     }),
   },
@@ -146,7 +146,7 @@ export default defineComponent({
       const fileName = "ReleaseItemsToWarehouse_" + Date.now() +".json";
       formData.append("uploadedFile", blob, fileName);
       formData.append("configId", "MDM_REL_ORD_ITM_JSON");
-      formData.append("param_productStoreId", this.currentEComStore.productStoreId);
+      formData.append("param_productStoreId", this.currentProductStore.productStoreId);
       return this.store.dispatch("order/releaseItems", {
           headers: {
               'Content-Type': 'multipart/form-data;'
@@ -180,8 +180,8 @@ export default defineComponent({
           filters: [ "productId: " + productId , ...JSON.parse(process.env.VUE_APP_ORDER_FILTERS) ] as any,
           sortBy: "orderDate ASC"
         }
-        if (this.currentEComStore) {
-          payload.filters.push('productStoreId: ' + this.currentEComStore.productStoreId);
+        if (this.currentProductStore) {
+          payload.filters.push('productStoreId: ' + this.currentProductStore.productStoreId);
         }
 
         if(this.currentOrderParking.length) {

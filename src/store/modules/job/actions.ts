@@ -102,7 +102,7 @@ const actions: ActionTree<JobState, RootState> = {
         "inputFields": {
           "statusId": "SERVICE_PENDING",
           "statusId_op": "equals",
-          "productStoreId": this.state.user.currentEComStore?.productStoreId,
+          "productStoreId": this.state.user.currentProductStore?.productStoreId,
           'systemJobEnumId': systemJobEnumIds,
           'systemJobEnumId_op': 'in'
         },
@@ -147,7 +147,7 @@ const actions: ActionTree<JobState, RootState> = {
       await Promise.allSettled(pendingSysJobEnumIds.map(async (systemJobEnumId: string) => {
         const resp = await JobService.fetchJobInformation({
           "inputFields": {
-            "productStoreId": this.state.user.currentEComStore?.productStoreId,
+            "productStoreId": this.state.user.currentProductStore?.productStoreId,
             'systemJobEnumId': systemJobEnumId,
             'systemJobEnumId_op': 'equals',
             "statusId": ["SERVICE_CANCELLED", "SERVICE_CRASHED", "SERVICE_FAILED", "SERVICE_FINISHED"],

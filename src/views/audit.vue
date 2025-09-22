@@ -163,7 +163,7 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      currentEComStore: 'user/getCurrentEComStore',
+      currentProductStore: 'user/getCurrentProductStore',
       products: 'product/getCatalogProducts',
       getProduct: 'product/getProduct',
       isCatalogScrollable: 'product/isCatalogScrollable'
@@ -186,7 +186,7 @@ export default defineComponent({
             "start": viewIndex * viewSize,
           } as any,
           "query": "*:*",
-          "filter": `docType: PRODUCT AND productStoreIds: ${this.currentEComStore.productStoreId} AND isVariant: true`
+          "filter": `docType: PRODUCT AND productStoreIds: ${this.currentProductStore.productStoreId} AND isVariant: true`
         }
       }
 
@@ -242,7 +242,7 @@ export default defineComponent({
             // draft jobs and so fetching draft job data is not of any use.
             "statusId": "SERVICE_PENDING",
             "statusId_op": "equals",
-            "productStoreId": this.currentEComStore.productStoreId,
+            "productStoreId": this.currentProductStore.productStoreId,
             'systemJobEnumId': 'JOB_REL_PREODR_CAT',
             'systemJobEnumId_op': 'equals'
           },

@@ -12,7 +12,7 @@ const userModule: Module<UserState, RootState> = {
       permissions: [],
       current: {},
       instanceUrl: '',
-      currentEComStore: {},
+      currentProductStore: {},
       virtualFacilities: {},
       currentOrderParking: [],
       pwaState: {

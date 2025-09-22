@@ -124,7 +124,7 @@ const scheduleJob = async (payload: any): Promise<any> => {
     'SERVICE_TEMP_EXPR': payload.frequency,
     'SERVICE_RUN_AS_SYSTEM': 'Y',
     'jobFields': {
-      'productStoreId': store.state.user.currentEComStore.productStoreId,
+      'productStoreId': store.state.user.currentProductStore.productStoreId,
       'systemJobEnumId': payload.job.systemJobEnumId,
       'tempExprId': payload.frequency, // Need to remove this as we are passing frequency in SERVICE_TEMP_EXPR, currently kept it for backward compatibility
       'maxRecurrenceCount': '-1',
@@ -137,7 +137,7 @@ const scheduleJob = async (payload: any): Promise<any> => {
   } as any
 
   // checking if the runtimeData has productStoreId, and if present then adding it on root level
-  payload.job?.runtimeData?.productStoreId?.length >= 0 && (params['productStoreId'] = store.state.user.currentEComStore.productStoreId)
+  payload.job?.runtimeData?.productStoreId?.length >= 0 && (params['productStoreId'] = store.state.user.currentProductStore.productStoreId)
   payload.job?.priority && (params['SERVICE_PRIORITY'] = payload.job.priority.toString())
   payload.runTime && (params['SERVICE_TIME'] = payload.runTime.toString())
 

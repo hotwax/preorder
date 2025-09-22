@@ -45,7 +45,7 @@ export default defineComponent({
       userProfile: 'user/getUserProfile',
       userToken: 'user/getUserToken',
       instanceUrl: 'user/getInstanceUrl',
-      currentEComStore: 'user/getCurrentEComStore'
+      currentProductStore: 'user/getCurrentProductStore'
     })
   },
   methods: {
@@ -105,7 +105,7 @@ export default defineComponent({
     }
 
     // Get product identification from api using dxp-component
-    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
+    await useProductIdentificationStore().getIdentificationPref(this.currentProductStore?.productStoreId)
       .catch((error) => console.error(error));
   },
   unmounted() {
