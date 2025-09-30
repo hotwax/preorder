@@ -34,28 +34,28 @@
                 https://vuex.vuejs.org/guide/forms.html#two-way-computed-property
                 -->
               <ion-input aria-label="ordered-after" v-model="query.orderedAfter" @ionChange="updateQuery()" type="date" />
-              <ion-icon @click='query.orderedAfter = ""' v-if="query.orderedAfter" :icon="close"/>
+              <ion-icon @click='query.orderedAfter = ""; updateQuery()' v-if="query.orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="ordered-before" v-model="query.orderedBefore" @ionChange="query.orderedBefore = $event.target.value; updateQuery()" type="date" />
-              <ion-icon @click='query.orderedBefore = ""' v-if="query.orderedBefore" :icon="close"/>
+              <ion-icon @click='query.orderedBefore = ""; updateQuery()' v-if="query.orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="promised-after" v-model="query.promisedAfter" @ionChange="query.promisedAfter = $event.target.value; updateQuery()" type="date" />
-              <ion-icon @click='query.promisedAfter = ""' v-if="query.promisedAfter" :icon="close"/>
+              <ion-icon @click='query.promisedAfter = ""; updateQuery()' v-if="query.promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="promised-before" v-model="query.promisedBefore" @ionChange="query.promisedBefore = $event.target.value; updateQuery()" type="date" />
-              <ion-icon @click='query.promisedBefore = ""' v-if="query.promisedBefore" :icon="close"/>
+              <ion-icon @click='query.promisedBefore = ""; updateQuery()' v-if="query.promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
@@ -65,7 +65,7 @@
               <ion-select aria-label="loyalty-status" :placeholder="$t('select')" v-model="query.cusotmerLoyalty"  @ionChange="updateQuery()" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for=" (key, value) in cusotmerLoyaltyOptions" v-bind:key="key" :value="value">{{key}}</ion-select-option>
               </ion-select>
-              <ion-icon @click='query.cusotmerLoyalty = ""' v-if="query.cusotmerLoyalty" :icon="close"/>
+              <ion-icon @click='query.cusotmerLoyalty = ""; updateQuery()' v-if="query.cusotmerLoyalty" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item lines="none">
@@ -290,6 +290,9 @@ export default defineComponent({
   },
   async ionViewWillEnter() {
     this.isScrollingEnabled = false;
+  },
+  ionViewWillLeave() {
+    this.store.dispatch('order/clearOrderState')
   },
   methods: {
     updateQuery() {
