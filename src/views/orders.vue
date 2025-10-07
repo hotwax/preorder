@@ -7,7 +7,7 @@
         </ion-buttons>
         <ion-title>{{ $t("Orders") }}</ion-title>
         <ion-buttons slot="secondary">
-          <!-- TODO Add internationalisation -->
+          <!-- TODO Add interationalisation -->
           <ion-button @click="deselectAlert()">{{ selectedItemsCount}} {{ $t("item selected")}} </ion-button>
         </ion-buttons>
         <ion-buttons slot="end">
@@ -299,7 +299,7 @@ export default defineComponent({
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
       let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
       const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
       if(distanceFromInfinite < 0) {
