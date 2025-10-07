@@ -7,7 +7,7 @@
         </ion-buttons>
         <ion-title>{{ $t("Orders") }}</ion-title>
         <ion-buttons slot="secondary">
-          <!-- TODO Add interationalisation -->
+          <!-- TODO Add internationalisation -->
           <ion-button @click="deselectAlert()">{{ selectedItemsCount}} {{ $t("item selected")}} </ion-button>
         </ion-buttons>
         <ion-buttons slot="end">
