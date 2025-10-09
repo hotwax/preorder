@@ -134,7 +134,7 @@
               </ion-item>
               <ion-item button @click="item.isChecked = !item.isChecked" lines="none">
                 <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" label-placement="end" justify="start">{{ $t("Select item") }}</ion-checkbox>
-                <ion-button fill="clear" color="medium" @click.stop="openPopover($event, item)">
+                <ion-button size="default" fill="clear" color="medium" @click.stop="openPopover($event, item)">
                   <ion-icon slot="icon-only" :icon="ellipsisVertical" />
                 </ion-button>
               </ion-item>
