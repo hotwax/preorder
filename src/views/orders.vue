@@ -134,7 +134,7 @@
               </ion-item>
               <ion-item button @click="item.isChecked = !item.isChecked" lines="none">
                 <ion-checkbox :modelValue="item.isChecked" @ionChange="selectItem($event, item)" label-placement="end" justify="start">{{ $t("Select item") }}</ion-checkbox>
-                <ion-button fill="clear" color="medium" @click.stop="openPopover($event, item)">
+                <ion-button size="default" fill="clear" color="medium" @click.stop="openPopover($event, item)">
                   <ion-icon slot="icon-only" :icon="ellipsisVertical" />
                 </ion-button>
               </ion-item>
@@ -299,7 +299,7 @@ export default defineComponent({
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
-      const scrollEl = parentElement.shadowRoot.querySelector("main[part='scroll']")
+      const scrollEl = parentElement.shadowRoot.querySelector("div[part='scroll']")
       let scrollHeight = scrollEl.scrollHeight, infiniteHeight = (this as any).$refs.infiniteScrollRef.$el.offsetHeight, scrollTop = scrollEl.scrollTop, threshold = 100, height = scrollEl.offsetHeight
       const distanceFromInfinite = scrollHeight - infiniteHeight - scrollTop - threshold - height
       if(distanceFromInfinite < 0) {
