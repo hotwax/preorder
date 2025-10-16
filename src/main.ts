@@ -35,6 +35,7 @@ import permissionActions from '@/authorization/Actions';
 import { setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
 import localeMessages from './i18n/locales';
 import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@/adapter'
+import { UtilService } from './services/UtilService';
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -63,7 +64,8 @@ const app = createApp(App)
     getAvailableTimeZones,
     getProductIdentificationPref,
     setProductIdentificationPref,
-    hasPermission
+    hasPermission,
+    fetchGoodIdentificationTypes: UtilService.fetchGoodIdentificationTypes
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters

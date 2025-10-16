@@ -1,5 +1,6 @@
 import { api } from '@/adapter';
 import store from '@/store';
+import { hasError } from '@hotwax/oms-api';
 
 const getServiceStatusDesc = async (payload: any): Promise<any> => {
   return api({
@@ -77,6 +78,37 @@ const fetchFacilities = async (payload: any): Promise<any> => {
   })
 }
 
+// TODO: remove this util service when the oms-api version is updated to 1.16.0
+const fetchGoodIdentificationTypes = async(parentTypeId = "HC_GOOD_ID_TYPE"): Promise<any> => {
+  const payload = {
+    "inputFields": {
+      "parentTypeId": parentTypeId,
+    },
+    "fieldList": ["goodIdentificationTypeId", "description"],
+    "viewSize": 50,
+    "entityName": "GoodIdentificationType",
+    "noConditionFind": "Y"
+  }
+  try {
+    const resp = await api({
+      url: "performFind",
+      method: "get",
+      params: payload
+    }) as any
+
+    if (!hasError(resp)) {
+      return Promise.resolve(resp.data.docs)
+    } else {
+      throw resp.data;
+    }
+  } catch (err) {
+    return Promise.reject({
+      code: 'error',
+      message: 'Something went wrong',
+      serverResponse: err
+    })
+  }
+}
 
 export const UtilService = {
   getServiceStatusDesc,
@@ -85,5 +117,6 @@ export const UtilService = {
   updateReserveInvConfig,
   updatePreOrdPhyInvHoldConfig,
   createPreOrdPhyInvHoldConfig,
-  fetchFacilities
+  fetchFacilities,
+  fetchGoodIdentificationTypes
 }
