@@ -114,6 +114,7 @@ import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
 import { hasError } from '@/utils';
+import { getPreviousRoute } from '@/router';
 
 export default defineComponent({
   name: 'Audit',
@@ -170,6 +171,10 @@ export default defineComponent({
     })
   },
   async ionViewWillEnter() {
+    const previousRoute = this.getPreviousRoute()?.path || ''
+    if (!previousRoute.startsWith('/audit-product-details')) {
+      this.prodCatalogCategoryTypeId = '' // 'All' is selected by default
+    }
     this.isScrollingEnabled = false;
     await this.getCatalogProducts()
     await this.preparePreordBckordComputationJob()
@@ -298,6 +303,7 @@ export default defineComponent({
       productIdentificationPref,
       router,
       store,
+      getPreviousRoute
     };
   },
 });
