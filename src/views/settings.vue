@@ -92,6 +92,7 @@
 <script lang="ts">
 import { codeWorkingOutline, openOutline, saveOutline, timeOutline, globeOutline, personCircleOutline} from 'ionicons/icons'
 import { useStore } from "@/store";
+import { Actions, hasPermission } from '@/authorization';
 import { 
   IonAvatar,
   IonButton,
@@ -141,7 +142,7 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline, openOutline, saveOutline }
+    return { Actions, hasPermission, store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline, openOutline, saveOutline }
   },
   data() {
     return {
