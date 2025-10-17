@@ -25,7 +25,7 @@
             </ion-card-header>
           </ion-item>
           <ion-button color="danger" @click="logout()">{{ $t("Logout") }}</ion-button>
-          <ion-button fill="outline" @click="goToLaunchpad()">
+          <ion-button :standalone-hidden="!hasPermission(Actions.APP_PWA_STANDALONE_ACCESS)" fill="outline" @click="goToLaunchpad()">
             {{ $t("Go to Launchpad") }}
             <ion-icon slot="end" :icon="openOutline" />
           </ion-button>
@@ -92,6 +92,7 @@
 <script lang="ts">
 import { codeWorkingOutline, openOutline, saveOutline, timeOutline, globeOutline, personCircleOutline} from 'ionicons/icons'
 import { useStore } from "@/store";
+import { Actions, hasPermission } from '@/authorization';
 import { 
   IonAvatar,
   IonButton,
@@ -141,7 +142,7 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    return { store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline, openOutline, saveOutline }
+    return { Actions, hasPermission, store, codeWorkingOutline, timeOutline, globeOutline, personCircleOutline, openOutline, saveOutline }
   },
   data() {
     return {
@@ -206,5 +207,11 @@ export default defineComponent({
     justify-content: space-between;
     align-items: center;
     padding: var(--spacer-xs) 10px 0px;
+  }
+  /* Added conditional hiding in standalone mode that respects user permissions */
+  @media (display-mode: standalone) {
+    [standalone-hidden] {
+      display: none;
+    }
   }
 </style>
