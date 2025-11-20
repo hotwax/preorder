@@ -360,6 +360,9 @@ const actions: ActionTree<OrderState, RootState> = {
       console.error('Something went wrong while fetching brokering count for products: ', err)
     }
     return brokeringCountByProduct;
+  },
+  clearOrderState({ commit }) {
+    commit(types.ORDER_STATE_CLEAR);
   }
 }
 export default actions;
