@@ -34,7 +34,7 @@ import permissionRules from '@/authorization/Rules';
 import permissionActions from '@/authorization/Actions';
 import { setUserTimeZone, getAvailableTimeZones, setUserLocale} from '@/adapter'
 import localeMessages from './i18n/locales';
-import { fetchGoodIdentificationTypes, getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@/adapter'
+import { fetchGoodIdentificationTypes, getConfig, getEComStores, getUserPreference, getProductIdentificationPref, initialise, setProductIdentificationPref, setUserPreference } from '@/adapter'
 
 const app = createApp(App)
   .use(IonicVue, {
@@ -64,7 +64,10 @@ const app = createApp(App)
     getProductIdentificationPref,
     setProductIdentificationPref,
     hasPermission,
-    fetchGoodIdentificationTypes
+    fetchGoodIdentificationTypes,
+    getEComStores,
+    getUserPreference,
+    setUserPreference,
   });
  
 // Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
