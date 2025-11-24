@@ -9,7 +9,6 @@ const mutations: MutationTree <UserState> = {
     [types.USER_END_SESSION] (state) {
       state.token = ''
       state.current = {}
-      state.currentEComStore = {}
       state.currentOrderParking = []
       state.virtualFacilities = {}
       state.permissions = []
@@ -22,9 +21,6 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_PERMISSIONS_UPDATED] (state, payload) {
         state.permissions = payload
-    },
-    [types.USER_CURRENT_ECOM_STORE_UPDATED] (state, payload) {
-        state.currentEComStore = payload;
     },
     [types.USER_VIRTUAL_FACILITIES_UPDATED] (state, payload) {
         state.virtualFacilities = payload;

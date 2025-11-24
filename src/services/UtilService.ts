@@ -1,6 +1,5 @@
 import { api } from '@/adapter';
-import store from '@/store';
-import { hasError } from '@hotwax/oms-api';
+import { getProductStoreId } from '@/utils'
 
 const getServiceStatusDesc = async (payload: any): Promise<any> => {
   return api({
@@ -32,7 +31,7 @@ const updatePreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
     "fromDate": payload.config.fromDate,
     "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',
     "settingValue": payload.value,
-    "productStoreId": store.state.user.currentEComStore.productStoreId
+    "productStoreId": getProductStoreId()
   }
 
   return await api({
@@ -45,7 +44,7 @@ const updatePreOrdPhyInvHoldConfig = async (payload: any): Promise<any> => {
 const updateReserveInvConfig = async (payload: any): Promise<any> => {
   const params = {
     "reserveInventory": payload.value ? "Y" : "N",
-    "productStoreId": store.state.user.currentEComStore.productStoreId
+    "productStoreId": getProductStoreId()
   }
 
   return await api({
@@ -60,7 +59,7 @@ const createPreOrdPhyInvHoldConfig = async (): Promise<any> => {
     "fromDate": Date.now(),
     "settingTypeEnumId": 'HOLD_PRORD_PHYCL_INV',
     "settingValue": 'true',
-    "productStoreId": store.state.user.currentEComStore.productStoreId
+    "productStoreId": getProductStoreId()
   }
 
   return await api({
@@ -78,38 +77,6 @@ const fetchFacilities = async (payload: any): Promise<any> => {
   })
 }
 
-// TODO: remove this util service when the oms-api version is updated to 1.16.0
-const fetchGoodIdentificationTypes = async(parentTypeId = "HC_GOOD_ID_TYPE"): Promise<any> => {
-  const payload = {
-    "inputFields": {
-      "parentTypeId": parentTypeId,
-    },
-    "fieldList": ["goodIdentificationTypeId", "description"],
-    "viewSize": 50,
-    "entityName": "GoodIdentificationType",
-    "noConditionFind": "Y"
-  }
-  try {
-    const resp = await api({
-      url: "performFind",
-      method: "get",
-      params: payload
-    }) as any
-
-    if (!hasError(resp)) {
-      return Promise.resolve(resp.data.docs)
-    } else {
-      throw resp.data;
-    }
-  } catch (err) {
-    return Promise.reject({
-      code: 'error',
-      message: 'Something went wrong',
-      serverResponse: err
-    })
-  }
-}
-
 export const UtilService = {
   getServiceStatusDesc,
   getReserveInvConfig,
@@ -117,6 +84,5 @@ export const UtilService = {
   updateReserveInvConfig,
   updatePreOrdPhyInvHoldConfig,
   createPreOrdPhyInvHoldConfig,
-  fetchFacilities,
-  fetchGoodIdentificationTypes
+  fetchFacilities
 }

@@ -30,9 +30,6 @@ const getters: GetterTree <UserState, RootState> = {
     getPwaState(state) {
         return state.pwaState;
     },
-    getCurrentEComStore(state) {
-        return state.currentEComStore
-    },
     getVirtualFacilities(state) {
         return state.virtualFacilities
     },

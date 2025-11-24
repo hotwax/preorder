@@ -44,12 +44,13 @@ import {
   IonToolbar,
   modalController
 } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
 import { mapGetters, useStore } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService'
 import { hasError } from '@/utils';
+import { useUserStore } from '@hotwax/dxp-components'
 
 export default defineComponent({
   name: 'JobHistoryModal',
@@ -74,7 +75,6 @@ export default defineComponent({
   props: ['job'],
   computed: {
     ...mapGetters({
-      currentEComStore: 'user/getCurrentEComStore',
       getStatusDesc: 'util/getStatusDesc'
     })
   },
@@ -120,9 +120,12 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const userStore = useUserStore();
+    let currentEComStore: any = computed(() => userStore.getCurrentEComStore)
 
     return {
       closeOutline,
+      currentEComStore,
       store
     };
   },
