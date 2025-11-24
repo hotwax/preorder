@@ -284,7 +284,6 @@ export default defineComponent({
       isJobPending: 'job/isJobPending',
       jobTotal: 'job/getTotal',
       userProfile: 'user/getUserProfile',
-      currentEComStore: 'user/getCurrentEComStore',
       currentOrderParking: 'user/getCurrentOrderParking'
     })
   },
