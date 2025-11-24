@@ -13,7 +13,7 @@ const actions: ActionTree<OrderState, RootState> = {
   /**
    * Update query
    */
-  updateQuery  ( { commit, dispatch } , { query }) {
+  updateQuery  ( { commit, dispatch, rootState } , { query }) {
     commit(types.ORDER_QUERY_UPDATED, { query } );
     const userProfile = this.getters['user/getUserProfile'];
     const payload = {
