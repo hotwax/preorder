@@ -109,7 +109,10 @@ const router = createRouter({
   routes
 })
 
+let previousRoute: any = null;
+
 router.beforeEach((to, from) => {
+  previousRoute = from
   if (to.meta.permissionId && !hasPermission(to.meta.permissionId)) {
     let redirectToPath = from.path;
     // If the user has navigated from Login page or if it is page load, redirect user to settings page without showing any toast
@@ -120,5 +123,9 @@ router.beforeEach((to, from) => {
     }
   }
 })
+
+export function getPreviousRoute() {
+  return previousRoute
+}
 
 export default router
