@@ -457,8 +457,8 @@ export default defineComponent({
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
       getInventoryConfig: "util/getInventoryConfig"
     }),
-    visibleFeatures(): any {
-      return Object.entries(this.features).filter(([, featureOptions]: any) => featureOptions.length > 1);
+    visibleFeatures(): [string, string[]][] {
+      return Object.entries(this.features).filter(([, featureOptions]: [string, any]) => (featureOptions as string[]).length > 1) as [string, string[]][];
     }
   },
   async ionViewWillEnter() {
@@ -1070,12 +1070,6 @@ export default defineComponent({
           const variantProductId = this.getProductIdentificationId(this.currentVariant.goodIdentifications, 'ShopifyShopProduct/' + config.shopId);
           if (variantProductId) {
             shopifyShop.variantProductId = variantProductId;
-          } else {
-            // Fallback to searching for any shopify variant ID if specific one is not found
-            const shopifyIdentification = this.currentVariant.goodIdentifications?.find((id: string) => id.startsWith('ShopifyShopProduct/'));
-            if (shopifyIdentification) {
-              shopifyShop.variantProductId = shopifyIdentification.split('/')[2];
-            }
           }
           !shopifyShop.hcVariantProductId && (shopifyShop.hcVariantProductId = this.currentVariant.productId)
           shopifyConfigsAndProductIds[config.shopId] = shopifyShop;
