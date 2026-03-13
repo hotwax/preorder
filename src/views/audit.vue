@@ -46,38 +46,22 @@
         {{ $t('No products found') }}
       </div>
       <div v-else>
-        <div class="list-item" v-for="product in products" :key="product.productId" @click="viewProduct(product)">
-          <ion-item lines="none" class="tablet">
-            <ion-thumbnail slot="start">
-              <DxpShopifyImg :src="product.mainImageUrl" size="small"/>
-            </ion-thumbnail>
-            <ion-label class="ion-text-wrap">
-              <h5>{{ getProductIdentificationValue(productIdentificationPref.primaryId, product) ? getProductIdentificationValue(productIdentificationPref.primaryId, product) : product.productName }}</h5>
-              <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-chip v-if="product.prodCatalogCategoryTypeIds?.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds?.includes('PCCT_BACKORDER')" class="tablet" outline>
+        <ion-item button detail v-for="product in products" :key="product.productId" @click="viewProduct(product)">
+          <ion-thumbnail slot="start">
+            <DxpShopifyImg :src="product.mainImageUrl" size="small"/>
+          </ion-thumbnail>
+          <ion-label class="ion-text-wrap">
+            {{ getProductIdentificationValue(productIdentificationPref.primaryId, product) ? getProductIdentificationValue(productIdentificationPref.primaryId, product) : product.productName }}
+            <p>{{ getProductIdentificationValue(productIdentificationPref.secondaryId, product) }}</p>
+          </ion-label>
+          <ion-chip slot="end" v-if="hasPresellCategory(product)" class="tablet" outline>
             <ion-label>{{ product.prodCatalogCategoryTypeIds.includes('PCCT_PREORDR') ? $t('Pre-order') : product.prodCatalogCategoryTypeIds.includes('PCCT_BACKORDER') ? $t('Back-order') : '-' }}</ion-label>
           </ion-chip>
-
-          <!-- TODO -->
-          <!-- <ion-item lines="none" class="tablet">
-            <ion-label class="ion-text-center">
-              <h5>{{ product.fromDate ? getTime(product.fromDate) : '-' }}</h5>
-              <p>{{ $t('from date') }}</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-item lines="none" class="tablet">
-            <ion-label class="ion-text-center">
-              <h5>{{ product.thruDate ? getTime(product.thruDate) : '-' }}</h5>
-              <p>{{ $t('thru date') }}</p>
-            </ion-label>
-          </ion-item> -->
-        </div>
-
-        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="100px" v-show="isCatalogScrollable" ref="infiniteScrollRef">
+          <ion-chip slot="end" class="tablet" outline>
+            <ion-label>{{ getInventoryChipLabel(product) }}</ion-label>
+          </ion-chip>
+        </ion-item>
+        <ion-infinite-scroll @ionInfinite="loadMoreProducts($event)" threshold="1000px" v-show="isCatalogScrollable" ref="infiniteScrollRef">
           <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="$t('Loading')" />
         </ion-infinite-scroll>
       </div>
@@ -114,6 +98,12 @@ import { mapGetters } from 'vuex';
 import { DateTime } from 'luxon';
 import { JobService } from '@/services/JobService';
 import { hasError } from '@/utils';
+import { StockService } from '@/services/StockService';
+
+type InventoryDetail = {
+  type: 'poAtp' | 'qoh',
+  value?: number
+}
 
 export default defineComponent({
   name: 'Audit',
@@ -156,6 +146,7 @@ export default defineComponent({
         name: 'Removed from category',
         value: 'REMOVED'
       }*/],
+      productInventory: {} as Record<string, InventoryDetail>,
       queryString: '',
       preordBckordComputationJob: {} as any,
       isScrollingEnabled: false
@@ -169,15 +160,40 @@ export default defineComponent({
       isCatalogScrollable: 'product/isCatalogScrollable'
     })
   },
+  watch: {
+    'currentEComStore.productStoreId': async function(newProductStoreId: string, oldProductStoreId: string) {
+      if (newProductStoreId === oldProductStoreId) {
+        return;
+      }
+
+      this.productInventory = {};
+      this.prodCatalogCategoryTypeId = '';
+      this.store.dispatch('product/resetCatalogProducts');
+
+      if (newProductStoreId) {
+        await this.getCatalogProducts();
+        await this.preparePreordBckordComputationJob();
+      } else {
+        this.preordBckordComputationJob = {};
+      }
+    }
+  },
   async ionViewWillEnter() {
     this.isScrollingEnabled = false;
+    this.productInventory = {}
     await this.getCatalogProducts()
     await this.preparePreordBckordComputationJob()
   },
   methods: {
     async getCatalogProducts(vSize?: any, vIndex?: any) {
+      if (!this.currentEComStore?.productStoreId) {
+        this.store.dispatch('product/resetCatalogProducts');
+        return;
+      }
+
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
+      const startIndex = viewIndex > 0 ? this.products.length : 0;
 
       const payload = {
         "json": {
@@ -201,6 +217,7 @@ export default defineComponent({
       }
 
       await this.store.dispatch("product/findCatalogProducts", payload);
+      await this.fetchProductInventoryDetails(this.products.slice(startIndex));
     },
     enableScrolling() {
       const parentElement = (this as any).$refs.contentRef.$el
@@ -228,6 +245,7 @@ export default defineComponent({
     async applyFilter(value: string) {
       if(value !== this.prodCatalogCategoryTypeId) {
         this.prodCatalogCategoryTypeId = value
+        this.productInventory = {}
         this.getCatalogProducts()
       }
     },
@@ -285,6 +303,124 @@ export default defineComponent({
     timeTillJob (time: any) {
       const timeDiff = DateTime.fromMillis(time).diff(DateTime.local());
       return DateTime.local().plus(timeDiff).toRelative();
+    },
+    hasPresellCategory(product: any) {
+      return product.prodCatalogCategoryTypeIds?.includes('PCCT_PREORDR') || product.prodCatalogCategoryTypeIds?.includes('PCCT_BACKORDER');
+    },
+    getInventoryChipLabel(product: any) {
+      const inventoryDetail = this.productInventory[product.productId];
+
+      if (!inventoryDetail) {
+        return '-';
+      }
+
+      if (inventoryDetail.type === 'poAtp') {
+        return `${this.$t('PO ATP left')}: ${typeof inventoryDetail.value === 'number' ? inventoryDetail.value : '-'}`;
+      }
+
+      return `${this.$t('Quantity on hand')}: ${typeof inventoryDetail.value === 'number' ? inventoryDetail.value : '-'}`;
+    },
+    async fetchProductInventoryDetails(products: any[]) {
+      const productsToFetch = products.filter((product: any) => !this.productInventory[product.productId]);
+
+      if (!productsToFetch.length) {
+        return;
+      }
+
+      const presellProductIds = productsToFetch
+        .filter((product: any) => this.hasPresellCategory(product))
+        .map((product: any) => product.productId);
+      const inventoryProductIds = productsToFetch
+        .filter((product: any) => !this.hasPresellCategory(product))
+        .map((product: any) => product.productId);
+
+      await Promise.all([
+        this.fetchPoAtpDetails(presellProductIds),
+        this.fetchOnHandInventoryDetails(inventoryProductIds)
+      ]);
+    },
+    async fetchPoAtpDetails(productIds: string[]) {
+      if (!productIds.length) {
+        return;
+      }
+
+      await Promise.all(productIds.map(async(productId: string) => {
+        try {
+          const resp = await StockService.getProductFutureAtp({ productId });
+          this.productInventory = {
+            ...this.productInventory,
+            [productId]: {
+              type: 'poAtp',
+              value: hasError(resp) ? 0 : resp.data?.futureAtp
+            }
+          };
+        } catch (error) {
+          console.error(error);
+          this.productInventory = {
+            ...this.productInventory,
+            [productId]: {
+              type: 'poAtp',
+              value: 0
+            }
+          };
+        }
+      }));
+    },
+    async fetchOnHandInventoryDetails(productIds: string[]) {
+      if (!productIds.length) {
+        return;
+      }
+
+      try {
+        const resp = await StockService.checkInventory({
+          viewSize: productIds.length,
+          filters: {
+            productId: productIds,
+            productId_op: 'in',
+            productStoreId: this.currentEComStore.productStoreId
+          },
+          fieldsToSelect: ['productId', 'quantityOnHandTotal']
+        });
+
+        if (resp.status === 200 && !hasError(resp)) {
+          const productInventory = { ...this.productInventory };
+
+          productIds.forEach((productId: string) => {
+            productInventory[productId] = { type: 'qoh', value: 0 };
+          });
+
+          (resp.data?.docs || []).forEach((product: any) => {
+            productInventory[product.productId] = { type: 'qoh', value: product.quantityOnHandTotal };
+          });
+
+          this.productInventory = productInventory;
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      await Promise.all(productIds.map(async(productId: string) => {
+        try {
+          const resp = await StockService.getProductInventoryAvailable({ productId });
+          this.productInventory = {
+            ...this.productInventory,
+            [productId]: {
+              type: 'qoh',
+              value: hasError(resp) ? 0 : resp.data?.quantityOnHandTotal
+            }
+          };
+        } catch (error) {
+          console.error(error);
+          this.productInventory = {
+            ...this.productInventory,
+            [productId]: {
+              type: 'qoh',
+              value: 0
+            }
+          };
+        }
+      }));
     },
   },
   setup() {
