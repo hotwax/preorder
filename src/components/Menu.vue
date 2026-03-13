@@ -41,7 +41,7 @@ import {
 import { computed, defineComponent} from "vue"
 import { mapGetters } from "vuex";
 
-import { albums ,shirt, pricetags, settings } from "ionicons/icons";
+import { albumsOutline, shirtOutline, pricetagsOutline, settingsOutline } from "ionicons/icons";
 import { useStore } from "@/store";
 import { useRouter } from "vue-router";
 import { hasPermission } from "@/authorization";
@@ -77,8 +77,8 @@ export default defineComponent({
       {
         title: "Orders",
         url: "/orders",
-        iosIcon: pricetags,
-        mdIcon: pricetags,
+        iosIcon: pricetagsOutline,
+        mdIcon: pricetagsOutline,
         meta: {
           permissionId: "APP_ORDERS_VIEW"
         }
@@ -87,8 +87,8 @@ export default defineComponent({
         title: "Products",
         url: "/products",
         childRoutes: ["/product-details/"],
-        iosIcon: shirt,
-        mdIcon: shirt,
+        iosIcon: shirtOutline,
+        mdIcon: shirtOutline,
         meta: {
           permissionId: "APP_PRODUCTS_VIEW"
         }
@@ -97,8 +97,8 @@ export default defineComponent({
         title: "Audit",
         url: "/audit",
         childRoutes: ["/audit-product-details/"],
-        iosIcon: albums,
-        mdIcon: albums,
+        iosIcon: albumsOutline,
+        mdIcon: albumsOutline,
         meta: {
           permissionId: "APP_AUDIT_VIEW"
         }
@@ -106,8 +106,8 @@ export default defineComponent({
       {
         title: "Settings",
         url: "/settings",
-        iosIcon: settings,
-        mdIcon: settings,
+        iosIcon: settingsOutline,
+        mdIcon: settingsOutline,
       }
     ];
 
@@ -118,12 +118,12 @@ export default defineComponent({
 
     return {
       appPages,
-      albums,
+      albumsOutline,
       getValidMenuItems,
-      pricetags,
-      settings,
+      pricetagsOutline,
+      settingsOutline,
       selectedIndex,
-      shirt,
+      shirtOutline,
       store
     };
   }
