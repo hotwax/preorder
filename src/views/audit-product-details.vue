@@ -23,7 +23,7 @@
           </div>
 
           <div class="product-features">
-            <ion-list v-for="[feature, featureOptions] in Object.entries(features)" :key="feature">
+            <ion-list v-for="[feature, featureOptions] in visibleFeatures" :key="feature">
               <ion-list-header>{{ feature }}</ion-list-header>
               <ion-item lines="none">
                 <ion-row>
@@ -435,7 +435,7 @@ export default defineComponent({
     return {
       variantId: '',
       productId: '',
-      features: [] as any,
+      features: {} as any,
       currentVariant: {} as any,
       poAndAtpDetails: {} as any,
       atpCalcDetails: {} as any,
@@ -456,7 +456,10 @@ export default defineComponent({
       currentEComStore: 'user/getCurrentEComStore',
       getCtgryAndBrkrngJob: "job/getCtgryAndBrkrngJob",
       getInventoryConfig: "util/getInventoryConfig"
-    })
+    }),
+    visibleFeatures(): [string, string[]][] {
+      return Object.entries(this.features).filter(([, featureOptions]: [string, any]) => (featureOptions as string[]).length > 1) as [string, string[]][];
+    }
   },
   async ionViewWillEnter() {
     (this as any).productId = this.$route.params.productId;
@@ -1064,7 +1067,10 @@ export default defineComponent({
 
         const shopifyConfigsAndProductIds = this.configsByStores.reduce((shopifyConfigsAndProductIds: any, config: any) => {
           const shopifyShop = shopifyConfigsAndProductIds[config.shopId] || {}
-          !shopifyShop.variantProductId && (shopifyShop.variantProductId = this.getProductIdentificationId(this.currentVariant.goodIdentifications, 'ShopifyShopProduct/' + config.shopId))
+          const variantProductId = this.getProductIdentificationId(this.currentVariant.goodIdentifications, 'ShopifyShopProduct/' + config.shopId);
+          if (variantProductId) {
+            shopifyShop.variantProductId = variantProductId;
+          }
           !shopifyShop.hcVariantProductId && (shopifyShop.hcVariantProductId = this.currentVariant.productId)
           shopifyConfigsAndProductIds[config.shopId] = shopifyShop;
           configs[config.shopId] = config;
@@ -1088,7 +1094,7 @@ export default defineComponent({
                 "rows": 1,
                 "sort": "_timestamp_ desc",
               } as any,
-              "filter": `docType: BULKOPERATION AND operation: SHOP_PREORDER_SYNC AND data.productVariantsBulkUpdate.productVariants.id: (${configAndIdData.variantProductId && `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}" OR`} "gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}") AND data.productVariantsBulkUpdate.productVariants.metafields.edges.node.namespace: "HC_PREORDER"`,
+              "filter": `docType: BULKOPERATION AND operation: (SHOP_PREORDER_SYNC OR "${shopId}") AND data.productVariantsBulkUpdate.productVariants.id: (${configAndIdData.variantProductId ? `"gid://shopify/ProductVariant/${configAndIdData.variantProductId}"` : `"gid://hotwax/ProductVariant/id/${configAndIdData.hcVariantProductId}"`}) AND data.productVariantsBulkUpdate.productVariants.metafields.edges.node.namespace: "HC_PREORDER"`,
               "query": "*:*",
             },
             "coreName": "shopifyCore"
@@ -1101,12 +1107,12 @@ export default defineComponent({
               // TODO Find a better way
               return Promise.resolve(this.shopListings)
             }
-            const listDataDoc = JSON.parse(JSON.stringify(resp.data.response.docs[0]))
-            const metafieldValueList = listDataDoc["data.productVariantsBulkUpdate.productVariants.metafields.edges.node.value"];
+            const listDataDoc = resp.data.response.docs[0];
+            const metafieldValueList = listDataDoc["data.productVariantsBulkUpdate.productVariants.metafields.edges.node.value"] || [];
             const metafieldValue = metafieldValueList.length > 0 ? JSON.parse(metafieldValueList[0]): {};
             listData = {
               ...listData,
-              containsError: listDataDoc.contains_error[0],
+              containsError: listDataDoc.contains_error ? listDataDoc.contains_error[0] : false,
               listingTime: metafieldValue["last_updated_at"],
               status: metafieldValue.status,
               promiseDate: metafieldValue["promise_date"]
