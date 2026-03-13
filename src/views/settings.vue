@@ -115,7 +115,6 @@ import {
 import { defineComponent } from "vue";
 import { mapGetters } from 'vuex'
 import Image from '@/components/Image.vue';
-import { DxpProductIdentifier } from '@hotwax/dxp-components';
 
 export default defineComponent({
   name: "settings",
