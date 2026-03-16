@@ -7,7 +7,7 @@ import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { Settings } from 'luxon'
 import { updateInstanceUrl, updateToken, resetConfig, logout, getUserPreference } from '@/adapter'
-import { useAuthStore, useProductIdentificationStore } from '@hotwax/dxp-components';
+import { useAuthStore, useProductIdentificationStore, useUserStore } from '@hotwax/dxp-components';
 import { UtilService } from '@/services/UtilService'
 import { getServerPermissionsFromRules, prepareAppPermissions, resetPermissions, setPermissions } from '@/authorization'
 import emitter from '@/event-bus'
@@ -83,6 +83,9 @@ const actions: ActionTree<UserState, RootState> = {
           commit(types.USER_TOKEN_CHANGED, { newToken: token });
           commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
           updateToken(token);
+          useUserStore().currentEComStore = preferredStore
+          dispatch("setEcomStore", { eComStore: preferredStore })
+          await useUserStore().setEComStorePreference(preferredStore)
 
           await dispatch("fetchVirtualFacilities", { token })
 
@@ -184,6 +187,8 @@ const actions: ActionTree<UserState, RootState> = {
         'userPrefTypeId': 'SELECTED_BRAND',
         'userPrefValue': payload.eComStore.productStoreId
       });
+
+      await useUserStore().setEComStorePreference(payload.eComStore);
     
       // Get product identification from api using dxp-component
       await useProductIdentificationStore().getIdentificationPref(payload.eComStore.productStoreId)
