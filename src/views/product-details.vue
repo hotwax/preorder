@@ -1,3 +1,6 @@
+product-details.vue
+
+
 <template>
   <ion-page>
     <ion-header :translucent="true">
@@ -53,28 +56,28 @@
             <ion-label>{{ $t("Ordered after") }} </ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="ordered-after" v-model="orderedAfter" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='orderedAfter = ""' v-if="orderedAfter" :icon="close"/>
+              <ion-icon @click='orderedAfter = ""; getVariantProducts()' v-if="orderedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Ordered before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="ordered-before" v-model="orderedBefore" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='orderedBefore = ""' v-if="orderedBefore" :icon="close"/>
+              <ion-icon @click='orderedBefore = ""; getVariantProducts()' v-if="orderedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised after") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="promised-after" v-model="promisedAfter" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='promisedAfter = ""' v-if="promisedAfter" :icon="close"/>
+              <ion-icon @click='promisedAfter = ""; getVariantProducts()' v-if="promisedAfter" :icon="close"/>
             </ion-chip>
           </ion-item>
           <ion-item>
             <ion-label>{{ $t("Promised before") }}</ion-label>
             <ion-chip slot="end">
               <ion-input aria-label="promised-before" v-model="promisedBefore" @ionChange="getVariantProducts()" type="date" />
-              <ion-icon @click='promisedBefore = ""' v-if="promisedBefore" :icon="close"/>
+              <ion-icon @click='promisedBefore = ""; getVariantProducts()' v-if="promisedBefore" :icon="close"/>
             </ion-chip>
           </ion-item>
           <!-- TODO -->
@@ -83,16 +86,16 @@
             <ion-chip slot="end">
               <ion-icon :icon="list" />
               <ion-label>none</ion-label>
-            </ion-chip>   
+            </ion-chip>
           </ion-item> -->
           <ion-item>
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
-            <ion-chip slot="end">  
+            <ion-chip slot="end">
               <ion-icon :icon="ribbon"  />
               <ion-select aria-label="loyalty-status" :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for="(key, value) in cusotmerLoyaltyOptions" :key="key" :value="value">{{key}}</ion-select-option>
-              </ion-select> 
-              <ion-icon @click='cusotmerLoyalty = ""' v-if="cusotmerLoyalty" :icon="close"/>
+              </ion-select>
+              <ion-icon @click='cusotmerLoyalty = ""; getVariantProducts()' v-if="cusotmerLoyalty" :icon="close"/>
            </ion-chip>
           </ion-item>
           <ion-item lines="none">
