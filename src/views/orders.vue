@@ -22,13 +22,13 @@
       <div class="header">
         <div class="search">
           <ion-searchbar @ionFocus="selectSearchBarText($event)" @ionClear="query.queryString = ''; updateQuery()" :value="query.queryString" v-on:keyup.enter="query.queryString = $event.target.value; updateQuery()"> </ion-searchbar>
-        </div>
+        </div> 
 
         <div class="filters">
           <ion-item>
             <ion-label>{{ $t("Ordered after") }}</ion-label>
             <ion-chip slot="end">
-              <!--
+              <!-- 
                 TODO Need to fix this
                 :value is a recommended way for vuex state but value is not working for date when resetting with close button used v-model instead of :value
                 https://vuex.vuejs.org/guide/forms.html#two-way-computed-property
