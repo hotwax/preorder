@@ -83,15 +83,15 @@
             <ion-chip slot="end">
               <ion-icon :icon="list" />
               <ion-label>none</ion-label>
-            </ion-chip>
+            </ion-chip>  
           </ion-item> -->
           <ion-item>
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
-            <ion-chip slot="end">
+            <ion-chip slot="end">  
               <ion-icon :icon="ribbon"  />
               <ion-select aria-label="loyalty-status" :placeholder="$t('select')" @ionChange="getVariantProducts()" v-model="cusotmerLoyalty" interface="popover" interface-options="{showBackdrop:false}">
                 <ion-select-option v-for="(key, value) in cusotmerLoyaltyOptions" :key="key" :value="value">{{key}}</ion-select-option>
-              </ion-select>
+              </ion-select> 
               <ion-icon @click='cusotmerLoyalty = ""; getVariantProducts()' v-if="cusotmerLoyalty" :icon="close"/>
            </ion-chip>
           </ion-item>
