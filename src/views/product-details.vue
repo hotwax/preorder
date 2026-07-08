@@ -83,7 +83,7 @@
             <ion-chip slot="end">
               <ion-icon :icon="list" />
               <ion-label>none</ion-label>
-            </ion-chip>  
+            </ion-chip>   
           </ion-item> -->
           <ion-item>
             <ion-label>{{ $t("Loyalty status") }}</ion-label>
