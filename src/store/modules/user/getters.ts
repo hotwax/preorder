@@ -27,6 +27,13 @@ const getters: GetterTree <UserState, RootState> = {
         if (!baseURL) baseURL = state.instanceUrl;
         return baseURL.startsWith('http') ? baseURL.includes('/api') ? baseURL : `${baseURL}/api/` : `https://${baseURL}.hotwax.io/api/`;
     },
+    getMaargBaseUrl(state) {
+        let maargURL = state.instanceUrl
+        if (maargURL) {
+            maargURL = maargURL.startsWith('http') ? maargURL.includes('/rest/s1') ? maargURL : `${maargURL}/rest/s1/` : `https://${maargURL}.hotwax.io/rest/s1/`;
+        }
+        return maargURL
+    },
     getPwaState(state) {
         return state.pwaState;
     },
@@ -38,6 +45,18 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrentOrderParking(state) {
         return state.currentOrderParking
+    },
+    isMoquiOnly(state) {
+        return state.isMoquiOnly
+    },
+    getProductIdentificationPref(state) {
+        return state.productIdentificationPref
+    },
+    getProductIdentificationOptions(state) {
+        return state.productIdentificationOptions
+    },
+    getProductStoreFacilities(state) {
+        return state.productStoreFacilities
     }
 }
 export default getters;

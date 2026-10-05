@@ -11,6 +11,7 @@ import productModule from "./modules/product"
 import jobModule from "./modules/job"
 import utilModule from "./modules/util"
 import { setPermissions } from '@/authorization'
+import purchaseOrderModule from "./modules/purchaseOrder"
 
 
 // TODO check how to register it from the components only
@@ -23,7 +24,7 @@ const state: any = {
 }
 
 const persistState = createPersistedState({
-    paths: ['user'],
+    paths: ['user', "util.enums", "util.facilities", "util.statusDesc"],
     fetchBeforeUse: true
 })
 
@@ -40,7 +41,8 @@ const store = createStore<RootState>({
         'stock': stockModule,
         'product': productModule,
         'job': jobModule,
-        'util': utilModule
+        'util': utilModule,
+        'purchaseOrder': purchaseOrderModule
     },
 })
 

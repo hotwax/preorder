@@ -6,12 +6,13 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import { Settings } from 'luxon'
-import { updateInstanceUrl, updateToken, resetConfig, logout, getUserPreference } from '@/adapter'
+import { client, updateInstanceUrl, updateToken, resetConfig, logout, getUserPreference } from '@/adapter'
 import { useAuthStore, useProductIdentificationStore, useUserStore } from '@hotwax/dxp-components';
 import { UtilService } from '@/services/UtilService'
 import { getServerPermissionsFromRules, prepareAppPermissions, resetPermissions, setPermissions } from '@/authorization'
 import emitter from '@/event-bus'
 import store from '@/store'
+import { UserMaargService } from '@/services/UserMaargService'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -22,8 +23,10 @@ const actions: ActionTree<UserState, RootState> = {
 
     const { token, oms } = payload;
     dispatch("setUserInstanceUrl", oms);
+    const isMoqui = await UserMaargService.fetchLoginOptions()
+    commit(types.USER_IS_MOQUI_ONLY_UPDATED, isMoqui)
     try {
-      if (token) {
+      if(token && !isMoqui) {
         // Getting the permissions list from server
         const permissionId = process.env.VUE_APP_PERMISSION_ID;
 
@@ -97,13 +100,67 @@ const actions: ActionTree<UserState, RootState> = {
         if (userProfile.userTimeZone) {
           Settings.defaultZone = userProfile.userTimeZone;
         }
+      } else if(token) {
+        const permissionId = process.env.VUE_APP_PERMISSION_ID;
 
+        // Prepare permissions list
+        const serverPermissionsFromRules = getServerPermissionsFromRules();
+        if (permissionId) serverPermissionsFromRules.push(permissionId);
+
+        const serverPermissions = await UserMaargService.getUserPermissions({
+          permissionIds: [...new Set(serverPermissionsFromRules)]
+        }, token);
+        const appPermissions = prepareAppPermissions(serverPermissions);
+
+        // Checking if the user has permission to access the app
+        // If there is no configuration, the permission check is not enabled
+        if (permissionId) {
+          const hasPermission = appPermissions.some((appPermission: any) => appPermission.action === permissionId );
+          // If there are any errors or permission check fails do not allow user to login
+          if (!hasPermission) {
+            const permissionError = "You do not have permission to access the app.";
+            showToast(translate(permissionError));
+            console.error("error", permissionError);
+            return Promise.reject(new Error(permissionError));
+          }
+        }
+
+        const userProfile = await UserMaargService.getUserProfile(token);
+        userProfile.userTimeZone = userProfile.timeZone
+        try {
+          userProfile.stores = await UserMaargService.getEComStores(token);
+        } catch (error) {
+          const reason = "Unable to login. Product Store not found";
+          console.error(reason, error);
+          showToast(translate(reason));
+          return Promise.reject(new Error(reason));
+        }
+        setPermissions(appPermissions);
+
+        if (userProfile.userTimeZone) {
+          Settings.defaultZone = userProfile.userTimeZone;
+        }
+        
+        let preferredStore = userProfile.stores[0];
+        const preferredStoreId =  await UserMaargService.getPreferredStore(userProfile.userId, token);
+        if (preferredStoreId) {
+          const store = userProfile.stores.find((store: any) => store.productStoreId === preferredStoreId);
+          store && (preferredStore = store)
+        }
+        
         // TODO user single mutation
         commit(types.USER_CURRENT_ECOM_STORE_UPDATED, preferredStore);
         commit(types.USER_INFO_UPDATED, userProfile);
         commit(types.USER_TOKEN_CHANGED, { newToken: token });
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
         updateToken(token);
+
+        useUserStore().currentEComStore = preferredStore
+        dispatch("setEcomStore", { eComStore: preferredStore })
+        await useUserStore().setEComStorePreference(preferredStore)
+
+        // Get product identification pref from moqui
+        await dispatch("fetchProductIdentificationPref", preferredStore?.productStoreId)
       }
     } catch (err: any) {
       showToast(translate('Something went wrong'));
@@ -115,14 +172,14 @@ const actions: ActionTree<UserState, RootState> = {
   /**
    * Logout user
    */
-  async logout ({ commit }, payload) {
+  async logout ({ commit, state }, payload) {
     // store the url on which we need to redirect the user after logout api completes in case of SSO enabled
     let redirectionUrl = ''
 
     emitter.emit('presentLoader')
     // Calling the logout api to flag the user as logged out, only when user is authorised
     // if the user is already unauthorised then not calling the logout api as it returns 401 again that results in a loop, thus there is no need to call logout api if the user is unauthorised
-    if(!payload?.isUserUnauthorised) {
+    if(!payload?.isUserUnauthorised && !state.isMoquiOnly) {
       let resp;
 
       // wrapping the parsing logic in try catch as in some case the logout api makes redirection, and then we are unable to parse the resp and thus the logout process halts
@@ -175,24 +232,38 @@ const actions: ActionTree<UserState, RootState> = {
     Settings.defaultZone = current.userTimeZone;
   },
 
+  async fetchFacilities({ commit, state }) {
+    const facilities = await UserMaargService.fetchProductStoreFacilities((state.currentEComStore as any).productStoreId);
+    commit(types.USER_PRODUCT_STORE_FACILITIES_UPDATED, facilities)
+  },
+
   /**
    * Set user's selected Ecom store
    */
-    async setEcomStore({ commit }, payload) {
+    async setEcomStore({ commit, dispatch, state }, payload) {
       commit(types.USER_CURRENT_ECOM_STORE_UPDATED, payload.eComStore);
       // Reset all the current queries
       this.dispatch("product/resetProductList")
       this.dispatch("order/resetOrderQuery")
-      await UserService.setUserPreference({
-        'userPrefTypeId': 'SELECTED_BRAND',
-        'userPrefValue': payload.eComStore.productStoreId
-      });
+      this.dispatch("util/clearFacilities")
 
-      await useUserStore().setEComStorePreference(payload.eComStore);
-    
-      // Get product identification from api using dxp-component
-      await useProductIdentificationStore().getIdentificationPref(payload.eComStore.productStoreId)
-        .catch((error) => console.error(error));
+      if(state.isMoquiOnly) {
+        UserMaargService.setProductStorePreference({
+          'userId': (state.current as any).userId,
+          'productStoreId': payload.eComStore.productStoreId
+        })
+        await dispatch("fetchFacilities")
+        await dispatch("fetchProductIdentificationPref", payload.eComStore.productStoreId)
+      } else {
+        await UserService.setUserPreference({
+          'userPrefTypeId': 'SELECTED_BRAND',
+          'userPrefValue': payload.eComStore.productStoreId
+        });
+        await useUserStore().setEComStorePreference(payload.eComStore);
+        // Get product identification from api using dxp-component
+        await useProductIdentificationStore().getIdentificationPref(payload.eComStore.productStoreId)
+          .catch((error) => console.error(error));
+      }
     },
 
   /**
@@ -251,7 +322,140 @@ const actions: ActionTree<UserState, RootState> = {
   },
     updatePwaState({ commit }, payload) {
       commit(types.USER_PWA_STATE_UPDATED, payload);
+    },
+
+  /**
+   * Fetch product identification pref for the product store, creates the pref with default value if not exists
+   */
+  async fetchProductIdentificationPref({ commit, state, getters }, productStoreId) {
+    const productIdentificationPref = { primaryId: "productId", secondaryId: "" }
+
+    if(!productStoreId) {
+      commit(types.USER_PRODUCT_IDENTIFICATION_PREF_UPDATED, productIdentificationPref)
+      return
     }
+
+    try {
+      const resp = await client({
+        url: `admin/productStores/${productStoreId}/settings`,
+        method: "GET",
+        baseURL: getters.getMaargBaseUrl,
+        params: { productStoreId, settingTypeEnumId: "PRDT_IDEN_PREF" },
+        headers: {
+          Authorization: 'Bearer ' + state.token,
+          'Content-Type': 'application/json'
+        }
+      }) as any
+
+      const settings = resp.data
+      if(settings[0]?.settingValue) {
+        const respValue = JSON.parse(settings[0].settingValue)
+        productIdentificationPref.primaryId = respValue.primaryId
+        productIdentificationPref.secondaryId = respValue.secondaryId
+      } else {
+        await client({
+          url: `admin/productStores/${productStoreId}/settings`,
+          method: "POST",
+          baseURL: getters.getMaargBaseUrl,
+          data: { productStoreId, settingTypeEnumId: "PRDT_IDEN_PREF", settingValue: JSON.stringify(productIdentificationPref) },
+          headers: {
+            Authorization: 'Bearer ' + state.token,
+            'Content-Type': 'application/json'
+          }
+        })
+      }
+    } catch(err) {
+      console.error("Failed to get product identification pref", err)
+    }
+
+    commit(types.USER_PRODUCT_IDENTIFICATION_PREF_UPDATED, productIdentificationPref)
+  },
+
+  /**
+   * Update product identification pref for the product store, only updates when the pref already exists
+   */
+  async setProductIdentificationPref({ commit, state, getters }, payload) {
+    const { id, value, productStoreId } = payload
+    const productIdentificationPref = JSON.parse(JSON.stringify(state.productIdentificationPref))
+
+    if(!productStoreId) {
+      commit(types.USER_PRODUCT_IDENTIFICATION_PREF_UPDATED, productIdentificationPref)
+      return
+    }
+
+    productIdentificationPref[id] = value
+    let isSettingExists = false
+    try {
+      const resp = await client({
+        url: `admin/productStores/${productStoreId}/settings`,
+        method: "GET",
+        baseURL: getters.getMaargBaseUrl,
+        params: { productStoreId, settingTypeEnumId: "PRDT_IDEN_PREF" },
+        headers: {
+          Authorization: 'Bearer ' + state.token,
+          'Content-Type': 'application/json'
+        }
+      }) as any
+      if(resp.data[0]?.settingTypeEnumId) isSettingExists = true
+    } catch(err) {
+      console.error(err)
+    }
+
+    if(!isSettingExists) {
+      console.error("Failed to set identification pref: product store setting is missing")
+      return
+    }
+
+    try {
+      await client({
+        url: `admin/productStores/${productStoreId}/settings`,
+        method: "POST",
+        baseURL: getters.getMaargBaseUrl,
+        data: { productStoreId, settingTypeEnumId: "PRDT_IDEN_PREF", settingValue: JSON.stringify(productIdentificationPref) },
+        headers: {
+          Authorization: 'Bearer ' + state.token,
+          'Content-Type': 'application/json'
+        }
+      })
+      commit(types.USER_PRODUCT_IDENTIFICATION_PREF_UPDATED, productIdentificationPref)
+    } catch(err) {
+      console.error("Failed to set identification pref", err)
+    }
+  },
+
+  /**
+   * Prepare product identifier options, static options along with the good identification types
+   */
+  async prepareProductIdentifierOptions({ commit, state, getters }) {
+    const staticOptions = [
+      { goodIdentificationTypeId: 'productId', description: 'Product ID' },
+      { goodIdentificationTypeId: 'groupId', description: 'Group ID' },
+      { goodIdentificationTypeId: 'groupName', description: 'Group Name' },
+      { goodIdentificationTypeId: 'internalName', description: 'Internal Name' },
+      { goodIdentificationTypeId: 'parentProductName', description: 'Parent Product Name' },
+      { goodIdentificationTypeId: 'primaryProductCategoryName', description: 'Primary Product Category Name' },
+      { goodIdentificationTypeId: 'title', description: 'Title' }
+    ]
+
+    let fetchedOptions = [] as any[]
+    try {
+      const resp = await client({
+        url: "oms/goodIdentificationTypes",
+        method: "GET",
+        baseURL: getters.getMaargBaseUrl,
+        params: { parentTypeId: "HC_GOOD_ID_TYPE", pageSize: 50 },
+        headers: {
+          Authorization: 'Bearer ' + state.token,
+          'Content-Type': 'application/json'
+        }
+      }) as any
+      fetchedOptions = resp.data || []
+    } catch(err) {
+      console.error("Failed to fetch good identification types", err)
+    }
+
+    commit(types.USER_PRODUCT_IDENTIFICATION_OPTIONS_UPDATED, [...staticOptions, ...fetchedOptions])
+  }
 
 }
 export default actions;

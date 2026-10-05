@@ -13,6 +13,8 @@ const mutations: MutationTree <UserState> = {
       state.currentOrderParking = []
       state.virtualFacilities = {}
       state.permissions = []
+      state.productIdentificationPref = { primaryId: 'productId', secondaryId: '' }
+      state.productIdentificationOptions = []
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
@@ -35,6 +37,21 @@ const mutations: MutationTree <UserState> = {
     [types.USER_PWA_STATE_UPDATED](state, payload) {
         state.pwaState.registration = payload.registration;
         state.pwaState.updateExists = payload.updateExists;
+    },
+    [types.USER_OMS_REDIRECTION_URL_UPDATED](state, payload) {
+        state.omsRedirectionUrl = payload;
+    },
+    [types.USER_IS_MOQUI_ONLY_UPDATED](state, payload) {
+        state.isMoquiOnly = payload;
+    },
+    [types.USER_PRODUCT_IDENTIFICATION_PREF_UPDATED](state, payload) {
+        state.productIdentificationPref = payload;
+    },
+    [types.USER_PRODUCT_IDENTIFICATION_OPTIONS_UPDATED](state, payload) {
+        state.productIdentificationOptions = payload;
+    },
+    [types.USER_PRODUCT_STORE_FACILITIES_UPDATED](state, payload) {
+        state.productStoreFacilities = payload;
     },
 }
 export default mutations;

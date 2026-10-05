@@ -6,6 +6,7 @@ import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
 import emitter from '@/event-bus'
+import { PurchaseOrderService } from '@/services/PurchaseOrderService'
 
 
 const actions: ActionTree<ProductState, RootState> = {
@@ -35,6 +36,47 @@ const actions: ActionTree<ProductState, RootState> = {
       "viewSize": productIds.length
     })
     if (resp.status === 200 && !hasError(resp)) {
+      const products = resp.data.response.docs;
+      // Handled empty response in case of failed query
+      if (resp.data) {
+        products.forEach((product: any) => {
+          cachedProducts[product.productId] = product
+        });
+      }
+      commit(types.PRODUCT_CACHED_UPDATED, { cached: cachedProducts });
+    }
+    return cachedProducts;
+  },
+
+  async fetchMaargProducts({commit, state}, { productIds }) {
+    const cachedProducts = JSON.parse(JSON.stringify(state.cached));
+    const cachedProductIds = Object.keys(state.cached);
+    const productIdFilter= productIds.reduce((filter: string, productId: any) => {
+      // If product already exist in cached products skip
+      if (cachedProductIds.includes(productId)) {
+        return filter;
+      } else {
+        // checking condition that if the filter is not empty then adding 'OR' to the filter
+        if (filter !== '') filter += ' OR '
+        return filter += productId;
+      }
+    }, '');
+
+    // If there are no products skip the API call
+    if (productIdFilter === '') return cachedProducts;
+
+    const resp = await PurchaseOrderService.fetchProducts({
+      json: {
+        params: {
+          rows: productIds.length,
+          start: 0,
+          'q.op': 'AND'
+        },
+        query: '(*:*)',
+        filter: ["docType: PRODUCT", `productId: ${productIdFilter}`]
+      },
+    })
+    if(!hasError(resp)) {
       const products = resp.data.response.docs;
       // Handled empty response in case of failed query
       if (resp.data) {

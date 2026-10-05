@@ -1,6 +1,6 @@
 import { api } from '@/adapter';
 import store from '@/store';
-import { hasError } from '@hotwax/oms-api';
+import { apiClient, hasError } from '@hotwax/oms-api';
 
 const getServiceStatusDesc = async (payload: any): Promise<any> => {
   return api({
@@ -110,6 +110,56 @@ const fetchGoodIdentificationTypes = async(parentTypeId = "HC_GOOD_ID_TYPE"): Pr
   }
 }
 
+const fetchEnums = async(payload: any): Promise<any> => {
+  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = store.getters['user/getMaargBaseUrl'];
+
+  return await apiClient({
+    url: "admin/enums",
+    params: payload,
+    method: "GET",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+const fetchMaargFacilities = async (payload: any): Promise <any>  => {
+  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = store.getters['user/getMaargBaseUrl'];
+
+  return apiClient({
+    url: `/oms/facilities`,
+    method: "GET",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    },
+    params: payload
+  });
+}
+
+const fetchStatusInfo = async(): Promise<any> => {
+  const omstoken = store.getters['user/getUserToken'];
+  const baseURL = store.getters['user/getMaargBaseUrl'];
+
+  return await apiClient({
+    url: "oms/statuses",
+    params: {
+      statusTypeId: "FII_STATUS"
+    },
+    method: "GET",
+    baseURL,
+    headers: {
+      "Authorization": "Bearer " + omstoken,
+      "Content-Type": "application/json"
+    }
+  });
+}
+
 export const UtilService = {
   getServiceStatusDesc,
   getReserveInvConfig,
@@ -117,6 +167,9 @@ export const UtilService = {
   updateReserveInvConfig,
   updatePreOrdPhyInvHoldConfig,
   createPreOrdPhyInvHoldConfig,
+  fetchEnums,
   fetchFacilities,
-  fetchGoodIdentificationTypes
+  fetchGoodIdentificationTypes,
+  fetchMaargFacilities,
+  fetchStatusInfo
 }

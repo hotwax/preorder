@@ -18,7 +18,15 @@ const userModule: Module<UserState, RootState> = {
       pwaState: {
         updateExists: false,
         registration: null,
-      }
+      },
+      omsRedirectionUrl: "",
+      isMoquiOnly: false,
+      productIdentificationPref: {
+        primaryId: 'productId',
+        secondaryId: ''
+      },
+      productStoreFacilities: [],
+      productIdentificationOptions: []
     },
     getters,
     actions,

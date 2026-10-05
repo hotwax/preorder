@@ -9,7 +9,9 @@ const utilModule: Module<UtilState, RootState> = {
   namespaced: true,
   state: {
     statusDesc: {},
-    config: {}
+    config: {},
+    enums: {},
+    facilities: {}
   },
   getters,
   actions,

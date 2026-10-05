@@ -4,6 +4,7 @@ import RootState from '@/store/RootState'
 import UtilState from './UtilState'
 import * as types from './mutation-types'
 import { hasError } from '@/utils'
+import { PurchaseOrderService } from '@/services/PurchaseOrderService'
 
 const actions: ActionTree<UtilState, RootState> = {
   /**
@@ -113,7 +114,60 @@ const actions: ActionTree<UtilState, RootState> = {
    */
     async clearInvConfigs({ commit }) {
       commit(types.UTIL_STORE_INV_CONFIG_UPDATED, {})
+    },
+
+    async clearFacilities({ commit }) {
+      commit(types.UTIL_FACILITIES_UPDATED, {})
+    },
+
+  async getEnumDetails({ commit, state }) {
+    if (Object.keys(state.enums).length) return
+
+    try{
+      const resp = await UtilService.fetchEnums({
+        enumTypeId: "FUTURE_INV_ITEM_TYPE,FUTURE_INV_DETAIL_REASON",
+        enumTypeId_op: "in",
+        pageSize: 500
+      }) 
+      if(resp.data.length) {
+        commit(types.UTIL_ENUMS_UPDATED, resp.data.reduce((enums: any, e: any) => {
+          enums[e.enumId] = e
+          return enums;
+        }, {}));
+      }
+    } catch(err) {
+      console.error(err)
     }
+  },
+
+  async fetchFacilityDetails({ commit }, facilityIds) {
+    try{
+      const resp = await UtilService.fetchMaargFacilities({
+        facilityId: facilityIds.join(","),
+        facilityId_op: "in",
+        pageSize: 500
+      }) 
+      if(resp.data.length) {
+        commit(types.UTIL_FACILITIES_UPDATED, resp.data.reduce((facilities: any, facility: any) => {
+          facilities[facility.facilityId] = facility
+          return facilities;
+        }, {}));
+      }
+    } catch(err) {
+      console.error(err)
+    }
+  },
+
+  async fetchStatuses({ commit }) {
+    try{
+      const resp = await UtilService.fetchStatusInfo() 
+      if(resp.data.length) {
+        commit(types.UTIL_SERVICE_STATUS_DESC_UPDATED, resp.data);
+      }
+    } catch(err) {
+      console.error(err)
+    }
+  },
 }
 
 export default actions;

@@ -7,4 +7,12 @@ export default interface UserState {
     currentEComStore: object;
     virtualFacilities: object | null;
     currentOrderParking: Array<string>;
+    omsRedirectionUrl: string;
+    isMoquiOnly: boolean;
+    productIdentificationPref: {
+        primaryId: string;
+        secondaryId: string;
+    };
+    productStoreFacilities: any;
+    productIdentificationOptions: Array<any>;
 }

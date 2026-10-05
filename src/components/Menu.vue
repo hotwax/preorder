@@ -41,7 +41,7 @@ import {
 import { computed, defineComponent} from "vue"
 import { mapGetters } from "vuex";
 
-import { albumsOutline, shirtOutline, pricetagsOutline, settingsOutline } from "ionicons/icons";
+import { albumsOutline, shirtOutline, pricetagsOutline, settingsOutline, receiptOutline } from "ionicons/icons";
 import { useStore } from "@/store";
 import { useRouter } from "vue-router";
 import { hasPermission } from "@/authorization";
@@ -70,7 +70,11 @@ export default defineComponent({
     const router = useRouter();
 
     const getValidMenuItems = (appPages: any) => {
-      return appPages.filter((appPage: any) => (!appPage.meta || !appPage.meta.permissionId) || hasPermission(appPage.meta.permissionId));
+      return appPages.filter((appPage: any) => {
+        // In case of moqui only setup, displaying only the moqui based pages
+        if(store.state.user.isMoquiOnly && !appPage.meta?.isMoquiBasedPage) return false;
+        return !appPage.meta?.permissionId || hasPermission(appPage.meta.permissionId);
+      });
     }
 
     const appPages = [
@@ -104,10 +108,23 @@ export default defineComponent({
         }
       },
       {
+        title: "Purchase Orders",
+        url: "/purchase-orders",
+        iosIcon: receiptOutline,
+        mdIcon: receiptOutline,
+        meta: {
+          permissionId: "APP_PURCHASE_ORDER_VIEW",
+          isMoquiBasedPage: true
+        }
+      },
+      {
         title: "Settings",
         url: "/settings",
         iosIcon: settingsOutline,
         mdIcon: settingsOutline,
+        meta: {
+          isMoquiBasedPage: true
+        }
       }
     ];
 

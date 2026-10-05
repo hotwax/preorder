@@ -34,4 +34,14 @@ const getFeature = (productFeatures: any, featureKey: string) => {
   return featureValue;
 }
 
-export { handleDateTimeInput, showToast, hasError, getFeature }
+const statusColor = {
+  "Approved": "primary",
+  "Completed": "success",
+  "Cancelled": "danger"
+} as Record<string, string>
+
+const getStatusColor = (status: string) => {
+  return statusColor[status] || "medium"
+}
+
+export { handleDateTimeInput, showToast, hasError, getFeature, getStatusColor }
