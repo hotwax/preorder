@@ -22,7 +22,7 @@ const fetchFutureInventory = async (params: any): Promise<any> => {
   const baseURL = store.getters['user/getMaargBaseUrl'];
 
   return await apiClient({
-    url: "oms/futureInventory",
+    url: "preorder/futureInventory",
     method: "GET",
     baseURL,
     params,
@@ -53,7 +53,7 @@ const fetchFutureInventoryDetail = async(id: string): Promise<any> => {
   const baseURL = store.getters['user/getMaargBaseUrl'];
 
   return await apiClient({
-    url: "oms/futureInventoryGroups",
+    url: "preorder/futureInventoryGroups",
     method: "GET",
     params: {
       externalId: id
