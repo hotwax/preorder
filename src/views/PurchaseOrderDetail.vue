@@ -69,7 +69,7 @@
                   </ion-item>
                   <div class="tablet ion-text-center">
                     <ion-label>
-                      {{ row.quantity || "-" }}/{{ row.availableToPromiseTotal || "-" }}
+                      {{ row.quantity || "-" }}/{{ row.availableToPromiseTotal ?? "-" }}
                       <p>{{ $t("quantity") }}/{{ $t("ATP") }}</p>
                     </ion-label>
                   </div>
