@@ -21,8 +21,9 @@ const actions: ActionTree<UserState, RootState> = {
  */
   async login ({ commit, dispatch }, payload) {
 
-    const { token, oms } = payload;
+    const { token, oms, omsRedirectionUrl } = payload;
     dispatch("setUserInstanceUrl", oms);
+    commit(types.USER_OMS_REDIRECTION_URL_UPDATED, omsRedirectionUrl || "");
     const isMoqui = await UserMaargService.fetchLoginOptions()
     commit(types.USER_IS_MOQUI_ONLY_UPDATED, isMoqui)
     try {

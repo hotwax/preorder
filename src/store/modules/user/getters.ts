@@ -28,7 +28,7 @@ const getters: GetterTree <UserState, RootState> = {
         return baseURL.startsWith('http') ? baseURL.includes('/api') ? baseURL : `${baseURL}/api/` : `https://${baseURL}.hotwax.io/api/`;
     },
     getMaargBaseUrl(state) {
-        let maargURL = state.instanceUrl
+        let maargURL = state.omsRedirectionUrl || state.instanceUrl
         if (maargURL) {
             maargURL = maargURL.startsWith('http') ? maargURL.includes('/rest/s1') ? maargURL : `${maargURL}/rest/s1/` : `https://${maargURL}.hotwax.io/rest/s1/`;
         }
