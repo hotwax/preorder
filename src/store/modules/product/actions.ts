@@ -73,7 +73,7 @@ const actions: ActionTree<ProductState, RootState> = {
           'q.op': 'AND'
         },
         query: '(*:*)',
-        filter: ["docType: PRODUCT", `productId: ${productIdFilter}`]
+        filter: ["docType: PRODUCT", `productId: (${productIdFilter})`]
       },
     })
     if(!hasError(resp)) {
