@@ -35,7 +35,7 @@ The app is built the way Order Manager is built and follows its design language:
 | `/preorders/:orderId` | Pre-order detail | `APP_PREORDER_VIEW` |
 | `/future-inventory` | Find future inventory | `APP_PREORDER_VIEW` |
 | `/future-inventory/:futureInventoryItemId` | FI batch detail (ledger, waiting lines) | `APP_PREORDER_VIEW` |
-| `/purchase-orders` | Find purchase orders | `APP_PO_VIEW` |
+| `/purchase-orders` | Find purchase orders (not scoped to the menu's store: supply belongs to facilities, and a PO may name no store) | `APP_PO_VIEW` |
 | `/purchase-orders/create` | Create purchase order | `APP_PO_UPDATE` |
 | `/purchase-orders/:orderId` | PO detail | `APP_PO_VIEW` |
 | `/inbound-shipments` | Find inbound shipments | `APP_PO_VIEW` |
@@ -190,7 +190,8 @@ Detail:
 
 Create (`/purchase-orders/create`):
 - supplier, destination facility, product store, currency and external id;
-- lines: product search, quantity, unit cost and arrival date;
+- lines: product search (Solr, sellable variants and simple products; falls back to OMS's
+  product list when Solr has no product documents), quantity, unit cost and arrival date;
 - an optional "Sell as pre-order" toggle with an FI type, which creates a batch per line.
 
 ### 3.5 Inbound shipments (`/inbound-shipments`)
@@ -322,6 +323,22 @@ All paths are relative to `/rest/s1/`.
   gives a reason.
 
 ## 5. Known limits and follow-ups
+
+Found while verifying against the local OMS (2026-10-18):
+
+- **The supplier list only names parties already on a PO.** It is `SHIP_FROM_VENDOR` roles on
+  existing POs, so a first PO from a new supplier can't be created from the app yet. It should list
+  SUPPLIER role parties.
+- **"Soonest arrival" sorts POs with no arrival date first.**
+- **Local environment problems in oms, not fixed here:**
+  - The local Solr has no PRODUCT documents, and `create#ProductIndex` writes documents with a
+    null identifier.
+  - The local DB has no `COM_EVENT_STATUS` StatusItems, so no CommunicationEvent can be recorded
+    and the email log stays empty.
+  - `send#EmailOnOrderEvents` throws for a store with no ShopifyShop.
+  - The QA fixture stores have no pay-to company, so `store#PurchaseOrder` refuses POs for them.
+    Demo Store works.
+
 
 - **FI is not scoped to a store.** On the dashboard and FI pages, store scope comes from
   ProductStoreFacility, as on the old board.
