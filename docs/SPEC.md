@@ -76,24 +76,30 @@ and rebuilt on the FI model, in Funnel's layout. One request: `GET preorder/dash
 
 ### 3.2 Pre-orders (`/preorders`)
 
-A pre-order is a sales order with at least one line that has reserved future inventory (an
-`FID_RESERVED` ledger row). Rows are orders.
+A pre-order is a sales order with at least one open pre-order line: a line that is not cancelled,
+completed or rejected, holds an open future inventory reservation (the latest ledger row for the line
+and batch is `FID_RESERVED`) and has no physical inventory reservation (`OrderItemShipGrpInvRes`).
+A shipped line, a cancelled one and one with stock reserved are not pre-orders. Rows are orders.
+
+The list reads current state only, never ledger history: it pages the order ids over
+`PreorderOpenLine`, starting from the store's open orders (index `OH_STORE_STATUS_TYPE`), then builds
+only that page.
 
 Filters: every Find orders filter from Order Manager, plus parking.
 
 | Filter | Values | Backed by |
 |---|---|---|
 | Search | order id, order name, external id, customer name, email | `OrderHeader`, `OrderRole BILL_TO_CUSTOMER` + `Person`, `OrderContactMech ORDER_EMAIL` |
-| Status | multi: order statuses | `OrderHeader.statusId` |
-| At parking now | Any / At parking / Released | any FI line's ship group at a facility of type `PRE_ORDER` or `BACKORDER` |
-| Allocation state | All, Allocated, Awaiting brokering, Unfillable, Archived | the line's ship group facility (Order Manager's vocabulary) |
+| Status | multi: open order statuses (closed orders have no open line) | `OrderHeader.statusId` |
+| At parking now | Any / At parking / Released | an open pre-order line's ship group at a facility of type `PRE_ORDER` or `BACKORDER` (released: at any other) |
+| Allocation state | All, Awaiting brokering, Unfillable, Archived | an open pre-order line's ship group facility (Order Manager's vocabulary). No "Allocated": a line with stock reserved is not a pre-order |
 | FI type | All, Pre-order, Back-order | `FutureInventoryItem.futureInventoryItemTypeId` |
 | Sales channel | enums `ORDER_SALES_CHANNEL` | `OrderHeader.salesChannelEnumId` |
 | Shipping method | shipment methods | `OrderItemShipGroup.shipmentMethodTypeId` |
 | Order date from / through | dates | `OrderHeader.orderDate` |
 | Product store | the menu footer's store | `OrderHeader.productStoreId` |
 
-Sort: oldest first (default) or newest first.
+Sort: newest first (default) or oldest first.
 
 Each row shows:
 - the customer, with order name, id and status;
@@ -309,7 +315,7 @@ All paths are relative to `/rest/s1/`.
 | Method + path | Backing | Notes |
 |---|---|---|
 | GET `preorder/dashboard` | `get#PreorderDashboard` | all dashboard figures for a store |
-| GET `preorder/preorders` | `get#PreorderOrders` | filters as in 3.2. Returns `{orders, ordersCount}`; each order carries its FI lines |
+| GET `preorder/preorders` | `get#PreorderOrders` over `PreorderOpenLine` | filters as in 3.2; page ids first, then `get#PreorderOrderDetails` for that page. Returns `{orders, ordersCount}`; each order carries its FI lines |
 | GET `preorder/preorders/{orderId}` | `get#PreorderOrder` | header and FI lines with batches |
 | POST `preorder/preorders/{orderId}/items/{orderItemSeqId}/reallocate` | `reallocate#FutureInventoryReservation` | |
 | GET `preorder/futureInventory/{futureInventoryItemId}` | `get#FutureInventoryItem` over the `FutureInventoryItem` `default` master | the batch with `product`, `purchaseOrderHeader` and `purchaseOrderItem` (the PO two absent with no PO), plus `reservedQuantity`, `waitingLineCount` and `waitingQuantity`; `{futureInventoryItem}`. The facility name comes from seed data |

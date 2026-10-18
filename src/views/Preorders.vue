@@ -31,7 +31,6 @@
 
           <ion-select v-model="filters.allocationState" :label="translate('Allocation state')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All locations') }}</ion-select-option>
-            <ion-select-option value="Allocated">{{ translate('Allocated') }}</ion-select-option>
             <ion-select-option value="AwaitingBrokering">{{ translate('Awaiting brokering') }}</ion-select-option>
             <ion-select-option value="Unfillable">{{ translate('Unfillable') }}</ion-select-option>
             <ion-select-option value="Archived">{{ translate('Archived') }}</ion-select-option>
@@ -94,7 +93,7 @@
       <EmptyState
         v-if="!loading && loaded && !error && !results.length"
         :title="translate('No matching pre-orders')"
-        :message="translate('Pre-orders are sales orders with items that reserved future inventory. Adjust the search text or filters to broaden the list.')"
+        :message="translate('Pre-orders are open orders with items still waiting on future inventory, with no stock reserved yet. Adjust the search text or filters to broaden the list.')"
       />
 
       <ion-infinite-scroll :disabled="!hasMore || !!error" @ionInfinite="loadMore">
@@ -154,10 +153,14 @@ const { releaseToBrokering, cancelPreorderItems, parkedLines } = usePreorderActi
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
 const sortOptions = [
-  { label: 'Oldest first', value: 'orderDate' },
   { label: 'Newest first', value: '-orderDate' },
+  { label: 'Oldest first', value: 'orderDate' },
 ];
-const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
+// A closed order has no open pre-order line, so its statuses are not offered
+const CLOSED_ORDER_STATUSES = ['ORDER_COMPLETED', 'ORDER_CANCELLED', 'ORDER_REJECTED'];
+const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS')
+  .filter((status: any) => !CLOSED_ORDER_STATUSES.includes(status.statusId))
+  .map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
 const salesChannels = computed(() => seed.enumsByType('ORDER_SALES_CHANNEL'));
 const shipmentMethodOptions = computed(() => seed.shipmentMethodOptions());
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
