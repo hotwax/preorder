@@ -1,5 +1,6 @@
 {
-  "name": "Preorder-Management",
+  "name": "preorder",
+  "appId": "co.hotwax.preorder",
   "integrations": {
     "capacitor": {}
   },

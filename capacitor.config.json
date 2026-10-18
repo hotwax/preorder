@@ -1,6 +1,6 @@
 {
   "appId": "co.hotwax.preorder",
-  "appName": "Preorder-Management",
+  "appName": "Preorder Management",
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "dist",
@@ -9,8 +9,5 @@
       "launchShowDuration": 0
     }
   },
-  "cordova": {},
-  "ios": {
-    "minVersion": "12.0"
-  }
+  "cordova": {}
 }

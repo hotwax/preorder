@@ -1,37 +1,54 @@
-import { toastController } from '@ionic/vue';
-import { DateTime } from "luxon";
-// TODO Use separate files for specific utilities
+import { alertController, toastController } from '@ionic/vue';
+import { translate } from '@common';
 
-// TODO Remove it when HC APIs are fully REST compliant
-const hasError = (response: any) => {
-    return typeof response.data != "object" || !!response.data._ERROR_MESSAGE_ || !!response.data._ERROR_MESSAGE_LIST_ || !!response.data.error;
+export const showToast = async (message: string) => {
+  const toast = await toastController.create({
+    message,
+    duration: 3000,
+    position: 'bottom',
+  })
+
+  return toast.present();
 }
 
-const showToast = async (message: string) => {
-    const toast = await toastController
-        .create({
-          message,
-          duration: 3000,
-          position: 'bottom',
-        })
-      return toast.present();
-}
-const handleDateTimeInput = (dateTimeValue: any) => {
-  // TODO Handle it in a better way
-  // Remove timezone and then convert to timestamp
-  // Current date time picker picks browser timezone and there is no supprt to change it
-  const dateTime = DateTime.fromISO(dateTimeValue, { setZone: true}).toFormat("yyyy-MM-dd'T'HH:mm:ss")
-  return DateTime.fromISO(dateTime).toMillis()
+/** A required field's label: the translated label and an asterisk, the one required marker. */
+export const requiredLabel = (label: string) => `${translate(label)} *`;
+
+/** Asks before a change that saves at once and cannot be taken back: Cancel first, then the action's verb. */
+export const confirmAction = async (header: string, message: string, confirmText: string): Promise<boolean> => {
+  const alert = await alertController.create({
+    header,
+    message,
+    buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: confirmText, role: 'confirm' }],
+  });
+  await alert.present();
+  return (await alert.onDidDismiss()).role === 'confirm';
 }
 
-const getFeature = (productFeatures: any, featureKey: string) => {
-  let  featureValue = ''
-  if (productFeatures) {
-    const feature = productFeatures.find((featureItem: any) => featureItem.startsWith(featureKey))
-    const featureSplit = feature ? feature.split('/') : [];
-    featureValue = featureSplit[1] ? featureSplit[1] : '';
-  }
-  return featureValue;
+/** Asks for a date ('yyyy-MM-dd') in an alert; undefined when cancelled. */
+export const promptForDate = async (header: string, message: string, confirmText: string, value = ''): Promise<string | undefined> => {
+  const alert = await alertController.create({
+    header,
+    message,
+    inputs: [{ name: 'date', type: 'date', value }],
+    buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: confirmText, role: 'confirm' }],
+  });
+  await alert.present();
+  const { role, data } = await alert.onDidDismiss();
+  const date = data?.values?.date;
+  return role === 'confirm' && date ? String(date) : undefined;
 }
 
-export { handleDateTimeInput, showToast, hasError, getFeature }
+/** Asks for a number in an alert; undefined when cancelled or not a number. */
+export const promptForNumber = async (header: string, message: string, confirmText: string, placeholder = ''): Promise<number | undefined> => {
+  const alert = await alertController.create({
+    header,
+    message,
+    inputs: [{ name: 'value', type: 'number', placeholder }],
+    buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: confirmText, role: 'confirm' }],
+  });
+  await alert.present();
+  const { role, data } = await alert.onDidDismiss();
+  const number = Number(data?.values?.value);
+  return role === 'confirm' && data?.values?.value !== '' && Number.isFinite(number) ? number : undefined;
+}
