@@ -1,0 +1,320 @@
+<template>
+  <ion-page>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-menu-button />
+        </ion-buttons>
+        <ion-title>{{ translate('Communications') }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <div class="section-header ion-padding-horizontal">
+        <h1>{{ translate('Pre-order emails') }}</h1>
+        <p>{{ translate('OMS sends these emails to customers through Klaviyo when a pre-order event happens. Turn an email off to stop OMS sending it for this store.') }}</p>
+      </div>
+
+      <ion-progress-bar v-if="settingsLoading" type="indeterminate" />
+      <ErrorState v-if="settingsError" :title="translate('Could not load email settings')" :message="settingsError" retryable @retry="loadSettings" />
+
+      <section v-else class="email-settings">
+        <ion-card v-for="setting in settings" :key="setting.emailType">
+          <ion-card-header>
+            <ion-card-subtitle>{{ setting.emailType }}</ion-card-subtitle>
+            <ion-card-title>{{ emailTypeLabel(setting.emailType) }}</ion-card-title>
+          </ion-card-header>
+          <ion-list lines="none">
+            <ion-item :disabled="!canUpdate || !setting.wired || toggling === setting.emailType">
+              <ion-toggle :checked="setting.wired && setting.exists && setting.enabled" @ionChange="toggle(setting, $event.detail.checked)">
+                {{ setting.wired ? (setting.exists && setting.enabled ? translate('Sending') : translate('Off')) : translate('Not wired') }}
+              </ion-toggle>
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                <p class="overline">{{ translate('When') }}</p>
+                {{ setting.triggerDescription || translate('No OMS event sends this email yet.') }}
+              </ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-icon slot="start" :icon="setting.gatewayConfigured ? checkmarkCircleOutline : alertCircleOutline" :color="setting.gatewayConfigured ? 'success' : 'warning'" />
+              <ion-label class="ion-text-wrap">
+                {{ setting.gatewayConfigured ? translate('Klaviyo gateway set') : translate('No Klaviyo gateway set') }}
+                <p v-if="!setting.gatewayConfigured">{{ translate('Set the email setting\'s gateway remote and auth for this store, or the email cannot reach Klaviyo.') }}</p>
+              </ion-label>
+            </ion-item>
+            <ion-item v-if="setting.subject">
+              <ion-label class="ion-text-wrap">
+                <p class="overline">{{ translate('Subject') }}</p>
+                {{ setting.subject }}
+              </ion-label>
+            </ion-item>
+          </ion-list>
+          <ion-card-content class="email-counts">
+            <StatCard :title="translate('Last 7 days')" :stat="sentCount(setting.emailType, 7)" />
+            <StatCard :title="translate('Last 30 days')" :stat="sentCount(setting.emailType, 30)" />
+          </ion-card-content>
+        </ion-card>
+      </section>
+
+      <hr />
+
+      <div class="section-header ion-padding-horizontal">
+        <h1>{{ translate('Recent emails') }}</h1>
+      </div>
+
+      <SearchFilterCard v-model="orderQuery" :placeholder="translate('Order ID')" :show-clear="false">
+        <UniformFilterLayout @clear="clearEventFilters">
+          <ion-select v-model="eventFilters.emailType" :label="translate('Email type')" label-placement="stacked" fill="outline" interface="popover">
+            <ion-select-option value="All">{{ translate('All email types') }}</ion-select-option>
+            <ion-select-option v-for="type in emailTypeOptions" :key="type.value" :value="type.value">{{ type.label }}</ion-select-option>
+          </ion-select>
+          <ion-select v-model="eventFilters.statusId" :label="translate('Status')" label-placement="stacked" fill="outline" interface="popover">
+            <ion-select-option value="All">{{ translate('All statuses') }}</ion-select-option>
+            <ion-select-option value="COM_COMPLETE">{{ seed.statusDescription('COM_COMPLETE') }}</ion-select-option>
+            <ion-select-option value="COM_BOUNCED">{{ seed.statusDescription('COM_BOUNCED') }}</ion-select-option>
+          </ion-select>
+          <DateFilterSelect v-model="eventFilters.fromDate" :label="translate('Sent from')" :max="eventFilters.thruDate" outlined />
+          <DateFilterSelect v-model="eventFilters.thruDate" :label="translate('Sent through')" :min="eventFilters.fromDate" outlined />
+        </UniformFilterLayout>
+      </SearchFilterCard>
+
+      <ion-progress-bar v-if="eventsLoading" type="indeterminate" />
+      <ErrorState v-if="eventsError" :title="translate('Could not load emails')" :message="eventsError" retryable @retry="loadEvents" />
+
+      <ion-list v-else>
+        <ion-list-header v-if="events.length">
+          <ion-label>{{ translate('{shown} of {count} emails', { shown: events.length, count: eventsTotal }) }}</ion-label>
+        </ion-list-header>
+        <div v-for="event in events" :key="event.communicationEventId" class="list-item event-row">
+          <ion-item lines="none">
+            <ion-icon slot="start" :icon="mailOutline" />
+            <ion-label>
+              {{ event.toString || event.partyIdTo || translate('Unknown recipient') }}
+              <p>{{ event.subject }}</p>
+            </ion-label>
+          </ion-item>
+          <ion-label class="tablet">
+            {{ emailTypeLabel(event.emailType) }}
+            <p>{{ translate('Email type') }}</p>
+          </ion-label>
+          <ion-label class="tablet">
+            <ion-button v-if="event.orderId" fill="clear" size="small" :router-link="`/preorders/${encodeURIComponent(event.orderId)}`">{{ event.orderId }}</ion-button>
+            <p>{{ translate('Order') }}</p>
+          </ion-label>
+          <ion-label class="tablet">
+            <ion-badge :color="statusColor(event.statusId)">{{ seed.statusDescription(event.statusId || '') }}</ion-badge>
+          </ion-label>
+          <ion-label class="ion-text-end">
+            {{ formatDateTime(event.datetimeStarted) }}
+            <p>{{ formatRelative(event.datetimeStarted) }}</p>
+          </ion-label>
+        </div>
+      </ion-list>
+
+      <EmptyState
+        v-if="!eventsLoading && eventsLoaded && !eventsError && !events.length"
+        :title="translate('No emails sent')"
+        :message="translate('Emails OMS sends for this store\'s orders show here, with their type.')"
+      />
+
+      <ion-infinite-scroll :disabled="events.length >= eventsTotal" @ionInfinite="loadMoreEvents">
+        <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading more emails')" />
+      </ion-infinite-scroll>
+    </ion-content>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import {
+  IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent,
+  IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonMenuButton,
+  IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToggle, IonToolbar, onIonViewWillEnter,
+} from '@ionic/vue';
+import { alertCircleOutline, checkmarkCircleOutline, mailOutline } from 'ionicons/icons';
+import { DateTime } from 'luxon';
+import { computed, reactive, ref, watch } from 'vue';
+import { StatCard, translate } from '@common';
+import { useSeedData } from '@common/db';
+import { useCommunications, type CommunicationEventRow, type PreorderEmailSetting } from '@/composables/useCommunications';
+import { useProductStore } from '@/store/productStore';
+import { useUserStore } from '@/store/user';
+import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
+import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
+import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
+import ErrorState from '@/components/common/ErrorState.vue';
+import { showToast } from '@/utils';
+import { formatDateTime, formatRelative } from '@/utils/format';
+import { toListParams } from '@/utils/query';
+import { statusColor } from '@/utils/statusColors';
+import { errorMessage } from '@/utils/response';
+import Actions from '@/authorization/actions';
+
+/** Events sent before OMS recorded the email type have none; the backend matches them with this. */
+const UNKNOWN_EMAIL_TYPE = '_NA_';
+const PAGE_SIZE = 20;
+
+const seed = useSeedData();
+const productStore = useProductStore();
+const userStore = useUserStore();
+const { fetchEmailSettings, setEmailEnabled, fetchEvents, fetchCounts } = useCommunications();
+
+const productStoreId = computed(() => productStore.getCurrentProductStore?.productStoreId || '');
+const canUpdate = computed(() => userStore.hasPermission(Actions.APP_COMMS_UPDATE));
+
+const settings = ref<PreorderEmailSetting[]>([]);
+const settingsLoading = ref(false);
+const settingsError = ref('');
+const toggling = ref('');
+const counts7 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
+const counts30 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
+
+const eventFilters = reactive({ emailType: 'All', statusId: 'All', fromDate: '', thruDate: '' });
+const orderQuery = ref('');
+const events = ref<CommunicationEventRow[]>([]);
+const eventsTotal = ref(0);
+const eventsPage = ref(0);
+const eventsLoading = ref(false);
+const eventsLoaded = ref(false);
+const eventsError = ref('');
+
+const emailTypeLabel = (emailType?: string) => {
+  if (!emailType) return translate('Unknown type');
+  const setting = settings.value.find((candidate) => candidate.emailType === emailType);
+  const label = seed.enumDescription(emailType);
+  return setting?.description && label === emailType ? setting.description : label;
+};
+
+const emailTypeOptions = computed(() => [
+  ...settings.value.map((setting) => ({ value: setting.emailType, label: emailTypeLabel(setting.emailType) })),
+  { value: UNKNOWN_EMAIL_TYPE, label: translate('Unknown type') },
+]);
+
+const sentCount = (emailType: string, days: number) => (days === 7 ? counts7.value : counts30.value)
+  .filter((row) => row.emailType === emailType && row.statusId !== 'COM_BOUNCED')
+  .reduce((sum, row) => sum + Number(row.count || 0), 0);
+
+const daysAgo = (days: number) => DateTime.now().minus({ days }).toISODate() as string;
+
+async function loadSettings() {
+  if (!productStoreId.value) return;
+  settingsLoading.value = true;
+  settingsError.value = '';
+  try {
+    const [rows, week, month] = await Promise.all([
+      fetchEmailSettings(productStoreId.value),
+      fetchCounts(productStoreId.value, daysAgo(7)),
+      fetchCounts(productStoreId.value, daysAgo(30)),
+    ]);
+    settings.value = rows;
+    counts7.value = week;
+    counts30.value = month;
+  } catch (err) {
+    settingsError.value = errorMessage(err, translate('Failed to load email settings.'));
+  } finally {
+    settingsLoading.value = false;
+  }
+}
+
+function eventParams(pageIndex: number) {
+  return {
+    ...toListParams({ ...eventFilters, orderId: orderQuery.value.trim(), productStoreId: productStoreId.value }),
+    pageIndex,
+    pageSize: PAGE_SIZE,
+  };
+}
+
+async function loadEvents() {
+  eventsLoading.value = true;
+  eventsError.value = '';
+  try {
+    const { rows, total } = await fetchEvents(eventParams(0));
+    events.value = rows;
+    eventsTotal.value = total;
+    eventsPage.value = 0;
+    eventsLoaded.value = true;
+  } catch (err) {
+    eventsError.value = errorMessage(err, translate('Failed to load emails.'));
+  } finally {
+    eventsLoading.value = false;
+  }
+}
+
+async function loadMoreEvents(event: CustomEvent) {
+  try {
+    const { rows, total } = await fetchEvents(eventParams(eventsPage.value + 1));
+    events.value = [...events.value, ...rows];
+    eventsTotal.value = total;
+    eventsPage.value += 1;
+  } finally {
+    (event.target as HTMLIonInfiniteScrollElement).complete();
+  }
+}
+
+let debounce: ReturnType<typeof setTimeout> | undefined;
+watch(orderQuery, () => {
+  if (debounce) clearTimeout(debounce);
+  debounce = setTimeout(loadEvents, 300);
+});
+watch(eventFilters, loadEvents, { deep: true });
+watch(productStoreId, () => {
+  void loadSettings();
+  void loadEvents();
+});
+
+onIonViewWillEnter(() => {
+  void loadSettings();
+  void loadEvents();
+});
+
+function clearEventFilters() {
+  Object.assign(eventFilters, { emailType: 'All', statusId: 'All', fromDate: '', thruDate: '' });
+  orderQuery.value = '';
+}
+
+async function toggle(setting: PreorderEmailSetting, enabled: boolean) {
+  if ((setting.exists && setting.enabled) === enabled) return;
+  toggling.value = setting.emailType;
+  try {
+    await setEmailEnabled(productStoreId.value, setting.emailType, enabled);
+    await showToast(enabled ? translate('{email} turned on.', { email: emailTypeLabel(setting.emailType) }) : translate('{email} turned off.', { email: emailTypeLabel(setting.emailType) }));
+  } catch (err) {
+    await showToast(errorMessage(err, translate('Failed to update the email setting.')));
+  } finally {
+    toggling.value = '';
+    await loadSettings();
+  }
+}
+</script>
+
+<style scoped>
+.email-settings {
+  display: grid;
+  gap: var(--spacer-sm);
+  grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr));
+  padding: var(--spacer-sm);
+}
+
+.email-settings ion-card {
+  margin: 0;
+}
+
+.email-counts {
+  display: grid;
+  gap: var(--spacer-sm);
+  grid-template-columns: 1fr 1fr;
+}
+
+.event-row {
+  --columns-desktop: 5;
+  --columns-tablet: 5;
+  min-height: 4rem;
+  border-block-start: var(--border-medium);
+  padding-inline-end: var(--spacer-sm);
+}
+
+.event-row > ion-label {
+  width: 100%;
+}
+</style>

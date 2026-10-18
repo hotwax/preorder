@@ -1,0 +1,240 @@
+<template>
+  <ion-page>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button default-href="/purchase-orders" />
+        </ion-buttons>
+        <ion-title>{{ translate('Create purchase order') }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <section class="create-po">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ translate('Order') }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content class="form-fields">
+            <ion-select v-model="form.supplierPartyId" :label="requiredLabel('Supplier')" label-placement="stacked" fill="outline" interface="popover" :placeholder="translate('Select supplier')">
+              <ion-select-option v-for="supplier in suppliers" :key="supplier.partyId" :value="supplier.partyId">{{ supplier.name || supplier.partyId }}</ion-select-option>
+            </ion-select>
+            <ion-select v-model="form.facilityId" :label="requiredLabel('Destination')" label-placement="stacked" fill="outline" interface="popover" :placeholder="translate('Select facility')">
+              <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">{{ facility.facilityName || facility.facilityId }}</ion-select-option>
+            </ion-select>
+            <ion-input v-model="form.externalId" :label="translate('External ID')" label-placement="stacked" fill="outline" :helper-text="translate('Generated when empty')" />
+            <ion-input v-model="form.orderName" :label="translate('Name')" label-placement="stacked" fill="outline" />
+            <ion-select v-model="form.statusId" :label="translate('Status')" label-placement="stacked" fill="outline" interface="popover">
+              <ion-select-option value="ORDER_CREATED">{{ seed.statusDescription('ORDER_CREATED') }}</ion-select-option>
+              <ion-select-option value="ORDER_APPROVED">{{ seed.statusDescription('ORDER_APPROVED') }}</ion-select-option>
+            </ion-select>
+            <ion-input v-model="form.currencyUomId" :label="translate('Currency')" label-placement="stacked" fill="outline" />
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ translate('Pre-order') }}</ion-card-title>
+          </ion-card-header>
+          <ion-list lines="none">
+            <ion-item>
+              <ion-toggle v-model="form.createFutureInventory">{{ translate('Sell as pre-order') }}</ion-toggle>
+            </ion-item>
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                <p>{{ translate('Creates a future inventory batch for each line, at its arrival date and quantity, so it can be sold before it arrives.') }}</p>
+              </ion-label>
+            </ion-item>
+            <ion-item :disabled="!form.createFutureInventory">
+              <ion-select v-model="form.futureInventoryItemTypeId" :label="translate('Sell as')" interface="popover">
+                <ion-select-option v-for="type in FUTURE_INVENTORY_TYPES" :key="type.value" :value="type.value">{{ translate(type.label) }}</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+      </section>
+
+      <ion-list>
+        <ion-list-header>
+          <ion-label>{{ translate('Lines') }}</ion-label>
+        </ion-list-header>
+        <div class="ion-padding-horizontal">
+          <ion-searchbar v-model="productQuery" :placeholder="translate('Search products to add')" :debounce="300" @ionInput="searchProducts" />
+        </div>
+        <ion-item v-for="product in searchResults" :key="product.productId" button :detail="false" @click="addLine(product)">
+          <ion-thumbnail slot="start">
+            <DxpShopifyImg :src="product.mainImageUrl" size="small" />
+          </ion-thumbnail>
+          <ion-label>
+            {{ primaryId(product, [product.parentProductName, product.productName, product.productId]) }}
+            <p>{{ secondaryId(product, [product.productId]) }}</p>
+          </ion-label>
+          <ion-icon slot="end" :icon="addCircleOutline" />
+        </ion-item>
+
+        <div v-for="(line, index) in form.items" :key="line.productId" class="line">
+          <ProductItem :product-id="line.productId" :product-name="line.productName" />
+          <ion-input v-model.number="line.quantity" type="number" min="1" :label="requiredLabel('Quantity')" label-placement="stacked" fill="outline" />
+          <ion-input v-model.number="line.unitPrice" type="number" min="0" :label="translate('Unit cost')" label-placement="stacked" fill="outline" />
+          <DateFilterSelect v-model="line.arrivalDate" :label="requiredLabel('Arrival date')" allow-future outlined />
+          <ion-button fill="clear" color="danger" :aria-label="translate('Remove line')" @click="form.items.splice(index, 1)">
+            <ion-icon slot="icon-only" :icon="trashOutline" />
+          </ion-button>
+        </div>
+        <ion-item v-if="!form.items.length" lines="none">
+          <ion-label>{{ translate('Search for products above to add lines.') }}</ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+
+    <ion-footer>
+      <ion-toolbar>
+        <ion-title size="small">{{ translate('{count} lines, {units} units', { count: form.items.length, units: totalUnits }) }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button fill="solid" :disabled="!canSave || saving" @click="save">{{ translate('Create purchase order') }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-footer>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import {
+  IonBackButton, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent, IonFooter, IonHeader,
+  IonIcon, IonInput, IonItem, IonLabel, IonList, IonListHeader, IonPage, IonSearchbar, IonSelect, IonSelectOption, IonThumbnail,
+  IonTitle, IonToggle, IonToolbar,
+} from '@ionic/vue';
+import { addCircleOutline, trashOutline } from 'ionicons/icons';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { DxpShopifyImg, translate, useSolrSearch } from '@common';
+import { useSeedData } from '@common/db';
+import router from '@/router';
+import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
+import { useProductIdentity } from '@/composables/useProductIdentity';
+import { useProductStore } from '@/store/productStore';
+import ProductItem from '@/components/common/ProductItem.vue';
+import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
+import { requiredLabel, showToast } from '@/utils';
+import { FUTURE_INVENTORY_TYPES } from '@/utils/labels';
+import { errorMessage } from '@/utils/response';
+
+const seed = useSeedData();
+const productStore = useProductStore();
+const { primaryId, secondaryId } = useProductIdentity();
+const { fetchSuppliers, createPurchaseOrder } = usePurchaseOrderActions();
+
+const suppliers = ref<{ partyId: string; name: string }[]>([]);
+const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
+const productQuery = ref('');
+const searchResults = ref<any[]>([]);
+const saving = ref(false);
+
+const form = reactive({
+  supplierPartyId: '',
+  facilityId: '',
+  externalId: '',
+  orderName: '',
+  statusId: 'ORDER_APPROVED',
+  currencyUomId: 'USD',
+  createFutureInventory: true,
+  futureInventoryItemTypeId: 'FIT_PRE_ORDER',
+  items: [] as { productId: string; productName?: string; quantity: number; unitPrice?: number; arrivalDate: string }[],
+});
+
+const totalUnits = computed(() => form.items.reduce((sum, line) => sum + Number(line.quantity || 0), 0));
+const canSave = computed(() => form.supplierPartyId && form.facilityId && form.items.length
+  && form.items.every((line) => Number(line.quantity) > 0 && line.arrivalDate));
+
+onMounted(async () => {
+  suppliers.value = await fetchSuppliers().catch(() => []);
+});
+
+async function searchProducts() {
+  const keyword = productQuery.value.trim();
+  if (!keyword) {
+    searchResults.value = [];
+    return;
+  }
+  try {
+    const { products, total } = await useSolrSearch().searchProducts({ keyword, viewSize: 10 });
+    searchResults.value = total ? (products as any[]) : [];
+  } catch {
+    searchResults.value = [];
+  }
+}
+
+function addLine(product: any) {
+  if (!form.items.some((line) => line.productId === product.productId)) {
+    const lastDate = form.items[form.items.length - 1]?.arrivalDate || '';
+    form.items.push({ productId: product.productId, productName: product.parentProductName || product.productName, quantity: 1, arrivalDate: lastDate });
+  }
+  productQuery.value = '';
+  searchResults.value = [];
+}
+
+async function save() {
+  saving.value = true;
+  try {
+    const result = await createPurchaseOrder({
+      supplierPartyId: form.supplierPartyId,
+      facilityId: form.facilityId,
+      productStoreId: productStore.getCurrentProductStore?.productStoreId,
+      externalId: form.externalId.trim() || undefined,
+      orderName: form.orderName.trim() || undefined,
+      statusId: form.statusId,
+      currencyUomId: form.currencyUomId || undefined,
+      createFutureInventory: form.createFutureInventory,
+      futureInventoryItemTypeId: form.futureInventoryItemTypeId,
+      items: form.items.map((line) => ({ productId: line.productId, quantity: Number(line.quantity), unitPrice: line.unitPrice === undefined || line.unitPrice === null || (line.unitPrice as any) === '' ? undefined : Number(line.unitPrice), arrivalDate: line.arrivalDate })),
+    });
+    await showToast(form.createFutureInventory
+      ? translate('Purchase order {orderId} created with {count} future inventory batches.', { orderId: result.orderId, count: result.futureInventoryItemIds?.length ?? 0 })
+      : translate('Purchase order {orderId} created.', { orderId: result.orderId }));
+    router.replace(`/purchase-orders/${encodeURIComponent(result.orderId)}`);
+  } catch (error) {
+    await showToast(errorMessage(error, translate('Failed to create the purchase order.')));
+  } finally {
+    saving.value = false;
+  }
+}
+</script>
+
+<style scoped>
+.create-po {
+  display: grid;
+  gap: var(--spacer-sm);
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--spacer-sm);
+}
+
+@media (min-width: 991px) {
+  .create-po {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.create-po ion-card {
+  margin: 0;
+}
+
+.form-fields {
+  display: grid;
+  gap: var(--spacer-sm);
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+}
+
+.line {
+  align-items: center;
+  border-block-start: var(--border-medium);
+  display: grid;
+  gap: var(--spacer-sm);
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) 11rem auto;
+  padding: var(--spacer-xs) var(--spacer-sm);
+}
+
+@media (max-width: 767px) {
+  .line {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</style>

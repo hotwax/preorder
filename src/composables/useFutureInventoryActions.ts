@@ -1,0 +1,47 @@
+import { api } from '@common';
+import { ensureOk } from '@/utils/response';
+import { readList } from '@/utils/query';
+import type { FutureInventoryBatch } from '@/types';
+
+const batchUrl = (id: string) => `preorder/futureInventory/${encodeURIComponent(id)}`;
+
+/** Future inventory batch requests: one batch, its ledger and waiting lines, and the batch actions. */
+export function useFutureInventoryActions() {
+  async function fetchBatch(id: string): Promise<FutureInventoryBatch> {
+    return (await ensureOk(api({ url: batchUrl(id), method: 'get' }), 'Failed to load the batch.')).futureInventoryItem;
+  }
+
+  async function fetchLedger(id: string, pageIndex = 0, pageSize = 100) {
+    return readList(await ensureOk(api({ url: `${batchUrl(id)}/details`, method: 'get', params: { pageIndex, pageSize } }), 'Failed to load the ledger.'), 'details');
+  }
+
+  async function fetchWaitingLines(id: string, pageIndex = 0, pageSize = 100) {
+    return readList(await ensureOk(api({ url: `${batchUrl(id)}/lines`, method: 'get', params: { pageIndex, pageSize } }), 'Failed to load the waiting lines.'), 'lines');
+  }
+
+  /** Active batches of a product, to move a line's reservation to. */
+  async function fetchActiveBatches(productId: string): Promise<FutureInventoryBatch[]> {
+    const data = await ensureOk(api({ url: 'preorder/futureInventoryItems', method: 'get', params: { productId, statusId: 'FUTURE_INV_ACTIVE', pageSize: 50 } }), 'Failed to load batches.');
+    return readList<FutureInventoryBatch>(data, 'futureInventoryItems').rows;
+  }
+
+  /** One FID_ADJUSTED row: a quantity change, a new promise date ('yyyy-MM-dd'), or both. */
+  async function adjustBatch(id: string, change: { quantityDiff?: number; promiseDate?: string; description?: string }) {
+    return ensureOk(api({ url: `${batchUrl(id)}/adjust`, method: 'post', data: change }), 'Failed to adjust the batch.');
+  }
+
+  async function cancelBatch(id: string, description?: string) {
+    return ensureOk(api({ url: `${batchUrl(id)}/cancel`, method: 'post', data: { description } }), 'Failed to cancel the batch.');
+  }
+
+  /** Runs an action on each batch, counting what worked and what failed. */
+  async function forEachBatch(ids: string[], action: (id: string) => Promise<any>) {
+    let done = 0; let failed = 0;
+    for (const id of ids) {
+      try { await action(id); done++; } catch { failed++; }
+    }
+    return { done, failed };
+  }
+
+  return { fetchBatch, fetchLedger, fetchWaitingLines, fetchActiveBatches, adjustBatch, cancelBatch, forEachBatch };
+}
