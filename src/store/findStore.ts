@@ -67,10 +67,10 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
         if (commonUtil.hasError(resp)) throw new Error(resp?.data?.errors || translate('Something went wrong. Please try again.'));
         return readList<R>(resp.data, config.listName);
       },
-      /** Searches from the first page. Skipped when nothing changed since the last search, unless forced. */
+      /** Searches from the first page. Skipped when the same search is loaded or in flight, unless forced. */
       async runSearch({ force = false } = {}) {
         const key = JSON.stringify(this.params(0));
-        if (!force && this.loaded && !this.stale && key === this.lastSearchKey) return;
+        if (!force && !this.stale && key === this.lastSearchKey && (this.loaded || this.loading)) return;
         this.lastSearchKey = key;
         this.stale = false;
         const requestId = ++this.requestId;
