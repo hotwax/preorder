@@ -299,21 +299,21 @@ All paths are relative to `/rest/s1/`.
 | GET `preorder/preorders/{orderId}` | `get#PreorderOrder` | header and FI lines with batches |
 | POST `preorder/preorders/{orderId}/items/{orderItemSeqId}/reallocate` | `reallocate#FutureInventoryReservation` | |
 | GET `preorder/futureInventory/{futureInventoryItemId}` | FI view, one | |
-| GET `preorder/futureInventoryItems` | `FutureInventoryItemAndFacility` list | facility name and computed `reservedQuantity`; X-Total-Count |
+| GET `preorder/futureInventoryItems` | `get#FutureInventoryItems` over `FutureInventoryItemAndProduct` | product and facility names, computed `reservedQuantity`; `{futureInventoryItems, futureInventoryItemsCount}` |
 | GET `preorder/futureInventory/{id}/details` | FutureInventoryItemDetail list | the ledger |
 | GET `preorder/futureInventory/{id}/lines` | FutureInventoryBackedLine list | waiting lines |
 | POST `preorder/futureInventory/{id}/adjust` | `adjust#FutureInventoryItem` | a quantity diff and/or a new promise date; one `FID_ADJUSTED` row |
 | POST `preorder/futureInventory/{id}/cancel` | `cancel#FutureInventoryItem` | |
-| GET `preorder/purchaseOrders` | `PurchaseOrderSummary` view list | supplier, facility, line and unit totals, earliest arrival; X-Total-Count |
+| GET `preorder/purchaseOrders` | `PurchaseOrderSummary` view | supplier, facility, line and unit totals, earliest arrival; `{orders, ordersCount}` |
 | POST `preorder/purchaseOrders` | `create#PurchaseOrder` | header and lines through `store#PurchaseOrder` (the import path); optional FI batches |
 | POST `preorder/purchaseOrders/{orderId}/arrivalDate` | `update#PurchaseOrderArrivalDate` | open lines' date plus `OrderItemChange`, so FI follows |
 | POST `preorder/purchaseOrders/{orderId}/futureInventory` | `create#PurchaseOrderFutureInventory` | a batch per open line without one |
-| GET `preorder/inboundShipments` | `InboundShipmentSummary` view list | X-Total-Count |
+| GET `preorder/inboundShipments` | `InboundShipmentSummary` view | `{shipments, shipmentsCount}` |
 | GET `preorder/inboundShipments/{shipmentId}` | `get#InboundShipment` | items with received quantity, and receipts |
-| GET `preorder/communicationEvents` | `PreorderCommunicationEvent` view list | email events scoped to a store through their order |
+| GET `preorder/communicationEvents` | `CommunicationEventOrderStore` view | email events scoped to a store through their order; `{communicationEvents, communicationEventsCount}` |
 | GET `preorder/communicationEventCounts` | count view | by email type and status, since a date |
 | GET `preorder/emailSettings` | `get#PreorderEmailSettings` | pre-order email types with setting, enabled, gateway and wired state |
-| POST `preorder/emailSettings/{emailType}` | `set#PreorderEmailEnabled` | enable or disable; creates the setting on first enable |
+| POST `preorder/emailSettings/{emailType}` | `update#PreorderEmailSetting` | enable or disable; creates the setting on first enable |
 
 ### 4.3 New: oms (branch `feat/preorder-app-api`)
 
@@ -348,4 +348,11 @@ Found while verifying against the local OMS (2026-10-18):
   with very many parked orders needs a sub-select.
 - **The locally configured email settings have no gateway.** Enabling an email does not make it
   reach Klaviyo until a CommGatewayAuth and SystemMessageRemote are set.
-- **Permissions:** `PREORDER_APP_UPDATE` and `PREORDER_ADMIN` are proposed, not seeded.
+- **Permissions:** `PREORDER_APP_UPDATE` and `PREORDER_ADMIN` are proposed, not seeded. The new
+  REST paths are granted by `PREORDER_APP_READ_API` (VIEW) and `PREORDER_APP_WRITE_API` (ALL), but
+  maarg-util adds every user to ADMIN on login, so any login can write through them today; the
+  app's update permissions are checked only in the browser.
+- **Spec gaps found by QA:** no assertion on the email log's store scope, a successful reallocate
+  through the wrapper, or the PO list's supplier, facility and arrival filters.
+- **`PurchaseOrderSummary`:** a PO with two different `SHIP_FROM_VENDOR` parties would count its
+  quantity twice. No such PO exists today.
