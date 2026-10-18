@@ -200,7 +200,7 @@ import type { FutureInventoryBatchDetail } from '@/types';
 const props = defineProps<{ futureInventoryItemId: string }>();
 const seed = useSeedData();
 const userStore = useUserStore();
-const { fetchBatch, fetchLedger, fetchWaitingLines, adjustBatch, cancelBatch } = useFutureInventoryActions();
+const { fetchBatch, fetchLedger, fetchWaitingLines, updateBatch, cancelBatch } = useFutureInventoryActions();
 
 const batch = ref<FutureInventoryBatchDetail>();
 const po = computed(() => batch.value?.purchaseOrderHeader);
@@ -263,7 +263,7 @@ async function changeDate() {
     translate('Change date'),
     toDateInputValue(batch.value?.promiseDate),
   );
-  if (promiseDate) await run(() => adjustBatch(props.futureInventoryItemId, { promiseDate, description: 'Promise date changed in the Pre-order app' }), translate('Promise date changed.'));
+  if (promiseDate) await run(() => updateBatch(props.futureInventoryItemId, { promiseDate, description: 'Promise date changed in the Pre-order app' }), translate('Promise date changed.'));
 }
 
 async function adjustQuantity() {
@@ -273,7 +273,7 @@ async function adjustQuantity() {
     translate('Adjust'),
     '-5',
   );
-  if (quantityDiff) await run(() => adjustBatch(props.futureInventoryItemId, { quantityDiff, description: 'Quantity adjusted in the Pre-order app' }), translate('Quantity adjusted.'));
+  if (quantityDiff) await run(() => updateBatch(props.futureInventoryItemId, { quantityDiff, description: 'Quantity adjusted in the Pre-order app' }), translate('Quantity adjusted.'));
 }
 
 async function cancel() {

@@ -42,6 +42,7 @@ The app is built the way Order Manager is built and follows its design language:
 | `/inbound-shipments/:shipmentId` | Inbound shipment detail | `APP_PO_VIEW` |
 | `/po-imports` | PO and FI import tracking, CSV upload | `APP_PO_VIEW` |
 | `/communications` | Post-purchase communications | `APP_COMMS_VIEW` |
+| `/bulk-updates` | Bulk updates: the promise date cascade's Data Manager imports | `APP_PREORDER_VIEW` |
 | `/settings` | Settings | any |
 
 Only `PREORDER_APP_VIEW` exists in seed data today. Update actions fall back to existing admin
@@ -49,7 +50,7 @@ permissions (`ORDERMGR_ADMIN`, `ORD_PURCH_ORDER_ADMIN`, `COMMON_ADMIN`) until `P
 and `PREORDER_ADMIN` are seeded (`src/authorization/actions.ts`).
 
 Menu: Dashboard, Pre-orders, Future inventory; **Supply**: Purchase orders, Inbound shipments,
-PO imports; **Customers**: Communications; Settings.
+PO imports; **Customers**: Communications, Bulk updates; Settings.
 
 ## 3. Pages
 
@@ -258,7 +259,20 @@ There is no DataFeed behind these emails, so the "feed" toggle is a switch on th
   type as the event's `reasonEnumId` (an Enumeration FK) when the caller gives none. Events sent
   before this change have none and count as "Unknown type".
 
-### 3.8 Settings
+### 3.8 Bulk updates (`/bulk-updates`)
+
+- A batch promise date change reaches its waiting order lines in bulk, not in the transaction that
+  moved it: a data feed queues a `FutureInventoryPromiseDateChange` system message, consuming it
+  writes the batch's FI-backed lines to an `IMP_FI_PROMISE_DATE` Data Manager file, and Data
+  Manager updates each line in its own transaction and sends its delay email (§4.3).
+- The page lists those imports, newest first: the batch (linking to it), status, lines and failed
+  lines, when it was queued and finished, and the lines and error files to download. A header shows
+  how many date changes are received and not yet queued.
+- Filters: status, created date range, exact log id.
+- One transaction per order (and one email per order) waits on Data Manager running a `groupBy`
+  group in one transaction: hotwax/hotwax-maarg-util#346.
+
+### 3.9 Settings
 
 Settings has these cards:
 - the user (with logout and Launchpad);
@@ -302,7 +316,7 @@ All paths are relative to `/rest/s1/`.
 | GET `preorder/futureInventoryItems` | `get#FutureInventoryItems` over `FutureInventoryItemAndProduct` | product and facility names, computed `reservedQuantity`; `{futureInventoryItems, futureInventoryItemsCount}` |
 | GET `preorder/futureInventory/{id}/details` | FutureInventoryItemDetail list | the ledger |
 | GET `preorder/futureInventory/{id}/lines` | FutureInventoryBackedLine list | waiting lines |
-| POST `preorder/futureInventory/{id}/adjust` | `adjust#FutureInventoryItem` | a quantity diff and/or a new promise date; one `FID_ADJUSTED` row |
+| PUT `preorder/futureInventory/{id}` | `update#FutureInventoryItem` | a quantity diff and/or a new promise date; one `FID_ADJUSTED` row (the ledger is append-only, so no field is set directly) |
 | POST `preorder/futureInventory/{id}/cancel` | `cancel#FutureInventoryItem` | |
 | GET `preorder/purchaseOrders` | `PurchaseOrderSummary` view | supplier, facility, line and unit totals, earliest arrival; `{orders, ordersCount}` |
 | POST `preorder/purchaseOrders` | `create#PurchaseOrder` | header and lines through `store#PurchaseOrder` (the import path); optional FI batches |
@@ -321,6 +335,11 @@ All paths are relative to `/rest/s1/`.
   setting, as it skips a missing one.
 - `send#EmailOnOrderEvents` records `CommunicationEvent.reasonEnumId = emailType` unless the caller
   gives a reason.
+- The promise date cascade: the `FutureInventoryPromiseDateFeed` data feed (on a batch's
+  `promiseDate`; a new batch is skipped) queues a `FutureInventoryPromiseDateChange` message;
+  `consume#FutureInventoryPromiseDateChange` writes the batch's FI-backed lines to an
+  `IMP_FI_PROMISE_DATE` import (`DMC_QUEUE`), and `import#FutureInventoryPromiseDateLine` updates one
+  line per row. It replaces the `SyncPromiseDateFromFII` SECA and `sync#PromiseDateFromFII`.
 
 ## 5. Known limits and follow-ups
 

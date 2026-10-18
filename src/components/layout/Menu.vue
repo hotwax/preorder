@@ -39,6 +39,7 @@ import {
   documentTextOutline,
   gridOutline,
   layersOutline,
+  syncOutline,
   mailOutline,
   settingsOutline
 } from 'ionicons/icons';
@@ -77,6 +78,7 @@ const pages: MenuPage[] = [
   { title: "Inbound shipments", url: "/inbound-shipments", icon: boatOutline, permissionId: Actions.APP_PO_VIEW },
   { title: "PO imports", url: "/po-imports", icon: cloudUploadOutline, permissionId: Actions.APP_PO_VIEW },
   { title: "Communications", url: "/communications", icon: mailOutline, permissionId: Actions.APP_COMMS_VIEW, divider: "Customers" },
+  { title: "Bulk updates", url: "/bulk-updates", icon: syncOutline, permissionId: Actions.APP_PREORDER_VIEW },
   { title: "Settings", url: "/settings", icon: settingsOutline, permissionId: "" },
 ];
 

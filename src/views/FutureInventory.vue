@@ -145,7 +145,7 @@ const seed = useSeedData();
 const store = useFutureInventorySearchStore();
 const { refresh } = useFindSearch(store);
 const userStore = useUserStore();
-const { adjustBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
+const { updateBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore, extras } = storeToRefs(store);
 const storeName = computed(() => useProductStore().getCurrentProductStore?.storeName || useProductStore().getCurrentProductStore?.productStoreId || translate('This store'));
 
@@ -231,7 +231,7 @@ async function changePromiseDate() {
     translate('Change date'),
   );
   if (!promiseDate) return;
-  const { done, failed } = await forEachBatch(ids, (id) => adjustBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' }));
+  const { done, failed } = await forEachBatch(ids, (id) => updateBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' }));
   await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
 }
 

@@ -25,9 +25,9 @@ export function useFutureInventoryActions() {
     return readList<FutureInventoryBatch>(data, 'futureInventoryItems').rows;
   }
 
-  /** One FID_ADJUSTED row: a quantity change, a new promise date ('yyyy-MM-dd'), or both. */
-  async function adjustBatch(id: string, change: { quantityDiff?: number; promiseDate?: string; description?: string }) {
-    return ensureOk(api({ url: `${batchUrl(id)}/adjust`, method: 'post', data: change }), 'Failed to adjust the batch.');
+  /** Updates a batch (PUT futureInventory/{id}): one FID_ADJUSTED ledger row with a quantity change, a new promise date ('yyyy-MM-dd'), or both. */
+  async function updateBatch(id: string, change: { quantityDiff?: number; promiseDate?: string; description?: string }) {
+    return ensureOk(api({ url: batchUrl(id), method: 'put', data: change }), 'Failed to update the batch.');
   }
 
   async function cancelBatch(id: string, description?: string) {
@@ -43,5 +43,5 @@ export function useFutureInventoryActions() {
     return { done, failed };
   }
 
-  return { fetchBatch, fetchLedger, fetchWaitingLines, fetchActiveBatches, adjustBatch, cancelBatch, forEachBatch };
+  return { fetchBatch, fetchLedger, fetchWaitingLines, fetchActiveBatches, updateBatch, cancelBatch, forEachBatch };
 }

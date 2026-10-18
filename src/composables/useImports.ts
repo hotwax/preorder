@@ -9,6 +9,11 @@ export const IMPORT_CONFIGS = [
   { configId: 'IMP_NS_INB_SHIPMENT', label: 'Inbound shipments (NetSuite)', uploadable: false },
 ];
 
+/** The bulk updates the app watches: Data Manager imports the OMS queues for itself, not uploads. */
+export const BULK_UPDATE_CONFIGS = [
+  { configId: 'IMP_FI_PROMISE_DATE', label: 'Promise date changes', messageTypeId: 'FutureInventoryPromiseDateChange' },
+];
+
 export interface ImportLog {
   logId: string;
   configId: string;
@@ -28,8 +33,8 @@ export interface ImportLog {
 
 /** Import tracking and CSV upload, through the Data Manager endpoints. */
 export function useImports() {
-  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string; logId?: string }, pageIndex: number, pageSize: number): Promise<ImportLog[]> {
-    const configIds = filters.configId && filters.configId !== 'All' ? [filters.configId] : IMPORT_CONFIGS.map((config) => config.configId);
+  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string; logId?: string }, pageIndex: number, pageSize: number, configs: { configId: string }[] = IMPORT_CONFIGS): Promise<ImportLog[]> {
+    const configIds = filters.configId && filters.configId !== 'All' ? [filters.configId] : configs.map((config) => config.configId);
     const params: Record<string, any> = { configId: configIds.join(','), configId_op: 'in', pageIndex, pageSize, orderByField: '-createdDate' };
     if (filters.logId) params.logId = filters.logId;
     if (filters.statusId && filters.statusId !== 'All') params.statusId = filters.statusId;
@@ -61,5 +66,11 @@ export function useImports() {
     return typeof data === 'string' ? data : '';
   }
 
-  return { fetchLogs, uploadFile, downloadLogFile, downloadTemplate };
+  /** How many messages of a type are received and not yet consumed: changes still to be queued as a bulk update. */
+  async function countWaitingMessages(systemMessageTypeId: string): Promise<number> {
+    const data = await ensureOk(api({ url: 'admin/systemMessages', method: 'get', params: { systemMessageTypeId, statusId: 'SmsgReceived', isOutgoing: 'N', pageSize: 1 } }), 'Failed to load the waiting changes.');
+    return Number(data.systemMessagesCount || 0);
+  }
+
+  return { fetchLogs, uploadFile, downloadLogFile, downloadTemplate, countWaitingMessages };
 }

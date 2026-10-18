@@ -17,6 +17,7 @@ import InboundShipments from '@/views/InboundShipments.vue';
 import InboundShipmentDetail from '@/views/InboundShipmentDetail.vue';
 import PurchaseOrderImports from '@/views/PurchaseOrderImports.vue';
 import Communications from '@/views/Communications.vue';
+import BulkUpdates from '@/views/BulkUpdates.vue';
 import Settings from '@/views/Settings.vue';
 
 const authGuard = async () => {
@@ -49,6 +50,7 @@ const routes: RouteRecordRaw[] = [
   page('/inbound-shipments/:shipmentId', 'InboundShipmentDetail', InboundShipmentDetail, Actions.APP_PO_VIEW),
   page('/po-imports', 'PurchaseOrderImports', PurchaseOrderImports, Actions.APP_PO_VIEW),
   page('/communications', 'Communications', Communications, Actions.APP_COMMS_VIEW),
+  page('/bulk-updates', 'BulkUpdates', BulkUpdates, Actions.APP_PREORDER_VIEW),
   page('/settings', 'Settings', Settings),
   { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
 ];
