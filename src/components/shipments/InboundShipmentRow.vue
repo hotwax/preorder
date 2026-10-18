@@ -4,7 +4,7 @@
       <ion-icon slot="start" :icon="boatOutline" />
       <ion-label>
         {{ shipment.externalId || shipment.shipmentId }}
-        <p>{{ [...new Set([shipment.shipmentId, shipment.externalId].filter(Boolean))].join(' - ') }}</p>
+        <p v-if="shipment.externalId">{{ shipment.shipmentId }}</p>
       </ion-label>
     </ion-item>
 
@@ -13,7 +13,7 @@
       <p>{{ translate('Purchase order') }}</p>
     </ion-label>
 
-    <ion-label class="tablet">
+    <ion-label>
       {{ shipment.facilityName || seed.facilityName(shipment.destinationFacilityId || '') }}
       <p>{{ translate('Destination') }}</p>
     </ion-label>
@@ -23,7 +23,7 @@
       <p>{{ translate('{count} items', { count: shipment.itemCount ?? 0 }) }}</p>
     </ion-label>
 
-    <ion-label>
+    <ion-label class="tablet">
       <ion-badge :color="statusColor(shipment.statusId)">{{ seed.statusDescription(shipment.statusId || '') }}</ion-badge>
     </ion-label>
 

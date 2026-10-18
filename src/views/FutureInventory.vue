@@ -48,7 +48,7 @@
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
-      <ErrorState v-if="error" :title="translate('Could not load future inventory')" :message="error" retryable @retry="store.runSearch()" />
+      <ErrorState v-if="error" :title="translate('Could not load future inventory')" :message="error" retryable @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
@@ -84,7 +84,7 @@
         :message="translate('Future inventory batches come from purchase orders, inbound shipments and future inventory imports. Adjust the search text or filters to broaden the list.')"
       />
 
-      <ion-infinite-scroll :disabled="!hasMore" @ionInfinite="loadMore">
+      <ion-infinite-scroll :disabled="!hasMore || !!error" @ionInfinite="loadMore">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading more batches')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -106,7 +106,6 @@
 import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
   IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
-  onIonViewWillEnter,
 } from '@ionic/vue';
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -114,9 +113,10 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
-import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user';
+import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
+import { useFindSearch } from '@/composables/useFindSearch';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -136,7 +136,7 @@ const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];
 
 const seed = useSeedData();
 const store = useFutureInventorySearchStore();
-const productStore = useProductStore();
+const { refresh } = useFindSearch(store);
 const userStore = useUserStore();
 const { adjustBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -170,20 +170,11 @@ const selectedOpenIds = computed(() => selectedBatches.value.filter((batch) => !
 const allSelected = computed(() => results.value.length > 0 && results.value.every((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
 const someSelected = computed(() => results.value.some((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
 
-let debounce: ReturnType<typeof setTimeout> | undefined;
-watch(query, () => {
-  if (debounce) clearTimeout(debounce);
-  debounce = setTimeout(() => store.runSearch(), 300);
-});
-watch(filters, () => store.runSearch(), { deep: true });
-watch(sort, () => store.runSearch());
-watch(() => productStore.getCurrentProductStore?.productStoreId, () => store.runSearch());
 watch(results, () => {
   const ids = new Set(results.value.map((batch) => batch.futureInventoryItemId));
   selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
 });
 
-onIonViewWillEnter(() => store.runSearch());
 
 function activate(id: string) {
   if (selectMode.value) setSelected(id, !selectedIds.value.includes(id));
@@ -217,10 +208,11 @@ async function loadMore(event: CustomEvent) {
 }
 
 async function finish(message: string) {
+  usePreorderSearchStore().markStale();
   await showToast(message);
   selectMode.value = false;
   selectedIds.value = [];
-  await store.runSearch();
+  await refresh();
 }
 
 async function changePromiseDate() {

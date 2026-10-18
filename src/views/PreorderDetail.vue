@@ -47,11 +47,19 @@
           <ion-list-header>
             <ion-label>{{ translate('Pre-order items') }}</ion-label>
           </ion-list-header>
-          <div v-for="line in order.lines" :key="line.orderItemSeqId" class="list-item line-row">
+          <div
+            v-for="line in order.lines"
+            :key="line.orderItemSeqId"
+            class="list-item line-row"
+            :role="line.futureInventoryItemId ? 'link' : undefined"
+            :tabindex="line.futureInventoryItemId ? 0 : undefined"
+            @click="openBatch(line)"
+            @keydown.enter.prevent="openBatch(line)"
+          >
             <ProductItem :product-id="line.productId" :product-name="line.productName" />
 
             <ion-label class="tablet">
-              <ion-chip :outline="true" :router-link="line.futureInventoryItemId ? `/future-inventory/${encodeURIComponent(line.futureInventoryItemId)}` : undefined" :disabled="!line.futureInventoryItemId">
+              <ion-chip :outline="true" :disabled="!line.futureInventoryItemId">
                 <ion-icon :icon="layersOutline" />
                 <ion-label>{{ line.futureInventoryItemId || translate('No batch') }}</ion-label>
               </ion-chip>
@@ -82,12 +90,15 @@
                 fill="clear"
                 size="small"
                 :disabled="!canUpdate"
-                @click="openMove(line)"
+                @click.stop="openMove(line)"
               >
                 {{ translate('Move') }}
               </ion-button>
             </div>
           </div>
+          <ion-item v-if="!order.lines.length" lines="none">
+            <ion-label>{{ translate('This order has no pre-order items.') }}</ion-label>
+          </ion-item>
         </ion-list>
       </template>
     </ion-content>
@@ -106,6 +117,9 @@ import { StatCard, translate } from '@common';
 import { useSeedData, useProductMaster } from '@common/db';
 import { usePreorderActions } from '@/composables/usePreorderActions';
 import { useUserStore } from '@/store/user';
+import { usePreorderSearchStore } from '@/store/preorderSearch';
+import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
+import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import MoveReservationModal from '@/components/preorders/MoveReservationModal.vue';
@@ -150,11 +164,18 @@ async function load() {
 
 onIonViewWillEnter(load);
 
+function openBatch(line: PreorderLine) {
+  if (line.futureInventoryItemId) router.push(`/future-inventory/${encodeURIComponent(line.futureInventoryItemId)}`);
+}
+
 async function openMove(line: PreorderLine) {
   const modal = await modalController.create({ component: MoveReservationModal, componentProps: { orderId: props.orderId, line } });
   await modal.present();
   const { role } = await modal.onWillDismiss();
-  if (role === 'confirm') await load();
+  if (role !== 'confirm') return;
+  usePreorderSearchStore().markStale();
+  useFutureInventorySearchStore().markStale();
+  await load();
 }
 </script>
 
@@ -172,7 +193,7 @@ async function openMove(line: PreorderLine) {
 
 .line-row {
   --columns-desktop: 5;
-  --columns-tablet: 4;
+  --columns-tablet: 5;
   border-block-start: var(--border-medium);
   padding-inline-end: var(--spacer-sm);
 }

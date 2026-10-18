@@ -52,7 +52,7 @@
             <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="formatRelative(batch.promiseDate)" />
             <StatCard :title="translate('On hand')" :stat="formatQuantity(batch.quantityOnHandTotal)" :subtitle="translate('Supply still to arrive')" />
             <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="Number(batch.availableToPromiseTotal) < 0 ? translate('Overcommitted') : translate('Can still be sold')" />
-            <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="translate('{count} lines waiting', { count: batch.waitingLineCount ?? lines.length })" />
+            <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="translate('Sold before it arrives')" />
           </div>
         </section>
 
@@ -83,7 +83,7 @@
             <ion-item lines="none">
               <ion-label>
                 {{ line.customerName || line.orderName || line.orderId }}
-                <p>{{ [line.orderName, line.orderId, line.orderItemSeqId].filter(Boolean).join(' - ') }}</p>
+                <p>{{ [line.customerName ? line.orderName : '', line.orderId, line.orderItemSeqId].filter((id) => id && id !== (line.customerName || line.orderName || line.orderId)).join(' - ') }}</p>
               </ion-label>
             </ion-item>
             <ion-label class="tablet">
@@ -106,13 +106,24 @@
           <ion-item v-if="!lines.length" lines="none">
             <ion-label>{{ translate('No orders are waiting on this batch.') }}</ion-label>
           </ion-item>
+          <ion-item v-else-if="linesTotal > lines.length" lines="none">
+            <ion-note>{{ translate('Showing the first {shown} of {count}.', { shown: lines.length, count: linesTotal }) }}</ion-note>
+          </ion-item>
         </ion-list>
 
         <ion-list v-else>
           <ion-list-header>
             <ion-label>{{ translate('{count} ledger entries', { count: ledgerTotal }) }}</ion-label>
           </ion-list-header>
-          <div v-for="row in ledger" :key="row.futureInventoryItemDetailId" class="list-item ledger-row">
+          <div
+            v-for="row in ledger"
+            :key="row.futureInventoryItemDetailId"
+            class="list-item ledger-row"
+            :role="row.orderId ? 'link' : undefined"
+            :tabindex="row.orderId ? 0 : undefined"
+            @click="row.orderId && router.push(`/preorders/${encodeURIComponent(row.orderId)}`)"
+            @keydown.enter.prevent="row.orderId && router.push(`/preorders/${encodeURIComponent(row.orderId)}`)"
+          >
             <ion-item lines="none">
               <ion-label>
                 {{ seed.enumDescription(row.reasonEnumId) }}
@@ -146,6 +157,12 @@
               <p>{{ row.changedByUserId || translate('System') }}</p>
             </ion-label>
           </div>
+          <ion-item v-if="!ledger.length" lines="none">
+            <ion-label>{{ translate('No ledger entries.') }}</ion-label>
+          </ion-item>
+          <ion-item v-else-if="ledgerTotal > ledger.length" lines="none">
+            <ion-note>{{ translate('Showing the latest {shown} of {count}.', { shown: ledger.length, count: ledgerTotal }) }}</ion-note>
+          </ion-item>
         </ion-list>
       </template>
     </ion-content>
@@ -163,6 +180,8 @@ import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { useUserStore } from '@/store/user';
+import { usePreorderSearchStore } from '@/store/preorderSearch';
+import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, promptForNumber, showToast } from '@/utils';
@@ -221,6 +240,8 @@ onIonViewWillEnter(load);
 async function run(action: () => Promise<any>, success: string) {
   try {
     await action();
+    useFutureInventorySearchStore().markStale();
+    usePreorderSearchStore().markStale();
     await showToast(success);
     await load();
   } catch (err) {

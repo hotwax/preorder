@@ -207,7 +207,7 @@
             </ion-list>
           </ion-radio-group>
 
-          <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+          <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="fab-vertical-bottom">
             <ion-fab-button :disabled="!timeZoneId || isSavingTimeZone" @click="saveUserTimeZone" :aria-label="translate('Save')">
               <ion-spinner v-if="isSavingTimeZone" name="crescent" />
               <ion-icon v-else :icon="saveOutline" />
@@ -438,12 +438,12 @@ ion-card > ion-button {
 }
 section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(18.75rem, 100%), 1fr));
   align-items: start;
 }
 .user-profile {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(25rem, 100%), 1fr));
 }
 hr {
   border-top: var(--border-medium);
@@ -452,7 +452,7 @@ hr {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacer-xs) 10px 0px;
+  padding: var(--spacer-xs) var(--spacer-xs) 0;
 }
 .card-header {
   display: flex;

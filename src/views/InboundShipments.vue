@@ -37,7 +37,7 @@
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
-      <ErrorState v-if="error" :title="translate('Could not load inbound shipments')" :message="error" retryable @retry="store.runSearch()" />
+      <ErrorState v-if="error" :title="translate('Could not load inbound shipments')" :message="error" retryable @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
@@ -58,7 +58,7 @@
         :message="translate('Inbound shipments are created against purchase orders, by suppliers or by imports. Adjust the search text or filters to broaden the list.')"
       />
 
-      <ion-infinite-scroll :disabled="!hasMore" @ionInfinite="loadMore">
+      <ion-infinite-scroll :disabled="!hasMore || !!error" @ionInfinite="loadMore">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading more shipments')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -68,14 +68,15 @@
 <script setup lang="ts">
 import {
   IonButtons, IonContent, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonLabel, IonList, IonListHeader,
-  IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar, onIonViewWillEnter,
+  IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useInboundShipmentSearchStore } from '@/store/inboundShipmentSearch';
+import { useFindSearch } from '@/composables/useFindSearch';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -87,6 +88,7 @@ import InboundShipmentRow from '@/components/shipments/InboundShipmentRow.vue';
 
 const seed = useSeedData();
 const store = useInboundShipmentSearchStore();
+const { refresh } = useFindSearch(store, { scopeByStore: false });
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
 const sortOptions = [
@@ -97,15 +99,7 @@ const sortOptions = [
 const statusOptions = computed(() => seed.statusItemsByType('PURCH_SHIP_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
 const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
 
-let debounce: ReturnType<typeof setTimeout> | undefined;
-watch(query, () => {
-  if (debounce) clearTimeout(debounce);
-  debounce = setTimeout(() => store.runSearch(), 300);
-});
-watch(filters, () => store.runSearch(), { deep: true });
-watch(sort, () => store.runSearch());
 
-onIonViewWillEnter(() => store.runSearch());
 
 async function loadMore(event: CustomEvent) {
   await store.appendNextPage();

@@ -28,9 +28,10 @@ export interface ImportLog {
 
 /** Import tracking and CSV upload, through the Data Manager endpoints. */
 export function useImports() {
-  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string }, pageIndex: number, pageSize: number): Promise<ImportLog[]> {
+  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string; logId?: string }, pageIndex: number, pageSize: number): Promise<ImportLog[]> {
     const configIds = filters.configId && filters.configId !== 'All' ? [filters.configId] : IMPORT_CONFIGS.map((config) => config.configId);
     const params: Record<string, any> = { configId: configIds.join(','), configId_op: 'in', pageIndex, pageSize, orderByField: '-createdDate' };
+    if (filters.logId) params.logId = filters.logId;
     if (filters.statusId && filters.statusId !== 'All') params.statusId = filters.statusId;
     if (filters.createdDateFrom) params.createdDate_from = `${filters.createdDateFrom} 00:00:00`;
     if (filters.createdDateThru) params.createdDate_thru = `${filters.createdDateThru} 23:59:59`;

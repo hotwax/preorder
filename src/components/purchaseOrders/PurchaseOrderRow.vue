@@ -18,8 +18,8 @@
         @ion-change="emit('selectionChange', $event.detail.checked)"
       />
       <ion-label>
-        {{ order.orderName || order.externalId || order.orderId }}
-        <p>{{ [...new Set([order.orderId, order.externalId].filter(Boolean))].join(' - ') }}</p>
+        {{ title }}
+        <p v-if="subtitle">{{ subtitle }}</p>
       </ion-label>
     </ion-item>
 
@@ -28,7 +28,7 @@
       <p>{{ translate('Supplier') }}</p>
     </ion-label>
 
-    <ion-label class="tablet">
+    <ion-label>
       {{ order.facilityName || seed.facilityName(order.facilityId || '') || translate('No facility') }}
       <p>{{ translate('Destination') }}</p>
     </ion-label>
@@ -38,7 +38,7 @@
       <p>{{ translate('{count} lines', { count: order.itemCount ?? 0 }) }}<template v-if="order.futureInventoryBatchCount">{{ ', ' + translate('{count} sold as pre-order', { count: order.futureInventoryBatchCount }) }}</template></p>
     </ion-label>
 
-    <ion-label>
+    <ion-label class="tablet">
       <ion-badge :color="statusColor(order.statusId)">{{ seed.statusDescription(order.statusId || '') }}</ion-badge>
       <p>{{ translate('Ordered {date}', { date: formatDate(order.orderDate) }) }}</p>
     </ion-label>
@@ -68,6 +68,9 @@ import type { PurchaseOrderSummary } from '@/types';
 const props = defineProps<{ order: PurchaseOrderSummary; selectMode?: boolean; selected?: boolean }>();
 const emit = defineEmits<{ (event: 'activate'): void; (event: 'selectionChange', selected: boolean): void }>();
 const seed = useSeedData();
+const title = computed(() => props.order.orderName || props.order.externalId || props.order.orderId);
+/** The ids the title does not already show. */
+const subtitle = computed(() => [...new Set([props.order.orderId, props.order.externalId].filter((id) => id && id !== title.value))].join(' - '));
 const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(props.order.statusId || ''));
 </script>
 

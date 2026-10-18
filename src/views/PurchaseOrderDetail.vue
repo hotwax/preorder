@@ -17,7 +17,7 @@
         <section class="summary">
           <ion-card>
             <ion-card-header>
-              <ion-card-subtitle>{{ [order.orderId, order.externalId].filter(Boolean).join(' - ') }}</ion-card-subtitle>
+              <ion-card-subtitle v-if="idsBesideTitle">{{ idsBesideTitle }}</ion-card-subtitle>
               <ion-card-title>{{ order.supplierName || order.supplierPartyId || translate('No supplier') }}</ion-card-title>
             </ion-card-header>
             <ion-list lines="none">
@@ -42,6 +42,7 @@
               <ion-button v-if="order.statusId === 'ORDER_CREATED'" fill="clear" @click="setStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
               <ion-button fill="clear" @click="changeArrival()">{{ translate('Change arrival date') }}</ion-button>
               <ion-button fill="clear" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow">{{ translate('Sell as pre-order') }}</ion-button>
+              <ion-button v-if="order.statusId === 'ORDER_APPROVED'" fill="clear" @click="setStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
               <ion-button fill="clear" color="danger" @click="setStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
             </template>
           </ion-card>
@@ -58,7 +59,15 @@
           <ion-list-header>
             <ion-label>{{ translate('Lines') }}</ion-label>
           </ion-list-header>
-          <div v-for="item in order.items" :key="item.orderItemSeqId" class="list-item po-line-row">
+          <div
+            v-for="item in order.items"
+            :key="item.orderItemSeqId"
+            class="list-item po-line-row"
+            :role="item.futureInventoryItemId ? 'link' : undefined"
+            :tabindex="item.futureInventoryItemId ? 0 : undefined"
+            @click="openBatch(item.futureInventoryItemId)"
+            @keydown.enter.prevent="openBatch(item.futureInventoryItemId)"
+          >
             <ProductItem :product-id="item.productId" :product-name="item.productName" />
             <ion-label class="tablet">
               {{ formatQuantity(Number(item.quantity || 0) - Number(item.cancelQuantity || 0)) }}
@@ -69,7 +78,7 @@
               <p>{{ translate('Received') }}</p>
             </ion-label>
             <ion-label class="tablet">
-              <ion-chip v-if="item.futureInventoryItemId" :outline="true" :router-link="`/future-inventory/${encodeURIComponent(item.futureInventoryItemId)}`">
+              <ion-chip v-if="item.futureInventoryItemId" :outline="true">
                 <ion-icon :icon="layersOutline" />
                 <ion-label>{{ translate('{atp} ATP, {reserved} reserved', { atp: formatQuantity(item.futureInventoryAvailableToPromise), reserved: formatQuantity(item.futureInventoryReserved) }) }}</ion-label>
               </ion-chip>
@@ -83,6 +92,9 @@
               <p>{{ item.estimatedDeliveryDate ? formatRelative(item.estimatedDeliveryDate) : '' }}</p>
             </ion-label>
           </div>
+          <ion-item v-if="!order.items.length" lines="none">
+            <ion-label>{{ translate('This purchase order has no lines.') }}</ion-label>
+          </ion-item>
         </ion-list>
 
         <ion-list>
@@ -119,6 +131,9 @@ import { StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useUserStore } from '@/store/user';
+import { usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
+import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
@@ -141,6 +156,8 @@ const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 const openItems = computed(() => (order.value?.items || []).filter((item: any) => !['ITEM_CANCELLED', 'ITEM_COMPLETED'].includes(item.statusId)));
 const linesWithoutBatch = computed(() => openItems.value.filter((item: any) => !item.futureInventoryItemId).length);
+/** The ids the toolbar title does not already show. */
+const idsBesideTitle = computed(() => [order.value?.orderId, order.value?.externalId].filter((id) => id && id !== (order.value?.orderName || props.orderId)).join(' - '));
 const earliestArrival = computed(() => openItems.value.map((item: any) => toMillis(item.estimatedDeliveryDate)).filter(Boolean).sort()[0]);
 
 const sum = (field: string) => (order.value?.items || []).reduce((total: number, item: any) => total + Number(item[field] || 0), 0);
@@ -163,6 +180,8 @@ onIonViewWillEnter(load);
 async function run(action: () => Promise<any>, success: string) {
   try {
     await action();
+    usePurchaseOrderSearchStore().markStale();
+    useFutureInventorySearchStore().markStale();
     await showToast(success);
     await load();
   } catch (err) {
@@ -170,14 +189,21 @@ async function run(action: () => Promise<any>, success: string) {
   }
 }
 
+const STATUS_ACTIONS: Record<string, { header: string; message: string; confirm: string; done: string }> = {
+  ORDER_APPROVED: { header: 'Approve purchase order', message: 'Approve this purchase order?', confirm: 'Approve', done: 'Purchase order approved.' },
+  ORDER_COMPLETED: { header: 'Complete purchase order', message: 'Complete this purchase order? Its open lines close, and nothing more is expected against it.', confirm: 'Complete', done: 'Purchase order completed.' },
+  ORDER_CANCELLED: { header: 'Cancel purchase order', message: 'Cancel this purchase order? This cannot be undone.', confirm: 'Cancel order', done: 'Purchase order cancelled.' },
+};
+
 async function setStatus(statusId: string) {
-  const cancel = statusId === 'ORDER_CANCELLED';
-  const confirmed = await confirmAction(
-    cancel ? translate('Cancel purchase order') : translate('Approve purchase order'),
-    cancel ? translate('Cancel this purchase order? This cannot be undone.') : translate('Approve this purchase order?'),
-    cancel ? translate('Cancel order') : translate('Approve'),
-  );
-  if (confirmed) await run(() => changeStatus(props.orderId, statusId), cancel ? translate('Purchase order cancelled.') : translate('Purchase order approved.'));
+  const action = STATUS_ACTIONS[statusId];
+  if (await confirmAction(translate(action.header), translate(action.message), translate(action.confirm))) {
+    await run(() => changeStatus(props.orderId, statusId), translate(action.done));
+  }
+}
+
+function openBatch(futureInventoryItemId?: string) {
+  if (futureInventoryItemId) router.push(`/future-inventory/${encodeURIComponent(futureInventoryItemId)}`);
 }
 
 async function changeArrival() {
@@ -191,7 +217,12 @@ async function changeArrival() {
 }
 
 async function sellAsPreorderNow() {
-  await run(() => sellAsPreorder(props.orderId), translate('Future inventory created.'));
+  const confirmed = await confirmAction(
+    translate('Sell as pre-order'),
+    translate('Creates a pre-order future inventory batch for each open line without one, at its arrival date and quantity.'),
+    translate('Create batches'),
+  );
+  if (confirmed) await run(() => sellAsPreorder(props.orderId), translate('Future inventory created.'));
 }
 </script>
 

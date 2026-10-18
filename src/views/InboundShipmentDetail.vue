@@ -17,7 +17,7 @@
         <section class="summary">
           <ion-card>
             <ion-card-header>
-              <ion-card-subtitle>{{ shipment.shipmentId }}</ion-card-subtitle>
+              <ion-card-subtitle v-if="shipment.externalId">{{ shipment.shipmentId }}</ion-card-subtitle>
               <ion-card-title>{{ shipment.facilityName || seed.facilityName(shipment.destinationFacilityId || '') }}</ion-card-title>
             </ion-card-header>
             <ion-list lines="none">
@@ -61,6 +61,9 @@
               <p>{{ translate('Received') }}</p>
             </ion-label>
           </div>
+          <ion-item v-if="!shipment.items?.length" lines="none">
+            <ion-label>{{ translate('This shipment has no items.') }}</ion-label>
+          </ion-item>
         </ion-list>
 
         <ion-list>

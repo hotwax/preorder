@@ -27,7 +27,11 @@
           </ion-radio>
         </ion-item>
       </ion-radio-group>
-      <ion-item v-if="!loading && !candidates.length" lines="none">
+      <ion-item v-if="loadError" lines="none">
+        <ion-label class="ion-text-wrap">{{ loadError }}</ion-label>
+        <ion-button slot="end" fill="outline" size="small" @click="loadBatches">{{ translate('Retry') }}</ion-button>
+      </ion-item>
+      <ion-item v-else-if="!loading && !candidates.length" lines="none">
         <ion-label>{{ translate('No other active batch of this product and type.') }}</ion-label>
       </ion-item>
     </ion-list>
@@ -72,15 +76,21 @@ const candidates = computed(() => batches.value.filter((batch) =>
   batch.futureInventoryItemId !== props.line.futureInventoryItemId
   && (!props.line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === props.line.futureInventoryItemTypeId)));
 
-onMounted(async () => {
+const loadError = ref('');
+
+async function loadBatches() {
+  loading.value = true;
+  loadError.value = '';
   try {
     batches.value = await fetchActiveBatches(props.line.productId);
   } catch (error) {
-    await showToast(errorMessage(error, translate('Failed to load batches.')));
+    loadError.value = errorMessage(error, translate('Failed to load batches.'));
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(loadBatches);
 
 function dismiss(role = 'cancel') {
   modalController.dismiss(null, role);

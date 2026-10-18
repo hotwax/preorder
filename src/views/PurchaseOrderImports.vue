@@ -37,7 +37,7 @@
         </div>
       </ion-card>
 
-      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Log ID')" :show-clear="false">
+      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Exact log ID')" :show-clear="false">
         <UniformFilterLayout @clear="clearFilters">
           <ion-select v-model="filters.configId" :label="translate('Import type')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All imports') }}</ion-select-option>
@@ -58,7 +58,7 @@
       <ion-list v-else>
         <ion-list-header v-if="visibleLogs.length">
           <ion-label>{{ translate('{count} imports', { count: visibleLogs.length }) }}</ion-label>
-          <ion-button fill="clear" size="small" @click="load">
+          <ion-button fill="clear" size="small" :aria-label="translate('Refresh')" @click="load">
             <ion-icon slot="icon-only" :icon="refreshOutline" />
           </ion-button>
         </ion-list-header>
@@ -79,8 +79,11 @@
             <p>{{ log.createdByUserLogin || translate('System') }}</p>
           </ion-label>
           <ion-label class="tablet">
-            {{ log.finishDateTime ? formatDateTime(log.finishDateTime) : (log.startDateTime ? translate('Running') : translate('Not started')) }}
-            <p>{{ translate('Finished') }}</p>
+            <template v-if="log.finishDateTime">
+              {{ formatDateTime(log.finishDateTime) }}
+              <p>{{ translate('Finished') }}</p>
+            </template>
+            <template v-else>{{ log.startDateTime ? translate('Running') : translate('Not started') }}</template>
           </ion-label>
           <div class="import-row-end">
             <ion-button fill="clear" size="small" :disabled="!log.logContentId" @click="downloadFile(log, false)">{{ translate('File') }}</ion-button>
@@ -150,11 +153,7 @@ const fileInput = ref<HTMLInputElement>();
 const selectedFile = ref<File>();
 const uploading = ref(false);
 
-// The Data Manager list has no free-text search, so the log id narrows what is loaded.
-const visibleLogs = computed(() => {
-  const query = logIdQuery.value.trim().toLowerCase();
-  return query ? logs.value.filter((log) => String(log.logId).toLowerCase().includes(query) || String(log.fileName || '').toLowerCase().includes(query)) : logs.value;
-});
+const visibleLogs = computed(() => logs.value);
 
 const configLabel = (configId: string) => translate(IMPORT_CONFIGS.find((config) => config.configId === configId)?.label || configId);
 
@@ -162,7 +161,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const rows = await fetchLogs(filters, 0, PAGE_SIZE);
+    const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, 0, PAGE_SIZE);
     logs.value = rows;
     pageIndex.value = 0;
     hasMore.value = rows.length === PAGE_SIZE;
@@ -174,18 +173,30 @@ async function load() {
   }
 }
 
+const loadingMore = ref(false);
+
 async function loadMore(event: CustomEvent) {
+  if (loadingMore.value) return (event.target as HTMLIonInfiniteScrollElement).complete();
+  loadingMore.value = true;
   try {
-    const rows = await fetchLogs(filters, pageIndex.value + 1, PAGE_SIZE);
+    const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, pageIndex.value + 1, PAGE_SIZE);
     logs.value = [...logs.value, ...rows];
     pageIndex.value += 1;
     hasMore.value = rows.length === PAGE_SIZE;
+  } catch (err) {
+    await showToast(errorMessage(err, translate('Could not load more imports. Scroll to try again.')));
   } finally {
+    loadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
   }
 }
 
 watch(filters, load, { deep: true });
+let logIdDebounce: ReturnType<typeof setTimeout> | undefined;
+watch(logIdQuery, () => {
+  if (logIdDebounce) clearTimeout(logIdDebounce);
+  logIdDebounce = setTimeout(load, 300);
+});
 onIonViewWillEnter(load);
 
 function clearFilters() {

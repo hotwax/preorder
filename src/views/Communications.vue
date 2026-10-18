@@ -21,13 +21,12 @@
       <section v-else class="email-settings">
         <ion-card v-for="setting in settings" :key="setting.emailType">
           <ion-card-header>
-            <ion-card-subtitle>{{ setting.emailType }}</ion-card-subtitle>
             <ion-card-title>{{ emailTypeLabel(setting.emailType) }}</ion-card-title>
             <p v-if="seed.enumDescription(setting.emailType) !== setting.emailType">{{ seed.enumDescription(setting.emailType) }}</p>
           </ion-card-header>
           <ion-list lines="none">
             <ion-item :disabled="!canUpdate || !setting.wired || toggling === setting.emailType">
-              <ion-toggle :checked="setting.wired && setting.exists && setting.enabled" @ionChange="toggle(setting, $event.detail.checked)">
+              <ion-toggle :key="`${setting.emailType}-${settingsRevision}`" :checked="setting.wired && setting.exists && setting.enabled" @ionChange="toggle(setting, $event.detail.checked)">
                 {{ setting.wired ? (setting.exists && setting.enabled ? translate('Sending') : translate('Off')) : translate('Not wired') }}
               </ion-toggle>
             </ion-item>
@@ -87,7 +86,15 @@
         <ion-list-header v-if="events.length">
           <ion-label>{{ translate('{shown} of {count} emails', { shown: events.length, count: eventsTotal }) }}</ion-label>
         </ion-list-header>
-        <div v-for="event in events" :key="event.communicationEventId" class="list-item event-row">
+        <div
+          v-for="event in events"
+          :key="event.communicationEventId"
+          class="list-item event-row"
+          :role="event.orderId ? 'link' : undefined"
+          :tabindex="event.orderId ? 0 : undefined"
+          @click="openOrder(event.orderId)"
+          @keydown.enter.prevent="openOrder(event.orderId)"
+        >
           <ion-item lines="none">
             <ion-icon slot="start" :icon="mailOutline" />
             <ion-label>
@@ -100,7 +107,7 @@
             <p>{{ translate('Email type') }}</p>
           </ion-label>
           <ion-label class="tablet">
-            <ion-button v-if="event.orderId" fill="clear" size="small" :router-link="`/preorders/${encodeURIComponent(event.orderId)}`">{{ event.orderId }}</ion-button>
+            {{ event.orderId || '-' }}
             <p>{{ translate('Order') }}</p>
           </ion-label>
           <ion-label class="tablet">
@@ -119,7 +126,7 @@
         :message="translate('Emails OMS sends for this store\'s orders show here, with their type.')"
       />
 
-      <ion-infinite-scroll :disabled="events.length >= eventsTotal" @ionInfinite="loadMoreEvents">
+      <ion-infinite-scroll :disabled="events.length >= eventsTotal || !!eventsError" @ionInfinite="loadMoreEvents">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading more emails')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -140,6 +147,7 @@ import { useSeedData } from '@common/db';
 import { useCommunications, type CommunicationEventRow, type PreorderEmailSetting } from '@/composables/useCommunications';
 import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user';
+import router from '@/router';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -168,6 +176,8 @@ const settings = ref<PreorderEmailSetting[]>([]);
 const settingsLoading = ref(false);
 const settingsError = ref('');
 const toggling = ref('');
+/** Re-keys the toggles after each save, so a failed one shows the server's state again. */
+const settingsRevision = ref(0);
 const counts7 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
 const counts30 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
 
@@ -235,6 +245,7 @@ function eventParams(pageIndex: number) {
 }
 
 async function loadEvents() {
+  if (!productStoreId.value) return;
   eventsLoading.value = true;
   eventsError.value = '';
   try {
@@ -250,13 +261,20 @@ async function loadEvents() {
   }
 }
 
+const eventsLoadingMore = ref(false);
+
 async function loadMoreEvents(event: CustomEvent) {
+  if (eventsLoadingMore.value) return (event.target as HTMLIonInfiniteScrollElement).complete();
+  eventsLoadingMore.value = true;
   try {
     const { rows, total } = await fetchEvents(eventParams(eventsPage.value + 1));
     events.value = [...events.value, ...rows];
     eventsTotal.value = total;
     eventsPage.value += 1;
+  } catch (err) {
+    await showToast(errorMessage(err, translate('Could not load more emails. Scroll to try again.')));
   } finally {
+    eventsLoadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
   }
 }
@@ -277,6 +295,10 @@ onIonViewWillEnter(() => {
   void loadEvents();
 });
 
+function openOrder(orderId?: string) {
+  if (orderId) router.push(`/preorders/${encodeURIComponent(orderId)}`);
+}
+
 function clearEventFilters() {
   Object.assign(eventFilters, { emailType: 'All', statusId: 'All', fromDate: '', thruDate: '' });
   orderQuery.value = '';
@@ -293,6 +315,7 @@ async function toggle(setting: PreorderEmailSetting, enabled: boolean) {
   } finally {
     toggling.value = '';
     await loadSettings();
+    settingsRevision.value += 1;
   }
 }
 </script>

@@ -15,6 +15,7 @@
     </ion-header>
 
     <ion-content>
+      <ion-progress-bar v-if="loading" type="indeterminate" />
       <ion-item lines="none" class="selected-store-header">
         <ion-icon slot="start" :icon="globeOutline" />
         <ion-label>
@@ -58,7 +59,7 @@
         </ion-card-content>
       </ion-card>
 
-      <section v-if="dashboard" class="drilldown ion-padding">
+      <section v-if="dashboard && !error" class="drilldown ion-padding">
         <StatCard :title="translate('Arriving in {days} days', { days: ARRIVAL_DAYS })" :stat="formatNumber(dashboard.arrivingSoon.count)" :subtitle="translate('{quantity} units, {reserved} already sold', { quantity: formatQuantity(dashboard.arrivingSoon.quantity), reserved: formatQuantity(dashboard.arrivingSoon.reserved) })">
           <ion-list lines="none" class="drilldown-list">
             <ion-item v-for="batch in dashboard.arrivingSoon.batches" :key="batch.futureInventoryItemId" button :detail="true" :router-link="batchRoute(batch.futureInventoryItemId)">
@@ -121,7 +122,7 @@
         </StatCard>
       </section>
 
-      <template v-if="dashboard">
+      <template v-if="dashboard && !error">
         <hr class="divider" />
 
         <ion-item lines="none" class="section-heading">
@@ -212,20 +213,25 @@ const topProductMax = computed(() => Math.max(0, ...(dashboard.value?.topProduct
 const productLabel = (productId: string, fallback?: string) => primaryId(getProduct(productId), [fallback, productId]);
 const batchRoute = (id: string) => `/future-inventory/${encodeURIComponent(id)}`;
 
+// Only the latest request may land: a store switch while one is in flight discards the older answer.
+let requestId = 0;
+
 async function load() {
+  const current = ++requestId;
   loading.value = true;
   error.value = false;
   try {
-    dashboard.value = await fetchDashboard(productStoreId.value, TREND_DAYS, ARRIVAL_DAYS);
-    const data = dashboard.value;
+    const data = await fetchDashboard(productStoreId.value, TREND_DAYS, ARRIVAL_DAYS);
+    if (current !== requestId) return;
+    dashboard.value = data;
     void prefetch([
       ...data.arrivingSoon.batches, ...data.pastDue.batches, ...data.exceptions.batches, ...data.overcommitted.batches,
       ...data.noPromiseDate.lines, ...data.topProducts,
     ].map((row: any) => row.productId).filter(Boolean));
   } catch {
-    error.value = true;
+    if (current === requestId) error.value = true;
   } finally {
-    loading.value = false;
+    if (current === requestId) loading.value = false;
   }
 }
 
@@ -233,10 +239,15 @@ async function load() {
 function openProduct(productId: string) {
   futureInventorySearch.clearFilters();
   futureInventorySearch.query = productId;
+  futureInventorySearch.markStale();
   router.push('/future-inventory');
 }
 
-watch(productStoreId, load);
+// Another store's figures never show under this store's name.
+watch(productStoreId, () => {
+  dashboard.value = undefined;
+  void load();
+});
 onIonViewWillEnter(load);
 </script>
 

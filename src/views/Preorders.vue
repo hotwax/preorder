@@ -61,7 +61,7 @@
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
-      <ErrorState v-if="error" :title="translate('Could not load pre-orders')" :message="error" retryable @retry="store.runSearch()" />
+      <ErrorState v-if="error" :title="translate('Could not load pre-orders')" :message="error" retryable @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
@@ -97,7 +97,7 @@
         :message="translate('Pre-orders are sales orders with items that reserved future inventory. Adjust the search text or filters to broaden the list.')"
       />
 
-      <ion-infinite-scroll :disabled="!hasMore" @ionInfinite="loadMore">
+      <ion-infinite-scroll :disabled="!hasMore || !!error" @ionInfinite="loadMore">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading more pre-orders')" />
       </ion-infinite-scroll>
     </ion-content>
@@ -119,7 +119,6 @@
 import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
   IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
-  onIonViewWillEnter,
 } from '@ionic/vue';
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -127,9 +126,10 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { usePreorderSearchStore } from '@/store/preorderSearch';
-import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user';
+import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePreorderActions } from '@/composables/usePreorderActions';
+import { useFindSearch } from '@/composables/useFindSearch';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -148,7 +148,7 @@ import type { PreorderOrder } from '@/types';
 
 const seed = useSeedData();
 const store = usePreorderSearchStore();
-const productStore = useProductStore();
+const { refresh } = useFindSearch(store);
 const userStore = useUserStore();
 const { releaseToBrokering, cancelPreorderItems, parkedLines } = usePreorderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -169,20 +169,11 @@ const selectedParkedCount = computed(() => selectedOrders.value.reduce((count, o
 const allSelected = computed(() => results.value.length > 0 && results.value.every((order) => selectedIds.value.includes(order.orderId)));
 const someSelected = computed(() => results.value.some((order) => selectedIds.value.includes(order.orderId)));
 
-let debounce: ReturnType<typeof setTimeout> | undefined;
-watch(query, () => {
-  if (debounce) clearTimeout(debounce);
-  debounce = setTimeout(() => store.runSearch(), 300);
-});
-watch(filters, () => store.runSearch(), { deep: true });
-watch(sort, () => store.runSearch());
-watch(() => productStore.getCurrentProductStore?.productStoreId, () => store.runSearch());
 watch(results, () => {
   const ids = new Set(results.value.map((order) => order.orderId));
   selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
 });
 
-onIonViewWillEnter(() => store.runSearch());
 
 function activate(order: PreorderOrder) {
   if (selectMode.value) setSelected(order.orderId, !selectedIds.value.includes(order.orderId));
@@ -224,9 +215,10 @@ async function confirmRelease() {
   if (!confirmed) return;
   const { moved, failed } = await releaseToBrokering(selectedOrders.value);
   await showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed }) : translate('{moved} items released to brokering.', { moved, count: moved }));
+  useFutureInventorySearchStore().markStale();
   selectMode.value = false;
   selectedIds.value = [];
-  await store.runSearch();
+  await refresh();
 }
 
 async function confirmCancel() {
@@ -238,9 +230,10 @@ async function confirmCancel() {
   if (!confirmed) return;
   const { cancelled, failed } = await cancelPreorderItems(selectedOrders.value);
   await showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
+  useFutureInventorySearchStore().markStale();
   selectMode.value = false;
   selectedIds.value = [];
-  await store.runSearch();
+  await refresh();
 }
 
 function exportSelected() {

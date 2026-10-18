@@ -16,7 +16,7 @@
             <ion-card-title>{{ translate('Order') }}</ion-card-title>
           </ion-card-header>
           <ion-card-content class="form-fields">
-            <ion-select v-model="form.supplierPartyId" :label="requiredLabel('Supplier')" label-placement="stacked" fill="outline" interface="popover" :placeholder="translate('Select supplier')">
+            <ion-select v-model="form.supplierPartyId" :label="requiredLabel('Supplier')" label-placement="stacked" fill="outline" interface="popover" :placeholder="suppliersError || translate('Select supplier')" :helper-text="suppliersError ? translate('Suppliers could not be loaded.') : undefined">
               <ion-select-option v-for="supplier in suppliers" :key="supplier.partyId" :value="supplier.partyId">{{ supplier.name || supplier.partyId }}</ion-select-option>
             </ion-select>
             <ion-select v-model="form.facilityId" :label="requiredLabel('Destination')" label-placement="stacked" fill="outline" interface="popover" :placeholder="translate('Select facility')">
@@ -61,6 +61,10 @@
         <div class="ion-padding-horizontal">
           <ion-searchbar v-model="productQuery" :placeholder="translate('Search products to add')" :debounce="300" @ionInput="searchProducts" />
         </div>
+        <ion-progress-bar v-if="searching" type="indeterminate" />
+        <ion-item v-if="productQuery.trim() && !searching && searched && !searchResults.length" lines="none">
+          <ion-label>{{ searchError || translate('No products match this search.') }}</ion-label>
+        </ion-item>
         <ion-item v-for="product in searchResults" :key="product.productId" button :detail="false" @click="addLine(product)">
           <ion-thumbnail slot="start">
             <DxpShopifyImg :src="product.mainImageUrl" size="small" />
@@ -101,7 +105,7 @@
 <script setup lang="ts">
 import {
   IonBackButton, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent, IonFooter, IonHeader,
-  IonIcon, IonInput, IonItem, IonLabel, IonList, IonListHeader, IonPage, IonSearchbar, IonSelect, IonSelectOption, IonThumbnail,
+  IonIcon, IonInput, IonItem, IonLabel, IonList, IonListHeader, IonPage, IonProgressBar, IonSearchbar, IonSelect, IonSelectOption, IonThumbnail,
   IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue';
 import { addCircleOutline, trashOutline } from 'ionicons/icons';
@@ -112,6 +116,8 @@ import router from '@/router';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import { useProductStore } from '@/store/productStore';
+import { usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ProductItem from '@/components/common/ProductItem.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import { requiredLabel, showToast } from '@/utils';
@@ -145,20 +151,38 @@ const totalUnits = computed(() => form.items.reduce((sum, line) => sum + Number(
 const canSave = computed(() => form.supplierPartyId && form.facilityId && form.items.length
   && form.items.every((line) => Number(line.quantity) > 0 && line.arrivalDate));
 
+const suppliersError = ref('');
+const searching = ref(false);
+const searched = ref(false);
+const searchError = ref('');
+
 onMounted(async () => {
-  suppliers.value = await fetchSuppliers().catch(() => []);
+  try {
+    suppliers.value = await fetchSuppliers();
+  } catch (error) {
+    suppliersError.value = errorMessage(error, translate('Suppliers could not be loaded.'));
+  }
 });
 
 async function searchProducts() {
   const keyword = productQuery.value.trim();
+  searched.value = false;
+  searchError.value = '';
   if (!keyword) {
     searchResults.value = [];
     return;
   }
+  searching.value = true;
   try {
-    searchResults.value = await searchOrderableProducts(keyword);
-  } catch {
+    const results = await searchOrderableProducts(keyword);
+    if (keyword !== productQuery.value.trim()) return;
+    searchResults.value = results;
+  } catch (error) {
     searchResults.value = [];
+    searchError.value = errorMessage(error, translate('Product search failed.'));
+  } finally {
+    searching.value = false;
+    searched.value = true;
   }
 }
 
@@ -189,6 +213,8 @@ async function save() {
     await showToast(form.createFutureInventory
       ? translate('Purchase order {orderId} created with {count} future inventory batches.', { orderId: result.orderId, count: result.futureInventoryItemIds?.length ?? 0 })
       : translate('Purchase order {orderId} created.', { orderId: result.orderId }));
+    usePurchaseOrderSearchStore().markStale();
+    useFutureInventorySearchStore().markStale();
     router.replace(`/purchase-orders/${encodeURIComponent(result.orderId)}`);
   } catch (error) {
     await showToast(errorMessage(error, translate('Failed to create the purchase order.')));

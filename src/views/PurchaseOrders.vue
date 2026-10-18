@@ -44,7 +44,7 @@
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
-      <ErrorState v-if="error" :title="translate('Could not load purchase orders')" :message="error" retryable @retry="store.runSearch()" />
+      <ErrorState v-if="error" :title="translate('Could not load purchase orders')" :message="error" retryable @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
@@ -80,7 +80,7 @@
         :message="translate('Adjust the search text or filters, or create a purchase order.')"
       />
 
-      <ion-infinite-scroll :disabled="!hasMore" @ionInfinite="loadMore">
+      <ion-infinite-scroll :disabled="!hasMore || !!error" @ionInfinite="loadMore">
         <ion-infinite-scroll-content loading-spinner="crescent" :loading-text="translate('Loading more purchase orders')" />
       </ion-infinite-scroll>
 
@@ -111,7 +111,7 @@
 import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFab, IonFabButton, IonFooter, IonHeader, IonIcon, IonInfiniteScroll,
   IonInfiniteScrollContent, IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect,
-  IonSelectOption, IonTitle, IonToolbar, onIonViewWillEnter,
+  IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -121,7 +121,9 @@ import { useSeedData } from '@common/db';
 import router from '@/router';
 import { usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useUserStore } from '@/store/user';
+import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
+import { useFindSearch } from '@/composables/useFindSearch';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -140,6 +142,7 @@ const OPEN_STATUSES = ['ORDER_CREATED', 'ORDER_APPROVED'];
 
 const seed = useSeedData();
 const store = usePurchaseOrderSearchStore();
+const { refresh } = useFindSearch(store, { scopeByStore: false });
 const userStore = useUserStore();
 const { fetchSuppliers, changeStatus, changeArrivalDate: changeOrderArrivalDate, sellAsPreorder, forEachOrder } = usePurchaseOrderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -162,13 +165,6 @@ const selectedOpen = computed(() => selectedWithStatus(OPEN_STATUSES));
 const allSelected = computed(() => results.value.length > 0 && results.value.every((order) => selectedIds.value.includes(order.orderId)));
 const someSelected = computed(() => results.value.some((order) => selectedIds.value.includes(order.orderId)));
 
-let debounce: ReturnType<typeof setTimeout> | undefined;
-watch(query, () => {
-  if (debounce) clearTimeout(debounce);
-  debounce = setTimeout(() => store.runSearch(), 300);
-});
-watch(filters, () => store.runSearch(), { deep: true });
-watch(sort, () => store.runSearch());
 watch(results, () => {
   const ids = new Set(results.value.map((order) => order.orderId));
   selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
@@ -177,7 +173,6 @@ watch(results, () => {
 onMounted(async () => {
   suppliers.value = await fetchSuppliers().catch(() => []);
 });
-onIonViewWillEnter(() => store.runSearch());
 
 function activate(orderId: string) {
   if (selectMode.value) setSelected(orderId, !selectedIds.value.includes(orderId));
@@ -212,9 +207,10 @@ async function loadMore(event: CustomEvent) {
 
 async function report(result: { done: number; failed: number; errors: string[] }, success: string) {
   await showToast(result.failed ? translate('{done} done, {failed} failed: {errors}', { ...result, errors: result.errors.slice(0, 2).join('; ') }) : success);
+  useFutureInventorySearchStore().markStale();
   selectMode.value = false;
   selectedIds.value = [];
-  await store.runSearch();
+  await refresh();
 }
 
 const STATUS_ACTIONS: Record<string, { header: string; message: string; confirm: string; from: string[]; done: string }> = {
