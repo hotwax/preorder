@@ -76,7 +76,6 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useInboundShipmentSearchStore } from '@/store/inboundShipmentSearch';
-import { useProductStore } from '@/store/productStore';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -88,7 +87,6 @@ import InboundShipmentRow from '@/components/shipments/InboundShipmentRow.vue';
 
 const seed = useSeedData();
 const store = useInboundShipmentSearchStore();
-const productStore = useProductStore();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
 const sortOptions = [
@@ -106,7 +104,6 @@ watch(query, () => {
 });
 watch(filters, () => store.runSearch(), { deep: true });
 watch(sort, () => store.runSearch());
-watch(() => productStore.getCurrentProductStore?.productStoreId, () => store.runSearch());
 
 onIonViewWillEnter(() => store.runSearch());
 

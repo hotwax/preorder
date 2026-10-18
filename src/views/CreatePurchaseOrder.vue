@@ -25,8 +25,8 @@
             <ion-input v-model="form.externalId" :label="translate('External ID')" label-placement="stacked" fill="outline" :helper-text="translate('Generated when empty')" />
             <ion-input v-model="form.orderName" :label="translate('Name')" label-placement="stacked" fill="outline" />
             <ion-select v-model="form.statusId" :label="translate('Status')" label-placement="stacked" fill="outline" interface="popover">
-              <ion-select-option value="ORDER_CREATED">{{ seed.statusDescription('ORDER_CREATED') }}</ion-select-option>
-              <ion-select-option value="ORDER_APPROVED">{{ seed.statusDescription('ORDER_APPROVED') }}</ion-select-option>
+              <ion-select-option value="ORDER_CREATED">{{ translate('Created') }}</ion-select-option>
+              <ion-select-option value="ORDER_APPROVED">{{ translate('Approved') }}</ion-select-option>
             </ion-select>
             <ion-input v-model="form.currencyUomId" :label="translate('Currency')" label-placement="stacked" fill="outline" />
           </ion-card-content>
@@ -106,7 +106,7 @@ import {
 } from '@ionic/vue';
 import { addCircleOutline, trashOutline } from 'ionicons/icons';
 import { computed, onMounted, reactive, ref } from 'vue';
-import { DxpShopifyImg, translate, useSolrSearch } from '@common';
+import { DxpShopifyImg, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
@@ -121,7 +121,7 @@ import { errorMessage } from '@/utils/response';
 const seed = useSeedData();
 const productStore = useProductStore();
 const { primaryId, secondaryId } = useProductIdentity();
-const { fetchSuppliers, createPurchaseOrder } = usePurchaseOrderActions();
+const { fetchSuppliers, createPurchaseOrder, searchOrderableProducts } = usePurchaseOrderActions();
 
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
 const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
@@ -156,8 +156,7 @@ async function searchProducts() {
     return;
   }
   try {
-    const { products, total } = await useSolrSearch().searchProducts({ keyword, viewSize: 10 });
-    searchResults.value = total ? (products as any[]) : [];
+    searchResults.value = await searchOrderableProducts(keyword);
   } catch {
     searchResults.value = [];
   }

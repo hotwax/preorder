@@ -1,4 +1,4 @@
-import { api } from '@common';
+import { api, useSolrSearch } from '@common';
 import { ensureOk } from '@/utils/response';
 
 const orderUrl = (orderId: string) => `preorder/purchaseOrders/${encodeURIComponent(orderId)}`;
@@ -46,6 +46,23 @@ export function usePurchaseOrderActions() {
     return ensureOk(api({ url: `${orderUrl(orderId)}/futureInventory`, method: 'post', data: { futureInventoryItemTypeId } }), 'Failed to create future inventory.');
   }
 
+  /**
+   * Products to add to a purchase order: sellable products (variants and simple products, never a
+   * virtual parent) from Solr, and from OMS's product list when Solr has none, as on an instance
+   * whose product index is empty.
+   */
+  async function searchOrderableProducts(keyword: string): Promise<any[]> {
+    const { products, total } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters: { isVariant: { value: '*' } } });
+    if (total) return products as any[];
+    const found = new Map<string, any>();
+    for (const field of ['productId', 'productName', 'internalName']) {
+      const resp: any = await api({ url: 'oms/products', method: 'get', params: { [field]: keyword, [`${field}_op`]: 'contains', [`${field}_ic`]: 'Y', pageSize: 20 } }).catch(() => undefined);
+      (Array.isArray(resp?.data) ? resp.data : []).filter((product: any) => product.isVirtual !== 'Y').forEach((product: any) => found.set(product.productId, product));
+      if (found.size >= 10) break;
+    }
+    return [...found.values()].slice(0, 10);
+  }
+
   async function forEachOrder(orderIds: string[], action: (orderId: string) => Promise<any>) {
     let done = 0; let failed = 0; const errors: string[] = [];
     for (const orderId of orderIds) {
@@ -54,5 +71,5 @@ export function usePurchaseOrderActions() {
     return { done, failed, errors };
   }
 
-  return { fetchPurchaseOrder, fetchSuppliers, createPurchaseOrder, changeStatus, changeArrivalDate, sellAsPreorder, forEachOrder };
+  return { fetchPurchaseOrder, fetchSuppliers, searchOrderableProducts, createPurchaseOrder, changeStatus, changeArrivalDate, sellAsPreorder, forEachOrder };
 }

@@ -15,6 +15,7 @@ export const usePurchaseOrderSearchStore = defineFindStore<{
   orderDateThru: string;
 }, PurchaseOrderSummary>('purchaseOrderSearch', {
   url: 'preorder/purchaseOrders',
+  scopeByStore: false,
   listName: 'orders',
   defaultSort: DEFAULT_PURCHASE_ORDER_SORT,
   defaultFilters: () => ({

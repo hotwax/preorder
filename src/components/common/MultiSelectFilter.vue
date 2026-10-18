@@ -1,31 +1,33 @@
 <template>
-  <ion-input
-    :id="triggerId"
-    class="multi-select-filter-trigger"
-    :label="label"
-    label-placement="stacked"
-    fill="outline"
-    :value="summary"
-    readonly
-  >
-    <ion-icon slot="end" :icon="chevronDownOutline" color="medium" aria-hidden="true" />
-  </ion-input>
-  <ion-popover :trigger="triggerId" trigger-action="click">
-    <ion-content>
-      <ion-list>
-        <ion-item lines="none">
-          <ion-checkbox :checked="!modelValue.length" justify="start" label-placement="end" @ionChange="selectAll(Boolean($event.detail.checked))">
-            {{ allLabel }}
-          </ion-checkbox>
-        </ion-item>
-        <ion-item v-for="option in options" :key="option.value" lines="none">
-          <ion-checkbox :checked="modelValue.includes(option.value)" justify="start" label-placement="end" @ionChange="toggle(option.value, Boolean($event.detail.checked))">
-            {{ option.label }}
-          </ion-checkbox>
-        </ion-item>
-      </ion-list>
-    </ion-content>
-  </ion-popover>
+  <div class="multi-select-filter">
+    <ion-input
+      :id="triggerId"
+      class="multi-select-filter-trigger"
+      :label="label"
+      label-placement="stacked"
+      fill="outline"
+      :value="summary"
+      readonly
+    >
+      <ion-icon slot="end" :icon="chevronDownOutline" color="medium" aria-hidden="true" />
+    </ion-input>
+    <ion-popover :trigger="triggerId" trigger-action="click">
+      <ion-content>
+        <ion-list>
+          <ion-item lines="none">
+            <ion-checkbox :checked="!modelValue.length" justify="start" label-placement="end" @ionChange="selectAll(Boolean($event.detail.checked))">
+              {{ allLabel }}
+            </ion-checkbox>
+          </ion-item>
+          <ion-item v-for="option in options" :key="option.value" lines="none">
+            <ion-checkbox :checked="modelValue.includes(option.value)" justify="start" label-placement="end" @ionChange="toggle(option.value, Boolean($event.detail.checked))">
+              {{ option.label }}
+            </ion-checkbox>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ion-popover>
+  </div>
 </template>
 
 <script lang="ts">

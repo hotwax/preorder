@@ -23,6 +23,7 @@
           <ion-card-header>
             <ion-card-subtitle>{{ setting.emailType }}</ion-card-subtitle>
             <ion-card-title>{{ emailTypeLabel(setting.emailType) }}</ion-card-title>
+            <p v-if="seed.enumDescription(setting.emailType) !== setting.emailType">{{ seed.enumDescription(setting.emailType) }}</p>
           </ion-card-header>
           <ion-list lines="none">
             <ion-item :disabled="!canUpdate || !setting.wired || toggling === setting.emailType">
@@ -179,11 +180,11 @@ const eventsLoading = ref(false);
 const eventsLoaded = ref(false);
 const eventsError = ref('');
 
+/** An email type by its short name ("Pre-Order Delivery Date Change"), not its long description. */
 const emailTypeLabel = (emailType?: string) => {
   if (!emailType) return translate('Unknown type');
-  const setting = settings.value.find((candidate) => candidate.emailType === emailType);
-  const label = seed.enumDescription(emailType);
-  return setting?.description && label === emailType ? setting.description : label;
+  const enumRow = seed.enums().find((row: any) => row.enumId === emailType);
+  return enumRow?.enumName || enumRow?.description || emailType;
 };
 
 const emailTypeOptions = computed(() => [

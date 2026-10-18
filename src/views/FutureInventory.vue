@@ -232,7 +232,7 @@ async function changePromiseDate() {
   );
   if (!promiseDate) return;
   const { done, failed } = await forEachBatch(ids, (id) => adjustBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' }));
-  await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed }) : translate('{done} batches moved to {date}.', { done, date: formatDate(promiseDate) }));
+  await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
 }
 
 async function cancelBatches() {
@@ -247,7 +247,7 @@ async function cancelBatches() {
   );
   if (!confirmed) return;
   const { done, failed } = await forEachBatch(ids, (id) => cancelBatch(id, 'Cancelled in the Pre-order app'));
-  await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed }) : translate('{done} batches cancelled.', { done }));
+  await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed }) : translate('{done} batches cancelled.', { done, count: done }));
 }
 
 function exportSelected() {

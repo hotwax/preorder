@@ -223,7 +223,7 @@ async function confirmRelease() {
   );
   if (!confirmed) return;
   const { moved, failed } = await releaseToBrokering(selectedOrders.value);
-  await showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed }) : translate('{moved} items released to brokering.', { moved }));
+  await showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed }) : translate('{moved} items released to brokering.', { moved, count: moved }));
   selectMode.value = false;
   selectedIds.value = [];
   await store.runSearch();
@@ -237,7 +237,7 @@ async function confirmCancel() {
   );
   if (!confirmed) return;
   const { cancelled, failed } = await cancelPreorderItems(selectedOrders.value);
-  await showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed }) : translate('{cancelled} items cancelled.', { cancelled }));
+  await showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
   selectMode.value = false;
   selectedIds.value = [];
   await store.runSearch();

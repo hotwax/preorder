@@ -16,9 +16,9 @@ describe('labels', () => {
   });
 
   it('formats quantities without trailing zeros', () => {
-    expect(formatQuantity(12)).toBe('12');
-    expect(formatQuantity('12.500')).toBe('12.5');
-    expect(formatQuantity(undefined)).toBe('0');
+    expect(formatQuantity(12)).toBe(12);
+    expect(formatQuantity('12.500')).toBe(12.5);
+    expect(formatQuantity(undefined)).toBe(0);
   });
 
   it('knows a past date', () => {

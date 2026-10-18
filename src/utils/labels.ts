@@ -28,8 +28,11 @@ export const isPast = (value?: number | string) => {
   return millis !== undefined && millis < Date.now();
 };
 
-/** A quantity without trailing zeros: 12, 12.5. */
-export const formatQuantity = (value: unknown) => {
+/**
+ * A quantity without trailing zeros: 12, 12.5. A number, not a string: vue-i18n picks a message's
+ * plural form ("{count} unit | {count} units") from a numeric `count` only.
+ */
+export const formatQuantity = (value: unknown): number => {
   const number = Number(value ?? 0);
-  return Number.isFinite(number) ? String(Number(number.toFixed(4))) : '0';
+  return Number.isFinite(number) ? Number(number.toFixed(4)) : 0;
 };

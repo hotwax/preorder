@@ -120,7 +120,6 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
-import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
@@ -141,7 +140,6 @@ const OPEN_STATUSES = ['ORDER_CREATED', 'ORDER_APPROVED'];
 
 const seed = useSeedData();
 const store = usePurchaseOrderSearchStore();
-const productStore = useProductStore();
 const userStore = useUserStore();
 const { fetchSuppliers, changeStatus, changeArrivalDate: changeOrderArrivalDate, sellAsPreorder, forEachOrder } = usePurchaseOrderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -171,7 +169,6 @@ watch(query, () => {
 });
 watch(filters, () => store.runSearch(), { deep: true });
 watch(sort, () => store.runSearch());
-watch(() => productStore.getCurrentProductStore?.productStoreId, () => store.runSearch());
 watch(results, () => {
   const ids = new Set(results.value.map((order) => order.orderId));
   selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
@@ -231,7 +228,7 @@ async function bulkStatus(statusId: string) {
   const orderIds = selectedWithStatus(action.from);
   if (!await confirmAction(translate(action.header), translate(action.message, { count: orderIds.length }), translate(action.confirm))) return;
   const result = await forEachOrder(orderIds, (orderId) => changeStatus(orderId, statusId));
-  await report(result, translate(action.done, { done: result.done }));
+  await report(result, translate(action.done, { done: result.done, count: result.done }));
 }
 
 async function changeArrivalDate() {
@@ -243,7 +240,7 @@ async function changeArrivalDate() {
   );
   if (!arrivalDate) return;
   const result = await forEachOrder(orderIds, (orderId) => changeOrderArrivalDate(orderId, arrivalDate));
-  await report(result, translate('{done} purchase orders now arrive {date}.', { done: result.done, date: formatDate(arrivalDate) }));
+  await report(result, translate('{done} purchase orders now arrive {date}.', { done: result.done, count: result.done, date: formatDate(arrivalDate) }));
 }
 
 async function sellAsPreorderBulk() {
@@ -254,7 +251,7 @@ async function sellAsPreorderBulk() {
     translate('Create batches'),
   )) return;
   const result = await forEachOrder(orderIds, (orderId) => sellAsPreorder(orderId));
-  await report(result, translate('Future inventory created for {done} purchase orders.', { done: result.done }));
+  await report(result, translate('Future inventory created for {done} purchase orders.', { done: result.done, count: result.done }));
 }
 
 function exportSelected() {

@@ -1,5 +1,6 @@
-import { alertController, toastController } from '@ionic/vue';
+import { alertController, modalController, toastController } from '@ionic/vue';
 import { translate } from '@common';
+import DatePromptModal from '@/components/common/DatePromptModal.vue';
 
 export const showToast = async (message: string) => {
   const toast = await toastController.create({
@@ -25,18 +26,12 @@ export const confirmAction = async (header: string, message: string, confirmText
   return (await alert.onDidDismiss()).role === 'confirm';
 }
 
-/** Asks for a date ('yyyy-MM-dd') in an alert; undefined when cancelled. */
+/** Asks for a date ('yyyy-MM-dd') in a modal calendar; undefined when cancelled. */
 export const promptForDate = async (header: string, message: string, confirmText: string, value = ''): Promise<string | undefined> => {
-  const alert = await alertController.create({
-    header,
-    message,
-    inputs: [{ name: 'date', type: 'date', value }],
-    buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: confirmText, role: 'confirm' }],
-  });
-  await alert.present();
-  const { role, data } = await alert.onDidDismiss();
-  const date = data?.values?.date;
-  return role === 'confirm' && date ? String(date) : undefined;
+  const modal = await modalController.create({ component: DatePromptModal, componentProps: { header, message, confirmText, value } });
+  await modal.present();
+  const { role, data } = await modal.onWillDismiss();
+  return role === 'confirm' && data ? String(data) : undefined;
 }
 
 /** Asks for a number in an alert; undefined when cancelled or not a number. */

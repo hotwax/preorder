@@ -60,7 +60,7 @@
 
             <ion-label class="tablet">
               {{ seed.facilityName(line.facilityId || '') }}
-              <p>{{ line.atParking ? translate('Waiting at parking') : translate('Released from parking') }}</p>
+              <p v-if="isOpen(line)">{{ line.atParking ? translate('Waiting at parking') : translate('Released from parking') }}</p>
             </ion-label>
 
             <ion-label class="tablet">
@@ -119,7 +119,7 @@ import type { PreorderLine, PreorderOrder } from '@/types';
 const props = defineProps<{ orderId: string }>();
 const seed = useSeedData();
 const { prefetch } = useProductMaster();
-const { fetchPreorder } = usePreorderActions();
+const { fetchPreorder, parkedLines } = usePreorderActions();
 const userStore = useUserStore();
 
 const order = ref<PreorderOrder>();
@@ -127,7 +127,8 @@ const loading = ref(false);
 const error = ref('');
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
-const parkedCount = computed(() => order.value?.lines.filter((line) => line.atParking).length ?? 0);
+const parkedCount = computed(() => (order.value ? parkedLines(order.value).length : 0));
+const isOpen = (line: PreorderLine) => !['ITEM_CANCELLED', 'ITEM_COMPLETED', 'ITEM_REJECTED'].includes(line.itemStatusId || '');
 const promiseLabel = computed(() => formatDateRange(order.value?.earliestPromiseDate, order.value?.latestPromiseDate) || translate('None'));
 const promiseSubtitle = computed(() => {
   const date = order.value?.earliestPromiseDate || order.value?.latestPromiseDate;

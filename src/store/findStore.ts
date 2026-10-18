@@ -12,6 +12,11 @@ export interface FindStoreConfig<F extends Record<string, FilterValue>> {
   defaultSort: string;
   /** The request param the search text goes in. */
   queryParam?: string;
+  /**
+   * Whether the menu's product store scopes the list. Supply (purchase orders, inbound shipments)
+   * belongs to facilities, and a purchase order may name no store, so those lists are not scoped.
+   */
+  scopeByStore?: boolean;
 }
 
 /**
@@ -39,7 +44,7 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
     },
     actions: {
       params(pageIndex: number) {
-        const productStoreId = useProductStore().getCurrentProductStore?.productStoreId;
+        const productStoreId = config.scopeByStore === false ? undefined : useProductStore().getCurrentProductStore?.productStoreId;
         return {
           ...toListParams({ ...(this.filters as Record<string, FilterValue>), productStoreId, [config.queryParam || 'keyword']: this.query.trim() }),
           orderBy: this.sort,
