@@ -46,6 +46,8 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
       loaded: false,
       stale: false,
       error: '',
+      /** What the last search answered beside its rows and total, such as the batch list's storeScope. */
+      extras: {} as Record<string, any>,
       requestId: 0,
       lastSearchKey: '',
     }),
@@ -65,7 +67,8 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
       async fetchPage(pageIndex: number) {
         const resp: any = await api({ url: config.url, method: 'get', params: this.params(pageIndex) });
         if (commonUtil.hasError(resp)) throw new Error(resp?.data?.errors || translate('Something went wrong. Please try again.'));
-        return readList<R>(resp.data, config.listName);
+        const { [config.listName]: _rows, [`${config.listName}Count`]: _count, ...extras } = resp.data || {};
+        return { ...readList<R>(resp.data, config.listName), extras };
       },
       /** Searches from the first page. Skipped when the same search is loaded or in flight, unless forced. */
       async runSearch({ force = false } = {}) {
@@ -77,8 +80,9 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
         this.loading = true;
         this.error = '';
         try {
-          const { rows, total } = await this.fetchPage(0);
+          const { rows, total, extras } = await this.fetchPage(0);
           if (requestId !== this.requestId) return;
+          this.extras = extras;
           this.pageIndex = 0;
           this.results = rows as any;
           this.total = total;

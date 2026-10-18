@@ -18,6 +18,8 @@ export interface PreorderDashboard {
   delayEmails: { count: number; trend: { date: string; count: number }[] };
   promiseDateChanges: number;
   topProducts: { productId: string; productName?: string; openUnits: number }[];
+  /** STORE_FACILITIES, NO_STORE_FACILITIES (supply covers every facility) or ALL_STORES. */
+  storeScope?: string;
 }
 
 /** The dashboard's figures for a store, in one request. */

@@ -391,6 +391,7 @@
   "This order has no pre-order items.": "This order has no pre-order items.",
   "This purchase order has no lines.": "This purchase order has no lines.",
   "This shipment has no items.": "This shipment has no items.",
+  "This store": "This store",
   "Time zone updated successfully.": "Time zone updated successfully.",
   "Timezone": "Timezone",
   "Title": "Title",
@@ -473,5 +474,7 @@
   "{shown} of {count} pre-orders": "{shown} of {count} pre-orders",
   "{shown} of {count} purchase orders": "{shown} of {count} purchase orders",
   "{shown} of {count} shipments": "{shown} of {count} shipments",
+  "{store} has no facilities assigned, so future inventory figures cover every facility. Assign the store its facilities in the Company app to see only its own.": "{store} has no facilities assigned, so future inventory figures cover every facility. Assign the store its facilities in the Company app to see only its own.",
+  "{store} has no facilities assigned, so this shows batches at every facility. Assign the store its facilities in the Company app to see only its own.": "{store} has no facilities assigned, so this shows batches at every facility. Assign the store its facilities in the Company app to see only its own.",
   "{total} records, {failed} failed": "{total} records, {failed} failed"
 }

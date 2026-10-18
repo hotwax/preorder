@@ -23,6 +23,12 @@
         </ion-label>
       </ion-item>
 
+      <ion-card v-if="dashboard?.storeScope === 'NO_STORE_FACILITIES'" color="warning" class="scope-note">
+        <ion-card-content>
+          {{ translate('{store} has no facilities assigned, so future inventory figures cover every facility. Assign the store its facilities in the Company app to see only its own.', { store: storeName }) }}
+        </ion-card-content>
+      </ion-card>
+
       <!-- Global stat: what is promised and not yet fulfilled -->
       <ion-card class="global-stat">
         <ion-card-content v-if="error" class="section-error">
@@ -258,7 +264,8 @@ onIonViewWillEnter(load);
   margin-bottom: var(--spacer-xs);
 }
 
-.global-stat {
+.global-stat,
+.scope-note {
   margin: var(--spacer-sm);
 }
 

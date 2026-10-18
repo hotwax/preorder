@@ -48,6 +48,12 @@
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
+      <ion-card v-if="extras.storeScope === 'NO_STORE_FACILITIES'" color="warning">
+        <ion-card-content>
+          {{ translate('{store} has no facilities assigned, so this shows batches at every facility. Assign the store its facilities in the Company app to see only its own.', { store: storeName }) }}
+        </ion-card-content>
+      </ion-card>
+
       <ErrorState v-if="error" :title="translate('Could not load future inventory')" :message="error" retryable @retry="refresh()" />
 
       <ion-list v-else>
@@ -104,7 +110,7 @@
 
 <script setup lang="ts">
 import {
-  IonButton, IonButtons, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
+  IonButton, IonButtons, IonCard, IonCardContent, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
   IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { computed, ref, watch } from 'vue';
@@ -114,6 +120,7 @@ import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { useUserStore } from '@/store/user';
+import { useProductStore } from '@/store/productStore';
 import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { useFindSearch } from '@/composables/useFindSearch';
@@ -139,7 +146,8 @@ const store = useFutureInventorySearchStore();
 const { refresh } = useFindSearch(store);
 const userStore = useUserStore();
 const { adjustBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
-const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
+const { query, filters, sort, results, total, loading, loaded, error, hasMore, extras } = storeToRefs(store);
+const storeName = computed(() => useProductStore().getCurrentProductStore?.storeName || useProductStore().getCurrentProductStore?.productStoreId || translate('This store'));
 
 const sortOptions = [
   { label: 'Soonest promise date', value: 'promiseDate' },
