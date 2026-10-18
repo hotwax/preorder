@@ -71,8 +71,8 @@
           </ion-select>
           <ion-select v-model="eventFilters.statusId" :label="translate('Status')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All statuses') }}</ion-select-option>
-            <ion-select-option value="COM_COMPLETE">{{ seed.statusDescription('COM_COMPLETE') }}</ion-select-option>
-            <ion-select-option value="COM_BOUNCED">{{ seed.statusDescription('COM_BOUNCED') }}</ion-select-option>
+            <ion-select-option value="COM_COMPLETE">{{ emailStatusLabel('COM_COMPLETE') }}</ion-select-option>
+            <ion-select-option value="COM_BOUNCED">{{ emailStatusLabel('COM_BOUNCED') }}</ion-select-option>
           </ion-select>
           <DateFilterSelect v-model="eventFilters.fromDate" :label="translate('Sent from')" :max="eventFilters.thruDate" outlined />
           <DateFilterSelect v-model="eventFilters.thruDate" :label="translate('Sent through')" :min="eventFilters.fromDate" outlined />
@@ -103,7 +103,7 @@
             <p>{{ translate('Order') }}</p>
           </ion-label>
           <ion-label class="tablet">
-            <ion-badge :color="statusColor(event.statusId)">{{ seed.statusDescription(event.statusId || '') }}</ion-badge>
+            <ion-badge :color="statusColor(event.statusId)">{{ emailStatusLabel(event.statusId) }}</ion-badge>
           </ion-label>
           <ion-label class="ion-text-end">
             {{ formatDateTime(event.datetimeStarted) }}
@@ -194,6 +194,14 @@ const emailTypeOptions = computed(() => [
 const sentCount = (emailType: string, days: number) => (days === 7 ? counts7.value : counts30.value)
   .filter((row) => row.emailType === emailType && row.statusId !== 'COM_BOUNCED')
   .reduce((sum, row) => sum + Number(row.count || 0), 0);
+
+/** Email statuses as a sender reads them; seed data may not carry the communication statuses. */
+const EMAIL_STATUS_LABELS: Record<string, string> = { COM_COMPLETE: 'Sent', COM_BOUNCED: 'Bounced', COM_IN_PROGRESS: 'Sending' };
+const emailStatusLabel = (statusId?: string) => {
+  if (!statusId) return translate('Unknown');
+  const label = seed.statusDescription(statusId);
+  return label !== statusId ? label : translate(EMAIL_STATUS_LABELS[statusId] || statusId);
+};
 
 const daysAgo = (days: number) => DateTime.now().minus({ days }).toISODate() as string;
 

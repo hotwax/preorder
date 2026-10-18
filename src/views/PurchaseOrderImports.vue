@@ -133,7 +133,7 @@ const userStore = useUserStore();
 const { fetchLogs, uploadFile, downloadLogFile, downloadTemplate } = useImports();
 
 const uploadableConfigs = IMPORT_CONFIGS.filter((config) => config.uploadable);
-const importStatuses = computed(() => seed.statusItemsByType('DataManagerLogStatus').length ? seed.statusItemsByType('DataManagerLogStatus') : seed.statuses().filter((status: any) => String(status.statusId).startsWith('Dmls')));
+const importStatuses = computed(() => seed.statusItemsByType('DataManagerLog'));
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 
 const filters = reactive({ configId: 'All', statusId: 'All', createdDateFrom: '', createdDateThru: '' });
