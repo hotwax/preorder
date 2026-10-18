@@ -16,7 +16,7 @@
       <template v-else-if="batch">
         <section class="summary">
           <ion-card>
-            <ProductItem :product-id="batch.productId" :product-name="batch.productName" />
+            <ProductItem :product-id="batch.productId" :product-name="batch.product?.productName || batch.product?.internalName" />
             <ion-list lines="none">
               <ion-item>
                 <ion-label>{{ translate('Status') }}</ion-label>
@@ -28,11 +28,16 @@
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Facility') }}</ion-label>
-                <ion-note slot="end">{{ batch.facilityName || seed.facilityName(batch.facilityId || '') }}</ion-note>
+                <ion-note slot="end">{{ seed.facilityName(batch.facilityId || '') }}</ion-note>
               </ion-item>
               <ion-item v-if="batch.poId" button :router-link="`/purchase-orders/${encodeURIComponent(batch.poId)}`">
-                <ion-label>{{ translate('Purchase order') }}</ion-label>
-                <ion-note slot="end">{{ batch.poId }}<template v-if="batch.poItemSeqId">{{ ' / ' + batch.poItemSeqId }}</template></ion-note>
+                <ion-label>
+                  {{ translate('Purchase order') }}
+                  <p v-if="poItem">{{ translate('Line {seq}, {quantity} ordered', { seq: poItem.orderItemSeqId, quantity: formatQuantity(poItem.quantity) }) }}</p>
+                  <p v-if="poItem?.estimatedDeliveryDate">{{ translate('Expected {date}', { date: formatDate(poItem.estimatedDeliveryDate) }) }}</p>
+                  <p v-if="po?.statusId">{{ seed.statusDescription(po.statusId) }}</p>
+                </ion-label>
+                <ion-note slot="end">{{ po?.orderName || po?.externalId || batch.poId }}</ion-note>
               </ion-item>
               <ion-item v-if="batch.shipmentExternalId">
                 <ion-label>{{ translate('Inbound shipment') }}</ion-label>
@@ -190,14 +195,16 @@ import { formatQuantity, futureInventoryTypeLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
-import type { FutureInventoryBatch } from '@/types';
+import type { FutureInventoryBatchDetail } from '@/types';
 
 const props = defineProps<{ futureInventoryItemId: string }>();
 const seed = useSeedData();
 const userStore = useUserStore();
 const { fetchBatch, fetchLedger, fetchWaitingLines, adjustBatch, cancelBatch } = useFutureInventoryActions();
 
-const batch = ref<FutureInventoryBatch>();
+const batch = ref<FutureInventoryBatchDetail>();
+const po = computed(() => batch.value?.purchaseOrderHeader);
+const poItem = computed(() => batch.value?.purchaseOrderItem);
 const lines = ref<any[]>([]);
 const linesTotal = ref(0);
 const ledger = ref<any[]>([]);

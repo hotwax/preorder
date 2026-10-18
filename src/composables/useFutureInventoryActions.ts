@@ -1,13 +1,13 @@
 import { api } from '@common';
 import { ensureOk } from '@/utils/response';
 import { readList } from '@/utils/query';
-import type { FutureInventoryBatch } from '@/types';
+import type { FutureInventoryBatch, FutureInventoryBatchDetail } from '@/types';
 
 const batchUrl = (id: string) => `preorder/futureInventory/${encodeURIComponent(id)}`;
 
 /** Future inventory batch requests: one batch, its ledger and waiting lines, and the batch actions. */
 export function useFutureInventoryActions() {
-  async function fetchBatch(id: string): Promise<FutureInventoryBatch> {
+  async function fetchBatch(id: string): Promise<FutureInventoryBatchDetail> {
     return (await ensureOk(api({ url: batchUrl(id), method: 'get' }), 'Failed to load the batch.')).futureInventoryItem;
   }
 

@@ -298,7 +298,7 @@ All paths are relative to `/rest/s1/`.
 | GET `preorder/preorders` | `get#PreorderOrders` | filters as in 3.2. Returns `{orders, ordersCount}`; each order carries its FI lines |
 | GET `preorder/preorders/{orderId}` | `get#PreorderOrder` | header and FI lines with batches |
 | POST `preorder/preorders/{orderId}/items/{orderItemSeqId}/reallocate` | `reallocate#FutureInventoryReservation` | |
-| GET `preorder/futureInventory/{futureInventoryItemId}` | FI view, one | |
+| GET `preorder/futureInventory/{futureInventoryItemId}` | `get#FutureInventoryItem` over the `FutureInventoryItem` `default` master | the batch with `product`, `purchaseOrderHeader` and `purchaseOrderItem` (the PO two absent with no PO), plus `reservedQuantity`, `waitingLineCount` and `waitingQuantity`; `{futureInventoryItem}`. The facility name comes from seed data |
 | GET `preorder/futureInventoryItems` | `get#FutureInventoryItems` over `FutureInventoryItemAndProduct` | product and facility names, computed `reservedQuantity`; `{futureInventoryItems, futureInventoryItemsCount}` |
 | GET `preorder/futureInventory/{id}/details` | FutureInventoryItemDetail list | the ledger |
 | GET `preorder/futureInventory/{id}/lines` | FutureInventoryBackedLine list | waiting lines |

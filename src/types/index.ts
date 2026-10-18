@@ -21,6 +21,16 @@ export interface FutureInventoryBatch {
   exceptionReason?: string;
 }
 
+/**
+ * One batch from GET preorder/futureInventory/{id}: the FutureInventoryItem default master, so its product and its
+ * purchase order header and line ride along. The facility name comes from seed data.
+ */
+export interface FutureInventoryBatchDetail extends Omit<FutureInventoryBatch, 'productName' | 'facilityName' | 'exceptionReason'> {
+  product?: { productId: string; productName?: string; internalName?: string };
+  purchaseOrderHeader?: { orderId: string; orderName?: string; externalId?: string; statusId?: string; orderDate?: number | string };
+  purchaseOrderItem?: { orderItemSeqId: string; quantity?: number; estimatedDeliveryDate?: number | string; statusId?: string };
+}
+
 export interface PreorderLine {
   orderItemSeqId: string;
   shipGroupSeqId?: string;
