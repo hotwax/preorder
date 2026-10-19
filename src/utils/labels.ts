@@ -10,6 +10,9 @@ const FUTURE_INVENTORY_TYPE_NAMES: Record<string, string> = {
   FIT_BACK_ORDER: 'Back-order',
 };
 
+/** A party id to show, or undefined for `_NA_`, the placeholder party of an order with no customer or supplier. */
+export const shownPartyId = (partyId?: string) => (partyId && partyId !== '_NA_' ? partyId : undefined);
+
 /** A future inventory type's name: the app's short name, else the enum's description, else its id. */
 export const futureInventoryTypeLabel = (typeId?: string, description?: string) =>
   translate((typeId && FUTURE_INVENTORY_TYPE_NAMES[typeId]) || description || typeId || 'Unknown');

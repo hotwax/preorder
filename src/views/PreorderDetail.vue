@@ -18,7 +18,7 @@
           <ion-card>
             <ion-card-header>
               <ion-card-subtitle>{{ translate('Customer') }}</ion-card-subtitle>
-              <ion-card-title>{{ order.customerName || order.customerPartyId || translate('Unknown customer') }}</ion-card-title>
+              <ion-card-title>{{ order.customerName || shownPartyId(order.customerPartyId) || translate('Unknown customer') }}</ion-card-title>
             </ion-card-header>
             <ion-list lines="none">
               <ion-item v-if="order.email">
@@ -124,7 +124,7 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import MoveReservationModal from '@/components/preorders/MoveReservationModal.vue';
 import { formatDate, formatDateTime, formatRelative } from '@/utils/format';
-import { formatDateRange, formatQuantity } from '@/utils/labels';
+import { formatDateRange, formatQuantity, shownPartyId } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';

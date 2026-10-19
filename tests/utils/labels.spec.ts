@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateRange, formatQuantity, futureInventoryTypeLabel, isPast } from '@/utils/labels';
+import { formatDateRange, formatQuantity, futureInventoryTypeLabel, isPast, shownPartyId } from '@/utils/labels';
 
 describe('labels', () => {
+  it('shows a party id, but not the _NA_ placeholder', () => {
+    expect(shownPartyId('CUST_1')).toBe('CUST_1');
+    expect(shownPartyId('_NA_')).toBeUndefined();
+    expect(shownPartyId(undefined)).toBeUndefined();
+  });
+
   it('names future inventory types, falling back to the id', () => {
     expect(futureInventoryTypeLabel('FIT_PRE_ORDER')).toBe('Pre-order');
     expect(futureInventoryTypeLabel('FIT_BACK_ORDER')).toBe('Back-order');

@@ -18,7 +18,7 @@
         @ion-change="emit('selectionChange', $event.detail.checked)"
       />
       <ion-label>
-        {{ order.customerName || order.email || order.customerPartyId || translate('Unknown customer') }}
+        {{ order.customerName || order.email || shownPartyId(order.customerPartyId) || translate('Unknown customer') }}
         <p>{{ identityLabel }}</p>
       </ion-label>
     </ion-item>
@@ -54,7 +54,7 @@ import { computed } from 'vue';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import { formatDate, formatRelative } from '@/utils/format';
-import { formatDateRange } from '@/utils/labels';
+import { formatDateRange, shownPartyId } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import type { PreorderOrder } from '@/types';
 
