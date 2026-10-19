@@ -41,7 +41,7 @@
           <ion-button fill="clear" router-link="/sync-events">{{ translate('View sync events') }}</ion-button>
         </ion-card>
         <ion-card><ion-card-header><ion-card-title>{{ translate('Publishing jobs') }}</ion-card-title></ion-card-header><ion-list>
-          <ion-item v-for="job in setup.jobs" :key="job.jobName"><ion-label class="ion-text-wrap">{{ job.jobName }}<p>{{ job.cronDescription }}</p><p v-if="job.scope">{{ job.scope }}</p><p v-if="job.latestRun">{{ translate('Last run') }}: {{ formatDateTime(job.latestRun.startTime) }} — {{ job.latestRun.hasError === 'Y' ? translate('Failed') : job.latestRun.endTime ? translate('Completed') : translate('Running') }}</p></ion-label><ion-badge slot="end" :color="job.available && job.paused === 'N' ? 'success' : 'warning'">{{ !job.available ? translate('Unavailable') : job.paused === 'Y' ? translate('Paused') : translate('Enabled') }}</ion-badge><ion-button v-if="canConfigure && job.available" slot="end" fill="clear" :disabled="loading" @click="changeJobState(job)">{{ job.paused === 'Y' ? translate('Enable') : translate('Pause') }}</ion-button></ion-item>
+          <ion-item v-for="job in setup.jobs" :key="job.jobName"><ion-label class="ion-text-wrap">{{ job.jobName }}<p>{{ job.cronDescription }}</p><p v-if="job.scope">{{ job.scope }}</p><p v-if="job.latestRun">{{ translate('Last run') }}: {{ formatDateTime(job.latestRun.startTime) }} — {{ job.latestRun.hasError === 'Y' ? translate('Failed') : job.latestRun.endTime ? translate('Completed') : translate('Running') }}</p></ion-label><ion-badge slot="end" :color="job.available && job.paused === 'N' ? 'success' : 'warning'">{{ !job.available ? translate('Unavailable') : job.paused === 'Y' ? translate('Paused') : translate('Enabled') }}</ion-badge><ion-button v-if="canConfigure && job.available" slot="end" fill="clear" :disabled="loading" @click="changeJobState(job)">{{ job.paused === 'Y' ? translate('Enable') : translate('Pause') }}</ion-button><ion-button v-if="canConfigure && job.available" slot="end" fill="clear" :disabled="loading" @click="copySchedule(job)">{{ translate('Copy schedule') }}</ion-button></ion-item>
         </ion-list></ion-card>
         <ion-card><ion-card-header><ion-card-title>{{ translate('Event feeds') }}</ion-card-title></ion-card-header><ion-list><ion-item v-for="feed in setup.feeds" :key="feed.dataFeedId"><ion-label>{{ feed.dataFeedId }}</ion-label><ion-note slot="end">{{ feed.dataFeedTypeEnumId || translate('Unavailable') }}</ion-note></ion-item></ion-list></ion-card>
       </template>
@@ -123,6 +123,28 @@ async function saveParking(purposeId: string, facilityId: string) {
   loading.value = true; error.value = '';
   try { await actions.saveParking(shopId.value, storeId.value, purposeId, facilityId); await showToast(translate('Parking facility activated.')); }
   catch (err) { error.value = errorMessage(err, translate('Failed to save the parking facility.')); }
+  finally { loading.value = false; }
+}
+async function copySchedule(job: any) {
+  if (!canConfigure.value || loading.value) return;
+  const alert = await alertController.create({
+    header: translate('Copy publishing schedule'),
+    message: translate('Creates a paused copy with the same schedule and parameters. Review its scope before enabling it. A custom name keeps it separate from release defaults.'),
+    inputs: [{ name: 'jobName', type: 'text', placeholder: translate('New schedule name'), value: `${job.jobName}_custom` }],
+    buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: translate('Copy'), handler: (values: { jobName: string }) => {
+      const newName = values.jobName?.trim();
+      if (!newName || !/^[A-Za-z0-9_-]{1,100}$/.test(newName) || setup.value?.jobs?.some((row: any) => row.jobName === newName)) {
+        void showToast(translate('Use a unique schedule name, up to 100 letters, numbers, underscores or hyphens.')); return false;
+      }
+      void saveScheduleCopy(job.jobName, newName);
+    } }],
+  });
+  await alert.present();
+}
+async function saveScheduleCopy(jobName: string, newJobName: string) {
+  loading.value = true; error.value = '';
+  try { await actions.copyJob(shopId.value, storeId.value, jobName, newJobName); await showToast(translate('Schedule copied. Review its scope and enable it when ready.')); }
+  catch (err) { error.value = errorMessage(err, translate('Failed to copy the publishing schedule.')); }
   finally { loading.value = false; }
 }
 async function changeJobState(job: any) {

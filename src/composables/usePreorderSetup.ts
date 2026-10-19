@@ -26,5 +26,11 @@ export function usePreorderSetup() {
     await ensureOk(api({ url: 'preorder/storeFacilityPurposes', method: 'post', data: { productStoreId, facilityPurposeEnumId, facilityId } }), 'Failed to save the parking facility.');
     await refresh(shopId, productStoreId);
   }
-  return { refresh, saveMetafield, saveChannel, setJobPaused, saveParking };
+  async function copyJob(shopId: string, productStoreId: string, jobName: string, newJobName: string) {
+    await ensureOk(api({ url: `admin/serviceJobs/${encodeURIComponent(jobName)}/clone`, method: 'post', data: { newJobName, copyParameters: true } }), 'Failed to copy the publishing schedule.');
+    const result = await ensureOk(api({ url: `admin/serviceJobs/${encodeURIComponent(newJobName)}`, method: 'get' }), 'Could not verify the copied schedule.');
+    if (result?.jobDetail?.parentJobName !== jobName) throw new Error('That schedule name already belongs to another job. Choose a different name.');
+    await refresh(shopId, productStoreId);
+  }
+  return { refresh, saveMetafield, saveChannel, setJobPaused, saveParking, copyJob };
 }
