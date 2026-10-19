@@ -124,7 +124,10 @@ export function usePurchaseOrderActions() {
   async function searchOrderableProducts(keyword: string, productStoreId?: string): Promise<any[]> {
     const filters: Record<string, { value: string }> = { isVariant: { value: '*' } };
     if (productStoreId) filters.productStoreIds_s = { value: `"${productStoreId.replace(/(["\\])/g, '\\$1')}"` };
-    const { products } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters });
+    // With a keyword, relevance first: the default name order put an exact SKU match like "100" past the 10 rows shown
+    // (preorder-maarg#87)
+    const sort = keyword?.trim() ? 'score desc, sort_productName asc' : undefined;
+    const { products } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters, ...(sort ? { sort } : {}) });
     return products as any[];
   }
 
