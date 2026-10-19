@@ -16,13 +16,11 @@ jobs:
         with:
           repository: hotwax/accxui
           ref: 163934c83d729c0679c7d212a089e229817dc7e5
-          token: ${{ secrets.envPAT }}
       - uses: actions/checkout@v4
         with:
           repository: hotwax/preorder
           ref: 3ef296b7e235c7465e13aac47d4a48c047215749
           path: apps/preorder
-          token: ${{ secrets.envPAT }}
       - uses: pnpm/action-setup@v4
         with:
           version: 9
