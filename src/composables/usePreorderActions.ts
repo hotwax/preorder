@@ -7,7 +7,7 @@ const CLOSED_ITEM_STATUSES = ['ITEM_CANCELLED', 'ITEM_COMPLETED', 'ITEM_REJECTED
 /** Pre-order requests: one order, and the bulk and line actions the Pre-orders pages offer. */
 export function usePreorderActions() {
   async function fetchPreorder(orderId: string): Promise<PreorderOrder> {
-    const data = await ensureOk(api({ url: `preorder/preorders/${encodeURIComponent(orderId)}`, method: 'get' }), 'Failed to load the pre-order.');
+    const data = await ensureOk(api({ url: `oms/preorders/${encodeURIComponent(orderId)}`, method: 'get' }), 'Failed to load the pre-order.');
     return data.order;
   }
 
@@ -58,7 +58,7 @@ export function usePreorderActions() {
 
   async function reallocateLine(orderId: string, orderItemSeqId: string, fromFutureInventoryItemId: string, toFutureInventoryItemId: string) {
     return ensureOk(api({
-      url: `preorder/preorders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(orderItemSeqId)}/reallocate`,
+      url: `oms/orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(orderItemSeqId)}/reallocate`,
       method: 'post',
       data: { fromFutureInventoryItemId, toFutureInventoryItemId },
     }), 'Failed to move the reservation.');

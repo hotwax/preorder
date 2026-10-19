@@ -32,7 +32,7 @@ async function fetchPurchaseOrderPage(params: Record<string, any>) {
 
   const [lines, counts]: any[] = await Promise.all([
     solrQuery(purchaseOrderLinesQuery(orderIds)),
-    api({ url: 'preorder/purchaseOrderBatchCounts', method: 'get', params: { orderIds: orderIds.join(',') } }),
+    api({ url: 'oms/futureInventoryItems/purchaseOrderCounts', method: 'get', params: { orderIds: orderIds.join(',') } }),
   ]);
   if (commonUtil.hasError(counts)) throw new Error(counts?.data?.errors || translate('Something went wrong. Please try again.'));
   const docsByOrder = new Map(readOrderGroups(lines).groups.map((group) => [group.orderId, group.docs]));

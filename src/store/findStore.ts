@@ -5,7 +5,7 @@ import { readList, toListParams, type FilterValue } from '@/utils/query';
 import { errorMessage } from '@/utils/response';
 
 export interface FindStoreConfig<F extends Record<string, FilterValue>> {
-  /** The list resource, relative to the Maarg REST root (`preorder/futureInventoryItems`); not used with `fetchPage`. */
+  /** The list resource, relative to the Maarg REST root (`oms/futureInventoryItems`); not used with `fetchPage`. */
   url?: string;
   /** The response key holding the rows; `<listName>Count` holds the total. */
   listName: string;

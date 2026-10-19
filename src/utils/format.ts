@@ -132,7 +132,7 @@ export const todayValue = (zone = userZone()): string => DateTime.now().setZone(
 
 /**
  * How a date-range bound is written for the API it goes to:
- * - `date`: 'yyyy-MM-dd', for the preorder resources, which bound the day themselves in the user's time zone;
+ * - `date`: 'yyyy-MM-dd', for the oms and poorti pre-order resources, which bound the day themselves in the user's time zone;
  * - `timestamp`: 'yyyy-MM-dd HH:mm:ss.SSS' in the user's time zone, for Moqui entity search parameters (`_from` / `_thru`);
  * - `iso`: the UTC ISO instant, for Solr.
  */

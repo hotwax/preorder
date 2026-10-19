@@ -27,7 +27,7 @@ export interface PreorderDashboard {
 /** The dashboard's figures for a store, in one request. */
 export function useDashboard() {
   async function fetchDashboard(productStoreId: string, days = 30, arrivalDays = 7): Promise<PreorderDashboard> {
-    return ensureOk(api({ url: 'preorder/dashboard', method: 'get', params: { productStoreId, days, arrivalDays } }), 'Failed to load the dashboard.');
+    return ensureOk(api({ url: 'oms/preorderDashboard', method: 'get', params: { productStoreId, days, arrivalDays } }), 'Failed to load the dashboard.');
   }
   return { fetchDashboard };
 }

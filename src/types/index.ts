@@ -1,4 +1,4 @@
-/** Shapes the preorder REST resources return (see docs/SPEC.md §4.2). */
+/** Shapes the pre-order resources of oms and poorti return (see docs/SPEC.md §4.2). */
 
 export interface FutureInventoryBatch {
   futureInventoryItemId: string;
@@ -22,7 +22,7 @@ export interface FutureInventoryBatch {
 }
 
 /**
- * One batch from GET preorder/futureInventory/{id}: the FutureInventoryItem default master, so its product and its
+ * One batch from GET oms/futureInventoryItems/{id}: the FutureInventoryItem default master, so its product and its
  * purchase order header and line ride along. The facility name comes from seed data.
  */
 export interface FutureInventoryBatchDetail extends Omit<FutureInventoryBatch, 'productName' | 'facilityName' | 'exceptionReason'> {
