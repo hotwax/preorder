@@ -96,7 +96,8 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
           this.extras = extras;
           this.pageIndex = 0;
           this.results = rows as any;
-          this.total = total;
+          // A short page is the last one, whatever count came with it: the list stops asking for more
+          this.total = rows.length < this.pageSize ? rows.length : total;
           this.loaded = true;
         } catch (error: any) {
           if (requestId !== this.requestId) return;
@@ -120,7 +121,8 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
           if (requestId !== this.requestId) return;
           this.pageIndex = next;
           this.results = [...this.results, ...rows] as any;
-          this.total = total;
+          // An empty or short page is the last one: infinite scroll stops instead of asking again
+          this.total = rows.length < this.pageSize ? this.results.length : total;
         } catch (error: any) {
           if (requestId !== this.requestId) return;
           logger.error(`Failed to load more ${config.listName}`, error);

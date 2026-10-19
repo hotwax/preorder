@@ -98,7 +98,7 @@
 
       <ion-list v-else>
         <ion-list-header v-if="events.length">
-          <ion-label>{{ translate('{shown} of {count} emails', { shown: events.length, count: eventsTotal }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} emails', { shown: formatNumber(events.length), ...countParams(eventsTotal) }) }}</ion-label>
         </ion-list-header>
         <div
           v-for="event in events"
@@ -169,7 +169,7 @@ import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { showToast } from '@/utils';
-import { dayBound, formatDateTime, formatRelative } from '@/utils/format';
+import { countParams, dayBound, formatDateTime, formatNumber, formatRelative } from '@/utils/format';
 import { toListParams } from '@/utils/query';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -313,7 +313,8 @@ async function loadEvents() {
     const { rows, total } = await fetchEvents(eventParams(0));
     if (request !== loadEventsRequest) return;
     events.value = rows;
-    eventsTotal.value = total;
+    // A short page is the last one, whatever count came with it
+    eventsTotal.value = rows.length < PAGE_SIZE ? rows.length : total;
     eventsPage.value = 0;
     eventsLoaded.value = true;
   } catch (err) {
@@ -334,9 +335,11 @@ async function loadMoreEvents(event: CustomEvent) {
     const { rows, total } = await fetchEvents(eventParams(eventsPage.value + 1));
     if (request !== loadEventsRequest) return;
     events.value = [...events.value, ...rows];
-    eventsTotal.value = total;
+    // An empty or short page is the last one: infinite scroll stops instead of asking again
+    eventsTotal.value = rows.length < PAGE_SIZE ? events.value.length : total;
     eventsPage.value += 1;
   } catch (err) {
+    if (request !== loadEventsRequest) return;
     await showToast(errorMessage(err, translate('Could not load more emails. Scroll to try again.')));
   } finally {
     eventsLoadingMore.value = false;

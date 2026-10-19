@@ -36,7 +36,7 @@
 
       <ion-list v-else>
         <ion-list-header v-if="logs.length">
-          <ion-label>{{ translate('{count} bulk updates', { count: logs.length }) }}</ion-label>
+          <ion-label>{{ countLabel }}</ion-label>
           <ion-button fill="clear" size="small" :aria-label="translate('Refresh')" @click="load">
             <ion-icon slot="icon-only" :icon="refreshOutline" />
           </ion-button>
@@ -102,7 +102,7 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { showToast } from '@/utils';
 import { downloadText } from '@/utils/download';
-import { formatDateTime, formatNumber } from '@/utils/format';
+import { countParams, formatDateTime, formatNumber } from '@/utils/format';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 
@@ -120,6 +120,17 @@ const logs = ref<ImportLog[]>([]);
 const waitingCount = ref<number>();
 const pageIndex = ref(0);
 const hasMore = ref(false);
+/** The matching count, when the Data Manager sends one. */
+const logsTotal = ref<number>();
+
+/** Whether another page may follow: never after a short or empty page, nor once the count is loaded. */
+const morePages = (pageLength: number, total?: number) => pageLength === PAGE_SIZE && (total === undefined || logs.value.length < total);
+
+/** The loaded rows against the count; without a count, a list with more to load says it shows the latest. */
+const countLabel = computed(() => {
+  if (logsTotal.value !== undefined) return translate('{shown} of {count} bulk updates', { shown: formatNumber(logs.value.length), ...countParams(logsTotal.value) });
+  return hasMore.value ? translate('Latest {count} bulk updates', countParams(logs.value.length)) : translate('{count} bulk updates', countParams(logs.value.length));
+});
 const loading = ref(false);
 const loaded = ref(false);
 const error = ref('');
@@ -137,15 +148,16 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const [rows, waiting] = await Promise.all([
+    const [{ rows, total }, waiting] = await Promise.all([
       fetchLogs(query(), 0, PAGE_SIZE, BULK_UPDATE_CONFIGS),
       countWaitingMessages(PROMISE_DATE.messageTypeId).catch(() => undefined),
     ]);
     if (request !== loadRequest) return;
     logs.value = rows;
+    logsTotal.value = total;
     waitingCount.value = waiting;
     pageIndex.value = 0;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
     loaded.value = true;
   } catch (err) {
     if (request !== loadRequest) return;
@@ -162,11 +174,12 @@ async function loadMore(event: CustomEvent) {
   const request = loadRequest;
   loadingMore.value = true;
   try {
-    const rows = await fetchLogs(query(), pageIndex.value + 1, PAGE_SIZE, BULK_UPDATE_CONFIGS);
+    const { rows, total } = await fetchLogs(query(), pageIndex.value + 1, PAGE_SIZE, BULK_UPDATE_CONFIGS);
     if (request !== loadRequest) return;
     logs.value = [...logs.value, ...rows];
+    logsTotal.value = total;
     pageIndex.value += 1;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
   } catch (err) {
     await showToast(errorMessage(err, translate('Could not load more bulk updates. Scroll to try again.')));
   } finally {

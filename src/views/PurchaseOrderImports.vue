@@ -56,13 +56,13 @@
       <ErrorState v-if="error" :title="translate('Could not load imports')" :message="error" retryable @retry="load" />
 
       <ion-list v-else>
-        <ion-list-header v-if="visibleLogs.length">
-          <ion-label>{{ translate('{count} imports', { count: visibleLogs.length }) }}</ion-label>
+        <ion-list-header v-if="logs.length">
+          <ion-label>{{ countLabel }}</ion-label>
           <ion-button fill="clear" size="small" :aria-label="translate('Refresh')" @click="load">
             <ion-icon slot="icon-only" :icon="refreshOutline" />
           </ion-button>
         </ion-list-header>
-        <div v-for="log in visibleLogs" :key="log.logId" class="list-item import-row">
+        <div v-for="log in logs" :key="log.logId" class="list-item import-row">
           <ion-item lines="none">
             <ion-icon slot="start" :icon="documentTextOutline" />
             <ion-label>
@@ -93,7 +93,7 @@
       </ion-list>
 
       <EmptyState
-        v-if="!loading && loaded && !error && !visibleLogs.length"
+        v-if="!loading && loaded && !error && !logs.length"
         :title="translate('No imports')"
         :message="translate('Purchase order and future inventory imports from CSV uploads and NetSuite show here.')"
       />
@@ -124,7 +124,7 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { showToast } from '@/utils';
 import { downloadText } from '@/utils/download';
-import { formatDateTime } from '@/utils/format';
+import { countParams, formatDateTime, formatNumber } from '@/utils/format';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
@@ -143,6 +143,17 @@ const logIdQuery = ref('');
 const logs = ref<ImportLog[]>([]);
 const pageIndex = ref(0);
 const hasMore = ref(false);
+/** The matching count, when the Data Manager sends one. */
+const logsTotal = ref<number>();
+
+/** Whether another page may follow: never after a short or empty page, nor once the count is loaded. */
+const morePages = (pageLength: number, total?: number) => pageLength === PAGE_SIZE && (total === undefined || logs.value.length < total);
+
+/** The loaded rows against the count; without a count, a list with more to load says it shows the latest. */
+const countLabel = computed(() => {
+  if (logsTotal.value !== undefined) return translate('{shown} of {count} imports', { shown: formatNumber(logs.value.length), ...countParams(logsTotal.value) });
+  return hasMore.value ? translate('Latest {count} imports', countParams(logs.value.length)) : translate('{count} imports', countParams(logs.value.length));
+});
 const loading = ref(false);
 const loaded = ref(false);
 const error = ref('');
@@ -157,8 +168,6 @@ const fileInput = ref<HTMLInputElement>();
 const selectedFile = ref<File>();
 const uploading = ref(false);
 
-const visibleLogs = computed(() => logs.value);
-
 const configLabel = (configId: string) => translate(IMPORT_CONFIGS.find((config) => config.configId === configId)?.label || configId);
 
 /** Each load takes a number; only the latest one's answer lands, and a next page under older filters is dropped. */
@@ -169,11 +178,12 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, 0, PAGE_SIZE);
+    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, 0, PAGE_SIZE);
     if (request !== loadRequest) return;
     logs.value = rows;
+    logsTotal.value = total;
     pageIndex.value = 0;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
     loaded.value = true;
   } catch (err) {
     if (request !== loadRequest) return;
@@ -190,11 +200,12 @@ async function loadMore(event: CustomEvent) {
   const request = loadRequest;
   loadingMore.value = true;
   try {
-    const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, pageIndex.value + 1, PAGE_SIZE);
+    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, pageIndex.value + 1, PAGE_SIZE);
     if (request !== loadRequest) return;
     logs.value = [...logs.value, ...rows];
+    logsTotal.value = total;
     pageIndex.value += 1;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
   } catch (err) {
     await showToast(errorMessage(err, translate('Could not load more imports. Scroll to try again.')));
   } finally {
