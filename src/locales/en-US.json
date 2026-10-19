@@ -459,7 +459,7 @@
   "{count} lines, {units} units": "{count} line, {units} units | {count} lines, {units} units",
   "{count} minutes": "{count} minute | {count} minutes",
   "{count} months": "{count} month | {count} months",
-  "{count} of {total} lines have future inventory": "{count} of {total} lines have future inventory",
+  "{count} of {total} lines have a future inventory batch": "{count} of {total} line has a future inventory batch | {count} of {total} lines have a future inventory batch",
   "{count} orders waiting on this batch": "{count} order waiting on this batch | {count} orders waiting on this batch",
   "{count} pre-order items": "{count} pre-order item | {count} pre-order items",
   "{count} receipts": "{count} receipt | {count} receipts",

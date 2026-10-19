@@ -51,7 +51,7 @@
             <StatCard :title="translate('Ordered')" :stat="formatQuantity(sum('quantity') - sum('cancelQuantity'))" :subtitle="translate('{count} lines', { count: order.items.length })" />
             <StatCard :title="translate('Received')" :stat="formatQuantity(sum('receivedQuantity'))" :subtitle="translate('{count} receipts', { count: order.receipts?.length ?? 0 })" />
             <StatCard :title="translate('Still to arrive')" :stat="formatQuantity(sum('openQuantity'))" :subtitle="earliestArrival ? translate('Next arrival {date}', { date: formatDate(earliestArrival) }) : translate('No arrival date')" />
-            <StatCard :title="translate('Sold as pre-order')" :stat="formatQuantity(sumBatches('futureInventoryReserved'))" :subtitle="translate('{count} of {total} lines have future inventory', { count: order.items.length - linesWithoutBatch, total: order.items.length })" />
+            <StatCard :title="translate('Sold as pre-order')" :stat="formatQuantity(sumBatches('futureInventoryReserved'))" :subtitle="translate('{count} of {total} lines have a future inventory batch', { count: formatNumber(linesWithBatch), total: formatNumber(order.items.length), n: order.items.length })" />
           </div>
         </section>
 
@@ -137,7 +137,7 @@ import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
-import { formatDate, formatMoney, formatRelative, toDateInputValue, toMillis } from '@/utils/format';
+import { formatDate, formatMoney, formatNumber, formatRelative, toDateInputValue, toMillis } from '@/utils/format';
 import { formatQuantity } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -156,6 +156,8 @@ const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 const openItems = computed(() => (order.value?.items || []).filter((item: any) => !['ITEM_CANCELLED', 'ITEM_COMPLETED'].includes(item.statusId)));
 const linesWithoutBatch = computed(() => openItems.value.filter((item: any) => !item.futureInventoryItemId).length);
+/** Lines of any status with a batch: a closed line without one is not counted as having one. */
+const linesWithBatch = computed(() => (order.value?.items || []).filter((item: any) => item.futureInventoryItemId).length);
 /** The ids the toolbar title does not already show. */
 const idsBesideTitle = computed(() => [order.value?.orderId, order.value?.externalId].filter((id) => id && id !== (order.value?.orderName || props.orderId)).join(' - '));
 const earliestArrival = computed(() => openItems.value.map((item: any) => toMillis(item.estimatedDeliveryDate)).filter(Boolean).sort()[0]);
