@@ -555,5 +555,6 @@
   "Committed to stock": "Committed to stock",
   "Failed to load the cancel reasons.": "Failed to load the cancel reasons.",
   "No cancel reason is set up, so nothing can be cancelled.": "No cancel reason is set up, so nothing can be cancelled.",
-  "This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?": "This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?"
+  "This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?": "This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?",
+  "No store": "No store"
 }

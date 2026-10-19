@@ -33,6 +33,8 @@ export interface ImportLog {
   logContentId?: string;
   errorFileName?: string;
   errorLogContentId?: string;
+  /** The store the upload was stamped with; none on logs from before the stamp, which every store lists. */
+  productStoreId?: string;
 }
 
 /** Import tracking and CSV upload, through the Data Manager endpoints. */

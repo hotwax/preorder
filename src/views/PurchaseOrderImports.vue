@@ -68,6 +68,8 @@
             <ion-label>
               {{ log.fileName || log.logId }}
               <p>{{ [log.logId, configLabel(log.configId)].filter(Boolean).join(' - ') }}</p>
+              <!-- A log from before uploads were stamped with a store is listed in every store (preorder-maarg#86) -->
+              <p v-if="!log.productStoreId">{{ translate('No store') }}</p>
             </ion-label>
           </ion-item>
           <ion-label class="tablet">
