@@ -41,10 +41,13 @@ export function useImports() {
    * A page of import logs, newest first. `total` is the matching count when the Data Manager sends one
    * (`dataManagerLogsCount`), else undefined: then a short page is the last one.
    */
-  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string; logId?: string }, pageIndex: number, pageSize: number, configs: { configId: string }[] = IMPORT_CONFIGS): Promise<{ rows: ImportLog[]; total?: number }> {
+  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string; logId?: string; productStoreId?: string }, pageIndex: number, pageSize: number, configs: { configId: string }[] = IMPORT_CONFIGS): Promise<{ rows: ImportLog[]; total?: number }> {
     const configIds = filters.configId && filters.configId !== 'All' ? [filters.configId] : configs.map((config) => config.configId);
     const params: Record<string, any> = { configId: configIds.join(','), configId_op: 'in', pageIndex, pageSize, orderByField: '-createdDate' };
     if (filters.logId) params.logId = filters.logId;
+    // The store the upload was stamped with (uploadFile); maarg-util get#DataManagerLogDetails filters on it once it
+    // takes the parameter (preorder-maarg#86)
+    if (filters.productStoreId) params.productStoreId = filters.productStoreId;
     if (filters.statusId && filters.statusId !== 'All') params.statusId = filters.statusId;
     if (filters.createdDateFrom) params.createdDate_from = dayBound(filters.createdDateFrom, 'start', 'timestamp');
     if (filters.createdDateThru) params.createdDate_thru = dayBound(filters.createdDateThru, 'end', 'timestamp');
