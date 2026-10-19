@@ -16,7 +16,7 @@
       presentation="date"
       :locale="locale()"
       :value="selected || undefined"
-      :min="min || undefined"
+      :min="earliest"
       @ionChange="selected = normalize($event.detail.value)"
     />
   </ion-content>
@@ -36,11 +36,16 @@ import { IonButton, IonButtons, IonContent, IonDatetime, IonFooter, IonHeader, I
 import { closeOutline } from 'ionicons/icons';
 import { ref } from 'vue';
 import { translate } from '@common';
-import { formatDate, locale } from '@/utils/format';
+import { formatDate, locale, todayValue } from '@/utils/format';
 
-/** Asks for one date ('yyyy-MM-dd'), as a modal with the calendar the date filters use. */
+/**
+ * Asks for one date ('yyyy-MM-dd'), as a modal with the calendar the date filters use. The dates it asks for (a
+ * promise or arrival date) lie ahead, so the earliest it offers is today in the user's time zone unless `min` says
+ * otherwise, and a current date already past starts unselected.
+ */
 const props = defineProps<{ header: string; message: string; confirmText: string; value?: string; min?: string }>();
-const selected = ref(props.value || '');
+const earliest = props.min || todayValue();
+const selected = ref(props.value && props.value >= earliest ? props.value : '');
 
 const normalize = (value: string | string[] | null | undefined) => {
   const date = Array.isArray(value) ? value[0] : value;

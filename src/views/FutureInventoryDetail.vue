@@ -54,7 +54,7 @@
           </ion-card>
 
           <div class="stats">
-            <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="formatRelative(batch.promiseDate)" />
+            <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="promiseOverdueDays ? overdueLabel(promiseOverdueDays) : formatRelativeDay(batch.promiseDate)" />
             <StatCard :title="translate('On hand')" :stat="formatQuantity(batch.quantityOnHandTotal)" :subtitle="translate('Supply still to arrive')" />
             <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="Number(batch.availableToPromiseTotal) < 0 ? translate('Overcommitted') : translate('Can still be sold')" />
             <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="translate('Sold before it arrives')" />
@@ -190,8 +190,8 @@ import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, promptForNumber, showToast } from '@/utils';
-import { formatDate, formatDateTime, formatRelative, toDateInputValue } from '@/utils/format';
-import { formatQuantity } from '@/utils/labels';
+import { formatDate, formatDateTime, formatQuantity, formatRelativeDay, toDateInputValue } from '@/utils/format';
+import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -215,6 +215,8 @@ const loading = ref(false);
 const error = ref('');
 const segment = ref('lines');
 
+/** An active batch whose promise date has passed: its supply is late. */
+const promiseOverdueDays = computed(() => (batch.value?.statusId === 'FUTURE_INV_ACTIVE' ? daysOverdue(batch.value.promiseDate) : 0));
 const isFinal = computed(() => ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'].includes(batch.value?.statusId || ''));
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 

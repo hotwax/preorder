@@ -85,7 +85,7 @@
                 {{ productLabel(batch.productId, batch.productName) }}
                 <p>{{ [batch.poId, formatDate(batch.promiseDate)].filter(Boolean).join(' - ') }}</p>
               </ion-label>
-              <p slot="end">{{ formatRelative(batch.promiseDate) }}</p>
+              <p slot="end">{{ daysOverdue(batch.promiseDate) ? overdueLabel(daysOverdue(batch.promiseDate)) : formatRelativeDay(batch.promiseDate) }}</p>
             </ion-item>
           </ion-list>
         </StatCard>
@@ -174,8 +174,8 @@ import { useDashboard, type PreorderDashboard } from '@/composables/useDashboard
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import { useProductStore } from '@/store/productStore';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
-import { formatDate, formatNumber, formatRelative } from '@/utils/format';
-import { formatQuantity } from '@/utils/labels';
+import { countParams, formatDate, formatNumber, formatQuantity, formatRelativeDay } from '@/utils/format';
+import { daysOverdue, overdueLabel } from '@/utils/labels';
 
 const ARRIVAL_DAYS = 7;
 const TREND_DAYS = 30;
@@ -204,8 +204,8 @@ const metrics = computed(() => {
   const supply = Number(data.supply?.quantityOnHand || 0);
   const reserved = Number(data.supply?.reserved || 0);
   return [
-    { id: 'preorder', label: translate('On pre-order'), percent: percent(preorderUnits, data.openUnits), value: data.openUnits ? preorderUnits / data.openUnits : 0, note: translate('{count} units', { count: formatQuantity(preorderUnits) }) },
-    { id: 'backorder', label: translate('On back-order'), percent: percent(backorderUnits, data.openUnits), value: data.openUnits ? backorderUnits / data.openUnits : 0, note: translate('{count} units', { count: formatQuantity(backorderUnits) }) },
+    { id: 'preorder', label: translate('On pre-order'), percent: percent(preorderUnits, data.openUnits), value: data.openUnits ? preorderUnits / data.openUnits : 0, note: translate('{count} units', countParams(preorderUnits)) },
+    { id: 'backorder', label: translate('On back-order'), percent: percent(backorderUnits, data.openUnits), value: data.openUnits ? backorderUnits / data.openUnits : 0, note: translate('{count} units', countParams(backorderUnits)) },
     { id: 'parked', label: translate('Waiting at parking'), percent: percent(data.parkedLines, data.openLines), value: data.openLines ? data.parkedLines / data.openLines : 0, note: translate('{shown} / {total} items', { shown: formatNumber(data.parkedLines), total: formatNumber(data.openLines) }) },
     { id: 'sellThrough', label: translate('Future inventory sold'), percent: percent(reserved, supply), value: supply ? Math.min(reserved / supply, 1) : 0, note: translate('{reserved} of {supply} units on {batches} active batches', { reserved: formatQuantity(reserved), supply: formatQuantity(supply), batches: formatNumber(data.supply?.activeBatches) }) },
   ];

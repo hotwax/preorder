@@ -1,8 +1,9 @@
-import { DateTime, Settings } from "luxon";
+import { DateTime } from "luxon";
 import { defineStore } from "pinia";
 import { api, commonUtil, cookieHelper, logger, translate } from "@common";
 import { useAuth } from "@common/composables/useAuth";
 import { showToast } from "@/utils";
+import { setUserZone } from "@/utils/format";
 import { useProductStore } from "@/store/productStore";
 import { usePreorderSearchStore } from "@/store/preorderSearch";
 import { useFutureInventorySearchStore } from "@/store/futureInventorySearch";
@@ -63,9 +64,7 @@ export const useUserStore = defineStore("user", {
         this.current = userProfileResp.data;
         useAuth().updateUserId(this.current.userId);
 
-        if (this.current.timeZone) {
-          Settings.defaultZone = this.current.timeZone;
-        }
+        setUserZone(this.current.timeZone);
         this.fetchStatus.profile = "success";
       } catch (error: any) {
         await showToast(translate("Failed to fetch user profile information. Please try again."));
@@ -137,7 +136,10 @@ export const useUserStore = defineStore("user", {
         if (resp?.status !== 200) throw resp;
 
         this.current.timeZone = tzId;
-        Settings.defaultZone = tzId;
+        setUserZone(tzId);
+        // The lists' day filters are bounded in the user's time zone: they search again in the new one when next shown
+        [usePreorderSearchStore(), useFutureInventorySearchStore(), usePurchaseOrderSearchStore(), useInboundShipmentSearchStore()]
+          .forEach((store) => store.markStale());
         await showToast(translate("Time zone updated successfully."));
         return tzId;
       } catch (error) {

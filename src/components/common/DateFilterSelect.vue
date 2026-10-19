@@ -51,8 +51,7 @@ let dateFilterSelectCounter = 0;
 import { computed, ref } from 'vue';
 import { IonDatetime, IonIcon, IonInput, IonItem, IonLabel, IonPopover } from '@ionic/vue';
 import { chevronDownOutline } from 'ionicons/icons';
-import { DateTime } from 'luxon';
-import { locale as appLocale, formatDate } from '@/utils/format';
+import { locale as appLocale, dayBound, formatDate, todayValue } from '@/utils/format';
 import { translate } from '@common';
 
 const locale = computed(() => appLocale());
@@ -79,11 +78,10 @@ const emit = defineEmits<{
 
 const triggerId = `date-filter-select-${(dateFilterSelectCounter += 1)}`;
 
-// A filter on something that already happened (an order date) cannot pick a day after today;
+// A filter on something that already happened (an order date) cannot pick a day after today in the user's time zone;
 // `allowFuture` lifts that for arrival and promise dates. Today is re-read when the calendar opens, so a page left open overnight moves on.
-const todayISO = () => DateTime.now().toISODate() as string;
-const today = ref(todayISO());
-const refreshToday = () => { today.value = todayISO(); };
+const today = ref(todayValue());
+const refreshToday = () => { today.value = todayValue(); };
 
 /** The caller's upper bound (e.g. the paired "through" date), but never later than today. */
 const latestSelectable = computed(() => {
@@ -97,10 +95,11 @@ const selectedDateLabel = computed(() => {
   return formatDate(props.modelValue) || props.modelValue;
 });
 
+/** The picked day as the 'yyyy-MM-dd' every date filter holds: the calendar's value carries no zone, so its date part is the day. */
 function normalizeDate(value: string | string[] | null | undefined): string {
   if (!value) return '';
   const selectedValue = Array.isArray(value) ? value[0] : value;
-  return selectedValue ? String(selectedValue).slice(0, 10) : '';
+  return selectedValue ? dayBound(String(selectedValue).slice(0, 10), 'start', 'date') : '';
 }
 
 function activateOutlinedTrigger(event: KeyboardEvent) {

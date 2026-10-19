@@ -134,11 +134,10 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import FutureInventoryRow from '@/components/futureInventory/FutureInventoryRow.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
-import { formatQuantity } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
-import { formatDate } from '@/utils/format';
+import { formatDate, formatQuantity } from '@/utils/format';
 import Actions from '@/authorization/actions';
 
 const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];

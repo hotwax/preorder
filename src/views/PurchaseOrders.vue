@@ -114,7 +114,6 @@ import {
   IonSelectOption, IonTitle, IonToolbar, onIonViewDidLeave,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
-import { DateTime } from 'luxon';
 import { computed, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { translate } from '@common';
@@ -137,7 +136,7 @@ import PurchaseOrderRow from '@/components/purchaseOrders/PurchaseOrderRow.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
 import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
-import { formatDate } from '@/utils/format';
+import { formatDate, toMillis } from '@/utils/format';
 import Actions from '@/authorization/actions';
 import type { PurchaseOrderSummary } from '@/types';
 
@@ -261,7 +260,7 @@ async function changeArrivalDate() {
   );
   if (!arrivalDate) return;
   const result = await runBulk(() => forEachOrder(orderIds, (orderId) => changeOrderArrivalDate(orderId, arrivalDate)));
-  const arrivalMillis = DateTime.fromISO(arrivalDate).toMillis();
+  const arrivalMillis = toMillis(arrivalDate);
   await report(result, translate('{done} purchase orders now arrive {date}.', { done: result.done, count: result.done, date: formatDate(arrivalDate) }), (order) =>
     ({ ...order, earliestArrivalDate: arrivalMillis, latestArrivalDate: arrivalMillis }));
 }

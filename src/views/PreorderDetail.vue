@@ -80,7 +80,8 @@
               <ion-label class="ion-text-end">
                 <template v-if="line.promisedDatetime">
                   {{ formatDate(line.promisedDatetime) }}
-                  <p>{{ formatRelative(line.promisedDatetime) }}</p>
+                  <p v-if="lineOverdueDays(line)"><ion-text color="danger">{{ overdueLabel(lineOverdueDays(line)) }}</ion-text></p>
+                  <p v-else>{{ formatRelativeDay(line.promisedDatetime) }}</p>
                 </template>
                 <ion-note v-else color="danger">{{ translate('No promise date') }}</ion-note>
                 <p v-if="line.autoCancelDate">{{ translate('Auto cancels {date}', { date: formatDate(line.autoCancelDate) }) }}</p>
@@ -108,7 +109,7 @@
 <script setup lang="ts">
 import {
   IonBackButton, IonBadge, IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonChip, IonContent,
-  IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonTitle, IonToolbar,
+  IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonText, IonTitle, IonToolbar,
   modalController, onIonViewWillEnter,
 } from '@ionic/vue';
 import { layersOutline } from 'ionicons/icons';
@@ -123,8 +124,8 @@ import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import MoveReservationModal from '@/components/preorders/MoveReservationModal.vue';
-import { formatDate, formatDateTime, formatRelative } from '@/utils/format';
-import { formatDateRange, formatQuantity, shownPartyId } from '@/utils/labels';
+import { formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
+import { daysOverdue, formatDateRange, overdueLabel, shownPartyId } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -145,10 +146,14 @@ const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UP
 
 const parkedCount = computed(() => (order.value ? parkedLines(order.value).length : 0));
 const isOpen = (line: PreorderLine) => !['ITEM_CANCELLED', 'ITEM_COMPLETED', 'ITEM_REJECTED'].includes(line.itemStatusId || '');
+/** An open line whose promise date has passed: the customer is waiting past it. */
+const lineOverdueDays = (line: PreorderLine) => (isOpen(line) ? daysOverdue(line.promisedDatetime) : 0);
 const promiseLabel = computed(() => formatDateRange(order.value?.earliestPromiseDate, order.value?.latestPromiseDate) || translate('None'));
 const promiseSubtitle = computed(() => {
   const date = order.value?.earliestPromiseDate || order.value?.latestPromiseDate;
-  return date ? formatRelative(date) : translate('No item has a promise date');
+  if (!date) return translate('No item has a promise date');
+  const overdue = daysOverdue(date);
+  return overdue ? overdueLabel(overdue) : formatRelativeDay(date);
 });
 
 async function load() {

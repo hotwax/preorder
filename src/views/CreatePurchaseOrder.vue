@@ -80,7 +80,7 @@
           <ProductItem :product-id="line.productId" :product-name="line.productName" />
           <ion-input v-model.number="line.quantity" type="number" min="1" :label="requiredLabel('Quantity')" label-placement="stacked" fill="outline" />
           <ion-input v-model.number="line.unitPrice" type="number" min="0" :label="translate('Unit cost')" label-placement="stacked" fill="outline" />
-          <DateFilterSelect v-model="line.arrivalDate" :label="requiredLabel('Arrival date')" allow-future outlined />
+          <DateFilterSelect v-model="line.arrivalDate" :label="requiredLabel('Arrival date')" :min="todayValue()" allow-future outlined />
           <ion-button fill="clear" color="danger" :aria-label="translate('Remove line')" @click="form.items.splice(index, 1)">
             <ion-icon slot="icon-only" :icon="trashOutline" />
           </ion-button>
@@ -123,6 +123,7 @@ import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import { requiredLabel, showToast } from '@/utils';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { errorMessage } from '@/utils/response';
+import { todayValue } from '@/utils/format';
 
 const seed = useSeedData();
 const { typeOptions } = useFutureInventoryTypes();
@@ -157,7 +158,7 @@ const form = reactive({
 
 const totalUnits = computed(() => form.items.reduce((sum, line) => sum + Number(line.quantity || 0), 0));
 const canSave = computed(() => form.supplierPartyId && form.facilityId && form.items.length
-  && form.items.every((line) => Number(line.quantity) > 0 && line.arrivalDate));
+  && form.items.every((line) => Number(line.quantity) > 0 && line.arrivalDate && line.arrivalDate >= todayValue()));
 
 const suppliersError = ref('');
 const searching = ref(false);

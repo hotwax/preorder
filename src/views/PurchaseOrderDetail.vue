@@ -89,7 +89,8 @@
             </ion-label>
             <ion-label class="ion-text-end">
               {{ formatDate(item.estimatedDeliveryDate) || translate('No arrival date') }}
-              <p>{{ item.estimatedDeliveryDate ? formatRelative(item.estimatedDeliveryDate) : '' }}</p>
+              <p v-if="lineOverdueDays(item)"><ion-text color="danger">{{ overdueLabel(lineOverdueDays(item)) }}</ion-text></p>
+              <p v-else>{{ formatRelativeDay(item.estimatedDeliveryDate) }}</p>
             </ion-label>
           </div>
           <ion-item v-if="!order.items.length" lines="none">
@@ -122,7 +123,7 @@
 <script setup lang="ts">
 import {
   IonBackButton, IonBadge, IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonChip, IonContent,
-  IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonTitle, IonToolbar,
+  IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonText, IonTitle, IonToolbar,
   onIonViewWillEnter,
 } from '@ionic/vue';
 import { boatOutline, layersOutline } from 'ionicons/icons';
@@ -137,8 +138,8 @@ import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
-import { formatDate, formatMoney, formatNumber, formatRelative, toDateInputValue, toMillis } from '@/utils/format';
-import { formatQuantity } from '@/utils/labels';
+import { formatDate, formatMoney, formatNumber, formatQuantity, formatRelativeDay, toDateInputValue, toMillis } from '@/utils/format';
+import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
@@ -161,6 +162,9 @@ const linesWithBatch = computed(() => (order.value?.items || []).filter((item: a
 /** The ids the toolbar title does not already show. */
 const idsBesideTitle = computed(() => [order.value?.orderId, order.value?.externalId].filter((id) => id && id !== (order.value?.orderName || props.orderId)).join(' - '));
 const earliestArrival = computed(() => openItems.value.map((item: any) => toMillis(item.estimatedDeliveryDate)).filter(Boolean).sort()[0]);
+
+/** An open line whose arrival date has passed: its supply is late. */
+const lineOverdueDays = (item: any) => (['ITEM_CANCELLED', 'ITEM_COMPLETED'].includes(item.statusId) ? 0 : daysOverdue(item.estimatedDeliveryDate));
 
 const sum = (field: string) => (order.value?.items || []).reduce((total: number, item: any) => total + Number(item[field] || 0), 0);
 const sumBatches = (field: string) => (order.value?.items || []).filter((item: any) => item.futureInventoryItemId).reduce((total: number, item: any) => total + Number(item[field] || 0), 0);

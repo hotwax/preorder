@@ -1,5 +1,6 @@
 import { api } from '@common';
 import { ensureOk } from '@/utils/response';
+import { dayBound } from '@/utils/format';
 
 /** The Data Manager configs this app tracks: purchase order and future inventory imports. */
 export const IMPORT_CONFIGS = [
@@ -38,8 +39,8 @@ export function useImports() {
     const params: Record<string, any> = { configId: configIds.join(','), configId_op: 'in', pageIndex, pageSize, orderByField: '-createdDate' };
     if (filters.logId) params.logId = filters.logId;
     if (filters.statusId && filters.statusId !== 'All') params.statusId = filters.statusId;
-    if (filters.createdDateFrom) params.createdDate_from = `${filters.createdDateFrom} 00:00:00`;
-    if (filters.createdDateThru) params.createdDate_thru = `${filters.createdDateThru} 23:59:59`;
+    if (filters.createdDateFrom) params.createdDate_from = dayBound(filters.createdDateFrom, 'start', 'timestamp');
+    if (filters.createdDateThru) params.createdDate_thru = dayBound(filters.createdDateThru, 'end', 'timestamp');
     const data = await ensureOk(api({ url: 'admin/dataManager/details', method: 'get', params }), 'Failed to load imports.');
     return data.dataManagerLogs || [];
   }

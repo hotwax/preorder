@@ -1,5 +1,5 @@
 import { translate } from '@common';
-import { formatDate, toMillis } from '@/utils/format';
+import { countParams, daysFromToday, formatDate } from '@/utils/format';
 
 /**
  * The app's short names for the future inventory types (FUTURE_INV_ITEM_TYPE enums), whose seed
@@ -26,17 +26,14 @@ export function formatDateRange(start?: number | string, end?: number | string):
   return `${from} - ${thru}`;
 }
 
-/** Whether a date has passed. */
-export const isPast = (value?: number | string) => {
-  const millis = toMillis(value);
-  return millis !== undefined && millis < Date.now();
+/**
+ * Whole days a date-only value (a promise or arrival date) has passed by, counted in calendar days in the user's
+ * time zone; 0 when it is today, later or empty.
+ */
+export const daysOverdue = (value?: number | string) => {
+  const days = daysFromToday(value);
+  return days !== undefined && days < 0 ? -days : 0;
 };
 
-/**
- * A quantity without trailing zeros: 12, 12.5. A number, not a string: vue-i18n picks a message's
- * plural form ("{count} unit | {count} units") from a numeric `count` only.
- */
-export const formatQuantity = (value: unknown): number => {
-  const number = Number(value ?? 0);
-  return Number.isFinite(number) ? Number(number.toFixed(4)) : 0;
-};
+/** "Overdue by 3 days": a promise or arrival date that has passed while its stock is still awaited. */
+export const overdueLabel = (days: number) => translate('Overdue by {count} days', countParams(days));

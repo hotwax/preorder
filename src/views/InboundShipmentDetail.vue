@@ -40,7 +40,7 @@
             </ion-list>
           </ion-card>
           <div class="stats">
-            <StatCard :title="translate('Estimated arrival')" :stat="formatDate(shipment.estimatedArrivalDate) || '-'" :subtitle="formatRelative(shipment.estimatedArrivalDate)" />
+            <StatCard :title="translate('Estimated arrival')" :stat="formatDate(shipment.estimatedArrivalDate) || '-'" :subtitle="arrivalOverdueDays ? overdueLabel(arrivalOverdueDays) : formatRelativeDay(shipment.estimatedArrivalDate)" />
             <StatCard :title="translate('Shipped')" :stat="formatQuantity(shipment.quantityTotal)" :subtitle="translate('{count} items', { count: shipment.items?.length ?? 0 })" />
             <StatCard :title="translate('Received')" :stat="formatQuantity(shipment.receivedQuantity)" :subtitle="translate('{count} receipts', { count: shipment.receipts?.length ?? 0 })" />
           </div>
@@ -92,15 +92,15 @@ import {
   IonBackButton, IonBadge, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonItem,
   IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonTitle, IonToolbar, onIonViewWillEnter,
 } from '@ionic/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { useInboundShipments } from '@/composables/useInboundShipments';
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
-import { formatDate, formatDateTime, formatRelative } from '@/utils/format';
-import { formatQuantity } from '@/utils/labels';
+import { formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
+import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 
@@ -112,6 +112,8 @@ const { fetchShipment } = useInboundShipments();
 const shipment = ref<any>();
 const loading = ref(false);
 const error = ref('');
+/** A shipment still on its way whose arrival date has passed. */
+const arrivalOverdueDays = computed(() => (['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(shipment.value?.statusId) ? 0 : daysOverdue(shipment.value?.estimatedArrivalDate)));
 
 async function load() {
   loading.value = true;

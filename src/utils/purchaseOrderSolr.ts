@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import type { PurchaseOrderSummary } from '@/types';
+import { dayBound } from '@/utils/format';
 import { shownPartyId } from '@/utils/labels';
 
 /**
@@ -43,14 +44,8 @@ export const escapeSolr = (value: string) => value.replace(/([+\-&|!(){}[\]^"~*?
 
 const quote = (value: string) => `"${value.replace(/(["\\])/g, '\\$1')}"`;
 
-/** A yyyy-MM-dd day in the user's time zone as the Solr range bound at its start, or its end. */
-function dayBound(day: string | undefined, end: boolean): string {
-  if (!day) return '*';
-  const date = DateTime.fromISO(day);
-  return (end ? date.endOf('day') : date.startOf('day')).toUTC().toISO() || '*';
-}
-
-const range = (from?: string, thru?: string) => `[${dayBound(from, false)} TO ${dayBound(thru, true)}]`;
+/** A range of whole days in the user's time zone, as Solr reads it; an open end is `*`. */
+const range = (from?: string, thru?: string) => `[${dayBound(from, 'start', 'iso') || '*'} TO ${dayBound(thru, 'end', 'iso') || '*'}]`;
 
 /** The filters that pick a page's orders. */
 export function purchaseOrderFilters(params: PurchaseOrderListParams): string[] {

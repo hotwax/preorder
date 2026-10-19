@@ -12,13 +12,13 @@
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet, IonSplitPane, loadingController } from '@ionic/vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Settings } from 'luxon';
 import { emitter, FastTravel, translate } from '@common';
 import { useAuth } from '@common/composables/useAuth';
 import { startAppDbSync } from '@/db/appDbSync';
 import Menu from '@/components/layout/Menu.vue';
 import router from './router';
 import { useUserStore } from '@/store/user';
+import { setUserZone } from '@/utils/format';
 
 const loader = ref<HTMLIonLoadingElement | null>(null);
 const { isAuthenticated } = useAuth();
@@ -55,8 +55,7 @@ onMounted(async () => {
   emitter.on('presentLoader', presentLoader);
   emitter.on('dismissLoader', dismissLoader);
 
-  const timeZone = userProfile.value?.timeZone || userProfile.value?.userTimeZone;
-  if (timeZone) Settings.defaultZone = timeZone;
+  setUserZone(userProfile.value?.timeZone || userProfile.value?.userTimeZone);
 
 });
 

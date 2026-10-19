@@ -39,7 +39,8 @@
     <ion-label class="fi-row-end ion-text-end">
       {{ formatDate(batch.promiseDate) }}
       <p>
-        <ion-text :color="batch.statusId === 'FUTURE_INV_ACTIVE' && isPast(batch.promiseDate) ? 'danger' : undefined">{{ formatRelative(batch.promiseDate) }}</ion-text>
+        <ion-text v-if="overdueDays" color="danger">{{ overdueLabel(overdueDays) }}</ion-text>
+        <template v-else>{{ formatRelativeDay(batch.promiseDate) }}</template>
       </p>
     </ion-label>
   </div>
@@ -47,19 +48,22 @@
 
 <script setup lang="ts">
 import { IonBadge, IonCheckbox, IonLabel, IonText } from '@ionic/vue';
+import { computed } from 'vue';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import ProductItem from '@/components/common/ProductItem.vue';
-import { formatDate, formatRelative } from '@/utils/format';
-import { formatQuantity, isPast } from '@/utils/labels';
+import { formatDate, formatQuantity, formatRelativeDay } from '@/utils/format';
+import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import type { FutureInventoryBatch } from '@/types';
 
-defineProps<{ batch: FutureInventoryBatch; selectMode?: boolean; selected?: boolean }>();
+const props = defineProps<{ batch: FutureInventoryBatch; selectMode?: boolean; selected?: boolean }>();
 const emit = defineEmits<{ (event: 'activate'): void; (event: 'selectionChange', selected: boolean): void }>();
 const seed = useSeedData();
 const { typeLabel } = useFutureInventoryTypes();
+/** An active batch's promise date that has passed: its supply is late. */
+const overdueDays = computed(() => (props.batch.statusId === 'FUTURE_INV_ACTIVE' ? daysOverdue(props.batch.promiseDate) : 0));
 </script>
 
 <style scoped>

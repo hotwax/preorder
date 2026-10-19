@@ -169,7 +169,7 @@ import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { showToast } from '@/utils';
-import { formatDateTime, formatRelative } from '@/utils/format';
+import { dayBound, formatDateTime, formatRelative } from '@/utils/format';
 import { toListParams } from '@/utils/query';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -239,7 +239,8 @@ const emailStatusLabel = (statusId?: string) => {
   return EMAIL_STATUS_LABELS[statusId] ? translate(EMAIL_STATUS_LABELS[statusId]) : seed.statusDescription(statusId);
 };
 
-const daysAgo = (days: number) => DateTime.now().minus({ days }).toISODate() as string;
+/** The first day of the last `days` days, in the user's time zone. */
+const daysAgo = (days: number) => dayBound(DateTime.now().minus({ days }), 'start', 'date');
 
 const gatewayLabel = (systemMessageRemoteId?: string) =>
   gateways.value.find((gateway) => gateway.systemMessageRemoteId === systemMessageRemoteId)?.description || systemMessageRemoteId || '';
@@ -288,7 +289,13 @@ function clearStoreData() {
 
 function eventParams(pageIndex: number) {
   return {
-    ...toListParams({ ...eventFilters, orderId: orderQuery.value.trim(), productStoreId: productStoreId.value }),
+    ...toListParams({
+      ...eventFilters,
+      fromDate: dayBound(eventFilters.fromDate, 'start', 'date'),
+      thruDate: dayBound(eventFilters.thruDate, 'end', 'date'),
+      orderId: orderQuery.value.trim(),
+      productStoreId: productStoreId.value,
+    }),
     pageIndex,
     pageSize: PAGE_SIZE,
   };
