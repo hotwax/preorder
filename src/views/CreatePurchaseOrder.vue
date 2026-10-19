@@ -16,7 +16,7 @@
             <ion-card-title>{{ translate('Order') }}</ion-card-title>
           </ion-card-header>
           <ion-card-content class="form-fields">
-            <ion-select v-model="form.supplierPartyId" :label="requiredLabel('Supplier')" label-placement="stacked" fill="outline" interface="popover" :placeholder="suppliersError || translate('Select supplier')" :helper-text="suppliersError ? translate('Suppliers could not be loaded.') : undefined">
+            <ion-select v-model="form.supplierPartyId" :label="requiredLabel('Supplier')" label-placement="stacked" fill="outline" interface="popover" :placeholder="translate('Select supplier')" :helper-text="suppliersError || undefined">
               <ion-select-option v-for="supplier in suppliers" :key="supplier.partyId" :value="supplier.partyId">{{ supplier.name || supplier.partyId }}</ion-select-option>
             </ion-select>
             <ion-select v-model="form.facilityId" :label="requiredLabel('Destination')" label-placement="stacked" fill="outline" interface="popover" :disabled="!facilitiesSynced" :placeholder="facilityPlaceholder">
@@ -111,7 +111,7 @@ import {
 } from '@ionic/vue';
 import { addCircleOutline, trashOutline } from 'ionicons/icons';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { DxpShopifyImg, translate } from '@common';
+import { commonUtil, DxpShopifyImg, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
@@ -124,7 +124,7 @@ import { SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrd
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ProductItem from '@/components/common/ProductItem.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
-import { requiredLabel, showToast } from '@/utils';
+import { requiredLabel } from '@/utils';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { errorMessage } from '@/utils/response';
 import { countParams, todayValue } from '@/utils/format';
@@ -182,25 +182,33 @@ onMounted(async () => {
   }
 });
 
+/** Each search takes a number; only the latest one's answer lands and ends the spinner. */
+let searchRequest = 0;
+
 async function searchProducts() {
+  const request = ++searchRequest;
   const keyword = productQuery.value.trim();
   searched.value = false;
   searchError.value = '';
   if (!keyword) {
     searchResults.value = [];
+    searching.value = false;
     return;
   }
   searching.value = true;
   try {
     const results = await searchOrderableProducts(keyword, productStore.getCurrentProductStoreId);
-    if (keyword !== productQuery.value.trim()) return;
+    if (request !== searchRequest) return;
     searchResults.value = results;
   } catch (error) {
+    if (request !== searchRequest) return;
     searchResults.value = [];
     searchError.value = errorMessage(error, translate('Product search failed.'));
   } finally {
-    searching.value = false;
-    searched.value = true;
+    if (request === searchRequest) {
+      searching.value = false;
+      searched.value = true;
+    }
   }
 }
 
@@ -228,14 +236,14 @@ async function save() {
       futureInventoryItemTypeId: form.futureInventoryItemTypeId,
       items: form.items.map((line) => ({ productId: line.productId, quantity: Number(line.quantity), unitPrice: line.unitPrice === undefined || line.unitPrice === null || (line.unitPrice as any) === '' ? undefined : Number(line.unitPrice), arrivalDate: line.arrivalDate })),
     });
-    await showToast(form.createFutureInventory && canUpdateFutureInventory.value
+    await commonUtil.showToast(form.createFutureInventory && canUpdateFutureInventory.value
       ? translate('Purchase order {orderId} created with {count} future inventory batches.', { orderId: result.orderId, count: result.futureInventoryItemIds?.length ?? 0 })
       : translate('Purchase order {orderId} created.', { orderId: result.orderId }));
     usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
     useFutureInventorySearchStore().markStale();
     router.replace(`/purchase-orders/${encodeURIComponent(result.orderId)}`);
   } catch (error) {
-    await showToast(errorMessage(error, translate('Failed to create the purchase order.')));
+    await commonUtil.showToast(errorMessage(error, translate('Failed to create the purchase order.')));
   } finally {
     saving.value = false;
   }

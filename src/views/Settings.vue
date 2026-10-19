@@ -14,7 +14,7 @@
         <ion-card>
           <ion-item lines="full">
             <ion-avatar slot="start" v-if="userProfile?.partyImageUrl">
-              <Image :src="userProfile.partyImageUrl"/>
+              <DxpShopifyImg :src="userProfile.partyImageUrl" />
             </ion-avatar>
             <ion-card-header class="ion-no-padding ion-padding-vertical">
               <ion-card-subtitle>{{ userProfile.username || userProfile.emailAddress || userProfile.userId }}</ion-card-subtitle>
@@ -102,8 +102,7 @@
           </ion-card-header>
           <ion-item lines="none">
             <ion-select :label="translate('Select language')" label-placement="stacked" interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
-              <ion-select-option value="en-US">English</ion-select-option>
-              <ion-select-option value="es-ES">Español</ion-select-option>
+              <ion-select-option v-for="language in languages" :key="language.code" :value="language.code">{{ language.name }}</ion-select-option>
             </ion-select>
           </ion-item>
         </ion-card>
@@ -223,7 +222,7 @@
 import { IonAvatar, IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonItemDivider, IonLabel, IonList, IonListHeader, IonMenuButton, IonModal, IonPage, IonRadio, IonRadioGroup, IonSearchbar, IonSelect, IonSelectOption, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue';
 import { checkmarkCircle, closeCircle, closeOutline, openOutline, saveOutline, syncOutline } from 'ionicons/icons';
 import { computed, onBeforeMount, ref } from 'vue';
-import { commonUtil, cookieHelper, i18n, translate } from '@common';
+import { commonUtil, cookieHelper, DxpShopifyImg, i18n, translate } from '@common';
 import { catalogFrom, useDbStatus } from '@common/db';
 import { useAuth } from '@common/composables/useAuth';
 import { useUserStore } from '@/store/user';
@@ -235,6 +234,7 @@ import DxpProductIdentifier from "@/components/settings/DxpProductIdentifier.vue
 import DxpAppVersionInfo from "@/components/settings/DxpAppVersionInfo.vue";
 import Actions from "@/authorization/actions";
 import { formatDateTime } from '@/utils/format';
+import localeMessages from '@/locales';
 
 const userStore = useUserStore();
 const userProfile = computed(() => userStore.getUserProfile);
@@ -244,6 +244,10 @@ const currentTimeZone = computed(() => userStore.getUserTimeZone || userProfile.
 const omsInstance = computed(() => cookieHelper().get('oms') || userStore.oms);
 
 const locale = computed(() => i18n.global.locale.value);
+
+/** Each language's name in itself: only the languages the app has messages for are offered. */
+const LANGUAGE_NAMES: Record<string, string> = { 'en-US': 'English', 'es-ES': 'Español' };
+const languages = Object.keys(localeMessages).map((code) => ({ code, name: LANGUAGE_NAMES[code] || code }));
 
 function setLocale(newLocale: string) {
   i18n.global.locale.value = newLocale;

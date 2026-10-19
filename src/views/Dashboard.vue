@@ -33,6 +33,7 @@
       <ion-card class="global-stat">
         <ion-card-content v-if="error" class="section-error">
           <p>{{ translate("Couldn't load the dashboard") }}</p>
+          <p>{{ error }}</p>
           <ion-button fill="outline" size="small" @click="load">
             <ion-icon slot="start" :icon="refreshOutline" />
             {{ translate('Retry') }}
@@ -167,7 +168,7 @@ import {
 } from '@ionic/vue';
 import { globeOutline, pricetagsOutline, refreshOutline } from 'ionicons/icons';
 import { computed, ref, watch } from 'vue';
-import { Sparkline, StatCard, translate } from '@common';
+import { logger, Sparkline, StatCard, translate } from '@common';
 import { useProductMaster, useSeedData } from '@common/db';
 import router from '@/router';
 import { useDashboard, type PreorderDashboard } from '@/composables/useDashboard';
@@ -176,6 +177,7 @@ import { useProductStore } from '@/store/productStore';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { countParams, formatDate, formatNumber, formatQuantity, formatRelativeDay } from '@/utils/format';
 import { daysOverdue, overdueLabel } from '@/utils/labels';
+import { errorMessage } from '@/utils/response';
 
 const ARRIVAL_DAYS = 7;
 const TREND_DAYS = 30;
@@ -189,7 +191,8 @@ const { fetchDashboard } = useDashboard();
 
 const dashboard = ref<PreorderDashboard>();
 const loading = ref(false);
-const error = ref(false);
+/** Why the dashboard did not load, as the server or the request said; empty when it did. */
+const error = ref('');
 
 const productStoreId = computed(() => productStore.getCurrentProductStoreId);
 const storeName = computed(() => (productStoreId.value ? seed.productStoreName(productStoreId.value) : translate('All stores')));
@@ -226,7 +229,7 @@ let requestId = 0;
 async function load() {
   const current = ++requestId;
   loading.value = true;
-  error.value = false;
+  error.value = '';
   try {
     const data = await fetchDashboard(productStoreId.value, TREND_DAYS, ARRIVAL_DAYS);
     if (current !== requestId) return;
@@ -235,8 +238,10 @@ async function load() {
       ...data.arrivingSoon.batches, ...data.pastDue.batches, ...data.exceptions.batches, ...data.overcommitted.batches,
       ...data.noPromiseDate.lines, ...data.topProducts,
     ].map((row: any) => row.productId).filter(Boolean));
-  } catch {
-    if (current === requestId) error.value = true;
+  } catch (err) {
+    if (current !== requestId) return;
+    logger.error('Failed to load the dashboard', err);
+    error.value = errorMessage(err, translate('Failed to load the dashboard.'));
   } finally {
     if (current === requestId) loading.value = false;
   }

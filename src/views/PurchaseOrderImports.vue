@@ -113,7 +113,7 @@ import {
 } from '@ionic/vue';
 import { cloudUploadOutline, documentAttachOutline, documentTextOutline, downloadOutline, refreshOutline } from 'ionicons/icons';
 import { computed, reactive, ref, watch } from 'vue';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { IMPORT_CONFIGS, useImports, type ImportLog } from '@/composables/useImports';
 import { useUserStore } from '@/store/user';
@@ -122,7 +122,6 @@ import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
-import { showToast } from '@/utils';
 import { downloadText } from '@/utils/download';
 import { countParams, formatDateTime, formatNumber } from '@/utils/format';
 import { statusColor } from '@/utils/statusColors';
@@ -207,7 +206,7 @@ async function loadMore(event: CustomEvent) {
     pageIndex.value += 1;
     hasMore.value = morePages(rows.length, total);
   } catch (err) {
-    await showToast(errorMessage(err, translate('Could not load more imports. Scroll to try again.')));
+    await commonUtil.showToast(errorMessage(err, translate('Could not load more imports. Scroll to try again.')));
   } finally {
     loadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
@@ -236,12 +235,12 @@ async function upload() {
   uploading.value = true;
   try {
     const logId = await uploadFile(uploadConfigId.value, selectedFile.value);
-    await showToast(translate('File uploaded as import {logId}.', { logId }));
+    await commonUtil.showToast(translate('File uploaded as import {logId}.', { logId }));
     selectedFile.value = undefined;
     if (fileInput.value) fileInput.value.value = '';
     await load();
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to upload the file.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to upload the file.')));
   } finally {
     uploading.value = false;
   }
@@ -251,7 +250,7 @@ async function downloadTemplateFile() {
   try {
     downloadText(`${uploadConfigId.value}-template.csv`, await downloadTemplate(uploadConfigId.value));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to download the template.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to download the template.')));
   }
 }
 
@@ -262,7 +261,7 @@ async function downloadFile(log: ImportLog, errors: boolean) {
     const name = (errors ? log.errorFileName : log.fileName) || `${log.logId}${errors ? '-errors' : ''}`;
     downloadText(name.endsWith('.csv') ? name : `${name}.csv`, await downloadLogFile(log.configId, logContentId));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to download the file.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to download the file.')));
   }
 }
 </script>

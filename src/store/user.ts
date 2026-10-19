@@ -2,7 +2,6 @@ import { DateTime } from "luxon";
 import { defineStore } from "pinia";
 import { api, commonUtil, cookieHelper, logger, translate } from "@common";
 import { useAuth } from "@common/composables/useAuth";
-import { showToast } from "@/utils";
 import { setUserZone } from "@/utils/format";
 import { useProductStore } from "@/store/productStore";
 import { usePreorderSearchStore } from "@/store/preorderSearch";
@@ -40,13 +39,9 @@ export const useUserStore = defineStore("user", {
     } as any
   }),
   getters: {
-    getPermissions: (state) => state.permissions,
     getUserProfile: (state) => state.current,
-    getAppVersion: (state) => state.appVersion,
-    getPwaState: (state) => state.pwaState,
     getUserTimeZone: (state) => state.current.timeZone,
     getAvailableTimeZones: (state) => state.timeZones,
-    getFetchStatus: (state) => state.fetchStatus,
     hasPermission: (state) => (permissionId: string): boolean => {
       if (!permissionId) return true;
 
@@ -77,7 +72,7 @@ export const useUserStore = defineStore("user", {
         setUserZone(this.current.timeZone);
         this.fetchStatus.profile = "success";
       } catch (error: any) {
-        await showToast(translate("Failed to fetch user profile information. Please try again."));
+        await commonUtil.showToast(translate("Failed to fetch user profile information. Please try again."));
         logger.error("Failed to fetch user profile information", error);
         useAuth().clearAuth();
         this.fetchStatus.profile = "error";
@@ -113,7 +108,7 @@ export const useUserStore = defineStore("user", {
           const hasPermission = serverPermissions.includes(permissionId)
           if(!hasPermission) {
             const permissionError = "You do not have permission to access the app."
-            await showToast(translate(permissionError))
+            await commonUtil.showToast(translate(permissionError))
             logger.error("error", permissionError)
             this.fetchStatus.permissions = "error"
             // The persisted list would otherwise keep granting what was just revoked
@@ -150,11 +145,11 @@ export const useUserStore = defineStore("user", {
         // The lists' day filters are bounded in the user's time zone: they search again in the new one when next shown
         [usePreorderSearchStore(), useFutureInventorySearchStore(), usePurchaseOrderSearchStore(), useInboundShipmentSearchStore()]
           .forEach((store) => store.markStale());
-        await showToast(translate("Time zone updated successfully."));
+        await commonUtil.showToast(translate("Time zone updated successfully."));
         return tzId;
       } catch (error) {
         logger.error("Failed to update time zone", error);
-        await showToast(translate("Failed to update time zone. Please try again."));
+        await commonUtil.showToast(translate("Failed to update time zone. Please try again."));
         return Promise.reject(error);
       }
     },

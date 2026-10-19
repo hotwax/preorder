@@ -21,9 +21,15 @@ export function productStoreLabels(rows: { productStoreId: string; storeName?: s
 /** A party id to show, or undefined for `_NA_`, the placeholder party of an order with no customer or supplier. */
 export const shownPartyId = (partyId?: string) => (partyId && partyId !== '_NA_' ? partyId : undefined);
 
-/** A future inventory type's name: the app's short name, else the enum's description, else its id. */
-export const futureInventoryTypeLabel = (typeId?: string, description?: string) =>
-  translate((typeId && FUTURE_INVENTORY_TYPE_NAMES[typeId]) || description || typeId || 'Unknown');
+/**
+ * A future inventory type's name: the app's short name (translated), else the enum's description or id as OMS
+ * has it: seed data is not a message key.
+ */
+export const futureInventoryTypeLabel = (typeId?: string, description?: string) => {
+  const name = typeId && FUTURE_INVENTORY_TYPE_NAMES[typeId];
+  if (name) return translate(name);
+  return description || typeId || translate('Unknown');
+};
 
 /** An enum's short name: its description up to the colon, for the reasons whose description defines them ("Reallocated: an order line's ..."). */
 export const shortDescription = (description?: string) => (description || '').split(':')[0].trim();

@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import type { RouteRecordRaw } from 'vue-router';
-import { Login, translate } from '@common';
+import { commonUtil, Login, translate } from '@common';
 import { useAuth } from '@common/composables/useAuth';
 import { useUserStore } from '@/store/user';
-import { showToast } from '@/utils';
 import Actions from '@/authorization/actions';
 import Dashboard from '@/views/Dashboard.vue';
 import Preorders from '@/views/Preorders.vue';
@@ -68,7 +67,7 @@ router.beforeEach((to, from) => {
     let redirectToPath = from.path;
     // From the login page or on page load, land on Settings without a toast.
     if (redirectToPath == "/login" || redirectToPath == "/") redirectToPath = "/settings";
-    else showToast(translate('You do not have permission to access this page.'));
+    else commonUtil.showToast(translate('You do not have permission to access this page.'));
     return { path: redirectToPath };
   }
 });

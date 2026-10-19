@@ -37,16 +37,11 @@ export interface OrderSortOption {
   value: string;
 }
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   modelValue: string;
-  options?: OrderSortOption[];
+  options: OrderSortOption[];
   triggerId: string;
-}>(), {
-  options: () => [
-    { label: 'Oldest first', value: 'orderDate asc' },
-    { label: 'Newest first', value: 'orderDate desc' },
-  ],
-});
+}>();
 
 const emit = defineEmits<{
   (event: 'update:modelValue', value: string): void;

@@ -92,7 +92,7 @@ import {
 } from '@ionic/vue';
 import { calendarOutline, refreshOutline } from 'ionicons/icons';
 import { computed, reactive, ref, watch } from 'vue';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { BULK_UPDATE_CONFIGS, useImports, type ImportLog } from '@/composables/useImports';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
@@ -100,7 +100,6 @@ import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
-import { showToast } from '@/utils';
 import { downloadText } from '@/utils/download';
 import { countParams, formatDateTime, formatNumber } from '@/utils/format';
 import { statusColor } from '@/utils/statusColors';
@@ -181,7 +180,7 @@ async function loadMore(event: CustomEvent) {
     pageIndex.value += 1;
     hasMore.value = morePages(rows.length, total);
   } catch (err) {
-    await showToast(errorMessage(err, translate('Could not load more bulk updates. Scroll to try again.')));
+    await commonUtil.showToast(errorMessage(err, translate('Could not load more bulk updates. Scroll to try again.')));
   } finally {
     loadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
@@ -208,7 +207,7 @@ async function downloadFile(log: ImportLog, errors: boolean) {
     const name = (errors ? log.errorFileName : log.fileName) || `${log.logId}${errors ? '-errors' : ''}.json`;
     downloadText(name, await downloadLogFile(log.configId, logContentId), 'application/json;charset=utf-8');
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to download the file.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to download the file.')));
   }
 }
 </script>

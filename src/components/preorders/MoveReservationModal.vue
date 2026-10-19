@@ -53,12 +53,11 @@ import {
 } from '@ionic/vue';
 import { closeOutline } from 'ionicons/icons';
 import { computed, onMounted, ref } from 'vue';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { usePreorderActions } from '@/composables/usePreorderActions';
 import { formatDate, formatQuantity } from '@/utils/format';
-import { showToast } from '@/utils';
 import { errorMessage } from '@/utils/response';
 import type { FutureInventoryBatch, PreorderLine } from '@/types';
 
@@ -109,10 +108,10 @@ async function save() {
   saving.value = true;
   try {
     await reallocateLine(props.orderId, props.line.orderItemSeqId, props.line.futureInventoryItemId, selectedId.value);
-    await showToast(translate('Reservation moved.'));
+    await commonUtil.showToast(translate('Reservation moved.'));
     dismiss('confirm');
   } catch (error) {
-    await showToast(errorMessage(error, translate('Failed to move the reservation.')));
+    await commonUtil.showToast(errorMessage(error, translate('Failed to move the reservation.')));
   } finally {
     saving.value = false;
   }

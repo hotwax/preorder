@@ -128,7 +128,7 @@ import {
 } from '@ionic/vue';
 import { boatOutline, layersOutline } from 'ionicons/icons';
 import { computed, ref } from 'vue';
-import { StatCard, translate } from '@common';
+import { commonUtil, StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useUserStore } from '@/store/user';
@@ -137,7 +137,7 @@ import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
-import { confirmAction, promptForDate, showToast } from '@/utils';
+import { usePrompts } from '@/composables/usePrompts';
 import { formatDate, formatMoney, formatNumber, formatQuantity, formatRelativeDay, toDateInputValue, toMillis } from '@/utils/format';
 import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
@@ -146,6 +146,7 @@ import Actions from '@/authorization/actions';
 
 const props = defineProps<{ orderId: string }>();
 const seed = useSeedData();
+const { confirmAction, promptForDate } = usePrompts();
 const userStore = useUserStore();
 const { fetchPurchaseOrder, changeStatus, changeArrivalDate, sellAsPreorder } = usePurchaseOrderActions();
 
@@ -190,10 +191,10 @@ async function run(action: () => Promise<any>, success: string) {
     await action();
     usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
     useFutureInventorySearchStore().markStale();
-    await showToast(success);
+    await commonUtil.showToast(success);
     await load();
   } catch (err) {
-    await showToast(errorMessage(err, translate('The change was not saved.')));
+    await commonUtil.showToast(errorMessage(err, translate('The change was not saved.')));
   }
 }
 

@@ -116,7 +116,7 @@ import {
 import { addOutline } from 'ionicons/icons';
 import { computed, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { translate } from '@common';
+import { commonUtil, logger, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { OPEN_PURCHASE_ORDER_STATUSES as OPEN_STATUSES, SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
@@ -133,14 +133,16 @@ import SortPopover from '@/components/common/SortPopover.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import PurchaseOrderRow from '@/components/purchaseOrders/PurchaseOrderRow.vue';
-import { confirmAction, promptForDate, showToast } from '@/utils';
+import { usePrompts } from '@/composables/usePrompts';
 import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
+import { errorMessage } from '@/utils/response';
 import { countParams, formatDate, formatNumber, toMillis } from '@/utils/format';
 import Actions from '@/authorization/actions';
 import type { PurchaseOrderSummary } from '@/types';
 
 const seed = useSeedData();
+const { confirmAction, promptForDate } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const store = usePurchaseOrderSearchStore();
 const { refresh, refreshLater } = useFindSearch(store, { scopeByStore: false, onStoreChange: clearSelection });
@@ -174,7 +176,12 @@ watch(results, () => {
 });
 
 onMounted(async () => {
-  suppliers.value = await fetchSuppliers().catch(() => []);
+  try {
+    suppliers.value = await fetchSuppliers();
+  } catch (error) {
+    logger.error('Failed to load suppliers', error);
+    await commonUtil.showToast(errorMessage(error, translate('Suppliers could not be loaded.')));
+  }
 });
 
 function activate(orderId: string) {
@@ -218,7 +225,7 @@ async function loadMore(event: CustomEvent) {
  * has the change.
  */
 async function report(result: { done: number; failed: number; errors: string[]; succeeded: string[] }, success: string, patch?: (order: PurchaseOrderSummary) => PurchaseOrderSummary | null) {
-  await showToast(result.failed ? translate('{done} done, {failed} failed: {errors}', { ...result, errors: result.errors.slice(0, 2).join('; ') }) : success);
+  await commonUtil.showToast(result.failed ? translate('{done} done, {failed} failed: {errors}', { ...result, errors: result.errors.slice(0, 2).join('; ') }) : success);
   useFutureInventorySearchStore().markStale();
   if (patch) {
     const changed = new Set(result.succeeded);
@@ -279,10 +286,10 @@ function exportSelected() {
     earliestArrivalDate: formatDate(order.earliestArrivalDate),
   }));
   downloadText('purchase-orders.csv', toCsv(rows, [
-    { key: 'orderId', label: 'PO' }, { key: 'orderName', label: 'Name' }, { key: 'externalId', label: 'External ID' },
-    { key: 'supplierName', label: 'Supplier' }, { key: 'facilityName', label: 'Destination' }, { key: 'status', label: 'Status' },
-    { key: 'orderDate', label: 'Order date' }, { key: 'earliestArrivalDate', label: 'Arrival' }, { key: 'itemCount', label: 'Lines' },
-    { key: 'quantityTotal', label: 'Units' },
+    { key: 'orderId', label: translate('PO') }, { key: 'orderName', label: translate('Name') }, { key: 'externalId', label: translate('External ID') },
+    { key: 'supplierName', label: translate('Supplier') }, { key: 'facilityName', label: translate('Destination') }, { key: 'status', label: translate('Status') },
+    { key: 'orderDate', label: translate('Order date') }, { key: 'earliestArrivalDate', label: translate('Arrival') }, { key: 'itemCount', label: translate('Lines') },
+    { key: 'quantityTotal', label: translate('Units') },
   ]));
 }
 </script>

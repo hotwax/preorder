@@ -28,7 +28,6 @@ export const useProductStore = defineStore('productStore', {
 
   getters: {
     getCurrentProductStoreId: (state) => state.currentProductStoreId,
-    getSettings: (state) => state.settings,
     getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
     getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
     getCurrentSampleProduct: (state) => state.settings.productIdentifier.currentSampleProduct,
@@ -218,9 +217,10 @@ export const useProductStore = defineStore('productStore', {
           }
         });
 
-        fetchedGoodIdentificationOptions = resp.data
+        // An error body or an unexpected shape adds no options, rather than breaking the merge below
+        fetchedGoodIdentificationOptions = Array.isArray(resp?.data) ? resp.data : []
       } catch (error) {
-        console.error('Failed to fetch good identification types', error)
+        logger.error('Failed to fetch good identification types', error)
       }
 
       // Merge the arrays and remove duplicates
@@ -239,7 +239,7 @@ export const useProductStore = defineStore('productStore', {
         this.settings.productIdentifier.sampleProducts = Array.isArray(resp.products) ? resp.products : []
         this.shuffleProduct()
       } catch (error: any) {
-        console.error("Failed to fetch sample products", error)
+        logger.error("Failed to fetch sample products", error)
       }
     },
     shuffleProduct() {

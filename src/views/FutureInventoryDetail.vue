@@ -191,7 +191,7 @@ import {
   IonNote, IonPage, IonProgressBar, IonSegment, IonSegmentButton, IonTitle, IonToolbar, onIonViewWillEnter,
 } from '@ionic/vue';
 import { computed, ref } from 'vue';
-import { StatCard, translate } from '@common';
+import { commonUtil, StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
@@ -200,7 +200,7 @@ import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
-import { confirmAction, promptForDate, promptForNumber, showToast } from '@/utils';
+import { usePrompts } from '@/composables/usePrompts';
 import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay, toDateInputValue } from '@/utils/format';
 import { daysOverdue, overdueLabel, readableNote, shortDescription } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
@@ -211,6 +211,7 @@ import type { FutureInventoryBatchDetail } from '@/types';
 
 const props = defineProps<{ futureInventoryItemId: string }>();
 const seed = useSeedData();
+const { confirmAction, promptForDate, promptForNumber } = usePrompts();
 const { typeLabel } = useFutureInventoryTypes();
 const userStore = useUserStore();
 const { fetchBatch, fetchLedger, fetchWaitingLines, updateBatch, cancelBatch } = useFutureInventoryActions();
@@ -301,10 +302,10 @@ async function run(action: () => Promise<any>, success: string) {
     await action();
     useFutureInventorySearchStore().markStale();
     usePreorderSearchStore().markStale();
-    await showToast(success);
+    await commonUtil.showToast(success);
     await load();
   } catch (err) {
-    await showToast(errorMessage(err, translate('The change was not saved.')));
+    await commonUtil.showToast(errorMessage(err, translate('The change was not saved.')));
   }
 }
 

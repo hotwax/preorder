@@ -115,7 +115,7 @@ import {
 } from '@ionic/vue';
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
@@ -134,7 +134,7 @@ import SortPopover from '@/components/common/SortPopover.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import FutureInventoryRow from '@/components/futureInventory/FutureInventoryRow.vue';
-import { confirmAction, promptForDate, showToast } from '@/utils';
+import { usePrompts } from '@/composables/usePrompts';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { ALL, toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
@@ -144,6 +144,7 @@ import Actions from '@/authorization/actions';
 const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];
 
 const seed = useSeedData();
+const { confirmAction, promptForDate } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const productStore = useProductStore();
@@ -230,7 +231,7 @@ async function loadMore(event: CustomEvent) {
 
 async function finish(message: string) {
   usePreorderSearchStore().markStale();
-  await showToast(message);
+  await commonUtil.showToast(message);
   selectMode.value = false;
   selectedIds.value = [];
   await refresh();
@@ -272,10 +273,10 @@ function exportSelected() {
     promiseDate: formatDate(batch.promiseDate),
   }));
   downloadText('future-inventory.csv', toCsv(rows, [
-    { key: 'futureInventoryItemId', label: 'Batch' }, { key: 'productId', label: 'Product ID' }, { key: 'productName', label: 'Product' },
-    { key: 'type', label: 'Type' }, { key: 'facilityName', label: 'Facility' }, { key: 'poId', label: 'PO' },
-    { key: 'promiseDate', label: 'Promise date' }, { key: 'quantityOnHandTotal', label: 'On hand' },
-    { key: 'availableToPromiseTotal', label: 'ATP' }, { key: 'reservedQuantity', label: 'Reserved' }, { key: 'status', label: 'Status' },
+    { key: 'futureInventoryItemId', label: translate('Batch') }, { key: 'productId', label: translate('Product ID') }, { key: 'productName', label: translate('Product') },
+    { key: 'type', label: translate('Type') }, { key: 'facilityName', label: translate('Facility') }, { key: 'poId', label: translate('PO') },
+    { key: 'promiseDate', label: translate('Promise date') }, { key: 'quantityOnHandTotal', label: translate('On hand') },
+    { key: 'availableToPromiseTotal', label: translate('ATP') }, { key: 'reservedQuantity', label: translate('Reserved') }, { key: 'status', label: translate('Status') },
   ]));
 }
 </script>

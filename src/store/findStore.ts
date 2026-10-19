@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { api, commonUtil, logger, translate } from '@common';
 import { useProductStore } from '@/store/productStore';
-import { showToast } from '@/utils';
 import { readList, toListParams, type FilterValue } from '@/utils/query';
 import { errorMessage } from '@/utils/response';
 
@@ -126,7 +125,7 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
         } catch (error: any) {
           if (requestId !== this.requestId) return;
           logger.error(`Failed to load more ${config.listName}`, error);
-          await showToast(errorMessage(error, translate('Could not load more rows. Scroll to try again.')));
+          await commonUtil.showToast(errorMessage(error, translate('Could not load more rows. Scroll to try again.')));
         } finally {
           this.loadingMore = false;
         }

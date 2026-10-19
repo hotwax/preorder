@@ -156,7 +156,7 @@ import {
 import { alertCircleOutline, checkmarkCircleOutline, createOutline, mailOutline } from 'ionicons/icons';
 import { DateTime } from 'luxon';
 import { computed, reactive, ref, watch } from 'vue';
-import { StatCard, translate } from '@common';
+import { commonUtil, StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { useCommunications, type CommunicationEventRow, type EmailGateway, type EmailSettingChanges, type PreorderEmailSetting } from '@/composables/useCommunications';
 import EmailSettingModal from '@/components/communications/EmailSettingModal.vue';
@@ -168,7 +168,6 @@ import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
-import { showToast } from '@/utils';
 import { countParams, dayBound, formatDateTime, formatNumber, formatRelative } from '@/utils/format';
 import { toListParams } from '@/utils/query';
 import { statusColor } from '@/utils/statusColors';
@@ -352,7 +351,7 @@ async function loadMoreEvents(event: CustomEvent) {
     eventsPage.value += 1;
   } catch (err) {
     if (request !== loadEventsRequest) return;
-    await showToast(errorMessage(err, translate('Could not load more emails. Scroll to try again.')));
+    await commonUtil.showToast(errorMessage(err, translate('Could not load more emails. Scroll to try again.')));
   } finally {
     eventsLoadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
@@ -388,7 +387,7 @@ function clearEventFilters() {
 /** Whether the store the settings were read for is still the current one; says so when it is not. */
 async function stillSameStore(storeId: string) {
   if (storeId === productStoreId.value) return true;
-  await showToast(translate('The product store changed, so the change was not saved.'));
+  await commonUtil.showToast(translate('The product store changed, so the change was not saved.'));
   return false;
 }
 
@@ -404,9 +403,9 @@ async function edit(setting: PreorderEmailSetting) {
   if (role !== 'confirm' || !data || !Object.keys(data).length || !await stillSameStore(storeId)) return;
   try {
     await updateEmailSetting(storeId, setting.emailType, data);
-    await showToast(translate('{email} settings saved.', { email: emailTypeLabel(setting.emailType) }));
+    await commonUtil.showToast(translate('{email} settings saved.', { email: emailTypeLabel(setting.emailType) }));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to update the email setting.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to update the email setting.')));
   } finally {
     await loadSettings();
     settingsRevision.value += 1;
@@ -419,9 +418,9 @@ async function toggle(setting: PreorderEmailSetting, enabled: boolean) {
   toggling.value = setting.emailType;
   try {
     await setEmailEnabled(storeId, setting.emailType, enabled);
-    await showToast(enabled ? translate('{email} turned on.', { email: emailTypeLabel(setting.emailType) }) : translate('{email} turned off.', { email: emailTypeLabel(setting.emailType) }));
+    await commonUtil.showToast(enabled ? translate('{email} turned on.', { email: emailTypeLabel(setting.emailType) }) : translate('{email} turned off.', { email: emailTypeLabel(setting.emailType) }));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to update the email setting.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to update the email setting.')));
   } finally {
     toggling.value = '';
     await loadSettings();
