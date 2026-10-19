@@ -40,7 +40,7 @@
             </ion-list>
           </ion-card>
           <div class="stats">
-            <StatCard :title="translate('Estimated arrival')" :stat="formatDate(shipment.estimatedArrivalDate) || '-'" :subtitle="arrivalOverdueDays ? overdueLabel(arrivalOverdueDays) : formatRelativeDay(shipment.estimatedArrivalDate)" />
+            <StatCard :title="translate('Estimated arrival')" :stat="formatDate(shipment.estimatedArrivalDate) || '-'" :subtitle="arrivalSubtitle" />
             <StatCard :title="translate('Shipped')" :stat="formatQuantity(shipment.quantityTotal)" :subtitle="translate('{count} items', { count: shipment.items.length })" />
             <StatCard :title="translate('Received')" :stat="formatQuantity(shipment.receivedQuantity)" :subtitle="Number(shipment.rejectedQuantity) > 0 ? translate('{count} rejected', countParams(shipment.rejectedQuantity)) : translate('{count} receipts', { count: shipment.receipts.length })" />
           </div>
@@ -114,8 +114,14 @@ const { fetchShipment } = useInboundShipments();
 const shipment = ref<InboundShipmentDetail>();
 const loading = ref(false);
 const error = ref('');
+/** A received or cancelled shipment is no longer on its way: it says nothing of days ahead or late. */
+const isClosed = computed(() => ['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(shipment.value?.statusId || ''));
 /** A shipment still on its way whose arrival date has passed. */
-const arrivalOverdueDays = computed(() => (['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(shipment.value?.statusId || '') ? 0 : daysOverdue(shipment.value?.estimatedArrivalDate)));
+const arrivalOverdueDays = computed(() => (isClosed.value ? 0 : daysOverdue(shipment.value?.estimatedArrivalDate)));
+const arrivalSubtitle = computed(() => {
+  if (isClosed.value) return '';
+  return arrivalOverdueDays.value ? overdueLabel(arrivalOverdueDays.value) : formatRelativeDay(shipment.value?.estimatedArrivalDate);
+});
 
 async function load() {
   loading.value = true;

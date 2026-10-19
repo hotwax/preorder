@@ -9,8 +9,11 @@
     </ion-item>
 
     <ion-label class="tablet">
-      {{ shipment.orderName || shipment.orderExternalId || shipment.primaryOrderId || translate('No purchase order') }}
-      <p>{{ translate('Purchase order') }}</p>
+      <template v-if="purchaseOrderLabel">
+        {{ purchaseOrderLabel }}
+        <p>{{ translate('Purchase order') }}</p>
+      </template>
+      <ion-note v-else>{{ translate('No purchase order') }}</ion-note>
     </ion-label>
 
     <ion-label>
@@ -30,7 +33,7 @@
     <ion-label class="shipment-row-end ion-text-end">
       <template v-if="shipment.estimatedArrivalDate">
         {{ formatDate(shipment.estimatedArrivalDate) }}
-        <p>
+        <p v-if="!isClosed">
           <ion-text v-if="overdueDays" color="danger">{{ overdueLabel(overdueDays) }}</ion-text>
           <template v-else-if="(daysFromToday(shipment.estimatedArrivalDate) ?? 0) < 0">{{ translate('Expected {age}', { age: formatRelativeDay(shipment.estimatedArrivalDate) }) }}</template>
           <template v-else>{{ translate('Arrives {age}', { age: formatRelativeDay(shipment.estimatedArrivalDate) }) }}</template>
@@ -55,8 +58,11 @@ import type { InboundShipmentSummary } from '@/types';
 const props = defineProps<{ shipment: InboundShipmentSummary }>();
 const emit = defineEmits<{ (event: 'activate'): void }>();
 const seed = useSeedData();
+const purchaseOrderLabel = computed(() => props.shipment.orderName || props.shipment.orderExternalId || props.shipment.primaryOrderId);
+/** A received or cancelled shipment is no longer on its way: it shows its arrival date and no days ahead or late. */
+const isClosed = computed(() => ['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(props.shipment.statusId || ''));
 /** A shipment still on its way whose arrival date has passed. */
-const overdueDays = computed(() => (['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(props.shipment.statusId || '') ? 0 : daysOverdue(props.shipment.estimatedArrivalDate)));
+const overdueDays = computed(() => (isClosed.value ? 0 : daysOverdue(props.shipment.estimatedArrivalDate)));
 </script>
 
 <style scoped>

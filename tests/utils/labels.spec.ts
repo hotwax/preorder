@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DateTime } from 'luxon';
 import { formatDate } from '@/utils/format';
 import {
-  daysOverdue, formatDateRange, futureInventoryTypeLabel, overdueLabel, productStoreLabels, readableNote, shortDescription, shownPartyId,
+  daysOverdue, facilityLabels, formatDateRange, futureInventoryTypeLabel, importProgressLabel, overdueLabel, productStoreLabels, readableNote, shortDescription, shownPartyId,
 } from '@/utils/labels';
 
 describe('labels', () => {
@@ -66,5 +66,29 @@ describe('product store labels', () => {
       { productStoreId: 'NONAME' },
     ]);
     expect([...labels.values()]).toEqual(['Demo (STORE)', 'Demo (STORE_2)', 'Outlet', 'NONAME']);
+  });
+});
+
+describe('facility labels', () => {
+  it('adds the id to a name two facilities share', () => {
+    const labels = facilityLabels([
+      { facilityId: 'WH_1', facilityName: 'Main' },
+      { facilityId: 'WH_2', facilityName: 'Main' },
+      { facilityId: 'STORE_1', facilityName: 'Outlet' },
+      { facilityId: 'NONAME' },
+    ]);
+    expect([...labels.values()]).toEqual(['Main (WH_1)', 'Main (WH_2)', 'Outlet', 'NONAME']);
+  });
+});
+
+describe('import progress label', () => {
+  it('says a waiting log has not started and a running one is running', () => {
+    expect(importProgressLabel('DmlsQueued', undefined, 'Queued')).toBe('Not started');
+    expect(importProgressLabel('DmlsRunning', 1, 'Running')).toBe('Running');
+  });
+
+  it('shows the status of a log that ended without a finish time', () => {
+    expect(importProgressLabel('DmlsFinished', undefined, 'Finished')).toBe('Finished');
+    expect(importProgressLabel('DmlsFailed', 1700000000000, 'Failed')).toBe('Failed');
   });
 });

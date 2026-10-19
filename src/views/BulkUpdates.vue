@@ -12,7 +12,7 @@
     <ion-content>
       <ion-card>
         <ion-card-content>
-          {{ translate('When a batch\'s promise date changes, the orders waiting on it are updated in bulk: the change is queued, then the Data Manager moves each waiting line to the new date and sends its delay email. Each row is one batch\'s date change; a line that could not be updated is in its error file.') }}
+          {{ translate('When a batch\'s promise date changes, the orders waiting on it are updated in bulk: the change is queued, then the Data Manager moves each waiting line to the new date and emails its customer where that email is on. Each row is one batch\'s date change; a line that could not be updated is in its error file.') }}
         </ion-card-content>
         <ion-item lines="none">
           <ion-label>{{ translate('Date changes waiting to be queued') }}</ion-label>
@@ -62,7 +62,7 @@
               {{ formatDateTime(log.finishDateTime) }}
               <p>{{ translate('Finished') }}</p>
             </template>
-            <template v-else>{{ log.startDateTime ? translate('Running') : translate('Not started') }}</template>
+            <template v-else>{{ importProgressLabel(log.statusId, log.startDateTime, seed.statusDescription(log.statusId)) }}</template>
           </ion-label>
           <div class="bulk-row-end">
             <ion-button fill="clear" size="small" :disabled="!log.logContentId" @click="downloadFile(log, false)">{{ translate('Lines') }}</ion-button>
@@ -102,6 +102,7 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { downloadText } from '@/utils/download';
 import { countParams, formatDateTime, formatNumber } from '@/utils/format';
+import { importProgressLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 

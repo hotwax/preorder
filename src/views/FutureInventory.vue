@@ -30,7 +30,7 @@
           <ion-select v-model="filters.facilityId" :label="translate('Facility')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All facilities') }}</ion-select-option>
             <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">
-              {{ facility.facilityName || facility.facilityId }}
+              {{ facility.label }}
             </ion-select-option>
           </ion-select>
 
@@ -112,7 +112,7 @@ import {
   IonButton, IonButtons, IonCard, IonCardContent, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
   IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
@@ -124,6 +124,7 @@ import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { useFindSearch } from '@/composables/useFindSearch';
 import { useBulkAction } from '@/composables/useBulkAction';
+import { useRowSelection } from '@/composables/useRowSelection';
 import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
@@ -173,33 +174,12 @@ const reservationFilter = computed({
   },
 });
 
-const selectMode = ref(false);
-const selectedIds = ref<string[]>([]);
-const selectedBatches = computed(() => results.value.filter((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
+const { selectMode, selectedIds, selectedRows: selectedBatches, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (batch) => batch.futureInventoryItemId);
 const selectedOpenIds = computed(() => selectedBatches.value.filter((batch) => !FINAL_STATUSES.includes(batch.statusId || '')).map((batch) => batch.futureInventoryItemId));
-const allSelected = computed(() => results.value.length > 0 && results.value.every((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
-const someSelected = computed(() => results.value.some((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
-
-watch(results, () => {
-  const ids = new Set(results.value.map((batch) => batch.futureInventoryItemId));
-  selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
-});
-
 
 function activate(id: string) {
-  if (selectMode.value) setSelected(id, !selectedIds.value.includes(id));
+  if (selectMode.value) toggleSelected(id);
   else router.push(`/future-inventory/${encodeURIComponent(id)}`);
-}
-
-function setSelected(id: string, checked: boolean) {
-  const next = new Set(selectedIds.value);
-  if (checked) next.add(id);
-  else next.delete(id);
-  selectedIds.value = [...next];
-}
-
-function toggleAll(checked: boolean) {
-  selectedIds.value = checked ? results.value.map((batch) => batch.futureInventoryItemId) : [];
 }
 
 /** Another store's batches leave with their selection, and a facility filter of the old store's facilities with them. */
@@ -208,19 +188,9 @@ function onStoreChange() {
   filters.value.facilityId = ALL;
 }
 
-function clearSelection() {
-  selectMode.value = false;
-  selectedIds.value = [];
-}
-
-function toggleSelectMode() {
-  selectMode.value = !selectMode.value;
-  if (!selectMode.value) selectedIds.value = [];
-}
-
 function clearFilters() {
   store.clearFilters();
-  selectedIds.value = [];
+  deselectAll();
 }
 
 async function loadMore(event: CustomEvent) {
@@ -231,8 +201,7 @@ async function loadMore(event: CustomEvent) {
 async function finish(message: string) {
   usePreorderSearchStore().markStale();
   await commonUtil.showToast(message);
-  selectMode.value = false;
-  selectedIds.value = [];
+  clearSelection();
   await refresh();
 }
 

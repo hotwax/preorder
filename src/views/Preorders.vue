@@ -105,7 +105,7 @@ import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
   IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
@@ -116,6 +116,7 @@ import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePreorderActions } from '@/composables/usePreorderActions';
 import { useFindSearch } from '@/composables/useFindSearch';
 import { useBulkAction } from '@/composables/useBulkAction';
+import { useRowSelection } from '@/composables/useRowSelection';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -137,7 +138,8 @@ const { confirmAction } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const store = usePreorderSearchStore();
-const { refresh } = useFindSearch(store, { onStoreChange });
+// Another store's orders leave with their selection, so a bulk action never runs on them under the new store
+const { refresh } = useFindSearch(store, { onStoreChange: () => clearSelection() });
 const userStore = useUserStore();
 const { releaseToBrokering, cancelPreorderItems, parkedLines } = usePreorderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -155,52 +157,17 @@ const salesChannels = computed(() => seed.enumsByType('ORDER_SALES_CHANNEL'));
 const shipmentMethodOptions = computed(() => seed.shipmentMethodOptions());
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
-const selectMode = ref(false);
-const selectedIds = ref<string[]>([]);
-const selectedOrders = computed(() => results.value.filter((order) => selectedIds.value.includes(order.orderId)));
+const { selectMode, selectedIds, selectedRows: selectedOrders, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (order) => order.orderId);
 const selectedParkedCount = computed(() => selectedOrders.value.reduce((count, order) => count + parkedLines(order).length, 0));
-const allSelected = computed(() => results.value.length > 0 && results.value.every((order) => selectedIds.value.includes(order.orderId)));
-const someSelected = computed(() => results.value.some((order) => selectedIds.value.includes(order.orderId)));
-
-watch(results, () => {
-  const ids = new Set(results.value.map((order) => order.orderId));
-  selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
-});
 
 function activate(order: PreorderOrder) {
-  if (selectMode.value) setSelected(order.orderId, !selectedIds.value.includes(order.orderId));
+  if (selectMode.value) toggleSelected(order.orderId);
   else router.push(`/preorders/${encodeURIComponent(order.orderId)}`);
-}
-
-function setSelected(orderId: string, checked: boolean) {
-  const next = new Set(selectedIds.value);
-  if (checked) next.add(orderId);
-  else next.delete(orderId);
-  selectedIds.value = [...next];
-}
-
-function toggleAll(checked: boolean) {
-  selectedIds.value = checked ? results.value.map((order) => order.orderId) : [];
-}
-
-/** Another store's orders leave with their selection, so a bulk action never runs on them under the new store. */
-function onStoreChange() {
-  clearSelection();
-}
-
-function clearSelection() {
-  selectMode.value = false;
-  selectedIds.value = [];
-}
-
-function toggleSelectMode() {
-  selectMode.value = !selectMode.value;
-  if (!selectMode.value) selectedIds.value = [];
 }
 
 function clearFilters() {
   store.clearFilters();
-  selectedIds.value = [];
+  deselectAll();
 }
 
 async function loadMore(event: CustomEvent) {
@@ -218,8 +185,7 @@ async function confirmRelease() {
   const { moved, failed } = await runBulk(() => releaseToBrokering(selectedOrders.value));
   await commonUtil.showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed, n: moved }) : translate('{moved} items released to brokering.', { moved, count: moved }));
   useFutureInventorySearchStore().markStale();
-  selectMode.value = false;
-  selectedIds.value = [];
+  clearSelection();
   await refresh();
 }
 
@@ -233,8 +199,7 @@ async function confirmCancel() {
   const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value));
   await commonUtil.showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed, n: cancelled }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
   useFutureInventorySearchStore().markStale();
-  selectMode.value = false;
-  selectedIds.value = [];
+  clearSelection();
   await refresh();
 }
 

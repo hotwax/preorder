@@ -229,8 +229,12 @@ export const useProductStore = defineStore('productStore', {
 
     async fetchProducts() {
       try {
+        // Sample products are the current store's: another store's products would preview identifiers it does not sell
+        const filters: Record<string, { value: string }> = {}
+        if (this.currentProductStoreId) filters.productStoreIds_s = { value: `"${this.currentProductStoreId.replace(/(["\\])/g, '\\$1')}"` }
         const resp = await useSolrSearch().searchProducts({
-          viewSize: 10
+          viewSize: 10,
+          filters
         })
 
         // searchProducts returns an array of docs on hits, and {} when the

@@ -83,7 +83,7 @@
               {{ formatDateTime(log.finishDateTime) }}
               <p>{{ translate('Finished') }}</p>
             </template>
-            <template v-else>{{ log.startDateTime ? translate('Running') : translate('Not started') }}</template>
+            <template v-else>{{ importProgressLabel(log.statusId, log.startDateTime, seed.statusDescription(log.statusId)) }}</template>
           </ion-label>
           <div class="import-row-end">
             <ion-button fill="clear" size="small" :disabled="!log.logContentId" @click="downloadFile(log, false)">{{ translate('File') }}</ion-button>
@@ -125,6 +125,7 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { downloadText } from '@/utils/download';
 import { countParams, formatDateTime, formatNumber } from '@/utils/format';
+import { importProgressLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';

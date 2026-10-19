@@ -86,7 +86,7 @@
             <ion-icon slot="icon-only" :icon="trashOutline" />
           </ion-button>
         </div>
-        <ion-item v-if="!form.items.length" lines="none">
+        <ion-item v-if="!form.items.length && !productQuery.trim() && !searchResults.length" lines="none">
           <ion-label>{{ translate('Search for products above to add lines.') }}</ion-label>
         </ion-item>
       </ion-list>

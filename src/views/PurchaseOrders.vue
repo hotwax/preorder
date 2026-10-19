@@ -30,7 +30,7 @@
           <ion-select v-model="filters.facilityId" :label="translate('Destination')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All facilities') }}</ion-select-option>
             <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">
-              {{ facility.facilityName || facility.facilityId }}
+              {{ facility.label }}
             </ion-select-option>
           </ion-select>
 
@@ -113,7 +113,7 @@ import {
   IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { commonUtil, logger, translate } from '@common';
 import { useSeedData } from '@common/db';
@@ -123,6 +123,8 @@ import { useUserStore } from '@/store/user';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useFindSearch } from '@/composables/useFindSearch';
+import { useRowSelection } from '@/composables/useRowSelection';
+import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import { useBulkAction } from '@/composables/useBulkAction';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
@@ -133,7 +135,7 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import PurchaseOrderRow from '@/components/purchaseOrders/PurchaseOrderRow.vue';
 import { usePrompts } from '@/composables/usePrompts';
-import { toCsv } from '@/utils/query';
+import { ALL, toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
 import { errorMessage } from '@/utils/response';
 import { countParams, formatDate, formatNumber, toMillis } from '@/utils/format';
@@ -144,7 +146,7 @@ const seed = useSeedData();
 const { confirmAction, promptForDate } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const store = usePurchaseOrderSearchStore();
-const { refresh, refreshLater } = useFindSearch(store, { onStoreChange: clearSelection });
+const { refresh, refreshLater } = useFindSearch(store, { onStoreChange });
 const userStore = useUserStore();
 const { fetchSuppliers, changeStatus, changeArrivalDate: changeOrderArrivalDate, sellAsPreorder, forEachOrder } = usePurchaseOrderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -155,24 +157,16 @@ const sortOptions = [
   { label: 'Oldest first', value: 'orderDate' },
 ];
 const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
-const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
+// Orders are bound for the store's receiving locations: warehouses and stores, never the virtual parking facilities.
+const { facilityOptions } = useStoreFacilities();
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 // Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 
-const selectMode = ref(false);
-const selectedIds = ref<string[]>([]);
-const selectedOrders = computed(() => results.value.filter((order) => selectedIds.value.includes(order.orderId)));
+const { selectMode, selectedIds, selectedRows: selectedOrders, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (order) => order.orderId);
 const selectedWithStatus = (statusIds: string[]) => selectedOrders.value.filter((order) => statusIds.includes(order.statusId || '')).map((order) => order.orderId);
 const selectedOpen = computed(() => selectedWithStatus(OPEN_STATUSES));
-const allSelected = computed(() => results.value.length > 0 && results.value.every((order) => selectedIds.value.includes(order.orderId)));
-const someSelected = computed(() => results.value.some((order) => selectedIds.value.includes(order.orderId)));
-
-watch(results, () => {
-  const ids = new Set(results.value.map((order) => order.orderId));
-  selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
-});
 
 onMounted(async () => {
   try {
@@ -184,34 +178,19 @@ onMounted(async () => {
 });
 
 function activate(orderId: string) {
-  if (selectMode.value) setSelected(orderId, !selectedIds.value.includes(orderId));
+  if (selectMode.value) toggleSelected(orderId);
   else router.push(`/purchase-orders/${encodeURIComponent(orderId)}`);
 }
 
-function setSelected(orderId: string, checked: boolean) {
-  const next = new Set(selectedIds.value);
-  if (checked) next.add(orderId);
-  else next.delete(orderId);
-  selectedIds.value = [...next];
-}
-
-function toggleAll(checked: boolean) {
-  selectedIds.value = checked ? results.value.map((order) => order.orderId) : [];
-}
-
-function clearSelection() {
-  selectMode.value = false;
-  selectedIds.value = [];
-}
-
-function toggleSelectMode() {
-  selectMode.value = !selectMode.value;
-  if (!selectMode.value) selectedIds.value = [];
+/** Another store's orders leave with their selection, and a destination filter of the old store's facilities with them. */
+function onStoreChange() {
+  clearSelection();
+  filters.value.facilityId = ALL;
 }
 
 function clearFilters() {
   store.clearFilters();
-  selectedIds.value = [];
+  deselectAll();
 }
 
 async function loadMore(event: CustomEvent) {
@@ -230,8 +209,7 @@ async function report(result: { done: number; failed: number; errors: string[]; 
     const changed = new Set(result.succeeded);
     store.updateRows((order) => (changed.has(order.orderId) ? patch(order) : order));
   }
-  selectMode.value = false;
-  selectedIds.value = [];
+  clearSelection();
   refreshLater(SOLR_SETTLE_MS);
 }
 

@@ -59,12 +59,19 @@
           </ion-card>
 
           <div class="stats">
-            <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="promiseOverdueDays ? overdueLabel(promiseOverdueDays) : formatRelativeDay(batch.promiseDate)" />
+            <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="promiseSubtitle" />
             <StatCard :title="translate('On order')" :stat="formatQuantity(batch.quantityOnOrderTotal)" :subtitle="onOrderCaption" />
             <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="availableCaption" />
             <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="reservedCaption" />
           </div>
         </section>
+
+        <ion-list v-if="batch.demandByFacility?.length">
+          <ion-list-header>
+            <ion-label>{{ translate('Demand by location') }}</ion-label>
+          </ion-list-header>
+          <DemandByFacilityItems :rows="batch.demandByFacility" />
+        </ion-list>
 
         <div class="ion-padding-horizontal">
           <ion-segment v-model="segment">
@@ -200,6 +207,7 @@ import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
+import DemandByFacilityItems from '@/components/preorders/DemandByFacilityItems.vue';
 import { usePrompts } from '@/composables/usePrompts';
 import { countParams, dayBound, formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
 import { daysOverdue, overdueLabel, readableNote, shortDescription } from '@/utils/labels';
@@ -232,6 +240,11 @@ const segment = ref('lines');
 
 /** An active batch whose promise date has passed: its supply is late. */
 const promiseOverdueDays = computed(() => (batch.value?.statusId === 'FUTURE_INV_ACTIVE' ? daysOverdue(batch.value.promiseDate) : 0));
+/** How far off the promise date is: only an active batch is still expected, so a received or cancelled one says nothing of days ahead. */
+const promiseSubtitle = computed(() => {
+  if (batch.value?.statusId !== 'FUTURE_INV_ACTIVE') return '';
+  return promiseOverdueDays.value ? overdueLabel(promiseOverdueDays.value) : formatRelativeDay(batch.value.promiseDate);
+});
 const isFinal = computed(() => ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'].includes(batch.value?.statusId || ''));
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 const isReceived = computed(() => batch.value?.statusId === 'FUTURE_INV_RECEIVED');

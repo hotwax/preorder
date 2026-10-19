@@ -1,5 +1,15 @@
 /** Shapes the pre-order resources of oms and poorti return (see docs/SPEC.md §4.2). */
 
+/** Where open pre-order reservations wait, by the reserving line's facility (oms/preorderDashboard, oms/futureInventoryItems/{id}). */
+export interface DemandByFacility {
+  facilityId: string;
+  facilityName?: string;
+  /** The facility is a pre-order or back-order parking facility. */
+  parking: boolean;
+  units: number;
+  lines: number;
+}
+
 export interface FutureInventoryBatch {
   futureInventoryItemId: string;
   productId: string;
@@ -26,6 +36,7 @@ export interface FutureInventoryBatch {
  * purchase order header and line ride along. The facility name comes from seed data.
  */
 export interface FutureInventoryBatchDetail extends Omit<FutureInventoryBatch, 'productName' | 'facilityName' | 'exceptionReason'> {
+  demandByFacility?: DemandByFacility[];
   product?: { productId: string; productName?: string; internalName?: string };
   purchaseOrderHeader?: { orderId: string; orderName?: string; externalId?: string; statusId?: string; orderDate?: number | string };
   purchaseOrderItem?: { orderItemSeqId: string; quantity?: number; estimatedDeliveryDate?: number | string; statusId?: string };
@@ -52,6 +63,8 @@ export interface PreorderLine {
   openQuantity?: number;
   /** The batch was received while the line still holds it: the stock has landed and the line waits to be released. */
   readyToRelease?: boolean;
+  /** A receipt or variance committed the line to physical stock: it no longer waits on future inventory. */
+  committed?: boolean;
   reservations?: { futureInventoryItemId: string; reasonEnumId: string; quantity: number; createdDate: number | string; open: boolean }[];
 }
 
@@ -67,7 +80,10 @@ export interface PreorderOrder {
   customerPartyId?: string;
   customerName?: string;
   email?: string;
+  /** Lines with a reservation history, open or not. */
   lineCount?: number;
+  /** Lines still holding an open reservation: the items still waiting. */
+  openLineCount?: number;
   parkedLineCount?: number;
   readyToReleaseLineCount?: number;
   openReservedQuantity?: number;

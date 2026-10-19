@@ -127,11 +127,13 @@
           </ion-list>
         </StatCard>
 
-        <StatCard :title="translate('Pre-order demand')" :stat="formatNumber(demandTotal)" :subtitle="translate('Units reserved in the last {days} days', { days: TREND_DAYS })">
-          <Sparkline v-if="demandPoints.length > 1" :points="demandPoints" :label="translate('Units reserved per day')" color="primary" />
+        <StatCard v-if="dashboard.demandByFacility?.length" :title="translate('Waiting by location')" :stat="formatNumber(dashboard.demandByFacility.length)" :subtitle="translate('Locations holding the most reserved units')">
+          <ion-list lines="none" class="drilldown-list">
+            <DemandByFacilityItems :rows="dashboard.demandByFacility" />
+          </ion-list>
         </StatCard>
 
-        <StatCard :title="translate('Delay emails')" :stat="formatNumber(dashboard.delayEmails.count)" :subtitle="translate('{changes} promise date changes in the last {days} days', { changes: formatNumber(dashboard.promiseDateChanges), days: TREND_DAYS })">
+        <StatCard :title="translate('Delay emails')" :stat="formatNumber(dashboard.delayEmails.count)" :subtitle="translate('Sent in the last {days} days', { days: TREND_DAYS })">
           <Sparkline v-if="emailPoints.length > 1" :points="emailPoints" :label="translate('Delay emails per day')" color="warning" />
           <ion-list lines="none" class="drilldown-list">
             <ion-item button :detail="true" router-link="/communications">
@@ -183,6 +185,7 @@ import { computed, ref, watch } from 'vue';
 import { logger, Sparkline, StatCard, translate } from '@common';
 import { useProductMaster, useSeedData } from '@common/db';
 import router from '@/router';
+import DemandByFacilityItems from '@/components/preorders/DemandByFacilityItems.vue';
 import { useDashboard, type PreorderDashboard } from '@/composables/useDashboard';
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import { useProductStore } from '@/store/productStore';
@@ -227,8 +230,6 @@ const metrics = computed(() => {
 });
 
 const attentionBatches = computed(() => [...(dashboard.value?.overcommitted.batches || []), ...(dashboard.value?.exceptions.batches || [])].slice(0, 5));
-const demandPoints = computed(() => (dashboard.value?.demandTrend || []).map((point) => Number(point.units || 0)));
-const demandTotal = computed(() => demandPoints.value.reduce((sum, units) => sum + units, 0));
 const emailPoints = computed(() => (dashboard.value?.delayEmails.trend || []).map((point) => Number(point.count || 0)));
 const topProductMax = computed(() => Math.max(0, ...(dashboard.value?.topProducts || []).map((product) => Number(product.openUnits || 0))));
 

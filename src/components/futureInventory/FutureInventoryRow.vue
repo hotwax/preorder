@@ -38,7 +38,7 @@
 
     <ion-label class="fi-row-end ion-text-end">
       {{ formatDate(batch.promiseDate) }}
-      <p>
+      <p v-if="isActive">
         <ion-text v-if="overdueDays" color="danger">{{ overdueLabel(overdueDays) }}</ion-text>
         <template v-else>{{ formatRelativeDay(batch.promiseDate) }}</template>
       </p>
@@ -62,8 +62,10 @@ const props = defineProps<{ batch: FutureInventoryBatch; selectMode?: boolean; s
 const emit = defineEmits<{ (event: 'activate'): void; (event: 'selectionChange', selected: boolean): void }>();
 const seed = useSeedData();
 const { typeLabel } = useFutureInventoryTypes();
+/** Only an active batch is still expected: a received or cancelled one shows no days ahead or late. */
+const isActive = computed(() => props.batch.statusId === 'FUTURE_INV_ACTIVE');
 /** An active batch's promise date that has passed: its supply is late. */
-const overdueDays = computed(() => (props.batch.statusId === 'FUTURE_INV_ACTIVE' ? daysOverdue(props.batch.promiseDate) : 0));
+const overdueDays = computed(() => (isActive.value ? daysOverdue(props.batch.promiseDate) : 0));
 </script>
 
 <style scoped>

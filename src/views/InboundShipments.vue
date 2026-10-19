@@ -25,7 +25,7 @@
           <ion-select v-model="filters.destinationFacilityId" :label="translate('Destination')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All facilities') }}</ion-select-option>
             <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">
-              {{ facility.facilityName || facility.facilityId }}
+              {{ facility.label }}
             </ion-select-option>
           </ion-select>
 
@@ -76,6 +76,7 @@ import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useInboundShipmentSearchStore } from '@/store/inboundShipmentSearch';
 import { useFindSearch } from '@/composables/useFindSearch';
+import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -85,10 +86,11 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import InboundShipmentRow from '@/components/shipments/InboundShipmentRow.vue';
 import { countParams, formatNumber } from '@/utils/format';
+import { ALL } from '@/utils/query';
 
 const seed = useSeedData();
 const store = useInboundShipmentSearchStore();
-const { refresh } = useFindSearch(store);
+const { refresh } = useFindSearch(store, { onStoreChange });
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
 const sortOptions = [
@@ -97,9 +99,13 @@ const sortOptions = [
   { label: 'Newest first', value: '-createdDate' },
 ];
 const statusOptions = computed(() => seed.statusItemsByType('PURCH_SHIP_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
-const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
+// Shipments are bound for the store's receiving locations: warehouses and stores, never the virtual parking facilities.
+const { facilityOptions } = useStoreFacilities();
 
-
+/** A destination filter of the old store's facilities leaves with it. */
+function onStoreChange() {
+  filters.value.destinationFacilityId = ALL;
+}
 
 async function loadMore(event: CustomEvent) {
   await store.appendNextPage();

@@ -33,7 +33,7 @@
                 <ion-label>{{ translate('Ordered') }}</ion-label>
                 <ion-note slot="end">{{ formatDate(order.orderDate) }}</ion-note>
               </ion-item>
-              <ion-item v-if="order.grandTotal !== undefined">
+              <ion-item v-if="Number(order.grandTotal) > 0">
                 <ion-label>{{ translate('Total') }}</ion-label>
                 <ion-note slot="end">{{ formatMoney(order.grandTotal, order.currencyUom) }}</ion-note>
               </ion-item>

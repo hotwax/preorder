@@ -50,8 +50,7 @@
 
         <ion-card>
           <ion-card-header>
-            <ion-card-subtitle>{{ translate("Product store") }}</ion-card-subtitle>
-            <ion-card-title>{{ translate("Store") }}</ion-card-title>
+            <ion-card-title>{{ translate("Product store") }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             {{ translate("A store represents a company or a unique catalog of products. If your OMS is connected to multiple eCommerce stores selling different collections of products, you may have multiple Product Stores set up in HotWax Commerce.") }}

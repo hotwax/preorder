@@ -10,13 +10,20 @@ const FUTURE_INVENTORY_TYPE_NAMES: Record<string, string> = {
   FIT_BACK_ORDER: 'Back-order',
 };
 
-/** Store pickers' names: each store's name, with its id after it where another store has the same name, by id. */
-export function productStoreLabels(rows: { productStoreId: string; storeName?: string }[]): Map<string, string> {
-  const name = (row: { productStoreId: string; storeName?: string }) => row.storeName || row.productStoreId;
+/** Each id's name, with the id after it where another id has the same name; an id with no name shows as itself. */
+function uniqueLabels(rows: { id: string; name?: string }[]): Map<string, string> {
   const uses = new Map<string, number>();
-  rows.forEach((row) => uses.set(name(row), (uses.get(name(row)) || 0) + 1));
-  return new Map(rows.map((row) => [row.productStoreId, (uses.get(name(row)) || 0) > 1 && row.storeName ? `${row.storeName} (${row.productStoreId})` : name(row)]));
+  rows.forEach((row) => uses.set(row.name || row.id, (uses.get(row.name || row.id) || 0) + 1));
+  return new Map(rows.map((row) => [row.id, (uses.get(row.name || row.id) || 0) > 1 && row.name ? `${row.name} (${row.id})` : row.name || row.id]));
 }
+
+/** Store pickers' names: each store's name, with its id after it where another store has the same name, by id. */
+export const productStoreLabels = (rows: { productStoreId: string; storeName?: string }[]): Map<string, string> =>
+  uniqueLabels(rows.map((row) => ({ id: row.productStoreId, name: row.storeName })));
+
+/** Facility pickers' names: each facility's name, with its id after it where another facility has the same name, by id. */
+export const facilityLabels = (rows: { facilityId: string; facilityName?: string }[]): Map<string, string> =>
+  uniqueLabels(rows.map((row) => ({ id: row.facilityId, name: row.facilityName })));
 
 /** A party id to show, or undefined for `_NA_`, the placeholder party of an order with no customer or supplier. */
 export const shownPartyId = (partyId?: string) => (partyId && partyId !== '_NA_' ? partyId : undefined);
@@ -68,3 +75,16 @@ export const daysOverdue = (value?: number | string) => {
 
 /** "Overdue by 3 days": a promise or arrival date that has passed while its stock is still awaited. */
 export const overdueLabel = (days: number) => translate('Overdue by {count} days', countParams(days));
+
+const IMPORT_NOT_STARTED = ['DmlsPending', 'DmlsQueued'];
+const IMPORT_RUNNING = ['DmlsRunning', 'DmlsCancelRequested'];
+
+/**
+ * Where a Data Manager log stands when it has no finish time: not started while it waits, running while it runs, and
+ * the status's own description for any other (a log that ended without a finish time is not "Not started").
+ */
+export function importProgressLabel(statusId: string, startDateTime: number | string | undefined, statusDescription: string) {
+  if (IMPORT_NOT_STARTED.includes(statusId)) return translate('Not started');
+  if (IMPORT_RUNNING.includes(statusId)) return translate('Running');
+  return statusDescription || (startDateTime ? translate('Running') : translate('Not started'));
+}

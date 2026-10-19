@@ -40,7 +40,7 @@
           </ion-card>
 
           <StatCard :title="translate('Current promise date')" :stat="promiseLabel" :subtitle="promiseSubtitle" />
-          <StatCard :title="translate('Waiting at parking')" :stat="parkedCount" :subtitle="translate('{count} pre-order items', { count: order.lines.length })" />
+          <StatCard :title="translate('Waiting at parking')" :stat="parkedCount" :subtitle="translate('{count} pre-order items', { count: waitingCount })" />
         </section>
 
         <ion-list>
@@ -69,7 +69,7 @@
             <ion-label class="tablet">
               {{ seed.facilityName(line.facilityId || '') }}
               <p v-if="line.readyToRelease"><ion-text color="warning">{{ translate('Batch received, ready to release') }}</ion-text></p>
-              <p v-else-if="isOpen(line)">{{ line.atParking ? translate('Waiting at parking') : translate('Released from parking') }}</p>
+              <p v-else-if="isOpen(line)">{{ lineWaitLabel(line) }}</p>
             </ion-label>
 
             <ion-label class="tablet">
@@ -145,8 +145,16 @@ const loading = ref(false);
 const error = ref('');
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
+/** The items still waiting: those holding an open reservation. The list below keeps every item the order reserved. */
+const waitingCount = computed(() => order.value?.openLineCount ?? order.value?.lineCount ?? order.value?.lines.length ?? 0);
 const parkedCount = computed(() => (order.value ? parkedLines(order.value).length : 0));
 const isOpen = (line: PreorderLine) => !['ITEM_CANCELLED', 'ITEM_COMPLETED', 'ITEM_REJECTED'].includes(line.itemStatusId || '');
+/** Where an open line stands: waiting on future inventory (at parking, or at the warehouse a rule routed it to), committed to stock, or released. */
+const lineWaitLabel = (line: PreorderLine) => {
+  if (line.reservationOpen) return line.atParking ? translate('Waiting at parking') : translate('Waiting on future inventory');
+  if (line.committed) return translate('Committed to stock');
+  return line.atParking ? translate('Waiting at parking') : translate('Released from parking');
+};
 /** An open line whose promise date has passed: the customer is waiting past it. */
 const lineOverdueDays = (line: PreorderLine) => (isOpen(line) ? daysOverdue(line.promisedDatetime) : 0);
 const promiseLabel = computed(() => formatDateRange(order.value?.earliestPromiseDate, order.value?.latestPromiseDate) || translate('None'));
