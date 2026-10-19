@@ -8,7 +8,7 @@ export interface PreorderDashboard {
   openOrders: number;
   openUnitsByType: Record<string, number>;
   parkedLines: number;
-  supply: { activeBatches: number; quantityOnHand: number; availableToPromise: number; reserved: number };
+  supply: { activeBatches: number; quantityOnOrder: number; availableToPromise: number; reserved: number };
   arrivingSoon: { count: number; quantity: number; reserved: number; batches: FutureInventoryBatch[] };
   pastDue: { count: number; batches: FutureInventoryBatch[] };
   exceptions: { count: number; batches: FutureInventoryBatch[] };

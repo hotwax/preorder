@@ -74,7 +74,7 @@
                 {{ productLabel(batch.productId, batch.productName) }}
                 <p>{{ formatDate(batch.promiseDate) }}</p>
               </ion-label>
-              <p slot="end">{{ formatQuantity(batch.quantityOnHandTotal) }}</p>
+              <p slot="end">{{ formatQuantity(batch.quantityOnOrderTotal) }}</p>
             </ion-item>
           </ion-list>
         </StatCard>
@@ -216,7 +216,7 @@ const metrics = computed(() => {
   if (!data) return [];
   const preorderUnits = Number(data.openUnitsByType?.FIT_PRE_ORDER || 0);
   const backorderUnits = Number(data.openUnitsByType?.FIT_BACK_ORDER || 0);
-  const supply = Number(data.supply?.quantityOnHand || 0);
+  const supply = Number(data.supply?.quantityOnOrder || 0);
   const reserved = Number(data.supply?.reserved || 0);
   return [
     { id: 'preorder', label: translate('On pre-order'), percent: percent(preorderUnits, data.openUnits), value: data.openUnits ? preorderUnits / data.openUnits : 0, note: translate('{count} units', countParams(preorderUnits)) },

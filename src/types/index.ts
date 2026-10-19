@@ -8,7 +8,7 @@ export interface FutureInventoryBatch {
   facilityName?: string;
   futureInventoryItemTypeId?: string;
   promiseDate?: number | string;
-  quantityOnHandTotal?: number;
+  quantityOnOrderTotal?: number;
   availableToPromiseTotal?: number;
   reservedQuantity?: number;
   statusId?: string;

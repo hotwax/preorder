@@ -275,7 +275,7 @@ function exportSelected() {
   downloadText('future-inventory.csv', toCsv(rows, [
     { key: 'futureInventoryItemId', label: translate('Batch') }, { key: 'productId', label: translate('Product ID') }, { key: 'productName', label: translate('Product') },
     { key: 'type', label: translate('Type') }, { key: 'facilityName', label: translate('Facility') }, { key: 'poId', label: translate('PO') },
-    { key: 'promiseDate', label: translate('Promise date') }, { key: 'quantityOnHandTotal', label: translate('On hand') },
+    { key: 'promiseDate', label: translate('Promise date') }, { key: 'quantityOnOrderTotal', label: translate('On order') },
     { key: 'availableToPromiseTotal', label: translate('ATP') }, { key: 'reservedQuantity', label: translate('Reserved') }, { key: 'status', label: translate('Status') },
   ]));
 }

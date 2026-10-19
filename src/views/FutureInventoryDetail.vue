@@ -60,7 +60,7 @@
 
           <div class="stats">
             <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="promiseOverdueDays ? overdueLabel(promiseOverdueDays) : formatRelativeDay(batch.promiseDate)" />
-            <StatCard :title="translate('On hand')" :stat="formatQuantity(batch.quantityOnHandTotal)" :subtitle="onHandCaption" />
+            <StatCard :title="translate('On order')" :stat="formatQuantity(batch.quantityOnOrderTotal)" :subtitle="onOrderCaption" />
             <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="availableCaption" />
             <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="reservedCaption" />
           </div>
@@ -146,8 +146,8 @@
                 </ion-label>
               </ion-item>
               <ion-label class="tablet">
-                {{ signed(row.quantityOnHandDiff) }}
-                <p>{{ translate('On hand') }}</p>
+                {{ signed(row.quantityOnOrderDiff) }}
+                <p>{{ translate('On order') }}</p>
               </ion-label>
               <ion-label class="tablet">
                 {{ signed(row.availableToPromiseDiff) }}
@@ -247,7 +247,7 @@ const actionsDisabledReason = computed(() => {
 const reservedCaption = computed(() => (isReceived.value && Number(batch.value?.reservedQuantity || 0) > 0
   ? translate('Batch received, ready to release')
   : translate('Sold before it arrives')));
-const onHandCaption = computed(() => (isReceived.value ? translate('Received into the facility') : translate('Supply still to arrive')));
+const onOrderCaption = computed(() => (isReceived.value ? translate('Received into the facility') : translate('Supply still to arrive')));
 const availableCaption = computed(() => {
   if (isFinal.value) return translate('No longer sold as pre-order');
   return Number(batch.value?.availableToPromiseTotal) < 0 ? translate('Overcommitted') : translate('Can still be sold');
@@ -325,7 +325,7 @@ async function changeDate() {
 async function adjustQuantity() {
   const quantityDiff = await promptForNumber(
     translate('Adjust quantity'),
-    translate('Add or remove units from this batch: a negative number removes them. On hand and available to promise change together.'),
+    translate('Add or remove units from this batch: a negative number removes them. On order and available to promise change together.'),
     translate('Adjust'),
     '-5',
   );
