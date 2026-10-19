@@ -73,7 +73,7 @@ import {
 import { closeOutline } from 'ionicons/icons';
 import { computed, reactive } from 'vue';
 import { translate } from '@common';
-import type { EmailGateway, EmailSettingChanges, PreorderEmailSetting } from '@/composables/useCommunications';
+import type { EmailGateway, EmailSettingChanges, PreorderEmailSetting } from '@/types';
 
 /** Edits one email type's setting for the store; dismisses with only the fields that changed. */
 const props = defineProps<{ header: string; setting: PreorderEmailSetting; gateways: EmailGateway[] }>();

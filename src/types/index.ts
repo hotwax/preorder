@@ -184,3 +184,52 @@ export interface InboundShipmentDetail extends InboundShipmentSummary {
     receivedByUserLoginId?: string;
   }[];
 }
+
+/**
+ * A store's setting for one pre-order email type, one per entry of the PreorderAppEmail catalog (admin/enums), joined
+ * with the store's ProductStoreEmailSetting for that type (oms/productStoreEmailSettings).
+ */
+export interface PreorderEmailSetting {
+  /** The catalog entry's relatedEnumId: a PRDS_EMAIL enumeration, the ProductStoreEmailSetting.emailType. */
+  emailType: string;
+  /** The email type's own description. */
+  description?: string;
+  /** Something sends this type (the catalog entry's optionIndicator Y). */
+  wired: boolean;
+  /** When it is sent: the catalog entry's description. */
+  triggerDescription?: string;
+  /** The store has a setting for this type. */
+  exists: boolean;
+  enabled: boolean;
+  subject?: string;
+  fromAddress?: string;
+  ccAddress?: string;
+  bccAddress?: string;
+  systemMessageRemoteId?: string;
+  gatewayAuthId?: string;
+  /** Both the gateway remote and its auth ID are set. */
+  gatewayConfigured: boolean;
+}
+
+/** The fields of a setting a save changes; an empty string clears one. */
+export type EmailSettingChanges = Partial<Record<'subject' | 'fromAddress' | 'ccAddress' | 'bccAddress' | 'systemMessageRemoteId' | 'gatewayAuthId', string>>
+  & { enabled?: boolean };
+
+/** A Unigate remote (SystemMessageRemote) a store's email setting can be sent through. */
+export interface EmailGateway {
+  systemMessageRemoteId: string;
+  description: string;
+  sendUrl?: string;
+}
+
+/** A row of a store's email log (GET oms/communicationEvents with productStoreId). */
+export interface CommunicationEventRow {
+  communicationEventId: string;
+  emailType?: string;
+  statusId?: string;
+  datetimeStarted?: number | string;
+  subject?: string;
+  toString?: string;
+  partyIdTo?: string;
+  orderId?: string;
+}
