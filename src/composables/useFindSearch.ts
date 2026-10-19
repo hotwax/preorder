@@ -33,7 +33,7 @@ export function useFindSearch(store: FindSearchStore, { scopeByStore = true } = 
   });
   watch(() => store.filters, searchNow, { deep: true });
   watch(() => store.sort, searchNow);
-  if (scopeByStore) watch(() => productStore.getCurrentProductStore?.productStoreId, searchNow);
+  if (scopeByStore) watch(() => productStore.getCurrentProductStoreId, searchNow);
 
   onIonViewWillEnter(() => {
     if (!store.loaded || store.stale) searchNow();

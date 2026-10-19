@@ -25,7 +25,7 @@
 
           <ion-select v-model="filters.futureInventoryItemTypeId" :label="translate('Type')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All types') }}</ion-select-option>
-            <ion-select-option v-for="type in FUTURE_INVENTORY_TYPES" :key="type.value" :value="type.value">{{ translate(type.label) }}</ion-select-option>
+            <ion-select-option v-for="type in typeOptions" :key="type.value" :value="type.value">{{ type.label }}</ion-select-option>
           </ion-select>
 
           <ion-select v-model="filters.facilityId" :label="translate('Facility')" label-placement="stacked" fill="outline" interface="popover">
@@ -133,7 +133,8 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import FutureInventoryRow from '@/components/futureInventory/FutureInventoryRow.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
-import { FUTURE_INVENTORY_TYPES, formatQuantity, futureInventoryTypeLabel } from '@/utils/labels';
+import { formatQuantity } from '@/utils/labels';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
 import { formatDate } from '@/utils/format';
@@ -142,12 +143,14 @@ import Actions from '@/authorization/actions';
 const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];
 
 const seed = useSeedData();
+const { typeLabel, typeOptions } = useFutureInventoryTypes();
+const productStore = useProductStore();
 const store = useFutureInventorySearchStore();
 const { refresh } = useFindSearch(store);
 const userStore = useUserStore();
 const { updateBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore, extras } = storeToRefs(store);
-const storeName = computed(() => useProductStore().getCurrentProductStore?.storeName || useProductStore().getCurrentProductStore?.productStoreId || translate('This store'));
+const storeName = computed(() => (productStore.getCurrentProductStoreId ? seed.productStoreName(productStore.getCurrentProductStoreId) : translate('This store')));
 
 const sortOptions = [
   { label: 'Soonest promise date', value: 'promiseDate' },
@@ -253,7 +256,8 @@ async function cancelBatches() {
 function exportSelected() {
   const rows = selectedBatches.value.map((batch) => ({
     ...batch,
-    type: futureInventoryTypeLabel(batch.futureInventoryItemTypeId),
+    facilityName: seed.facilityName(batch.facilityId || ''),
+    type: typeLabel(batch.futureInventoryItemTypeId),
     status: seed.statusDescription(batch.statusId || ''),
     promiseDate: formatDate(batch.promiseDate),
   }));

@@ -19,14 +19,14 @@
             <ion-select v-model="form.supplierPartyId" :label="requiredLabel('Supplier')" label-placement="stacked" fill="outline" interface="popover" :placeholder="suppliersError || translate('Select supplier')" :helper-text="suppliersError ? translate('Suppliers could not be loaded.') : undefined">
               <ion-select-option v-for="supplier in suppliers" :key="supplier.partyId" :value="supplier.partyId">{{ supplier.name || supplier.partyId }}</ion-select-option>
             </ion-select>
-            <ion-select v-model="form.facilityId" :label="requiredLabel('Destination')" label-placement="stacked" fill="outline" interface="popover" :placeholder="translate('Select facility')">
+            <ion-select v-model="form.facilityId" :label="requiredLabel('Destination')" label-placement="stacked" fill="outline" interface="popover" :disabled="!facilitiesSynced" :placeholder="facilityPlaceholder">
               <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">{{ facility.facilityName || facility.facilityId }}</ion-select-option>
             </ion-select>
             <ion-input v-model="form.externalId" :label="translate('External ID')" label-placement="stacked" fill="outline" :helper-text="translate('Generated when empty')" />
             <ion-input v-model="form.orderName" :label="translate('Name')" label-placement="stacked" fill="outline" />
-            <ion-select v-model="form.statusId" :label="translate('Status')" label-placement="stacked" fill="outline" interface="popover">
-              <ion-select-option value="ORDER_CREATED">{{ translate('Created') }}</ion-select-option>
-              <ion-select-option value="ORDER_APPROVED">{{ translate('Approved') }}</ion-select-option>
+            <ion-select v-model="form.statusId" :label="translate('Status')" label-placement="stacked" fill="outline" interface="popover" :selected-text="seed.statusDescription(form.statusId)">
+              <ion-select-option value="ORDER_CREATED">{{ seed.statusDescription('ORDER_CREATED') }}</ion-select-option>
+              <ion-select-option value="ORDER_APPROVED">{{ seed.statusDescription('ORDER_APPROVED') }}</ion-select-option>
             </ion-select>
             <ion-input v-model="form.currencyUomId" :label="translate('Currency')" label-placement="stacked" fill="outline" />
           </ion-card-content>
@@ -47,7 +47,7 @@
             </ion-item>
             <ion-item :disabled="!form.createFutureInventory">
               <ion-select v-model="form.futureInventoryItemTypeId" :label="translate('Sell as')" interface="popover">
-                <ion-select-option v-for="type in FUTURE_INVENTORY_TYPES" :key="type.value" :value="type.value">{{ translate(type.label) }}</ion-select-option>
+                <ion-select-option v-for="type in typeOptions" :key="type.value" :value="type.value">{{ type.label }}</ion-select-option>
               </ion-select>
             </ion-item>
           </ion-list>
@@ -121,16 +121,24 @@ import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ProductItem from '@/components/common/ProductItem.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import { requiredLabel, showToast } from '@/utils';
-import { FUTURE_INVENTORY_TYPES } from '@/utils/labels';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { errorMessage } from '@/utils/response';
 
 const seed = useSeedData();
+const { typeOptions } = useFutureInventoryTypes();
 const productStore = useProductStore();
 const { primaryId, secondaryId } = useProductIdentity();
 const { fetchSuppliers, createPurchaseOrder, searchOrderableProducts } = usePurchaseOrderActions();
 
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
-const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
+// withSync: right after login the facilities table is still filling, which is not "no facilities"
+const facilitySync = computed(() => seed.facilities.withSync());
+const facilitiesSynced = computed(() => facilitySync.value.synced);
+const facilityOptions = computed(() => facilitySync.value.data.filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
+const facilityPlaceholder = computed(() => {
+  if (!facilitiesSynced.value) return translate('Loading facilities');
+  return facilityOptions.value.length ? translate('Select facility') : translate('No facilities');
+});
 const productQuery = ref('');
 const searchResults = ref<any[]>([]);
 const saving = ref(false);
@@ -201,7 +209,7 @@ async function save() {
     const result = await createPurchaseOrder({
       supplierPartyId: form.supplierPartyId,
       facilityId: form.facilityId,
-      productStoreId: productStore.getCurrentProductStore?.productStoreId,
+      productStoreId: productStore.getCurrentProductStoreId || undefined,
       externalId: form.externalId.trim() || undefined,
       orderName: form.orderName.trim() || undefined,
       statusId: form.statusId,

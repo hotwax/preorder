@@ -61,7 +61,7 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
     },
     actions: {
       params(pageIndex: number) {
-        const productStoreId = config.scopeByStore === false ? undefined : useProductStore().getCurrentProductStore?.productStoreId;
+        const productStoreId = config.scopeByStore === false ? undefined : useProductStore().getCurrentProductStoreId || undefined;
         return {
           ...toListParams({ ...(this.filters as Record<string, FilterValue>), productStoreId, [config.queryParam || 'keyword']: this.query.trim() }),
           orderBy: this.sort,

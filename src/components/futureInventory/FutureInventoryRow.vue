@@ -23,11 +23,11 @@
 
     <ion-label class="tablet">
       {{ batch.futureInventoryItemId }}
-      <p>{{ [futureInventoryTypeLabel(batch.futureInventoryItemTypeId), batch.poId].filter(Boolean).join(' - ') }}</p>
+      <p>{{ [typeLabel(batch.futureInventoryItemTypeId), batch.poId].filter(Boolean).join(' - ') }}</p>
     </ion-label>
 
     <ion-label class="tablet">
-      {{ batch.facilityName || seed.facilityName(batch.facilityId || '') }}
+      {{ seed.facilityName(batch.facilityId || '') }}
       <p><ion-badge :color="statusColor(batch.statusId)">{{ seed.statusDescription(batch.statusId || '') }}</ion-badge></p>
     </ion-label>
 
@@ -51,13 +51,15 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { formatDate, formatRelative } from '@/utils/format';
-import { formatQuantity, futureInventoryTypeLabel, isPast } from '@/utils/labels';
+import { formatQuantity, isPast } from '@/utils/labels';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import type { FutureInventoryBatch } from '@/types';
 
 defineProps<{ batch: FutureInventoryBatch; selectMode?: boolean; selected?: boolean }>();
 const emit = defineEmits<{ (event: 'activate'): void; (event: 'selectionChange', selected: boolean): void }>();
 const seed = useSeedData();
+const { typeLabel } = useFutureInventoryTypes();
 </script>
 
 <style scoped>

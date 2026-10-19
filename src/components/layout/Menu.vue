@@ -24,7 +24,7 @@
       v-if="isAuthenticated"
       :instance-label="omsInstanceLabel()"
       :product-stores="productStores"
-      :current-product-store-id="currentProductStore?.productStoreId"
+      :current-product-store-id="currentProductStoreId"
       @update:product-store="setCurrentProductStore"
     />
   </ion-menu>
@@ -48,7 +48,8 @@ import { useAuth } from '@common/composables/useAuth';
 import router from '@/router';
 import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user';
-import { computed, onMounted } from 'vue';
+import { computed } from 'vue';
+import { useProductStoreSelection } from '@/composables/useProductStores';
 import Actions from '@/authorization/actions';
 
 const HOTWAX_HOST_SUFFIX = ".hotwax.io";
@@ -57,8 +58,7 @@ const { isAuthenticated } = useAuth();
 const userStore = useUserStore();
 const productStore = useProductStore();
 
-const currentProductStore = computed(() => productStore.getCurrentProductStore);
-const productStores = computed(() => productStore.getProductStores || []);
+const { productStores, currentProductStoreId } = useProductStoreSelection();
 
 interface MenuPage {
   title: string;
@@ -99,13 +99,8 @@ function omsInstanceLabel() {
   return host.endsWith(HOTWAX_HOST_SUFFIX) ? host.slice(0, -HOTWAX_HOST_SUFFIX.length) : host;
 }
 
-onMounted(async () => {
-  if (isAuthenticated.value) await productStore.initializeProductStore();
-});
-
 function setCurrentProductStore(productStoreId: string) {
-  if (currentProductStore.value.productStoreId === productStoreId) return;
-  const selectedProductStore = productStores.value.find((store: any) => store.productStoreId == productStoreId);
-  if (selectedProductStore) productStore.setProductStorePreference(selectedProductStore);
+  if (!productStoreId || currentProductStoreId.value === productStoreId) return;
+  productStore.setProductStorePreference(productStoreId);
 }
 </script>

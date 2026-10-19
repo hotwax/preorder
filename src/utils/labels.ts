@@ -1,14 +1,18 @@
 import { translate } from '@common';
 import { formatDate, formatRelative, toMillis } from '@/utils/format';
 
-/** Future inventory batch types, as the app names them. */
-export const FUTURE_INVENTORY_TYPES = [
-  { value: 'FIT_PRE_ORDER', label: 'Pre-order' },
-  { value: 'FIT_BACK_ORDER', label: 'Back-order' },
-];
+/**
+ * The app's short names for the future inventory types (FUTURE_INV_ITEM_TYPE enums), whose seed
+ * descriptions are long ("Pre-Order Supply (New Style)"). A type without one shows its description.
+ */
+const FUTURE_INVENTORY_TYPE_NAMES: Record<string, string> = {
+  FIT_PRE_ORDER: 'Pre-order',
+  FIT_BACK_ORDER: 'Back-order',
+};
 
-export const futureInventoryTypeLabel = (typeId?: string) =>
-  translate(FUTURE_INVENTORY_TYPES.find((type) => type.value === typeId)?.label || typeId || 'Unknown');
+/** A future inventory type's name: the app's short name, else the enum's description, else its id. */
+export const futureInventoryTypeLabel = (typeId?: string, description?: string) =>
+  translate((typeId && FUTURE_INVENTORY_TYPE_NAMES[typeId]) || description || typeId || 'Unknown');
 
 /** A date range as one value: "Nov 2, 2026", or "Nov 2, 2026 - Dec 1, 2026" when the ends differ. */
 export function formatDateRange(start?: number | string, end?: number | string): string {

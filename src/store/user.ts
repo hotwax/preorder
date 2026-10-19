@@ -172,7 +172,6 @@ export const useUserStore = defineStore("user", {
         await this.fetchUserProfile();
         this.oms = cookieHelper().get("oms") || "";
         await this.fetchPermissions();
-        await useProductStore().fetchProductStores();
         await useProductStore().fetchProductStorePreference();
 
         // Start non-blocking Web Worker sync to hydrate and update the local IndexedDB
@@ -198,7 +197,8 @@ export const useUserStore = defineStore("user", {
     },
 
     async postLogout() {
-      await stopAppDbSync();
+      await stopAppDbSync().catch(() => { /* never block logout on cleanup */ });
+      useProductStore().$reset();
       this.$reset();
     }
   },

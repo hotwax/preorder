@@ -268,6 +268,7 @@ async function sellAsPreorderBulk() {
 function exportSelected() {
   const rows = selectedOrders.value.map((order) => ({
     ...order,
+    facilityName: seed.facilityName(order.facilityId || ''),
     status: seed.statusDescription(order.statusId || ''),
     orderDate: formatDate(order.orderDate),
     earliestArrivalDate: formatDate(order.earliestArrivalDate),

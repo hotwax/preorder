@@ -21,7 +21,7 @@
           <ion-radio :value="batch.futureInventoryItemId">
             <ion-label>
               {{ formatDate(batch.promiseDate) }}
-              <p>{{ [batch.futureInventoryItemId, batch.facilityName || batch.facilityId, batch.poId].filter(Boolean).join(' - ') }}</p>
+              <p>{{ [batch.futureInventoryItemId, seed.facilityName(batch.facilityId || ''), batch.poId].filter(Boolean).join(' - ') }}</p>
               <p>{{ translate('{atp} available to promise, {reserved} reserved', { atp: formatQuantity(batch.availableToPromiseTotal), reserved: formatQuantity(batch.reservedQuantity) }) }}</p>
             </ion-label>
           </ion-radio>
@@ -54,6 +54,7 @@ import {
 import { closeOutline } from 'ionicons/icons';
 import { computed, onMounted, ref } from 'vue';
 import { translate } from '@common';
+import { useSeedData } from '@common/db';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { usePreorderActions } from '@/composables/usePreorderActions';
 import { formatDate } from '@/utils/format';
@@ -63,6 +64,8 @@ import { errorMessage } from '@/utils/response';
 import type { FutureInventoryBatch, PreorderLine } from '@/types';
 
 const props = defineProps<{ orderId: string; line: PreorderLine }>();
+// The modal mounts outside the page's tree, so it opens its own seed reads
+const seed = useSeedData();
 const { fetchActiveBatches } = useFutureInventoryActions();
 const { reallocateLine } = usePreorderActions();
 

@@ -55,20 +55,19 @@ const productStore = useProductStore();
 const userStore = useUserStore()
 
 const getProductIdentificationValue = commonUtil.getProductIdentificationValue;
-const currentProductStore = computed(() =>  productStore.getCurrentProductStore)
 const productIdentificationPref = computed(() => productStore.getProductIdentificationPref);
 const productIdentificationOptions = computed(() => productStore.getProductIdentificationOptions);
 const currentSampleProduct = computed(() => productStore.getCurrentSampleProduct) as any
 onMounted(() => {
   productStore.prepareProductIdentifierOptions();
-  productStore.fetchProductStoreSettings(currentProductStore.value.productStoreId);
+  productStore.fetchProductStoreSettings(productStore.getCurrentProductStoreId);
   productStore.fetchProducts(); 
 })
 
 function setProductIdentificationPref(value: string | any, id: string) {
   const updatedPreference = JSON.parse(JSON.stringify(productIdentificationPref.value)) as any
   updatedPreference[id] = value
-  productStore.setProductStoreSetting(currentProductStore.value.productStoreId, "PRDT_IDEN_PREF", updatedPreference)
+  productStore.setProductStoreSetting(productStore.getCurrentProductStoreId, "PRDT_IDEN_PREF", updatedPreference)
 }
 
 function shuffle() {

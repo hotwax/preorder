@@ -8,7 +8,7 @@ export interface NewPurchaseOrder {
   orderName?: string;
   supplierPartyId: string;
   facilityId: string;
-  productStoreId: string;
+  productStoreId?: string;
   currencyUomId?: string;
   statusId?: string;
   items: { productId: string; quantity: number; unitPrice?: number; arrivalDate: string }[];

@@ -24,7 +24,7 @@
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Type') }}</ion-label>
-                <ion-note slot="end">{{ futureInventoryTypeLabel(batch.futureInventoryItemTypeId) }}</ion-note>
+                <ion-note slot="end">{{ typeLabel(batch.futureInventoryItemTypeId) }}</ion-note>
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Facility') }}</ion-label>
@@ -191,7 +191,8 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, promptForNumber, showToast } from '@/utils';
 import { formatDate, formatDateTime, formatRelative, toDateInputValue } from '@/utils/format';
-import { formatQuantity, futureInventoryTypeLabel } from '@/utils/labels';
+import { formatQuantity } from '@/utils/labels';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
@@ -199,6 +200,7 @@ import type { FutureInventoryBatchDetail } from '@/types';
 
 const props = defineProps<{ futureInventoryItemId: string }>();
 const seed = useSeedData();
+const { typeLabel } = useFutureInventoryTypes();
 const userStore = useUserStore();
 const { fetchBatch, fetchLedger, fetchWaitingLines, updateBatch, cancelBatch } = useFutureInventoryActions();
 

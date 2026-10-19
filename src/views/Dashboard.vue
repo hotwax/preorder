@@ -168,7 +168,7 @@ import {
 import { globeOutline, pricetagsOutline, refreshOutline } from 'ionicons/icons';
 import { computed, ref, watch } from 'vue';
 import { Sparkline, StatCard, translate } from '@common';
-import { useProductMaster } from '@common/db';
+import { useProductMaster, useSeedData } from '@common/db';
 import router from '@/router';
 import { useDashboard, type PreorderDashboard } from '@/composables/useDashboard';
 import { useProductIdentity } from '@/composables/useProductIdentity';
@@ -180,6 +180,7 @@ import { formatQuantity } from '@/utils/labels';
 const ARRIVAL_DAYS = 7;
 const TREND_DAYS = 30;
 
+const seed = useSeedData();
 const productStore = useProductStore();
 const futureInventorySearch = useFutureInventorySearchStore();
 const { prefetch } = useProductMaster();
@@ -190,8 +191,8 @@ const dashboard = ref<PreorderDashboard>();
 const loading = ref(false);
 const error = ref(false);
 
-const productStoreId = computed(() => productStore.getCurrentProductStore?.productStoreId || '');
-const storeName = computed(() => productStore.getCurrentProductStore?.storeName || productStoreId.value || translate('All stores'));
+const productStoreId = computed(() => productStore.getCurrentProductStoreId);
+const storeName = computed(() => (productStoreId.value ? seed.productStoreName(productStoreId.value) : translate('All stores')));
 
 const percent = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 

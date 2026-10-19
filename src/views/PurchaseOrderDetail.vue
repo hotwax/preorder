@@ -27,7 +27,7 @@
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Destination') }}</ion-label>
-                <ion-note slot="end">{{ order.facilityName || seed.facilityName(order.facilityId || '') }}</ion-note>
+                <ion-note slot="end">{{ seed.facilityName(order.facilityId || '') }}</ion-note>
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Ordered') }}</ion-label>

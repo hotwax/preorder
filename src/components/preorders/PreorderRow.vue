@@ -54,17 +54,19 @@ import { computed } from 'vue';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import { formatDate, formatRelative } from '@/utils/format';
-import { formatDateRange, futureInventoryTypeLabel } from '@/utils/labels';
+import { formatDateRange } from '@/utils/labels';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import type { PreorderOrder } from '@/types';
 
 const props = defineProps<{ order: PreorderOrder; selectMode?: boolean; selected?: boolean }>();
 const emit = defineEmits<{ (event: 'activate'): void; (event: 'selectionChange', selected: boolean): void }>();
 const seed = useSeedData();
+const { typeLabel: futureInventoryTypeName } = useFutureInventoryTypes();
 
 const identityLabel = computed(() => [...new Set([props.order.orderName, props.order.orderId, seed.statusDescription(props.order.statusId || '')].filter(Boolean))].join(' - '));
 const typeLabel = computed(() => {
   const types = props.order.futureInventoryItemTypeIds || [];
-  return types.length ? types.map(futureInventoryTypeLabel).join(', ') : translate('Pre-order');
+  return types.length ? types.map((type) => futureInventoryTypeName(type)).join(', ') : translate('Pre-order');
 });
 </script>
 

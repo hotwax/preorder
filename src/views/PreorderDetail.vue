@@ -63,7 +63,7 @@
                 <ion-icon :icon="layersOutline" />
                 <ion-label>{{ line.futureInventoryItemId || translate('No batch') }}</ion-label>
               </ion-chip>
-              <p>{{ futureInventoryTypeLabel(line.futureInventoryItemTypeId) }}<template v-if="line.poId">{{ ' - ' + line.poId }}</template></p>
+              <p>{{ typeLabel(line.futureInventoryItemTypeId) }}<template v-if="line.poId">{{ ' - ' + line.poId }}</template></p>
             </ion-label>
 
             <ion-label class="tablet">
@@ -124,7 +124,8 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import MoveReservationModal from '@/components/preorders/MoveReservationModal.vue';
 import { formatDate, formatDateTime, formatRelative } from '@/utils/format';
-import { formatDateRange, formatQuantity, futureInventoryTypeLabel } from '@/utils/labels';
+import { formatDateRange, formatQuantity } from '@/utils/labels';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
@@ -132,6 +133,7 @@ import type { PreorderLine, PreorderOrder } from '@/types';
 
 const props = defineProps<{ orderId: string }>();
 const seed = useSeedData();
+const { typeLabel } = useFutureInventoryTypes();
 const { prefetch } = useProductMaster();
 const { fetchPreorder, parkedLines } = usePreorderActions();
 const userStore = useUserStore();

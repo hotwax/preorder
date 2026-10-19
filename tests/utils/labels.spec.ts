@@ -6,6 +6,8 @@ describe('labels', () => {
     expect(futureInventoryTypeLabel('FIT_PRE_ORDER')).toBe('Pre-order');
     expect(futureInventoryTypeLabel('FIT_BACK_ORDER')).toBe('Back-order');
     expect(futureInventoryTypeLabel('OTHER')).toBe('OTHER');
+    expect(futureInventoryTypeLabel('FIT_NEW', 'New supply')).toBe('New supply');
+    expect(futureInventoryTypeLabel('FIT_PRE_ORDER', 'Pre-Order Supply (New Style)')).toBe('Pre-order');
   });
 
   it('shows one date when a range has equal or missing ends', () => {

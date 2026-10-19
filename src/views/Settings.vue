@@ -57,7 +57,7 @@
             {{ translate("A store represents a company or a unique catalog of products. If your OMS is connected to multiple eCommerce stores selling different collections of products, you may have multiple Product Stores set up in HotWax Commerce.") }}
           </ion-card-content>
           <ion-item lines="none">
-            <ion-select :label="translate('Select store')" label-placement="stacked" interface="popover" :value="currentProductStore.productStoreId" @ionChange="setCurrentProductStore($event)">
+            <ion-select :label="translate('Select store')" label-placement="stacked" interface="popover" :value="currentProductStoreId" @ionChange="setCurrentProductStore($event)">
               <ion-select-option v-for="store in productStores" :key="store.productStoreId" :value="store.productStoreId">
                 {{ store.storeName || store.productStoreId }}
               </ion-select-option>
@@ -224,12 +224,13 @@ import { IonAvatar, IonBadge, IonButton, IonButtons, IonCard, IonCardContent, Io
 import { checkmarkCircle, closeCircle, closeOutline, openOutline, saveOutline, syncOutline } from 'ionicons/icons';
 import { computed, onBeforeMount, ref } from 'vue';
 import { commonUtil, cookieHelper, i18n, translate } from '@common';
-import { useDbStatus } from '@common/db';
+import { catalogFrom, useDbStatus } from '@common/db';
 import { useAuth } from '@common/composables/useAuth';
 import { useUserStore } from '@/store/user';
 import { useProductStore } from '@/store/productStore';
 import { preorderDb } from '@/db/preorderDb';
-import { resyncDomain, resyncReferenceData, syncService } from '@/db/appDbSync';
+import { resyncDomain, resyncReferenceData } from '@/db/appDbSync';
+import { useProductStores } from '@/composables/useProductStores';
 import DxpProductIdentifier from "@/components/settings/DxpProductIdentifier.vue";
 import DxpAppVersionInfo from "@/components/settings/DxpAppVersionInfo.vue";
 import Actions from "@/authorization/actions";
@@ -237,8 +238,7 @@ import { formatDateTime } from '@/utils/format';
 
 const userStore = useUserStore();
 const userProfile = computed(() => userStore.getUserProfile);
-const currentProductStore = computed(() => useProductStore().getCurrentProductStore);
-const productStores = computed(() => useProductStore().getProductStores || []);
+const { productStores, currentProductStoreId } = useProductStores();
 const timeZones = computed(() => userStore.getAvailableTimeZones);
 const currentTimeZone = computed(() => userStore.getUserTimeZone || userProfile.value?.userTimeZone || Intl.DateTimeFormat().resolvedOptions().timeZone);
 const omsInstance = computed(() => cookieHelper().get('oms') || userStore.oms);
@@ -301,9 +301,8 @@ async function checkOmsConnection() {
 }
 
 function setCurrentProductStore(event: CustomEvent) {
-  if (currentProductStore.value.productStoreId !== event.detail.value) {
-    const selectedProductStore = productStores.value.find((store: any) => store.productStoreId == event.detail.value)
-    useProductStore().setProductStorePreference(selectedProductStore)
+  if (event.detail.value && currentProductStoreId.value !== event.detail.value) {
+    useProductStore().setProductStorePreference(event.detail.value)
   }
 }
 
@@ -361,7 +360,7 @@ const {
   domains, refreshing, totalRows, oldestSyncedAt, lastSyncedAt, refreshDomain, refreshAll,
 } = useDbStatus(
   preorderDb.client(),
-  preorderDb.statusCatalog,
+  async () => catalogFrom((await import('@/workers/appSyncDomains')).appSyncDomains),
   {
     resyncDomain,
     resyncAll: resyncReferenceData,

@@ -29,7 +29,7 @@
     </ion-label>
 
     <ion-label>
-      {{ order.facilityName || seed.facilityName(order.facilityId || '') || translate('No facility') }}
+      {{ seed.facilityName(order.facilityId || '') || translate('No facility') }}
       <p>{{ translate('Destination') }}</p>
     </ion-label>
 

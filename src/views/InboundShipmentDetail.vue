@@ -18,7 +18,7 @@
           <ion-card>
             <ion-card-header>
               <ion-card-subtitle v-if="shipment.externalId">{{ shipment.shipmentId }}</ion-card-subtitle>
-              <ion-card-title>{{ shipment.facilityName || seed.facilityName(shipment.destinationFacilityId || '') }}</ion-card-title>
+              <ion-card-title>{{ seed.facilityName(shipment.destinationFacilityId || '') }}</ion-card-title>
             </ion-card-header>
             <ion-list lines="none">
               <ion-item>

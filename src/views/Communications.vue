@@ -184,7 +184,7 @@ const productStore = useProductStore();
 const userStore = useUserStore();
 const { fetchEmailSettings, setEmailEnabled, updateEmailSetting, fetchEmailGateways, fetchEvents, fetchCounts } = useCommunications();
 
-const productStoreId = computed(() => productStore.getCurrentProductStore?.productStoreId || '');
+const productStoreId = computed(() => productStore.getCurrentProductStoreId);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_COMMS_UPDATE));
 
 const settings = ref<PreorderEmailSetting[]>([]);
@@ -206,10 +206,13 @@ const eventsLoading = ref(false);
 const eventsLoaded = ref(false);
 const eventsError = ref('');
 
+/** The pre-order email types (PRDS_EMAIL enums), by enumId: read once per change, not per label. */
+const emailTypesById = computed(() => new Map<string, any>(seed.enumsByType('PRDS_EMAIL').map((row: any) => [row.enumId, row])));
+
 /** An email type by its short name ("Pre-Order Delivery Date Change"), not its long description. */
 const emailTypeLabel = (emailType?: string) => {
   if (!emailType) return translate('Unknown type');
-  const enumRow = seed.enums().find((row: any) => row.enumId === emailType);
+  const enumRow = emailTypesById.value.get(emailType);
   return enumRow?.enumName || enumRow?.description || emailType;
 };
 
@@ -222,12 +225,14 @@ const sentCount = (emailType: string, days: number) => (days === 7 ? counts7.val
   .filter((row) => row.emailType === emailType && row.statusId !== 'COM_BOUNCED')
   .reduce((sum, row) => sum + Number(row.count || 0), 0);
 
-/** Email statuses as a sender reads them; seed data may not carry the communication statuses. */
+/**
+ * Email statuses in a sender's words: a sent email's status is COM_COMPLETE, whose description is
+ * "Closed". Any other status shows its seed description.
+ */
 const EMAIL_STATUS_LABELS: Record<string, string> = { COM_COMPLETE: 'Sent', COM_BOUNCED: 'Bounced', COM_IN_PROGRESS: 'Sending' };
 const emailStatusLabel = (statusId?: string) => {
   if (!statusId) return translate('Unknown');
-  const label = seed.statusDescription(statusId);
-  return label !== statusId ? label : translate(EMAIL_STATUS_LABELS[statusId] || statusId);
+  return EMAIL_STATUS_LABELS[statusId] ? translate(EMAIL_STATUS_LABELS[statusId]) : seed.statusDescription(statusId);
 };
 
 const daysAgo = (days: number) => DateTime.now().minus({ days }).toISODate() as string;

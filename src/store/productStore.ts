@@ -1,12 +1,18 @@
 import { defineStore } from 'pinia'
 import { api, commonUtil, logger, translate, useSolrSearch } from '@common'
 import { useUserStore } from '@/store/user'
+/** The saved-store lookup in flight, so the picker's watch asks for it once. */
+let preferenceLookup: Promise<void> | undefined
 const defaultProductStoreSettings = JSON.parse(import.meta.env.VITE_DEFAULT_PRODUCT_STORE_SETTINGS as string || '{"PRDT_IDEN_PREF":{"stateKey":"productIdentifier.productIdentificationPref","value":{"primaryId":"SKU","secondaryId":"productId"}}}')
-const productStoreInitialization = new WeakMap<object, Promise<void>>()
 
+/**
+ * The product store the user works in, and its product identifier settings. Only the selected id is
+ * kept here: the product store rows (names, the picker's list) are the `productStores` seed table in
+ * the app db, read with `useProductStores()`.
+ */
 export const useProductStore = defineStore('productStore', {
   state: () => ({
-    currentProductStore: {} as any,
+    currentProductStoreId: '',
     settings: {
       productIdentifier: {
         productIdentificationPref: {
@@ -17,83 +23,25 @@ export const useProductStore = defineStore('productStore', {
         sampleProducts: [],
         currentSampleProduct: null
       },
-      barcodeIdentifier: {
-        barcodeIdentifierPref: "",
-        barcodeIdentifierOptions: [] as any[],
-      },
-      affectQOHOnRej: 'N'
     } as any,
-    productStores: [] as any[],
-    isProductStoreInitialized: false,
   }),
 
   getters: {
-    getCurrentProductStore: (state) => state.currentProductStore,
-    getProductStores: (state) => state.productStores,
+    getCurrentProductStoreId: (state) => state.currentProductStoreId,
     getSettings: (state) => state.settings,
     getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
-    getBarcodeIdentifierPref: (state) => state.settings.barcodeIdentifier.barcodeIdentifierPref,
     getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
-    getBarcodeIdentifierOptions: (state) => state.settings.barcodeIdentifier.barcodeIdentifierOptions,
     getCurrentSampleProduct: (state) => state.settings.productIdentifier.currentSampleProduct,
-    getAffectQOHOnRej: (state) => state.settings.affectQOHOnRej,
   },
 
   actions: {
-    async initializeProductStore() {
-      if (this.isProductStoreInitialized) return
-
-      const pendingInitialization = productStoreInitialization.get(this)
-      if (pendingInitialization) return pendingInitialization
-
-      const initialization = (async () => {
-        await this.fetchProductStores()
-        await this.fetchProductStorePreference()
-        this.isProductStoreInitialized = true
-      })()
-
-      productStoreInitialization.set(this, initialization)
-      try {
-        await initialization
-      } finally {
-        productStoreInitialization.delete(this)
-      }
-    },
-    async setCurrentProductStore(store: any) {
-      this.currentProductStore = store
-      this.fetchProductStoreSettings(store.productStoreId);
+    /** Selects a product store for this session and loads its settings. */
+    setCurrentProductStore(productStoreId: string) {
+      this.currentProductStoreId = productStoreId
+      this.fetchProductStoreSettings(productStoreId);
     },
 
-    async fetchProductStores() {
-      try {
-        const payload = {
-          fieldsToSelect: ["productStoreId", "storeName"],
-          pageSize: 250
-        }
-
-        const resp = await api({
-          url: `/admin/productStores`,
-          method: "GET",
-          params: payload
-        });
-
-        if (!commonUtil.hasError(resp)) {
-          const stores = resp.data
-          this.productStores = stores
-          if (stores.length) {
-            const selectedStore = stores.find((store: any) => store.productStoreId === this.currentProductStore?.productStoreId)
-            this.currentProductStore = selectedStore || stores[0]
-          } else {
-            this.currentProductStore = {}
-          }
-        } else {
-          throw resp.data
-        }
-      } catch (err) {
-        logger.error("Failed to fetch product stores", err)
-      }
-    },
-
+    /** Selects the user's saved product store (the SELECTED_BRAND preference), if they have one. */
     async fetchProductStorePreference() {
       const userStore = useUserStore();
       try {
@@ -107,24 +55,30 @@ export const useProductStore = defineStore('productStore', {
           },
         }) as any;
         const preferredStoreId = preferredStoreResp.data?.[0]?.preferenceValue
-        if (preferredStoreId) {
-          const store = this.productStores?.find((store: any) => store.productStoreId === preferredStoreId);
-          if (store) {
-            this.setCurrentProductStore(store)
-            return
-          }
-        }
-        if (this.productStores?.length && !this.productStores.some((store: any) => store.productStoreId === this.currentProductStore?.productStoreId)) {
-          this.setCurrentProductStore(this.productStores[0])
-        }
+        if (preferredStoreId) this.setCurrentProductStore(preferredStoreId)
       } catch (err) {
         logger.error('Favourite product store not found', err)
-        if (this.productStores?.length && !this.currentProductStore?.productStoreId) {
-          this.setCurrentProductStore(this.productStores[0])
-        }
       }
     },
-    async setProductStorePreference(payload: any) {
+
+    /**
+     * Keeps the selection on a product store that exists. With nothing selected (a reload of a session
+     * from before the selection was kept here), the user's saved store comes first; then the first of
+     * `productStoreIds` (the app db's rows, in the picker's order) when the selection is still empty or
+     * names a store that is gone.
+     */
+    async ensureCurrentProductStore(productStoreIds: string[]) {
+      if (!productStoreIds.length || productStoreIds.includes(this.currentProductStoreId)) return
+      if (!this.currentProductStoreId) {
+        preferenceLookup ??= this.fetchProductStorePreference().finally(() => { preferenceLookup = undefined })
+        await preferenceLookup
+        if (productStoreIds.includes(this.currentProductStoreId)) return
+      }
+      this.setCurrentProductStore(productStoreIds[0])
+    },
+
+    /** Selects a product store and saves it as the user's SELECTED_BRAND preference. */
+    async setProductStorePreference(productStoreId: string) {
       const userStore = useUserStore();
       try {
         await api({
@@ -133,14 +87,13 @@ export const useProductStore = defineStore('productStore', {
           data: {
             userId: userStore.current.userId,
             preferenceKey: 'SELECTED_BRAND',
-            preferenceValue: payload.productStoreId,
+            preferenceValue: productStoreId,
           }
         });
       } catch (error) {
-        console.error('error', error)
+        logger.error('Failed to save the product store preference', error)
       }
-      this.fetchProductStoreSettings(payload.productStoreId);
-      this.currentProductStore = payload;
+      this.setCurrentProductStore(productStoreId);
     },
     async fetchProductStoreSettings(productStoreId: string) {
       const productStoreSettings = {} as any
@@ -270,7 +223,6 @@ export const useProductStore = defineStore('productStore', {
 
       // Merge the arrays and remove duplicates
       this.settings.productIdentifier.productIdentificationOptions = Array.from(new Set([...productIdentificationOptions, ...fetchedGoodIdentificationOptions])).sort();
-      this.settings.barcodeIdentifier.barcodeIdentifierOptions = fetchedGoodIdentificationOptions
     },
 
     async fetchProducts() {
@@ -297,7 +249,10 @@ export const useProductStore = defineStore('productStore', {
       }
     }
   },
+  // Only the selection and the identifier settings are kept: the sample products are Solr search results
+  // for the Settings preview (screen data), and a field older versions kept (the product store rows) is
+  // dropped on load, since pick applies to hydration too.
   persist: {
-    omit: ['isProductStoreInitialized']
+    pick: ['currentProductStoreId', 'settings.productIdentifier.productIdentificationPref', 'settings.productIdentifier.productIdentificationOptions']
   }
 })

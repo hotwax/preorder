@@ -14,7 +14,7 @@
     </ion-label>
 
     <ion-label>
-      {{ shipment.facilityName || seed.facilityName(shipment.destinationFacilityId || '') }}
+      {{ seed.facilityName(shipment.destinationFacilityId || '') }}
       <p>{{ translate('Destination') }}</p>
     </ion-label>
 
