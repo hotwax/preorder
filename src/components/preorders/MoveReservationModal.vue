@@ -73,18 +73,8 @@ const loading = ref(true);
 const saving = ref(false);
 const selectedId = ref('');
 
-// Batches the line was reallocated or cancelled from: a new reservation there would not read as open, so reallocate# refuses them
-const closedBatchIds = computed(() => new Set((props.line.reservations || [])
-  .filter((row) => row.reasonEnumId === 'FID_REALLOCATED' || row.reasonEnumId === 'FID_CANCELLED')
-  .map((row) => row.futureInventoryItemId)));
-
-// The target must be another ACTIVE batch of the line's product and FI type, at the order's store, that the line never left (reallocate#'s rule).
-// A line waiting at a facility moves only to a batch at that facility or one at the store's parking (location-less).
-const candidates = computed(() => moveTargets(props.line, batches.value.filter((batch) =>
-  batch.futureInventoryItemId !== props.line.futureInventoryItemId
-  && !closedBatchIds.value.has(batch.futureInventoryItemId)
-  && (!props.line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === props.line.futureInventoryItemTypeId)),
-(facilityId) => seed.facility(facilityId)?.facilityTypeId));
+// reallocate#'s rule, read from the line's current reservation and the batches only (preorder-maarg#93)
+const candidates = computed(() => moveTargets(props.line, batches.value, (facilityId) => seed.facility(facilityId)?.facilityTypeId));
 
 const loadError = ref('');
 

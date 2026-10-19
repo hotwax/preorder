@@ -55,4 +55,19 @@ describe('move targets', () => {
     const ids = moveTargets({ atParking: false, facilityId: 'WH' }, batches, typeOf).map((batch) => batch.futureInventoryItemId);
     expect(ids).toEqual(['AT_WH', 'AT_PARKING', 'AT_STORE_PARKING', 'NO_FACILITY']);
   });
+
+  it('leaves out the batch the line holds and batches of another FI type', () => {
+    const typed = [{ futureInventoryItemId: 'A', facilityId: 'WH', futureInventoryItemTypeId: 'FIT_PRE_ORDER' },
+      { futureInventoryItemId: 'B', facilityId: 'WH', futureInventoryItemTypeId: 'FIT_PRE_ORDER' },
+      { futureInventoryItemId: 'C', facilityId: 'WH', futureInventoryItemTypeId: 'FIT_BACK_ORDER' }];
+    const line = { atParking: false, facilityId: 'WH', futureInventoryItemId: 'A', futureInventoryItemTypeId: 'FIT_PRE_ORDER' };
+    expect(moveTargets(line, typed, typeOf).map((batch) => batch.futureInventoryItemId)).toEqual(['B']);
+  });
+
+  it('offers the batch a line was moved from again: A to B, then B back to A (preorder-maarg#93)', () => {
+    const typed = [{ futureInventoryItemId: 'A', facilityId: 'WH' }, { futureInventoryItemId: 'B', facilityId: 'WH' }];
+    const onB = { atParking: false, facilityId: 'WH', futureInventoryItemId: 'B',
+      reservations: [{ futureInventoryItemId: 'A', reasonEnumId: 'FID_REALLOCATED' }, { futureInventoryItemId: 'B', reasonEnumId: 'FID_RESERVED' }] };
+    expect(moveTargets(onB, typed, typeOf).map((batch) => batch.futureInventoryItemId)).toEqual(['A']);
+  });
 });

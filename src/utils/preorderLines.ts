@@ -25,14 +25,18 @@ const PRE_ORDER_PARKING_ID = 'PRE_ORDER_PARKING';
  * waiting at a facility only to a batch at its own facility or a location-less one (at the store's parking), as OMS
  * refuses any other. `facilityTypeOf` reads a facility's type from seed data.
  */
-export function moveTargets<T extends { futureInventoryItemId: string; facilityId?: string }>(
-  line: Pick<PreorderLine, 'atParking' | 'facilityId'>,
+export function moveTargets<T extends { futureInventoryItemId: string; facilityId?: string; futureInventoryItemTypeId?: string }>(
+  line: Pick<PreorderLine, 'atParking' | 'facilityId' | 'futureInventoryItemId' | 'futureInventoryItemTypeId'>,
   batches: T[],
   facilityTypeOf: (facilityId: string) => string | undefined,
 ): T[] {
-  if (line.atParking) return batches;
+  // Any other ACTIVE batch (the caller lists only those) of the line's FI type: its reservation is a row of its own now, so
+  // a batch the line was moved or released from before is as good a target as any (preorder-maarg#93)
+  const sameType = batches.filter((batch) => batch.futureInventoryItemId !== line.futureInventoryItemId
+    && (!line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === line.futureInventoryItemTypeId));
+  if (line.atParking) return sameType;
   const isLocationless = (facilityId?: string) => !facilityId
     || PARKING_FACILITY_TYPES.includes(facilityTypeOf(facilityId) || '')
     || facilityId === PRE_ORDER_PARKING_ID;
-  return batches.filter((batch) => isLocationless(batch.facilityId) || batch.facilityId === line.facilityId);
+  return sameType.filter((batch) => isLocationless(batch.facilityId) || batch.facilityId === line.facilityId);
 }
