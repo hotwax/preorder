@@ -454,7 +454,6 @@
   "The {count} batches move to this date. Waiting pre-orders take the new date, and their customers are emailed where that email is on.": "The batch moves to this date. Waiting pre-orders take the new date, and their customers are emailed where that email is on. | The {count} batches move to this date. Waiting pre-orders take the new date, and their customers are emailed where that email is on.",
   "This cancels {count} batches. This cannot be undone.": "This cancels {count} batch. This cannot be undone. | This cancels {count} batches. This cannot be undone.",
   "This cancels {count} batches. {reserved} reserved units stay with their orders and need moving to another batch.": "This cancels {count} batch. {reserved} reserved units stay with their orders and need moving to another batch. | This cancels {count} batches. {reserved} reserved units stay with their orders and need moving to another batch.",
-  "This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone.": "This cancels the {count} item still waiting on future inventory in the selected orders and releases its reservation. This cannot be undone. | This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone.",
   "This cannot be undone.": "This cannot be undone.",
   "This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.": "This is the name of the OMS you are connected to right now. Make sure that you are connected to the right instance before proceeding.",
   "This moves {count} items waiting at pre-order or back-order parking to brokering, so routing can allocate them to a fulfillment location.": "This moves {count} item waiting at pre-order or back-order parking to brokering, so routing can allocate it to a fulfillment location. | This moves {count} items waiting at pre-order or back-order parking to brokering, so routing can allocate them to a fulfillment location.",
@@ -553,5 +552,8 @@
   "{total} records, {failed} failed": "{total} record, {failed} failed | {total} records, {failed} failed",
   "Sent in the last {days} days": "Sent in the last {days} days",
   "Waiting on future inventory": "Waiting on future inventory",
-  "Committed to stock": "Committed to stock"
+  "Committed to stock": "Committed to stock",
+  "Failed to load the cancel reasons.": "Failed to load the cancel reasons.",
+  "No cancel reason is set up, so nothing can be cancelled.": "No cancel reason is set up, so nothing can be cancelled.",
+  "This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?": "This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?"
 }

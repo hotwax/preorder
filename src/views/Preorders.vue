@@ -135,14 +135,14 @@ import Actions from '@/authorization/actions';
 import type { PreorderOrder } from '@/types';
 
 const seed = useSeedData();
-const { confirmAction } = usePrompts();
+const { confirmAction, promptForChoice } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const store = usePreorderSearchStore();
 // Another store's orders leave with their selection, so a bulk action never runs on them under the new store
 const { refresh } = useFindSearch(store, { onStoreChange: () => clearSelection() });
 const userStore = useUserStore();
-const { releaseToBrokering, cancelPreorderItems } = usePreorderActions();
+const { releaseToBrokering, fetchCancelReasons, cancelPreorderItems } = usePreorderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
 const sortOptions = [
@@ -193,13 +193,25 @@ async function confirmRelease() {
 }
 
 async function confirmCancel() {
-  const confirmed = await confirmAction(
+  let reasons: { value: string; label: string }[] = [];
+  try {
+    reasons = await fetchCancelReasons();
+  } catch (error: any) {
+    await commonUtil.showToast(error?.message || translate('Failed to load the cancel reasons.'));
+    return;
+  }
+  if (!reasons.length) {
+    await commonUtil.showToast(translate('No cancel reason is set up, so nothing can be cancelled.'));
+    return;
+  }
+  const reason = await promptForChoice(
     translate('Cancel pre-order items'),
-    translate('This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone.', { count: selectedWaitingCount.value }),
+    translate('This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?', { count: selectedWaitingCount.value }),
     translate('Cancel items'),
+    reasons,
   );
-  if (!confirmed) return;
-  const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value));
+  if (!reason) return;
+  const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value, reason));
   await commonUtil.showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed, n: cancelled }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
   useFutureInventorySearchStore().markStale();
   clearSelection();
