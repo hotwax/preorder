@@ -6,6 +6,7 @@
           <ion-back-button default-href="/inbound-shipments" />
         </ion-buttons>
         <ion-title>{{ shipment?.externalId || shipmentId }}</ion-title>
+        <ion-buttons v-if="canReceive" slot="end"><ion-button :disabled="receiving || loading" @click="receive">{{ translate('Receive remaining units') }}</ion-button></ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -30,7 +31,7 @@
                 <ion-note slot="end">{{ shipment.orderName || shipment.orderExternalId || shipment.primaryOrderId }}</ion-note>
               </ion-item>
               <ion-item>
-                <ion-label>{{ translate('Shipped') }}</ion-label>
+                <ion-label>{{ translate('Ship date') }}</ion-label>
                 <ion-note slot="end">{{ formatDate(shipment.estimatedShipDate) || '-' }}</ion-note>
               </ion-item>
               <ion-item>
@@ -38,7 +39,6 @@
                 <ion-note slot="end">{{ formatDateTime(shipment.createdDate) }}</ion-note>
               </ion-item>
             </ion-list>
-            <ion-button v-if="canReceive" fill="clear" :disabled="receiving" @click="receive">{{ translate('Receive remaining units') }}</ion-button>
           </ion-card>
           <div class="stats">
             <StatCard :title="translate('Estimated arrival')" :stat="formatDate(shipment.estimatedArrivalDate) || '-'" :subtitle="formatRelative(shipment.estimatedArrivalDate)" />
@@ -76,8 +76,7 @@
               {{ primaryIdentifier(receipt.productId) || receipt.productId }}
               <p>{{ [receipt.receiptId, receipt.receivedByUserLoginId].filter(Boolean).join(' - ') }}</p>
             </ion-label>
-            <ion-note slot="end">{{ translate('{accepted} accepted, {rejected} rejected', { accepted: formatQuantity(receipt.quantityAccepted), rejected: formatQuantity(receipt.quantityRejected) }) }}</ion-note>
-            <ion-note slot="end">{{ formatDateTime(receipt.datetimeReceived) }}</ion-note>
+            <ion-label slot="end" class="ion-text-end ion-text-wrap">{{ translate('{accepted} accepted, {rejected} rejected', { accepted: formatQuantity(receipt.quantityAccepted), rejected: formatQuantity(receipt.quantityRejected) }) }}<p>{{ formatDateTime(receipt.datetimeReceived) }}</p></ion-label>
           </ion-item>
           <ion-item v-if="!shipment.receipts?.length" lines="none">
             <ion-label>{{ translate('Nothing received yet.') }}</ion-label>
