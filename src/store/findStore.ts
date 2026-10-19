@@ -107,6 +107,9 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
       /** Appends the next page; a failure keeps the loaded rows and says so. */
       async appendNextPage() {
         if (this.loading || this.loadingMore || this.error || !this.hasMore) return;
+        // The search text or filters changed and their search hasn't started yet (it is debounced): a
+        // next page now would be the new search's, appended to the old rows
+        if (JSON.stringify(this.params(0)) !== this.lastSearchKey) return;
         const requestId = this.requestId;
         const next = this.pageIndex + 1;
         this.loadingMore = true;

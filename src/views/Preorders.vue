@@ -75,7 +75,7 @@
           </span>
           <ion-label>{{ translate('{shown} of {count} pre-orders', { shown: results.length, count: total }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="preorder-sort-trigger" :options="sortOptions" />
-          <ion-button fill="clear" size="small" @click="toggleSelectMode">
+          <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
           </ion-button>
         </ion-list-header>
@@ -105,8 +105,8 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedParkedCount || !canUpdate" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedIds.length || !canUpdate" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedParkedCount || !canUpdate || running" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedIds.length || !canUpdate || running" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -129,6 +129,7 @@ import { useUserStore } from '@/store/user';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePreorderActions } from '@/composables/usePreorderActions';
 import { useFindSearch } from '@/composables/useFindSearch';
+import { useBulkAction } from '@/composables/useBulkAction';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -146,6 +147,7 @@ import Actions from '@/authorization/actions';
 import type { PreorderOrder } from '@/types';
 
 const seed = useSeedData();
+const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const store = usePreorderSearchStore();
 const { refresh } = useFindSearch(store);
@@ -217,7 +219,7 @@ async function confirmRelease() {
     translate('Release'),
   );
   if (!confirmed) return;
-  const { moved, failed } = await releaseToBrokering(selectedOrders.value);
+  const { moved, failed } = await runBulk(() => releaseToBrokering(selectedOrders.value));
   await showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed }) : translate('{moved} items released to brokering.', { moved, count: moved }));
   useFutureInventorySearchStore().markStale();
   selectMode.value = false;
@@ -232,7 +234,7 @@ async function confirmCancel() {
     translate('Cancel items'),
   );
   if (!confirmed) return;
-  const { cancelled, failed } = await cancelPreorderItems(selectedOrders.value);
+  const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value));
   await showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
   useFutureInventorySearchStore().markStale();
   selectMode.value = false;

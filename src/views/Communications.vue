@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import {
-  IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent,
+  IonBadge, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent,
   IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonMenuButton,
   IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter,
 } from '@ionic/vue';
@@ -270,30 +270,38 @@ function eventParams(pageIndex: number) {
   };
 }
 
+/** Each load takes a number; only the latest one's answer lands, and a next page under older filters is dropped. */
+let loadEventsRequest = 0;
+
 async function loadEvents() {
+  const request = ++loadEventsRequest;
   if (!productStoreId.value) return;
   eventsLoading.value = true;
   eventsError.value = '';
   try {
     const { rows, total } = await fetchEvents(eventParams(0));
+    if (request !== loadEventsRequest) return;
     events.value = rows;
     eventsTotal.value = total;
     eventsPage.value = 0;
     eventsLoaded.value = true;
   } catch (err) {
+    if (request !== loadEventsRequest) return;
     eventsError.value = errorMessage(err, translate('Failed to load emails.'));
   } finally {
-    eventsLoading.value = false;
+    if (request === loadEventsRequest) eventsLoading.value = false;
   }
 }
 
 const eventsLoadingMore = ref(false);
 
 async function loadMoreEvents(event: CustomEvent) {
-  if (eventsLoadingMore.value) return (event.target as HTMLIonInfiniteScrollElement).complete();
+  if (eventsLoadingMore.value || eventsLoading.value) return (event.target as HTMLIonInfiniteScrollElement).complete();
+  const request = loadEventsRequest;
   eventsLoadingMore.value = true;
   try {
     const { rows, total } = await fetchEvents(eventParams(eventsPage.value + 1));
+    if (request !== loadEventsRequest) return;
     events.value = [...events.value, ...rows];
     eventsTotal.value = total;
     eventsPage.value += 1;

@@ -59,7 +59,7 @@
           </span>
           <ion-label>{{ translate('{shown} of {count} purchase orders', { shown: results.length, count: total }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="po-sort-trigger" :options="sortOptions" />
-          <ion-button fill="clear" size="small" @click="toggleSelectMode">
+          <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
           </ion-button>
         </ion-list-header>
@@ -95,11 +95,11 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -111,7 +111,7 @@
 import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFab, IonFabButton, IonFooter, IonHeader, IonIcon, IonInfiniteScroll,
   IonInfiniteScrollContent, IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect,
-  IonSelectOption, IonTitle, IonToolbar,
+  IonSelectOption, IonTitle, IonToolbar, onIonViewDidLeave,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
 import { DateTime } from 'luxon';
@@ -125,6 +125,7 @@ import { useUserStore } from '@/store/user';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useFindSearch } from '@/composables/useFindSearch';
+import { useBulkAction } from '@/composables/useBulkAction';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -141,6 +142,7 @@ import Actions from '@/authorization/actions';
 import type { PurchaseOrderSummary } from '@/types';
 
 const seed = useSeedData();
+const { running, runBulk } = useBulkAction();
 const store = usePurchaseOrderSearchStore();
 const { refresh } = useFindSearch(store, { scopeByStore: false });
 const userStore = useUserStore();
@@ -207,6 +209,15 @@ async function loadMore(event: CustomEvent) {
 
 /** Solr shows a saved change after its next commit, about a second; the list searches again once it has. */
 const SOLR_REFRESH_DELAY_MS = 1500;
+let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+
+// Leaving before the refresh runs: drop it, and search again when the list is next shown
+onIonViewDidLeave(() => {
+  if (!refreshTimer) return;
+  clearTimeout(refreshTimer);
+  refreshTimer = undefined;
+  store.markStale();
+});
 
 /**
  * Says how a bulk action went, shows its change on the rows it succeeded for at once, and searches again once Solr
@@ -221,7 +232,8 @@ async function report(result: { done: number; failed: number; errors: string[]; 
   }
   selectMode.value = false;
   selectedIds.value = [];
-  setTimeout(() => { void refresh(); }, SOLR_REFRESH_DELAY_MS);
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => { refreshTimer = undefined; void refresh(); }, SOLR_REFRESH_DELAY_MS);
 }
 
 const STATUS_ACTIONS: Record<string, { header: string; message: string; confirm: string; from: string[]; done: string }> = {
@@ -234,7 +246,7 @@ async function bulkStatus(statusId: string) {
   const action = STATUS_ACTIONS[statusId];
   const orderIds = selectedWithStatus(action.from);
   if (!await confirmAction(translate(action.header), translate(action.message, { count: orderIds.length }), translate(action.confirm))) return;
-  const result = await forEachOrder(orderIds, (orderId) => changeStatus(orderId, statusId));
+  const result = await runBulk(() => forEachOrder(orderIds, (orderId) => changeStatus(orderId, statusId)));
   const listedStatusIds = filters.value.statusId;
   await report(result, translate(action.done, { done: result.done, count: result.done }), (order) =>
     (listedStatusIds.length && !listedStatusIds.includes(statusId) ? null : { ...order, statusId }));
@@ -248,7 +260,7 @@ async function changeArrivalDate() {
     translate('Change date'),
   );
   if (!arrivalDate) return;
-  const result = await forEachOrder(orderIds, (orderId) => changeOrderArrivalDate(orderId, arrivalDate));
+  const result = await runBulk(() => forEachOrder(orderIds, (orderId) => changeOrderArrivalDate(orderId, arrivalDate)));
   const arrivalMillis = DateTime.fromISO(arrivalDate).toMillis();
   await report(result, translate('{done} purchase orders now arrive {date}.', { done: result.done, count: result.done, date: formatDate(arrivalDate) }), (order) =>
     ({ ...order, earliestArrivalDate: arrivalMillis, latestArrivalDate: arrivalMillis }));
@@ -261,7 +273,7 @@ async function sellAsPreorderBulk() {
     translate('Creates a pre-order future inventory batch for each open line of {count} purchase orders that does not have one, at its arrival date and quantity.', { count: orderIds.length }),
     translate('Create batches'),
   )) return;
-  const result = await forEachOrder(orderIds, (orderId) => sellAsPreorder(orderId));
+  const result = await runBulk(() => forEachOrder(orderIds, (orderId) => sellAsPreorder(orderId)));
   await report(result, translate('Future inventory created for {done} purchase orders.', { done: result.done, count: result.done }));
 }
 

@@ -284,7 +284,7 @@ onBeforeMount(async () => {
   timeZoneId.value = currentTimeZone.value;
 
   if (props.showBrowserTimeZone) {
-    browserTimeZone.value.label = timeZones.value.find((timeZone: any) => timeZone.id.toLowerCase().match(browserTimeZone.value.id.toLowerCase()))?.label || browserTimeZone.value.id;
+    browserTimeZone.value.label = timeZones.value.find((timeZone: any) => timeZone.id.toLowerCase().includes(browserTimeZone.value.id.toLowerCase()))?.label || browserTimeZone.value.id;
   }
 
   findTimeZone();
@@ -330,10 +330,10 @@ function closeModal() {
 
 function findTimeZone() {
   const searchedString = queryString.value.toLowerCase();
-  filteredTimeZones.value = timeZones.value.filter((timeZone: any) => timeZone.id.toLowerCase().match(searchedString) || timeZone.label.toLowerCase().match(searchedString));
+  filteredTimeZones.value = timeZones.value.filter((timeZone: any) => timeZone.id.toLowerCase().includes(searchedString) || timeZone.label.toLowerCase().includes(searchedString));
 
   if (props.showBrowserTimeZone) {
-    filteredTimeZones.value = filteredTimeZones.value.filter((timeZone: any) => !timeZone.id.toLowerCase().match(browserTimeZone.value.id.toLowerCase()));
+    filteredTimeZones.value = filteredTimeZones.value.filter((timeZone: any) => !timeZone.id.toLowerCase().includes(browserTimeZone.value.id.toLowerCase()));
   }
 }
 

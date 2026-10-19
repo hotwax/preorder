@@ -4,6 +4,10 @@ import { api, commonUtil, cookieHelper, logger, translate } from "@common";
 import { useAuth } from "@common/composables/useAuth";
 import { showToast } from "@/utils";
 import { useProductStore } from "@/store/productStore";
+import { usePreorderSearchStore } from "@/store/preorderSearch";
+import { useFutureInventorySearchStore } from "@/store/futureInventorySearch";
+import { usePurchaseOrderSearchStore } from "@/store/purchaseOrderSearch";
+import { useInboundShipmentSearchStore } from "@/store/inboundShipmentSearch";
 import { startAppDbSync, stopAppDbSync } from "@/db/appDbSync";
 
 export const useUserStore = defineStore("user", {
@@ -103,6 +107,8 @@ export const useUserStore = defineStore("user", {
             await showToast(translate(permissionError))
             logger.error("error", permissionError)
             this.fetchStatus.permissions = "error"
+            // The persisted list would otherwise keep granting what was just revoked
+            this.permissions = []
             return Promise.reject(new Error(permissionError))
           }
         }
@@ -198,7 +204,9 @@ export const useUserStore = defineStore("user", {
 
     async postLogout() {
       await stopAppDbSync().catch(() => { /* never block logout on cleanup */ });
-      useProductStore().$reset();
+      // A logout unmounts nothing: without a reset the next login in this tab sees this session's lists
+      [useProductStore(), usePreorderSearchStore(), useFutureInventorySearchStore(), usePurchaseOrderSearchStore(), useInboundShipmentSearchStore()]
+        .forEach((store) => store.$reset());
       this.$reset();
     }
   },

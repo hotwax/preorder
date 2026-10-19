@@ -157,29 +157,37 @@ const visibleLogs = computed(() => logs.value);
 
 const configLabel = (configId: string) => translate(IMPORT_CONFIGS.find((config) => config.configId === configId)?.label || configId);
 
+/** Each load takes a number; only the latest one's answer lands, and a next page under older filters is dropped. */
+let loadRequest = 0;
+
 async function load() {
+  const request = ++loadRequest;
   loading.value = true;
   error.value = '';
   try {
     const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, 0, PAGE_SIZE);
+    if (request !== loadRequest) return;
     logs.value = rows;
     pageIndex.value = 0;
     hasMore.value = rows.length === PAGE_SIZE;
     loaded.value = true;
   } catch (err) {
+    if (request !== loadRequest) return;
     error.value = errorMessage(err, translate('Failed to load imports.'));
   } finally {
-    loading.value = false;
+    if (request === loadRequest) loading.value = false;
   }
 }
 
 const loadingMore = ref(false);
 
 async function loadMore(event: CustomEvent) {
-  if (loadingMore.value) return (event.target as HTMLIonInfiniteScrollElement).complete();
+  if (loadingMore.value || loading.value) return (event.target as HTMLIonInfiniteScrollElement).complete();
+  const request = loadRequest;
   loadingMore.value = true;
   try {
     const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, pageIndex.value + 1, PAGE_SIZE);
+    if (request !== loadRequest) return;
     logs.value = [...logs.value, ...rows];
     pageIndex.value += 1;
     hasMore.value = rows.length === PAGE_SIZE;

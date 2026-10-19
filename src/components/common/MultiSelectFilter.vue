@@ -15,7 +15,7 @@
       <ion-content>
         <ion-list>
           <ion-item lines="none">
-            <ion-checkbox :checked="!modelValue.length" justify="start" label-placement="end" @ionChange="selectAll(Boolean($event.detail.checked))">
+            <ion-checkbox :checked="!modelValue.length" :disabled="!modelValue.length" justify="start" label-placement="end" @ionChange="selectAll(Boolean($event.detail.checked))">
               {{ allLabel }}
             </ion-checkbox>
           </ion-item>
@@ -57,6 +57,7 @@ const summary = computed(() => {
   return translate('{count} selected', { count: props.modelValue.length });
 });
 
+/** "All" clears the selection; it is inert while nothing is selected, since there is nothing to clear. */
 function selectAll(checked: boolean) {
   if (checked) emit('update:modelValue', []);
 }

@@ -69,7 +69,7 @@
           </span>
           <ion-label>{{ translate('{shown} of {count} batches', { shown: results.length, count: total }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="fi-sort-trigger" :options="sortOptions" />
-          <ion-button fill="clear" size="small" @click="toggleSelectMode">
+          <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
           </ion-button>
         </ion-list-header>
@@ -99,8 +99,8 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedOpenIds.length || !canUpdate" @click="changePromiseDate">{{ translate('Change promise date') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedOpenIds.length || !canUpdate" @click="cancelBatches">{{ translate('Cancel batch') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpenIds.length || !canUpdate || running" @click="changePromiseDate">{{ translate('Change promise date') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedOpenIds.length || !canUpdate || running" @click="cancelBatches">{{ translate('Cancel batch') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -124,6 +124,7 @@ import { useProductStore } from '@/store/productStore';
 import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { useFindSearch } from '@/composables/useFindSearch';
+import { useBulkAction } from '@/composables/useBulkAction';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -143,6 +144,7 @@ import Actions from '@/authorization/actions';
 const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];
 
 const seed = useSeedData();
+const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const productStore = useProductStore();
 const store = useFutureInventorySearchStore();
@@ -234,7 +236,7 @@ async function changePromiseDate() {
     translate('Change date'),
   );
   if (!promiseDate) return;
-  const { done, failed } = await forEachBatch(ids, (id) => updateBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' }));
+  const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => updateBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' })));
   await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
 }
 
@@ -249,7 +251,7 @@ async function cancelBatches() {
     translate('Cancel batches'),
   );
   if (!confirmed) return;
-  const { done, failed } = await forEachBatch(ids, (id) => cancelBatch(id, 'Cancelled in the Pre-order app'));
+  const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => cancelBatch(id, 'Cancelled in the Pre-order app')));
   await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed }) : translate('{done} batches cancelled.', { done, count: done }));
 }
 

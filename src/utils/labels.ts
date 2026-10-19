@@ -1,5 +1,5 @@
 import { translate } from '@common';
-import { formatDate, formatRelative, toMillis } from '@/utils/format';
+import { formatDate, toMillis } from '@/utils/format';
 
 /**
  * The app's short names for the future inventory types (FUTURE_INV_ITEM_TYPE enums), whose seed
@@ -22,9 +22,6 @@ export function formatDateRange(start?: number | string, end?: number | string):
   if (!thru || from === thru) return from;
   return `${from} - ${thru}`;
 }
-
-/** "in 12 days" / "3 days ago" against now, for a promise or arrival date. */
-export const relativeToNow = (value?: number | string) => formatRelative(value);
 
 /** Whether a date has passed. */
 export const isPast = (value?: number | string) => {
