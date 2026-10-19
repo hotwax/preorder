@@ -396,7 +396,7 @@ import Actions from '@/authorization/actions';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { errorMessage } from '@/utils/response';
 import { formatDateTime } from '@/utils/format';
-import { showToast } from '@/utils';
+import { commonUtil } from '@common';
 const user = useUserStore();
 const seed = useSeedData();
 const actions = usePreorderSetup();
@@ -535,7 +535,7 @@ async function saveMapping() {
   error.value = '';
   try {
     await actions.saveMetafield(shopId.value, storeId.value, namespace.value, metafieldKey.value);
-    await showToast(translate('Metafield mapping saved.'));
+    await commonUtil.showToast(translate('Metafield mapping saved.'));
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to save the metafield mapping.'));
   } finally {
@@ -553,7 +553,7 @@ async function saveChannel() {
       facilityGroupId: facilityGroupId.value,
       shopifyLocationId: shopifyLocationId.value,
     });
-    await showToast(translate('Pre-order channel saved.'));
+    await commonUtil.showToast(translate('Pre-order channel saved.'));
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to save the pre-order channel.'));
   } finally {
@@ -585,7 +585,7 @@ async function saveParking(purposeId: string, facilityId: string) {
   error.value = '';
   try {
     await actions.saveParking(shopId.value, storeId.value, purposeId, facilityId);
-    await showToast(translate('Parking facility activated.'));
+    await commonUtil.showToast(translate('Parking facility activated.'));
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to save the parking facility.'));
   } finally {
@@ -613,7 +613,7 @@ async function copySchedule(job: any) {
             !/^[A-Za-z0-9_-]{1,100}$/.test(newName) ||
             setup.value?.jobs?.some((row: any) => row.jobName === newName)
           ) {
-            void showToast(
+            void commonUtil.showToast(
               translate('Use a unique schedule name, up to 100 letters, numbers, underscores or hyphens.')
             );
             return false;
@@ -630,7 +630,7 @@ async function saveScheduleCopy(jobName: string, newJobName: string) {
   error.value = '';
   try {
     await actions.copyJob(shopId.value, storeId.value, jobName, newJobName);
-    await showToast(translate('Schedule copied. Review its scope and enable it when ready.'));
+    await commonUtil.showToast(translate('Schedule copied. Review its scope and enable it when ready.'));
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to copy the publishing schedule.'));
   } finally {
@@ -662,7 +662,7 @@ async function saveJobState(jobName: string, paused: 'Y' | 'N') {
   error.value = '';
   try {
     await actions.setJobPaused(shopId.value, storeId.value, jobName, paused);
-    await showToast(translate('Publishing job updated.'));
+    await commonUtil.showToast(translate('Publishing job updated.'));
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to update the publishing job.'));
   } finally {
