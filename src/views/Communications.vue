@@ -12,7 +12,7 @@
     <ion-content>
       <div class="section-header ion-padding-horizontal">
         <h1>{{ translate('Pre-order emails') }}</h1>
-        <p>{{ translate('OMS sends these emails to customers through Klaviyo when a pre-order event happens. Turn an email off to stop OMS sending it for this store.') }}</p>
+        <p>{{ translate('When a pre-order event happens, OMS queues the email and sends it through the store\'s email gateway within about a minute. Edit what each email sends, or turn it off for this store.') }}</p>
       </div>
 
       <ion-progress-bar v-if="settingsLoading" type="indeterminate" />
@@ -39,8 +39,9 @@
             <ion-item>
               <ion-icon slot="start" :icon="setting.gatewayConfigured ? checkmarkCircleOutline : alertCircleOutline" :color="setting.gatewayConfigured ? 'success' : 'warning'" />
               <ion-label class="ion-text-wrap">
-                {{ setting.gatewayConfigured ? translate('Klaviyo gateway set') : translate('No Klaviyo gateway set') }}
-                <p v-if="!setting.gatewayConfigured">{{ translate('Set the email setting\'s gateway remote and auth for this store, or the email cannot reach Klaviyo.') }}</p>
+                {{ setting.gatewayConfigured ? translate('Gateway set') : translate('No gateway set') }}
+                <p v-if="setting.gatewayConfigured">{{ gatewayLabel(setting.systemMessageRemoteId) }}</p>
+                <p v-else>{{ translate('Set the gateway and its auth ID, or the email cannot reach the email provider.') }}</p>
               </ion-label>
             </ion-item>
             <ion-item v-if="setting.subject">
@@ -48,6 +49,19 @@
                 <p class="overline">{{ translate('Subject') }}</p>
                 {{ setting.subject }}
               </ion-label>
+            </ion-item>
+            <ion-item v-if="setting.fromAddress">
+              <ion-label class="ion-text-wrap">
+                <p class="overline">{{ translate('From') }}</p>
+                {{ setting.fromAddress }}
+                <p v-if="setting.ccAddress || setting.bccAddress">
+                  {{ [setting.ccAddress && translate('CC {address}', { address: setting.ccAddress }), setting.bccAddress && translate('BCC {address}', { address: setting.bccAddress })].filter(Boolean).join(', ') }}
+                </p>
+              </ion-label>
+            </ion-item>
+            <ion-item button :detail="true" :disabled="!canUpdate" @click="edit(setting)">
+              <ion-icon slot="start" :icon="createOutline" />
+              <ion-label>{{ translate('Edit email settings') }}</ion-label>
             </ion-item>
           </ion-list>
           <ion-card-content class="email-counts">
@@ -137,14 +151,15 @@
 import {
   IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent,
   IonHeader, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonMenuButton,
-  IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToggle, IonToolbar, onIonViewWillEnter,
+  IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter,
 } from '@ionic/vue';
-import { alertCircleOutline, checkmarkCircleOutline, mailOutline } from 'ionicons/icons';
+import { alertCircleOutline, checkmarkCircleOutline, createOutline, mailOutline } from 'ionicons/icons';
 import { DateTime } from 'luxon';
 import { computed, reactive, ref, watch } from 'vue';
 import { StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
-import { useCommunications, type CommunicationEventRow, type PreorderEmailSetting } from '@/composables/useCommunications';
+import { useCommunications, type CommunicationEventRow, type EmailGateway, type EmailSettingChanges, type PreorderEmailSetting } from '@/composables/useCommunications';
+import EmailSettingModal from '@/components/communications/EmailSettingModal.vue';
 import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user';
 import router from '@/router';
@@ -167,7 +182,7 @@ const PAGE_SIZE = 20;
 const seed = useSeedData();
 const productStore = useProductStore();
 const userStore = useUserStore();
-const { fetchEmailSettings, setEmailEnabled, fetchEvents, fetchCounts } = useCommunications();
+const { fetchEmailSettings, setEmailEnabled, updateEmailSetting, fetchEmailGateways, fetchEvents, fetchCounts } = useCommunications();
 
 const productStoreId = computed(() => productStore.getCurrentProductStore?.productStoreId || '');
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_COMMS_UPDATE));
@@ -178,6 +193,7 @@ const settingsError = ref('');
 const toggling = ref('');
 /** Re-keys the toggles after each save, so a failed one shows the server's state again. */
 const settingsRevision = ref(0);
+const gateways = ref<EmailGateway[]>([]);
 const counts7 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
 const counts30 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
 
@@ -216,17 +232,22 @@ const emailStatusLabel = (statusId?: string) => {
 
 const daysAgo = (days: number) => DateTime.now().minus({ days }).toISODate() as string;
 
+const gatewayLabel = (systemMessageRemoteId?: string) =>
+  gateways.value.find((gateway) => gateway.systemMessageRemoteId === systemMessageRemoteId)?.description || systemMessageRemoteId || '';
+
 async function loadSettings() {
   if (!productStoreId.value) return;
   settingsLoading.value = true;
   settingsError.value = '';
   try {
-    const [rows, week, month] = await Promise.all([
+    const [rows, week, month, gatewayRows] = await Promise.all([
       fetchEmailSettings(productStoreId.value),
       fetchCounts(productStoreId.value, daysAgo(7)),
       fetchCounts(productStoreId.value, daysAgo(30)),
+      fetchEmailGateways().catch(() => [] as EmailGateway[]),
     ]);
     settings.value = rows;
+    gateways.value = gatewayRows;
     counts7.value = week;
     counts30.value = month;
   } catch (err) {
@@ -302,6 +323,25 @@ function openOrder(orderId?: string) {
 function clearEventFilters() {
   Object.assign(eventFilters, { emailType: 'All', statusId: 'All', fromDate: '', thruDate: '' });
   orderQuery.value = '';
+}
+
+async function edit(setting: PreorderEmailSetting) {
+  const modal = await modalController.create({
+    component: EmailSettingModal,
+    componentProps: { header: emailTypeLabel(setting.emailType), setting, gateways: gateways.value },
+  });
+  await modal.present();
+  const { data, role } = await modal.onDidDismiss<EmailSettingChanges>();
+  if (role !== 'confirm' || !data || !Object.keys(data).length) return;
+  try {
+    await updateEmailSetting(productStoreId.value, setting.emailType, data);
+    await showToast(translate('{email} settings saved.', { email: emailTypeLabel(setting.emailType) }));
+  } catch (err) {
+    await showToast(errorMessage(err, translate('Failed to update the email setting.')));
+  } finally {
+    await loadSettings();
+    settingsRevision.value += 1;
+  }
 }
 
 async function toggle(setting: PreorderEmailSetting, enabled: boolean) {
