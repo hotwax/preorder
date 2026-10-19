@@ -97,6 +97,58 @@ export interface PurchaseOrderSummary {
   futureInventoryBatchCount?: number;
 }
 
+/** A line of GET oms/purchaseOrders/{orderId}: the OrderItem, with what is left of it and its future inventory batch. */
+export interface PurchaseOrderLine {
+  orderItemSeqId: string;
+  shipGroupSeqId?: string;
+  productId: string;
+  productName?: string;
+  statusId?: string;
+  itemStatusDesc?: string;
+  facilityId?: string;
+  quantity?: number;
+  cancelQuantity?: number;
+  unitPrice?: number;
+  estimatedDeliveryDate?: number | string;
+  receivedQuantity?: number;
+  openQuantity?: number;
+  unshippedQuantity?: number;
+  futureInventoryItemId?: string;
+  futureInventoryStatusId?: string;
+  futureInventoryAvailableToPromise?: number;
+  futureInventoryReserved?: number;
+}
+
+/** GET oms/purchaseOrders/{orderId}: the OrderHeader with its supplier and destination, and its lines. */
+export interface PurchaseOrderDetail {
+  orderId: string;
+  orderName?: string;
+  externalId?: string;
+  statusId?: string;
+  orderStatusDesc?: string;
+  orderDate?: number | string;
+  productStoreId?: string;
+  grandTotal?: number;
+  currencyUom?: string;
+  supplierPartyId?: string;
+  supplierName?: string;
+  facilityId?: string;
+  facilityName?: string;
+  items: PurchaseOrderLine[];
+}
+
+/** A row of GET oms/purchaseOrders/{orderId}/receipts (PurchaseOrderItemShipmentReceipt). */
+export interface PurchaseOrderReceipt {
+  receiptId: string;
+  orderId?: string;
+  orderItemSeqId?: string;
+  productId?: string;
+  quantityAccepted?: number;
+  quantityRejected?: number;
+  datetimeReceived?: number | string;
+  receivedByUserLoginId?: string;
+}
+
 /** One row of GET poorti/purchaseShipments: a PURCHASE_SHIPMENT with what was accepted and rejected on receipt. */
 export interface InboundShipmentSummary {
   shipmentId: string;

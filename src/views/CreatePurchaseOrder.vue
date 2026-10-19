@@ -166,7 +166,7 @@ watch(facilityOptions, (options) => {
 });
 
 const totalUnits = computed(() => form.items.reduce((sum, line) => sum + Number(line.quantity || 0), 0));
-const canSave = computed(() => form.supplierPartyId && form.facilityId && form.items.length
+const canSave = computed(() => productStore.getCurrentProductStoreId && form.supplierPartyId && form.facilityId && form.items.length
   && form.items.every((line) => Number(line.quantity) > 0 && line.arrivalDate && line.arrivalDate >= todayValue()));
 
 const suppliersError = ref('');
@@ -227,7 +227,7 @@ async function save() {
     const result = await createPurchaseOrder({
       supplierPartyId: form.supplierPartyId,
       facilityId: form.facilityId,
-      productStoreId: productStore.getCurrentProductStoreId || undefined,
+      productStoreId: productStore.getCurrentProductStoreId,
       externalId: form.externalId.trim() || undefined,
       orderName: form.orderName.trim() || undefined,
       statusId: form.statusId,
@@ -236,9 +236,18 @@ async function save() {
       futureInventoryItemTypeId: form.futureInventoryItemTypeId,
       items: form.items.map((line) => ({ productId: line.productId, quantity: Number(line.quantity), unitPrice: line.unitPrice === undefined || line.unitPrice === null || (line.unitPrice as any) === '' ? undefined : Number(line.unitPrice), arrivalDate: line.arrivalDate })),
     });
-    await commonUtil.showToast(form.createFutureInventory && canUpdateFutureInventory.value
-      ? translate('Purchase order {orderId} created with {count} future inventory batches.', { orderId: result.orderId, count: result.futureInventoryItemIds?.length ?? 0 })
-      : translate('Purchase order {orderId} created.', { orderId: result.orderId }));
+    if (result.futureInventoryError) {
+      // The order exists without its batches: the toast stays until dismissed, and Sell as pre-order on the order adds them
+      const toast: any = await commonUtil.showToast(
+        translate('Purchase order {orderId} created, but its future inventory was not: {error} Use Sell as pre-order on the order to create it.', { orderId: result.orderId, error: result.futureInventoryError }),
+        { manualDismiss: true, canDismiss: true },
+      );
+      await toast.present();
+    } else {
+      await commonUtil.showToast(result.futureInventoryItemIds
+        ? translate('Purchase order {orderId} created with {count} future inventory batches.', { orderId: result.orderId, count: result.futureInventoryItemIds.length })
+        : translate('Purchase order {orderId} created.', { orderId: result.orderId }));
+    }
     usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
     useFutureInventorySearchStore().markStale();
     router.replace(`/purchase-orders/${encodeURIComponent(result.orderId)}`);

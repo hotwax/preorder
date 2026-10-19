@@ -49,7 +49,7 @@
 
           <div class="stats">
             <StatCard :title="translate('Ordered')" :stat="formatQuantity(sum('quantity') - sum('cancelQuantity'))" :subtitle="translate('{count} lines', { count: order.items.length })" />
-            <StatCard :title="translate('Received')" :stat="formatQuantity(sum('receivedQuantity'))" :subtitle="translate('{count} receipts', { count: order.receipts?.length ?? 0 })" />
+            <StatCard :title="translate('Received')" :stat="formatQuantity(sum('receivedQuantity'))" :subtitle="receiptsError ? translate('Receipts could not be loaded') : translate('{count} receipts', { count: receipts.length })" />
             <StatCard :title="translate('Still to arrive')" :stat="formatQuantity(sum('openQuantity'))" :subtitle="earliestArrival ? translate('Next arrival {date}', { date: formatDate(earliestArrival) }) : translate('No arrival date')" />
             <StatCard :title="translate('Sold as pre-order')" :stat="formatQuantity(sumBatches('futureInventoryReserved'))" :subtitle="translate('{count} of {total} lines have a future inventory batch', { count: formatNumber(linesWithBatch), total: formatNumber(order.items.length), n: order.items.length })" />
           </div>
@@ -98,11 +98,12 @@
           </ion-item>
         </ion-list>
 
-        <ion-list>
+        <ErrorState v-if="shipmentsError" :title="translate('Could not load the inbound shipments')" :message="shipmentsError" retryable @retry="loadShipments" />
+        <ion-list v-else>
           <ion-list-header>
             <ion-label>{{ translate('Inbound shipments') }}</ion-label>
           </ion-list-header>
-          <ion-item v-for="shipment in order.shipments" :key="shipment.shipmentId" button :router-link="`/inbound-shipments/${encodeURIComponent(shipment.shipmentId)}`">
+          <ion-item v-for="shipment in shipments" :key="shipment.shipmentId" button :router-link="`/inbound-shipments/${encodeURIComponent(shipment.shipmentId)}`">
             <ion-icon slot="start" :icon="boatOutline" />
             <ion-label>
               {{ shipment.externalId || shipment.shipmentId }}
@@ -111,7 +112,7 @@
             <ion-badge slot="end" :color="statusColor(shipment.statusId)">{{ seed.statusDescription(shipment.statusId || '') }}</ion-badge>
             <ion-note slot="end">{{ formatDate(shipment.estimatedArrivalDate) }}</ion-note>
           </ion-item>
-          <ion-item v-if="!order.shipments?.length" lines="none">
+          <ion-item v-if="!shipments.length" lines="none">
             <ion-label>{{ translate('No inbound shipments against this purchase order yet.') }}</ion-label>
           </ion-item>
         </ion-list>
@@ -142,41 +143,71 @@ import { formatDate, formatMoney, formatNumber, formatQuantity, formatRelativeDa
 import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
+import { CLOSED_PO_LINE_STATUSES } from '@/utils/purchaseOrders';
+import type { InboundShipmentSummary, PurchaseOrderDetail, PurchaseOrderLine, PurchaseOrderReceipt } from '@/types';
 import Actions from '@/authorization/actions';
 
 const props = defineProps<{ orderId: string }>();
 const seed = useSeedData();
 const { confirmAction, promptForDate } = usePrompts();
 const userStore = useUserStore();
-const { fetchPurchaseOrder, changeStatus, changeArrivalDate, sellAsPreorder } = usePurchaseOrderActions();
+const { fetchPurchaseOrder, fetchPurchaseOrderShipments, fetchPurchaseOrderReceipts, changeStatus, changeArrivalDate, sellAsPreorder } = usePurchaseOrderActions();
 
-const order = ref<any>();
+const order = ref<PurchaseOrderDetail>();
 const loading = ref(false);
 const error = ref('');
+/** The order's shipments and receipts load beside it: one that fails shows its own error, never hiding the order. */
+const shipments = ref<InboundShipmentSummary[]>([]);
+const shipmentsError = ref('');
+const receipts = ref<PurchaseOrderReceipt[]>([]);
+const receiptsError = ref('');
 
-const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order.value?.statusId));
+const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order.value?.statusId || ''));
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 // Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
-const openItems = computed(() => (order.value?.items || []).filter((item: any) => !['ITEM_CANCELLED', 'ITEM_COMPLETED'].includes(item.statusId)));
-const linesWithoutBatch = computed(() => openItems.value.filter((item: any) => !item.futureInventoryItemId).length);
+const openItems = computed(() => (order.value?.items || []).filter((item) => !CLOSED_PO_LINE_STATUSES.includes(item.statusId || '')));
+const linesWithoutBatch = computed(() => openItems.value.filter((item) => !item.futureInventoryItemId).length);
 /** Lines of any status with a batch: a closed line without one is not counted as having one. */
-const linesWithBatch = computed(() => (order.value?.items || []).filter((item: any) => item.futureInventoryItemId).length);
+const linesWithBatch = computed(() => (order.value?.items || []).filter((item) => item.futureInventoryItemId).length);
 /** The ids the toolbar title does not already show. */
 const idsBesideTitle = computed(() => [order.value?.orderId, order.value?.externalId].filter((id) => id && id !== (order.value?.orderName || props.orderId)).join(' - '));
-const earliestArrival = computed(() => openItems.value.map((item: any) => toMillis(item.estimatedDeliveryDate)).filter(Boolean).sort()[0]);
+const earliestArrival = computed(() => openItems.value.map((item) => toMillis(item.estimatedDeliveryDate)).filter((millis): millis is number => !!millis).sort((a, b) => a - b)[0]);
 
 /** An open line whose arrival date has passed: its supply is late. */
-const lineOverdueDays = (item: any) => (['ITEM_CANCELLED', 'ITEM_COMPLETED'].includes(item.statusId) ? 0 : daysOverdue(item.estimatedDeliveryDate));
+const lineOverdueDays = (item: PurchaseOrderLine) => (CLOSED_PO_LINE_STATUSES.includes(item.statusId || '') ? 0 : daysOverdue(item.estimatedDeliveryDate));
 
-const sum = (field: string) => (order.value?.items || []).reduce((total: number, item: any) => total + Number(item[field] || 0), 0);
-const sumBatches = (field: string) => (order.value?.items || []).filter((item: any) => item.futureInventoryItemId).reduce((total: number, item: any) => total + Number(item[field] || 0), 0);
+type LineQuantity = 'quantity' | 'cancelQuantity' | 'receivedQuantity' | 'openQuantity' | 'futureInventoryReserved';
+const sum = (field: LineQuantity) => (order.value?.items || []).reduce((total, item) => total + Number(item[field] || 0), 0);
+const sumBatches = (field: LineQuantity) => (order.value?.items || []).filter((item) => item.futureInventoryItemId).reduce((total, item) => total + Number(item[field] || 0), 0);
 
+async function loadShipments() {
+  shipmentsError.value = '';
+  try {
+    shipments.value = await fetchPurchaseOrderShipments(props.orderId);
+  } catch (err) {
+    shipments.value = [];
+    shipmentsError.value = errorMessage(err, translate('Failed to load the inbound shipments.'));
+  }
+}
+
+async function loadReceipts() {
+  receiptsError.value = '';
+  try {
+    receipts.value = await fetchPurchaseOrderReceipts(props.orderId);
+  } catch (err) {
+    receipts.value = [];
+    receiptsError.value = errorMessage(err, translate('Failed to load the receipts.'));
+  }
+}
+
+/** The order, and its shipments and receipts beside it: a part that fails shows its own error, never hiding the order. */
 async function load() {
   loading.value = true;
   error.value = '';
   try {
-    order.value = await fetchPurchaseOrder(props.orderId);
+    const [orderRow] = await Promise.all([fetchPurchaseOrder(props.orderId), loadShipments(), loadReceipts()]);
+    order.value = orderRow;
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to load the purchase order.'));
   } finally {
@@ -222,7 +253,7 @@ async function changeArrival() {
     translate('Change date'),
     toDateInputValue(earliestArrival.value),
   );
-  if (arrivalDate) await run(() => changeArrivalDate(props.orderId, arrivalDate), translate('Arrival date changed.'));
+  if (arrivalDate) await run(() => changeArrivalDate(props.orderId, arrivalDate, order.value?.items), translate('Arrival date changed.'));
 }
 
 async function sellAsPreorderNow() {
