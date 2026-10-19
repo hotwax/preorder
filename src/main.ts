@@ -1,16 +1,10 @@
-import { createApp } from 'vue'
+import { createApp, watchEffect } from 'vue'
 import App from './App.vue'
 import router from './router';
-
 import { IonicVue } from '@ionic/vue';
-import i18n from './i18n'
-import store from './store'
-import { DateTime } from 'luxon';
-import { sortSizes } from "@/apparel-sorter"
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css';
-import '@hotwax/apps-theme';
 
 /* Basic CSS for apps built with Ionic */
 import '@ionic/vue/css/normalize.css';
@@ -25,136 +19,59 @@ import '@ionic/vue/css/text-transformation.css';
 import '@ionic/vue/css/flex-utils.css';
 import '@ionic/vue/css/display.css';
 
+/* Ionic Dark Mode */
+import '@ionic/vue/css/palettes/dark.system.css';
+
 /* Theme variables */
 import './theme/variables.css';
-import { dxpComponents } from '@hotwax/dxp-components'
-import { login, logout, loader, fetchProducts } from './user-utils';
-import permissionPlugin, { Actions, hasPermission } from '@/authorization';
-import permissionRules from '@/authorization/Rules';
-import permissionActions from '@/authorization/Actions';
-import { setUserTimeZone, getAvailableTimeZones, setUserLocale, setUserPreference, getUserPreference} from '@/adapter'
-import localeMessages from './i18n/locales';
-import { getConfig, getProductIdentificationPref, initialise, setProductIdentificationPref } from '@/adapter'
-import { UtilService } from './services/UtilService';
+import "@common/css/settings.css"
+import "@common/css/theme.css"
+
+import { createPinia } from 'pinia';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { commonUtil, cookieHelper, createDxpI18n, imagePreview, initialiseConfig, logger, segmentHeight } from '@common';
+import { preorderDb } from './db/preorderDb';
+import { useUserStore } from './store/user';
+import localeMessages from './locales';
+
+// Keeps commonUtil out of db/preorderDb.ts, and therefore out of the sync worker chunk.
+preorderDb.setOmsInstanceResolver(() => commonUtil.getOMSInstanceName());
+
+const pinia = createPinia().use(piniaPluginPersistedstate);
+const i18n = createDxpI18n(localeMessages)
+// Settings saves the chosen language in a cookie; start in it, and keep <html lang> in step so
+// screen readers and the browser's spellcheck and hyphenation use the same language.
+const savedLocale = cookieHelper().get('locale');
+if(savedLocale && savedLocale in localeMessages) {i18n.global.locale.value = savedLocale;}
+watchEffect(() => { document.documentElement.lang = i18n.global.locale.value; });
 
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md',
     innerHTMLTemplatesEnabled: true
   })
-  .use(router)
-  .use(i18n)
-  .use(store)
-  .use(permissionPlugin, {
-    rules: permissionRules,
-    actions: permissionActions
+  .use(logger, {
+    level: import.meta.env.VITE_DEFAULT_LOG_LEVEL
   })
-  .use(dxpComponents, {
-    Actions,
-    defaultImgUrl: require("@/assets/images/defaultImage.png"),
-    login,
-    logout,
-    loader,
-    appLoginUrl: process.env.VUE_APP_LOGIN_URL as string,
-    getConfig: getConfig,
-    initialise: initialise,
-    localeMessages,
-    setUserLocale,
-    setUserTimeZone,
-    getAvailableTimeZones,
-    getProductIdentificationPref,
-    setProductIdentificationPref,
-    hasPermission,
-    fetchGoodIdentificationTypes: UtilService.fetchGoodIdentificationTypes,
-    fetchProducts,
-    getUserPreference,
-    setUserPreference
-  });
- 
-// Filters are removed in Vue 3 and global filter introduced https://v3.vuejs.org/guide/migration/filters.html#global-filters
-app.config.globalProperties.$filters = {
-  formatDate(value: any, inFormat?: string, outFormat = 'MM-dd-yyyy') {
-    if(inFormat){
-      return DateTime.fromFormat(value, inFormat).toFormat(outFormat);
-    }
-    return DateTime.fromISO(value).toFormat(outFormat);
-  },
-  formatUtcDate(value: any, inFormat?: any, outFormat = 'MM-dd-yyyy') {
-    // TODO Use Loxon instead
-    // TODO Make default format configurable and from environment variables
-    const userProfile = store.getters['user/getUserProfile'];
-    // TODO Fix this setDefault should set the default timezone instead of getting it everytiem and setting the tz
-    return DateTime.fromISO(value, { zone: 'utc' }).setZone(userProfile.userTimeZone).toFormat(outFormat ? outFormat : 'MM-dd-yyyy')
-  },
-  getOrderIdentificationId(identifications: any, id: string) {
-    let  externalId = ''
-    if (identifications) {
-      const externalIdentification = identifications.find((identification: any) => identification.startsWith(id))
-      const externalIdentificationSplit = externalIdentification ? externalIdentification.split('/') : [];
-      externalId = externalIdentificationSplit[1] ? externalIdentificationSplit[1] : '';
-    }
-    return externalId;
-  },
-  getFeature(featureHierarchy: any, featureKey: string) {
-    let  featureValue = ''
-    if (featureHierarchy) {
-      const feature = featureHierarchy.find((featureItem: any) => featureItem.startsWith(featureKey))
-      const featureSplit = feature ? feature.split('/') : [];
-      featureValue = featureSplit[2] ? featureSplit[2] : '';
-    }
-    return featureValue;
-  },
-  groupFeatures(featureHierarchy: any) {
-    if (featureHierarchy) {
-      const features = featureHierarchy.reduce((filteredFeatures: any, feature: any) => {
-        const featureSplit = feature.split('/');
-        if (featureSplit[1] && featureSplit[2]) {
-          filteredFeatures[featureSplit[1]] ? filteredFeatures[featureSplit[1]].push(featureSplit[2]) : filteredFeatures[featureSplit[1]] = [featureSplit[2]]
-        }  
-        return filteredFeatures;
-      }, {});
-      const sortedFeatures = {} as any;
-      Object.keys(features).sort().map((key) => sortedFeatures[key] = features[key].join(', '))
-      return sortedFeatures;
-    }
-  },
-  getFeatures(featureHierarchy: any, featureKey: string) {
-    let featuresValue = ''
-    if (featureHierarchy) {
-      let featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
-        const featureSplit = feature ? feature.split('/') : [];
-        const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        return featureValue;
-      })
-      featuresList = featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList
-      featuresValue = featuresList.join(" ");
-    }
-    return featuresValue;
-  },
-  getFeaturesList(featureHierarchy: any, featureKey: string) {
-    let featuresList = [] as any;
-    if (featureHierarchy) {
-      featuresList = featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).map((feature: any) => {
-        const featureSplit = feature ? feature.split('/') : [];
-        const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        return featureValue;
-      })
-    }
-    return featureKey === '1/SIZE/' ? sortSizes(featuresList) : featuresList;
-  },
-  getCustomerLoyalty(orderNotes: any, cusotmerLoyaltyOptions: any) {
-    let  customerLoyalty = '' as any
-    if (orderNotes && cusotmerLoyaltyOptions) {
-      for (const customerLoyaltyOption of Object.entries(cusotmerLoyaltyOptions)) {
-          if (orderNotes.includes(customerLoyaltyOption[0])) {
-            customerLoyalty = customerLoyaltyOption[1];
-          }
-      }
-    }
-    return customerLoyalty;
-  },
-}
+  .use(i18n)
+  .use(pinia)
 
-router.isReady().then(() => {
+initialiseConfig({
+  postLogin: useUserStore().postLogin,
+  postLogout: useUserStore().postLogout,
+  get oms() { return useUserStore().oms },
+  set oms(val) { useUserStore().oms = val },
+  get appVersion() { return useUserStore().appVersion },
+  set appVersion(val) { useUserStore().appVersion = val },
+  get current() { return useUserStore().current },
+  set current(val) { useUserStore().current = val },
+  router: router
+})
+
+app.use(router)
+
+router.isReady().then(async () => {
+  app.directive('image-preview', imagePreview)
+  app.directive('segment-height', segmentHeight)
   app.mount('#app');
 });

@@ -8,32 +8,39 @@
         "**/.*",
         "**/node_modules/**"
       ],
-      "rewrites": [ {
-        "source": "**",
-        "destination": "/index.html"
-      } ],
-      "headers": [ {
-        "source": "**",
-        "headers": [ {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
+      "rewrites": [
         {
-          "key": "X-Content-Type-Options",
-          "value": "NoSniff"
-        },
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
         {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
-        },
-        {
-          "key": "strict-transport-security",
-          "value": "max-age=31536000; includeSubDomains; preload"
-        },{
-          "key": "Permissions-Policy",
-          "value": "camera=self"
-        } ]
-      }]
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *; frame-ancestors https://admin.shopify.com https://*.myshopify.com;"
+            },
+            {
+              "key": "strict-transport-security",
+              "value": "max-age=31536000; includeSubDomains; preload"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=self"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "NoSniff"
+            }
+          ]
+        }
+      ]
     },
     {
       "target": "dev",
@@ -43,32 +50,39 @@
         "**/.*",
         "**/node_modules/**"
       ],
-      "rewrites": [ {
-        "source": "**",
-        "destination": "/index.html"
-      } ],
-      "headers": [ {
-        "source": "**",
-        "headers": [ {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
+      "rewrites": [
         {
-          "key": "X-Content-Type-Options",
-          "value": "NoSniff"
-        },
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
         {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
-        },
-        {
-          "key": "strict-transport-security",
-          "value": "max-age=31536000; includeSubDomains; preload"
-        },{
-          "key": "Permissions-Policy",
-          "value": "camera=self"
-        } ]
-      }]
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *; frame-ancestors https://admin.shopify.com https://*.myshopify.com;"
+            },
+            {
+              "key": "strict-transport-security",
+              "value": "max-age=31536000; includeSubDomains; preload"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=self"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "NoSniff"
+            }
+          ]
+        }
+      ]
     },
     {
       "target": "uat",
@@ -78,32 +92,39 @@
         "**/.*",
         "**/node_modules/**"
       ],
-      "rewrites": [ {
-        "source": "**",
-        "destination": "/index.html"
-      } ],
-      "headers": [ {
-        "source": "**",
-        "headers": [ {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
+      "rewrites": [
         {
-          "key": "X-Content-Type-Options",
-          "value": "NoSniff"
-        },
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
         {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *;connect-src 'self' *"
-        },
-        {
-          "key": "strict-transport-security",
-          "value": "max-age=31536000; includeSubDomains; preload"
-        },{
-          "key": "Permissions-Policy",
-          "value": "camera=self"
-        } ]
-      }]
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self';font-src 'self' data: *;script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://www.gstatic.com *.firebaseapp.com;img-src 'self' 'unsafe-inline' *.shopify.com javascript: ;style-src 'self' 'unsafe-inline' *; connect-src 'self' *; frame-ancestors https://admin.shopify.com https://*.myshopify.com;"
+            },
+            {
+              "key": "strict-transport-security",
+              "value": "max-age=31536000; includeSubDomains; preload"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=self"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "NoSniff"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

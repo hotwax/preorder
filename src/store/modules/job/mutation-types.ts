@@ -1,6 +1,0 @@
-export const SN_JOB = 'job'
-export const JOB_LIST_UPDATED = SN_JOB + '/LIST_UPDATED'
-export const JOB_LOGS_UPDATED = SN_JOB + '/LOGS_UPDATED'
-export const JOB_POLLING_UPDATED = SN_JOB + '/POLLING_UPDATED'
-export const JOB_UPDATED = SN_JOB + '/UPDATED'
-export const JOB_CTGRY_AND_BRKRNG_UPDATED = SN_JOB + '/CTGRY_AND_BRKRNG_UPDATED'

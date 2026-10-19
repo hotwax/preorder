@@ -1,138 +1,74 @@
 <template>
-  <IonApp>
-    <IonSplitPane content-id="main-content" when="lg">
-      <Menu />
-      <ion-router-outlet id="main-content"></ion-router-outlet>
-    </IonSplitPane>
-  </IonApp>
+  <ion-app>
+    <ion-split-pane content-id="main-content" when="lg">
+      <Menu v-if="router.currentRoute.value.name !== 'Login'" />
+      <ion-router-outlet id="main-content" />
+    </ion-split-pane>
+    <!-- Fast Travel: Cmd/Ctrl+K app switcher + deep-link router across the HotWax suite -->
+    <FastTravel current-app="preorder" />
+  </ion-app>
 </template>
 
-<script lang="ts">
-import {
-  IonApp,
-  IonRouterOutlet,
-  IonSplitPane
-} from "@ionic/vue";
-import Menu from '@/components/Menu.vue';
-import { defineComponent } from "vue";
-import { useI18n } from 'vue-i18n'
-import TaskQueue from './task-queue';
-import OfflineHelper from "./offline-helper"
-import emitter from "@/event-bus"
-import { loadingController } from '@ionic/vue';
-import { mapGetters, useStore } from 'vuex';
-import { Settings } from 'luxon'
-import { initialise, resetConfig } from '@/adapter'
-import { useRouter } from 'vue-router';
-import { useProductIdentificationStore } from "@hotwax/dxp-components";
+<script setup lang="ts">
+import { IonApp, IonRouterOutlet, IonSplitPane, loadingController } from '@ionic/vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { Settings } from 'luxon';
+import { emitter, FastTravel, translate } from '@common';
+import { useAuth } from '@common/composables/useAuth';
+import { startAppDbSync } from '@/db/appDbSync';
+import Menu from '@/components/layout/Menu.vue';
+import router from './router';
+import { useUserStore } from '@/store/user';
 
-export default defineComponent({
-  name: "App",
-  components: {
-    IonApp,
-    IonRouterOutlet,
-    IonSplitPane,
-    Menu
-  },
-  data() {
-    return {
-      loader: null as any,
-      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0
-    }
-  },
-  computed: {
-    ...mapGetters({
-      userProfile: 'user/getUserProfile',
-      userToken: 'user/getUserToken',
-      instanceUrl: 'user/getInstanceUrl',
-      currentEComStore: 'user/getCurrentEComStore'
-    })
-  },
-  methods: {
-    async presentLoader() {
-      if (!this.loader) {
-        this.loader = await loadingController
-          .create({
-            message: this.$t("Click the backdrop to dismiss."),
-            translucent: true,
-            backdropDismiss: true
-          });
-      }
-      this.loader.present();
-    },
-    dismissLoader() {
-      if (this.loader) {
-        this.loader.dismiss();
-        this.loader = null as any;
-      }
-    },
-    async unauthorised() {
-      // Mark the user as unauthorised, this will help in not making the logout api call in actions
-      this.store.dispatch("user/logout", { isUserUnauthorised: true });
-      const redirectUrl = window.location.origin + '/login';
-      window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`;
-    }
-  },
-  created() {
-    initialise({
-      token: this.userToken,
-      instanceUrl: this.instanceUrl,
-      cacheMaxAge: this.maxAge,
-      events: {
-        unauthorised: this.unauthorised,
-        responseError: () => {
-          setTimeout(() => this.dismissLoader(), 100);
-        },
-        queueTask: (payload: any) => {
-          emitter.emit("queueTask", payload);
-        }
-      }
-    })
-  },
-  async mounted() {
-    this.loader = await loadingController
-      .create({
-        message: this.$t("Click the backdrop to dismiss."),
-        translucent: true,
-        backdropDismiss: true
-      });
-    emitter.on('presentLoader', this.presentLoader);
-    emitter.on('dismissLoader', this.dismissLoader);
-    // Handles case when user resumes or reloads the app
-    // Luxon timezzone should be set with the user's selected timezone
-    if (this.userProfile && this.userProfile.userTimeZone) {
-      Settings.defaultZone = this.userProfile.userTimeZone;
-    }
+const loader = ref<HTMLIonLoadingElement | null>(null);
+const { isAuthenticated } = useAuth();
+const userStore = useUserStore();
+const userProfile = computed(() => userStore.getUserProfile);
 
-    // Get product identification from api using dxp-component
-    await useProductIdentificationStore().getIdentificationPref(this.currentEComStore?.productStoreId)
-      .catch((error) => console.error(error));
-  },
-  unmounted() {
-    emitter.off('presentLoader', this.presentLoader);
-    emitter.off('dismissLoader', this.dismissLoader);
-    resetConfig()
-  },
-  setup() {
-    const store = useStore();
-    TaskQueue.init();
-    OfflineHelper.register();
-    const { t, locale } = useI18n();
-    const router = useRouter();
-    return {
-      router,
-      TaskQueue,
-      OfflineHelper,
-      t,
-      locale,
-      store
-    };
-  },
+async function presentLoader(options = { message: '', backdropDismiss: true }) {
+  if (options.message && loader.value) dismissLoader();
+
+  if (!loader.value) {
+    loader.value = await loadingController.create({
+      message: options.message ? translate(options.message) : translate("Click the backdrop to dismiss."),
+      translucent: true,
+      backdropDismiss: options.backdropDismiss
+    });
+  }
+
+  loader.value.present();
+}
+
+function dismissLoader() {
+  if (loader.value) {
+    loader.value.dismiss();
+    loader.value = null;
+  }
+}
+
+onMounted(async () => {
+  loader.value = await loadingController.create({
+    message: translate("Click the backdrop to dismiss."),
+    translucent: true,
+    backdropDismiss: true
+  });
+  emitter.on('presentLoader', presentLoader);
+  emitter.on('dismissLoader', dismissLoader);
+
+  const timeZone = userProfile.value?.timeZone || userProfile.value?.userTimeZone;
+  if (timeZone) Settings.defaultZone = timeZone;
+
+});
+
+watch(isAuthenticated, (authenticated) => {
+  if (authenticated) {
+    userStore.fetchPermissions().catch(() => undefined);
+    void startAppDbSync();
+  }
+}, { immediate: true });
+
+onUnmounted(() => {
+  emitter.off('presentLoader', presentLoader);
+  emitter.off('dismissLoader', dismissLoader);
 });
 </script>
-<style scoped>
-
-ion-item.selected {
-  --color: var(--ion-color-secondary);
-}
-</style>

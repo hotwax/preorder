@@ -1,5 +1,6 @@
 # Specifies intentionally untracked files to ignore when using Git
 # http://git-scm.com/docs/gitignore
+# Mirrors accxui sibling apps (job-manager, transfers) — keep in sync.
 
 *~
 *.sw[mnpcod]
@@ -17,6 +18,8 @@ $RECYCLE.BIN/
 log.txt
 npm-debug.log*
 
+/.tmp
+/tmp
 /.idea
 /.ionic
 /.sass-cache
@@ -25,13 +28,20 @@ npm-debug.log*
 /.vscode
 /coverage
 /dist
+/dev-dist
 /node_modules
 /platforms
 /plugins
 /www
-.firebase/
 
+# Secrets — credentials live here in .env.local. NEVER commit.
 .env
-.history
 .env.*
 !.env.example
+
+.history
+.firebase
+.gradle
+/.claude
+/.gstack
+.claude/launch.json

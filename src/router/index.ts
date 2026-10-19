@@ -1,124 +1,76 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
-import { RouteRecordRaw } from 'vue-router';
-import Products from '../views/products.vue'
-import ProductDetails from '../views/product-details.vue'
-import AuditProductDetails from '../views/audit-product-details.vue'
-import Orders from '../views/orders.vue'
-import Audit from '../views/audit.vue'
-import Settings from '../views/settings.vue'
-import store from '@/store';
-import { DxpLogin, useAuthStore } from '@hotwax/dxp-components';
-import { loader } from '@/user-utils';
-import { hasPermission } from '@/authorization';
+import type { RouteRecordRaw } from 'vue-router';
+import { Login, translate } from '@common';
+import { useAuth } from '@common/composables/useAuth';
+import { useUserStore } from '@/store/user';
 import { showToast } from '@/utils';
-import { translate } from '@/i18n';
+import Actions from '@/authorization/actions';
+import Dashboard from '@/views/Dashboard.vue';
+import Preorders from '@/views/Preorders.vue';
+import PreorderDetail from '@/views/PreorderDetail.vue';
+import FutureInventory from '@/views/FutureInventory.vue';
+import FutureInventoryDetail from '@/views/FutureInventoryDetail.vue';
+import PurchaseOrders from '@/views/PurchaseOrders.vue';
+import PurchaseOrderDetail from '@/views/PurchaseOrderDetail.vue';
+import CreatePurchaseOrder from '@/views/CreatePurchaseOrder.vue';
+import InboundShipments from '@/views/InboundShipments.vue';
+import InboundShipmentDetail from '@/views/InboundShipmentDetail.vue';
+import PurchaseOrderImports from '@/views/PurchaseOrderImports.vue';
+import Communications from '@/views/Communications.vue';
+import BulkUpdates from '@/views/BulkUpdates.vue';
+import Settings from '@/views/Settings.vue';
 
-// Defining types for the meta values
-declare module 'vue-router' {
-  interface RouteMeta {
-    permissionId?: string;
+const authGuard = async () => {
+  if (!useAuth().isAuthenticated.value) {
+    return { path: '/login' };
   }
-}
-
-const authGuard = async (to: any, from: any, next: any) => {
-  const authStore = useAuthStore()
-  if (!authStore.isAuthenticated || !store.getters['user/isAuthenticated']) {
-    await loader.present('Authenticating')
-    // TODO use authenticate() when support is there
-    const redirectUrl = window.location.origin + '/login'
-    window.location.href = `${process.env.VUE_APP_LOGIN_URL}?redirectUrl=${redirectUrl}`
-    loader.dismiss()
-  }
-  next()
 };
 
-const loginGuard = (to: any, from: any, next: any) => {
-  const authStore = useAuthStore()
-  if (authStore.isAuthenticated && !to.query?.token && !to.query?.oms) {
-    next('/')
-  }
-  next();
-};
+const page = (path: string, name: string, component: any, permissionId?: string): RouteRecordRaw => ({
+  path,
+  name,
+  component,
+  props: path.includes(':'),
+  beforeEnter: authGuard,
+  meta: permissionId ? { permissionId } : {}
+});
 
-const routes: Array<RouteRecordRaw> = [
-   {
-    path: '/',
-    redirect: '/orders'
-  },
-  {
-    path: '/login',
-    name: 'dxp-login',
-    component: DxpLogin,
-    beforeEnter: loginGuard
-  },
-  {
-    path: '/products',
-    name: 'products',
-    component: Products,
-    beforeEnter: authGuard,
-    meta: {
-      permissionId: "APP_PRODUCTS_VIEW"
-    }
-  },
-  {
-    path: '/product-details/:id',
-    name: 'Product-details',
-    component: ProductDetails,
-    beforeEnter: authGuard,
-    meta: {
-      permissionId: "APP_PRDT_DTLS_VIEW"
-    }
-  },
-  {
-    path: '/orders',
-    name: 'Orders',
-    component: Orders,
-    beforeEnter: authGuard,
-    meta: {
-      permissionId: "APP_ORDERS_VIEW"
-    }
-  },
-  {
-    path: '/audit',
-    name: 'Audit',
-    component: Audit,
-    beforeEnter: authGuard,
-    meta: {
-      permissionId: "APP_AUDIT_VIEW"
-    }
-  },
-  {
-    path: '/audit-product-details/:productId/',
-    name: 'AuditProductDetails',
-    component: AuditProductDetails,
-    beforeEnter: authGuard,
-    meta: {
-      permissionId: "APP_AUDIT_PRDT_DTLS_VIEW"
-    }
-  },
-  {
-    path: '/settings',
-    name: 'Settings',
-    component: Settings,
-    beforeEnter: authGuard
-  },
-]
+const routes: RouteRecordRaw[] = [
+  { path: '/', redirect: '/dashboard' },
+  { path: '/login', name: 'Login', component: Login },
+  page('/dashboard', 'Dashboard', Dashboard, Actions.APP_PREORDER_VIEW),
+  page('/preorders', 'Preorders', Preorders, Actions.APP_PREORDER_VIEW),
+  page('/preorders/:orderId', 'PreorderDetail', PreorderDetail, Actions.APP_PREORDER_VIEW),
+  page('/future-inventory', 'FutureInventory', FutureInventory, Actions.APP_PREORDER_VIEW),
+  page('/future-inventory/:futureInventoryItemId', 'FutureInventoryDetail', FutureInventoryDetail, Actions.APP_PREORDER_VIEW),
+  page('/purchase-orders', 'PurchaseOrders', PurchaseOrders, Actions.APP_PO_VIEW),
+  page('/purchase-orders/create', 'CreatePurchaseOrder', CreatePurchaseOrder, Actions.APP_PO_UPDATE),
+  page('/purchase-orders/:orderId', 'PurchaseOrderDetail', PurchaseOrderDetail, Actions.APP_PO_VIEW),
+  page('/inbound-shipments', 'InboundShipments', InboundShipments, Actions.APP_PO_VIEW),
+  page('/inbound-shipments/:shipmentId', 'InboundShipmentDetail', InboundShipmentDetail, Actions.APP_PO_VIEW),
+  page('/po-imports', 'PurchaseOrderImports', PurchaseOrderImports, Actions.APP_PO_VIEW),
+  page('/communications', 'Communications', Communications, Actions.APP_COMMS_VIEW),
+  page('/bulk-updates', 'BulkUpdates', BulkUpdates, Actions.APP_PREORDER_VIEW),
+  page('/settings', 'Settings', Settings),
+  { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
+];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
-})
+});
 
 router.beforeEach((to, from) => {
-  if (to.meta.permissionId && !hasPermission(to.meta.permissionId)) {
-    let redirectToPath = from.path;
-    // If the user has navigated from Login page or if it is page load, redirect user to settings page without showing any toast
-    if (redirectToPath == "/login" || redirectToPath == "/") redirectToPath = "/settings";
-    else showToast(translate('You do not have permission to access this page'));
-    return {
-      path: redirectToPath,
-    }
-  }
-})
+  // Enforce the canonical version URL on every navigation (no-op until the version is resolved).
+  if (useAuth().checkAppVersionRedirect()) return false;
 
-export default router
+  if (to.meta.permissionId && !useUserStore().hasPermission(to.meta.permissionId as string)) {
+    let redirectToPath = from.path;
+    // From the login page or on page load, land on Settings without a toast.
+    if (redirectToPath == "/login" || redirectToPath == "/") redirectToPath = "/settings";
+    else showToast(translate('You do not have permission to access this page.'));
+    return { path: redirectToPath };
+  }
+});
+
+export default router;
