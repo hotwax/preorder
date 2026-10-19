@@ -30,12 +30,9 @@ import "@common/css/theme.css"
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { commonUtil, cookieHelper, createDxpI18n, imagePreview, initialiseConfig, logger, segmentHeight } from '@common';
-import { commonDomains, registerDomains } from '@common/db';
 import { preorderDb } from './db/preorderDb';
 import { useUserStore } from './store/user';
 import localeMessages from './locales';
-
-registerDomains(Object.values(commonDomains));
 
 // Keeps commonUtil out of db/preorderDb.ts, and therefore out of the sync worker chunk.
 preorderDb.setOmsInstanceResolver(() => commonUtil.getOMSInstanceName());

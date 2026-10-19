@@ -9,13 +9,25 @@ import { defineAppDb } from "@common/db/schema/defineAppDb";
 import { commonSchema } from "@common/db/seed/seedSchema";
 
 /**
- * The app takes the whole common schema (seed reference data and the `products` master) and has
- * no tables of its own: purchase orders, shipments, future inventory and pre-orders are searched
- * live, so they stay in the stores that asked for them.
+ * The seed tables the app reads: labels (statuses, enums, facilities and their types, shipment
+ * methods), the product store picker, and the `products` master. The app has no tables of its own:
+ * purchase orders, shipments, future inventory and pre-orders are searched live, so they stay in the
+ * stores that asked for them.
  */
+const PREORDER_SEED_TABLES = [
+  "productStores",
+  "statuses",
+  "enums",
+  "facilities",
+  "facilityTypes",
+  "shipmentMethodTypes",
+  "products",
+] as const;
+
 export const preorderDb = defineAppDb({
   suffix: "PreorderDB",
-  version: 1,
-  schema: commonSchema,
+  // v2: only the seed tables the app reads, instead of the whole common schema
+  version: 2,
+  schema: commonSchema.pick([...PREORDER_SEED_TABLES]),
 });
 preorderDb.setOmsInstanceResolver(() => "default");
