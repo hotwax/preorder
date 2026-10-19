@@ -41,8 +41,8 @@
           </ion-card>
           <div class="stats">
             <StatCard :title="translate('Estimated arrival')" :stat="formatDate(shipment.estimatedArrivalDate) || '-'" :subtitle="arrivalOverdueDays ? overdueLabel(arrivalOverdueDays) : formatRelativeDay(shipment.estimatedArrivalDate)" />
-            <StatCard :title="translate('Shipped')" :stat="formatQuantity(shipment.quantityTotal)" :subtitle="translate('{count} items', { count: shipment.items?.length ?? 0 })" />
-            <StatCard :title="translate('Received')" :stat="formatQuantity(shipment.receivedQuantity)" :subtitle="translate('{count} receipts', { count: shipment.receipts?.length ?? 0 })" />
+            <StatCard :title="translate('Shipped')" :stat="formatQuantity(shipment.quantityTotal)" :subtitle="translate('{count} items', { count: shipment.items.length })" />
+            <StatCard :title="translate('Received')" :stat="formatQuantity(shipment.receivedQuantity)" :subtitle="Number(shipment.rejectedQuantity) > 0 ? translate('{count} rejected', countParams(shipment.rejectedQuantity)) : translate('{count} receipts', { count: shipment.receipts.length })" />
           </div>
         </section>
 
@@ -59,9 +59,10 @@
             <ion-label class="ion-text-end">
               {{ formatQuantity(item.receivedQuantity) }}
               <p>{{ translate('Received') }}</p>
+              <p v-if="Number(item.rejectedQuantity) > 0"><ion-text color="danger">{{ translate('{count} rejected', countParams(item.rejectedQuantity)) }}</ion-text></p>
             </ion-label>
           </div>
-          <ion-item v-if="!shipment.items?.length" lines="none">
+          <ion-item v-if="!shipment.items.length" lines="none">
             <ion-label>{{ translate('This shipment has no items.') }}</ion-label>
           </ion-item>
         </ion-list>
@@ -78,7 +79,7 @@
             <ion-note slot="end">{{ translate('{accepted} accepted, {rejected} rejected', { accepted: formatQuantity(receipt.quantityAccepted), rejected: formatQuantity(receipt.quantityRejected) }) }}</ion-note>
             <ion-note slot="end">{{ formatDateTime(receipt.datetimeReceived) }}</ion-note>
           </ion-item>
-          <ion-item v-if="!shipment.receipts?.length" lines="none">
+          <ion-item v-if="!shipment.receipts.length" lines="none">
             <ion-label>{{ translate('Nothing received yet.') }}</ion-label>
           </ion-item>
         </ion-list>
@@ -90,7 +91,7 @@
 <script setup lang="ts">
 import {
   IonBackButton, IonBadge, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonItem,
-  IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonTitle, IonToolbar, onIonViewWillEnter,
+  IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonText, IonTitle, IonToolbar, onIonViewWillEnter,
 } from '@ionic/vue';
 import { computed, ref } from 'vue';
 import { StatCard, translate } from '@common';
@@ -99,21 +100,22 @@ import { useInboundShipments } from '@/composables/useInboundShipments';
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
-import { formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
+import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
 import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
+import type { InboundShipmentDetail } from '@/types';
 
 const props = defineProps<{ shipmentId: string }>();
 const seed = useSeedData();
 const { primaryIdentifier } = useProductIdentity();
 const { fetchShipment } = useInboundShipments();
 
-const shipment = ref<any>();
+const shipment = ref<InboundShipmentDetail>();
 const loading = ref(false);
 const error = ref('');
 /** A shipment still on its way whose arrival date has passed. */
-const arrivalOverdueDays = computed(() => (['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(shipment.value?.statusId) ? 0 : daysOverdue(shipment.value?.estimatedArrivalDate)));
+const arrivalOverdueDays = computed(() => (['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(shipment.value?.statusId || '') ? 0 : daysOverdue(shipment.value?.estimatedArrivalDate)));
 
 async function load() {
   loading.value = true;

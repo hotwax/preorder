@@ -497,6 +497,7 @@
   "{count} records, live while in use": "{count} record, live while in use | {count} records, live while in use",
   "{count} records, not synced yet": "{count} record, not synced yet | {count} records, not synced yet",
   "{count} records, synced {time}": "{count} record, synced {time} | {count} records, synced {time}",
+  "{count} rejected": "{count} rejected",
   "{count} reserved": "{count} reserved",
   "{count} selected": "{count} selected",
   "{count} sold as pre-order": "{count} sold as pre-order",

@@ -97,6 +97,7 @@ export interface PurchaseOrderSummary {
   futureInventoryBatchCount?: number;
 }
 
+/** One row of GET poorti/purchaseShipments: a PURCHASE_SHIPMENT with what was accepted and rejected on receipt. */
 export interface InboundShipmentSummary {
   shipmentId: string;
   externalId?: string;
@@ -106,11 +107,28 @@ export interface InboundShipmentSummary {
   orderName?: string;
   orderExternalId?: string;
   destinationFacilityId?: string;
-  facilityName?: string;
   estimatedArrivalDate?: number | string;
   estimatedShipDate?: number | string;
   createdDate?: number | string;
   itemCount?: number;
   quantityTotal?: number;
+  /** Accepted on receipt. */
   receivedQuantity?: number;
+  rejectedQuantity?: number;
+}
+
+/** GET poorti/purchaseShipments/{shipmentId}: the list row, its items and its receipts. */
+export interface InboundShipmentDetail extends InboundShipmentSummary {
+  items: { shipmentItemSeqId: string; productId: string; productName?: string; quantity?: number; receivedQuantity?: number; rejectedQuantity?: number }[];
+  receipts: {
+    receiptId: string;
+    shipmentItemSeqId?: string;
+    productId: string;
+    orderId?: string;
+    orderItemSeqId?: string;
+    quantityAccepted?: number;
+    quantityRejected?: number;
+    datetimeReceived?: number | string;
+    receivedByUserLoginId?: string;
+  }[];
 }

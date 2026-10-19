@@ -4,14 +4,14 @@ import type { InboundShipmentSummary } from '@/types';
 
 export const DEFAULT_INBOUND_SHIPMENT_SORT = '-estimatedArrivalDate';
 
-/** Find inbound shipments created against purchase orders. */
+/** Find inbound shipments (poorti's purchase shipments), bound for the store's facilities. */
 export const useInboundShipmentSearchStore = defineFindStore<{
   statusId: string[];
   destinationFacilityId: string;
   arrivalDateFrom: string;
   arrivalDateThru: string;
 }, InboundShipmentSummary>('inboundShipmentSearch', {
-  url: 'preorder/inboundShipments',
+  url: 'poorti/purchaseShipments',
   listName: 'shipments',
   defaultSort: DEFAULT_INBOUND_SHIPMENT_SORT,
   defaultFilters: () => ({
