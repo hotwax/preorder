@@ -123,6 +123,8 @@ export const useProductStore = defineStore('productStore', {
           logger.error("Failed to fetch settings", error)
         }
       }
+      // The store changed while this was in flight: its settings, or the defaults, must not land on the new one
+      if (productStoreId !== this.currentProductStoreId) return
 
       Object.entries(defaultProductStoreSettings).forEach(([settingTypeEnumId, setting]: any) => {
         const { stateKey, value } = setting;
