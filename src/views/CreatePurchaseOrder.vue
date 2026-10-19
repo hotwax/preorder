@@ -20,7 +20,7 @@
               <ion-select-option v-for="supplier in suppliers" :key="supplier.partyId" :value="supplier.partyId">{{ supplier.name || supplier.partyId }}</ion-select-option>
             </ion-select>
             <ion-select v-model="form.facilityId" :label="requiredLabel('Destination')" label-placement="stacked" fill="outline" interface="popover" :disabled="!facilitiesSynced" :placeholder="facilityPlaceholder">
-              <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">{{ facility.facilityName || facility.facilityId }}</ion-select-option>
+              <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">{{ facility.label }}</ion-select-option>
             </ion-select>
             <ion-input v-model="form.externalId" :label="translate('External ID')" label-placement="stacked" fill="outline" :helper-text="translate('Generated when empty')" />
             <ion-input v-model="form.orderName" :label="translate('Name')" label-placement="stacked" fill="outline" />
