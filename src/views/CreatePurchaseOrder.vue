@@ -37,12 +37,13 @@
             <ion-card-title>{{ translate('Pre-order') }}</ion-card-title>
           </ion-card-header>
           <ion-list lines="none">
-            <ion-item>
+            <ion-item :disabled="!canUpdateFutureInventory">
               <ion-toggle v-model="form.createFutureInventory">{{ translate('Sell as pre-order') }}</ion-toggle>
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">
                 <p>{{ translate('Creates a future inventory batch for each line, at its arrival date and quantity, so it can be sold before it arrives.') }}</p>
+                <p v-if="!canUpdateFutureInventory">{{ translate('You do not have permission to create future inventory.') }}</p>
               </ion-label>
             </ion-item>
             <ion-item :disabled="!form.createFutureInventory">
@@ -117,6 +118,8 @@ import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import { useProductStore } from '@/store/productStore';
+import { useUserStore } from '@/store/user';
+import Actions from '@/authorization/actions';
 import { SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ProductItem from '@/components/common/ProductItem.vue';
@@ -132,6 +135,8 @@ const productStore = useProductStore();
 const { primaryId, secondaryId } = useProductIdentity();
 const { fetchSuppliers, createPurchaseOrder, searchOrderableProducts } = usePurchaseOrderActions();
 
+// Selling as pre-order creates future inventory: the FI permission, not the PO one that opens this page
+const canUpdateFutureInventory = computed(() => useUserStore().hasPermission(Actions.APP_FI_UPDATE));
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
 // The store's receiving facilities; right after login their tables are still filling, which is not "no facilities"
 const { facilityOptions, synced: facilitiesSynced } = useStoreFacilities();
@@ -150,7 +155,7 @@ const form = reactive({
   orderName: '',
   statusId: 'ORDER_APPROVED',
   currencyUomId: 'USD',
-  createFutureInventory: true,
+  createFutureInventory: canUpdateFutureInventory.value,
   futureInventoryItemTypeId: 'FIT_PRE_ORDER',
   items: [] as { productId: string; productName?: string; quantity: number; unitPrice?: number; arrivalDate: string }[],
 });
@@ -219,11 +224,11 @@ async function save() {
       orderName: form.orderName.trim() || undefined,
       statusId: form.statusId,
       currencyUomId: form.currencyUomId || undefined,
-      createFutureInventory: form.createFutureInventory,
+      createFutureInventory: form.createFutureInventory && canUpdateFutureInventory.value,
       futureInventoryItemTypeId: form.futureInventoryItemTypeId,
       items: form.items.map((line) => ({ productId: line.productId, quantity: Number(line.quantity), unitPrice: line.unitPrice === undefined || line.unitPrice === null || (line.unitPrice as any) === '' ? undefined : Number(line.unitPrice), arrivalDate: line.arrivalDate })),
     });
-    await showToast(form.createFutureInventory
+    await showToast(form.createFutureInventory && canUpdateFutureInventory.value
       ? translate('Purchase order {orderId} created with {count} future inventory batches.', { orderId: result.orderId, count: result.futureInventoryItemIds?.length ?? 0 })
       : translate('Purchase order {orderId} created.', { orderId: result.orderId }));
     usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);

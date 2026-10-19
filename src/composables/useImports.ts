@@ -2,10 +2,13 @@ import { api } from '@common';
 import { ensureOk } from '@/utils/response';
 import { dayBound } from '@/utils/format';
 
-/** The Data Manager configs this app tracks: purchase order and future inventory imports. */
-export const IMPORT_CONFIGS = [
-  { configId: 'IMPORT_PO', label: 'Purchase orders (CSV)', uploadable: true },
-  { configId: 'SYNC_PREORDER', label: 'Future inventory (CSV)', uploadable: true },
+/**
+ * The Data Manager configs this app tracks: purchase order and future inventory imports. An uploadable one names
+ * the app action (src/authorization/actions) an upload needs: a future inventory file creates or moves batches.
+ */
+export const IMPORT_CONFIGS: { configId: string; label: string; uploadable: boolean; uploadAction?: 'APP_PO_UPDATE' | 'APP_FI_UPDATE' }[] = [
+  { configId: 'IMPORT_PO', label: 'Purchase orders (CSV)', uploadable: true, uploadAction: 'APP_PO_UPDATE' },
+  { configId: 'SYNC_PREORDER', label: 'Future inventory (CSV)', uploadable: true, uploadAction: 'APP_FI_UPDATE' },
   { configId: 'IMP_NS_PURCHASE_ORDER', label: 'Purchase orders (NetSuite)', uploadable: false },
   { configId: 'IMP_NS_INB_SHIPMENT', label: 'Inbound shipments (NetSuite)', uploadable: false },
 ];

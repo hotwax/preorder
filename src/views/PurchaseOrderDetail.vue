@@ -38,12 +38,12 @@
                 <ion-note slot="end">{{ formatMoney(order.grandTotal, order.currencyUom) }}</ion-note>
               </ion-item>
             </ion-list>
-            <template v-if="isOpen && canUpdate">
-              <ion-button v-if="order.statusId === 'ORDER_CREATED'" fill="clear" @click="setStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
-              <ion-button fill="clear" @click="changeArrival()">{{ translate('Change arrival date') }}</ion-button>
-              <ion-button fill="clear" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow">{{ translate('Sell as pre-order') }}</ion-button>
-              <ion-button v-if="order.statusId === 'ORDER_APPROVED'" fill="clear" @click="setStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
-              <ion-button fill="clear" color="danger" @click="setStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
+            <template v-if="isOpen">
+              <ion-button v-if="canUpdate && order.statusId === 'ORDER_CREATED'" fill="clear" @click="setStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
+              <ion-button v-if="canUpdateFutureInventory" fill="clear" @click="changeArrival()">{{ translate('Change arrival date') }}</ion-button>
+              <ion-button v-if="canUpdateFutureInventory" fill="clear" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow">{{ translate('Sell as pre-order') }}</ion-button>
+              <ion-button v-if="canUpdate && order.statusId === 'ORDER_APPROVED'" fill="clear" @click="setStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
+              <ion-button v-if="canUpdate" fill="clear" color="danger" @click="setStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
             </template>
           </ion-card>
 
@@ -155,6 +155,8 @@ const error = ref('');
 
 const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order.value?.statusId));
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
+// Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
+const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 const openItems = computed(() => (order.value?.items || []).filter((item: any) => !['ITEM_CANCELLED', 'ITEM_COMPLETED'].includes(item.statusId)));
 const linesWithoutBatch = computed(() => openItems.value.filter((item: any) => !item.futureInventoryItemId).length);
 /** Lines of any status with a batch: a closed line without one is not counted as having one. */

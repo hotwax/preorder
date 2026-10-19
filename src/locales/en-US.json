@@ -443,6 +443,7 @@
   "When a batch's promise date changes, the orders waiting on it are updated in bulk: the change is queued, then the Data Manager moves each waiting line to the new date and sends its delay email. Each row is one batch's date change; a line that could not be updated is in its error file.": "When a batch's promise date changes, the orders waiting on it are updated in bulk: the change is queued, then the Data Manager moves each waiting line to the new date and sends its delay email. Each row is one batch's date change; a line that could not be updated is in its error file.",
   "When a pre-order event happens, OMS queues the email and sends it through the store's email gateway within about a minute. Edit what each email sends, or turn it off for this store.": "When a pre-order event happens, OMS queues the email and sends it through the store's email gateway within about a minute. Edit what each email sends, or turn it off for this store.",
   "You do not have permission to access this page.": "You do not have permission to access this page.",
+  "You do not have permission to create future inventory.": "You do not have permission to create future inventory.",
   "{accepted} accepted, {rejected} rejected": "{accepted} accepted, {rejected} rejected",
   "{atp} ATP, {reserved} reserved": "{atp} ATP, {reserved} reserved",
   "{atp} available to promise": "{atp} available to promise",

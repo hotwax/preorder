@@ -96,8 +96,8 @@
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
           <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdateFutureInventory || running || loading" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdateFutureInventory || running || loading" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
           <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
@@ -157,6 +157,8 @@ const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS')
 const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
+// Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
+const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 
 const selectMode = ref(false);
 const selectedIds = ref<string[]>([]);

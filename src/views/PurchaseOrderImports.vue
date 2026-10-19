@@ -137,7 +137,6 @@ const { fetchLogs, uploadFile, downloadLogFile, downloadTemplate } = useImports(
 
 const uploadableConfigs = IMPORT_CONFIGS.filter((config) => config.uploadable);
 const importStatuses = computed(() => seed.statusItemsByType('DataManagerLog'));
-const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 
 const filters = reactive({ configId: 'All', statusId: 'All', createdDateFrom: '', createdDateThru: '' });
 const logIdQuery = ref('');
@@ -149,6 +148,11 @@ const loaded = ref(false);
 const error = ref('');
 
 const uploadConfigId = ref(uploadableConfigs[0].configId);
+/** An upload needs its import type's permission: purchase orders the PO one, future inventory the FI one. */
+const canUpdate = computed(() => {
+  const action = uploadableConfigs.find((config) => config.configId === uploadConfigId.value)?.uploadAction;
+  return !!action && userStore.hasPermission(Actions[action]);
+});
 const fileInput = ref<HTMLInputElement>();
 const selectedFile = ref<File>();
 const uploading = ref(false);
