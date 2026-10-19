@@ -55,3 +55,15 @@ export function toEmailSettingPayload(changes: EmailSettingChanges, exists: bool
   if (changes.enabled === false) return null;
   return { ...payload, subject: payload.subject || emailTypeName || '', disabled: 'N' };
 }
+
+/**
+ * The payload fields a saved setting, read back after the save, doesn't hold: a backend without a field drops it and
+ * still answers 200 (ProductStoreEmailSetting.disabled before oms#1195, preorder-maarg#97). `disabled` compares as the
+ * screen reads it: anything but Y is on.
+ */
+export function unsavedSettingFields(payload: Record<string, string>, saved: Record<string, any> | undefined): string[] {
+  return Object.keys(payload).filter((field) => {
+    if (field === 'disabled') return (payload.disabled === 'Y') !== (saved?.disabled === 'Y');
+    return String(saved?.[field] ?? '').trim() !== payload[field];
+  });
+}
