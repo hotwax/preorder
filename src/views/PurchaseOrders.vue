@@ -57,7 +57,7 @@
               @ionChange="toggleAll($event.detail.checked)"
             />
           </span>
-          <ion-label>{{ translate('{shown} of {count} purchase orders', { shown: results.length, count: total }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} purchase orders', { shown: formatNumber(results.length), ...countParams(total) }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="po-sort-trigger" :options="sortOptions" />
           <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
@@ -136,7 +136,7 @@ import PurchaseOrderRow from '@/components/purchaseOrders/PurchaseOrderRow.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
 import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
-import { formatDate, toMillis } from '@/utils/format';
+import { countParams, formatDate, formatNumber, toMillis } from '@/utils/format';
 import Actions from '@/authorization/actions';
 import type { PurchaseOrderSummary } from '@/types';
 

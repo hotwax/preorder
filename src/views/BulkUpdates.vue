@@ -51,7 +51,7 @@
           </ion-item>
           <ion-label class="tablet">
             <ion-badge :color="statusColor(log.statusId)">{{ seed.statusDescription(log.statusId) }}</ion-badge>
-            <p v-if="log.totalRecordCount !== undefined && log.totalRecordCount !== null">{{ translate('{total} lines, {failed} failed', { total: log.totalRecordCount, failed: log.failedRecordCount ?? 0 }) }}</p>
+            <p v-if="log.totalRecordCount !== undefined && log.totalRecordCount !== null">{{ translate('{total} lines, {failed} failed', { ...countParams(log.totalRecordCount, 'total'), failed: formatNumber(log.failedRecordCount ?? 0) }) }}</p>
           </ion-label>
           <ion-label class="tablet">
             {{ formatDateTime(log.createdDate) }}
@@ -66,7 +66,7 @@
           </ion-label>
           <div class="bulk-row-end">
             <ion-button fill="clear" size="small" :disabled="!log.logContentId" @click="downloadFile(log, false)">{{ translate('Lines') }}</ion-button>
-            <ion-button fill="clear" size="small" color="danger" :disabled="!log.errorLogContentId" @click="downloadFile(log, true)">{{ translate('Errors') }}</ion-button>
+            <ion-button fill="clear" size="small" :color="log.errorLogContentId ? 'danger' : undefined" :disabled="!log.errorLogContentId" @click="downloadFile(log, true)">{{ translate('Errors') }}</ion-button>
           </div>
         </div>
       </ion-list>

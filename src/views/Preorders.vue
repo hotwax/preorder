@@ -60,7 +60,7 @@
               @ionChange="toggleAll($event.detail.checked)"
             />
           </span>
-          <ion-label>{{ translate('{shown} of {count} pre-orders', { shown: results.length, count: total }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} pre-orders', { shown: formatNumber(results.length), ...countParams(total) }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="preorder-sort-trigger" :options="sortOptions" />
           <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
@@ -129,7 +129,7 @@ import { confirmAction, showToast } from '@/utils';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
-import { formatDate } from '@/utils/format';
+import { countParams, formatDate, formatNumber } from '@/utils/format';
 import Actions from '@/authorization/actions';
 import type { PreorderOrder } from '@/types';
 
@@ -216,7 +216,7 @@ async function confirmRelease() {
   );
   if (!confirmed) return;
   const { moved, failed } = await runBulk(() => releaseToBrokering(selectedOrders.value));
-  await showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed }) : translate('{moved} items released to brokering.', { moved, count: moved }));
+  await showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed, n: moved }) : translate('{moved} items released to brokering.', { moved, count: moved }));
   useFutureInventorySearchStore().markStale();
   selectMode.value = false;
   selectedIds.value = [];
@@ -231,7 +231,7 @@ async function confirmCancel() {
   );
   if (!confirmed) return;
   const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value));
-  await showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
+  await showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed, n: cancelled }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
   useFutureInventorySearchStore().markStale();
   selectMode.value = false;
   selectedIds.value = [];

@@ -23,7 +23,7 @@
     <DxpOmsInstanceFooter
       v-if="isAuthenticated"
       :instance-label="omsInstanceLabel()"
-      :product-stores="productStores"
+      :product-stores="pickerStores"
       :current-product-store-id="currentProductStoreId"
       @update:product-store="setCurrentProductStore"
     />
@@ -59,6 +59,8 @@ const userStore = useUserStore();
 const productStore = useProductStore();
 
 const { productStores, currentProductStoreId } = useProductStoreSelection();
+// The footer shows a store's name: a name two stores share carries the store's id
+const pickerStores = computed(() => productStores.value.map((store) => ({ ...store, storeName: store.label })));
 
 interface MenuPage {
   title: string;

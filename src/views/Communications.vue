@@ -27,13 +27,13 @@
           <ion-list lines="none">
             <ion-item :disabled="!canUpdate || !settingsReady || !setting.wired || toggling === setting.emailType">
               <ion-toggle :key="`${setting.emailType}-${settingsRevision}`" :checked="setting.wired && setting.exists && setting.enabled" @ionChange="toggle(setting, $event.detail.checked)">
-                {{ setting.wired ? (setting.exists && setting.enabled ? translate('Sending') : translate('Off')) : translate('Not wired') }}
+                {{ setting.wired ? (setting.exists && setting.enabled ? translate('Sending') : translate('Off')) : translate('Not available yet') }}
               </ion-toggle>
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">
                 <p class="overline">{{ translate('When') }}</p>
-                {{ setting.triggerDescription || translate('No OMS event sends this email yet.') }}
+                {{ triggerLabel(setting) }}
               </ion-label>
             </ion-item>
             <ion-item>
@@ -218,6 +218,18 @@ const emailTypeLabel = (emailType?: string) => {
   if (!emailType) return translate('Unknown type');
   const enumRow = emailTypesById.value.get(emailType);
   return enumRow?.enumName || enumRow?.description || emailType;
+};
+
+/**
+ * When each email type is sent, in the app's words; OMS's own description of a type the app does not know shows
+ * as it is, and a type nothing sends says so.
+ */
+const EMAIL_TRIGGERS: Record<string, string> = {
+  PREORDER_DATE_CHANGE: "Sent when a batch's promise date moves and the orders waiting on it get the new date.",
+};
+const triggerLabel = (setting: PreorderEmailSetting) => {
+  if (!setting.wired) return translate('No OMS event sends this email yet.');
+  return EMAIL_TRIGGERS[setting.emailType] ? translate(EMAIL_TRIGGERS[setting.emailType]) : setting.triggerDescription || translate('No OMS event sends this email yet.');
 };
 
 const emailTypeOptions = computed(() => [

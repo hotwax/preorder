@@ -41,7 +41,7 @@
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
-          <ion-label>{{ translate('{shown} of {count} shipments', { shown: results.length, count: total }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} shipments', { shown: formatNumber(results.length), ...countParams(total) }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="shipment-sort-trigger" :options="sortOptions" />
         </ion-list-header>
         <InboundShipmentRow
@@ -85,6 +85,7 @@ import SortPopover from '@/components/common/SortPopover.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import InboundShipmentRow from '@/components/shipments/InboundShipmentRow.vue';
+import { countParams, formatNumber } from '@/utils/format';
 
 const seed = useSeedData();
 const store = useInboundShipmentSearchStore();

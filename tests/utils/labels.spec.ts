@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { DateTime } from 'luxon';
 import { formatDate } from '@/utils/format';
-import { daysOverdue, formatDateRange, futureInventoryTypeLabel, overdueLabel, readableNote, shortDescription, shownPartyId } from '@/utils/labels';
+import {
+  daysOverdue, formatDateRange, futureInventoryTypeLabel, overdueLabel, productStoreLabels, readableNote, shortDescription, shownPartyId,
+} from '@/utils/labels';
 
 describe('labels', () => {
   it('shows a party id, but not the _NA_ placeholder', () => {
@@ -52,5 +54,17 @@ describe('ledger notes', () => {
     expect(readableNote('Expired: promise date 2026-11-30 00:00 passed; 4.0 unsold written off')).toBe(`Expired: promise date ${formatDate('2026-11-30')} passed; 4 unsold written off`);
     expect(readableNote('Batch FI-10.2B stays')).toBe('Batch FI-10.2B stays');
     expect(readableNote(undefined)).toBe('');
+  });
+});
+
+describe('product store labels', () => {
+  it('adds the id to a name two stores share', () => {
+    const labels = productStoreLabels([
+      { productStoreId: 'STORE', storeName: 'Demo' },
+      { productStoreId: 'STORE_2', storeName: 'Demo' },
+      { productStoreId: 'OUTLET', storeName: 'Outlet' },
+      { productStoreId: 'NONAME' },
+    ]);
+    expect([...labels.values()]).toEqual(['Demo (STORE)', 'Demo (STORE_2)', 'Outlet', 'NONAME']);
   });
 });

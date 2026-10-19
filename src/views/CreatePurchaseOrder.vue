@@ -94,7 +94,7 @@
 
     <ion-footer>
       <ion-toolbar>
-        <ion-title size="small">{{ translate('{count} lines, {units} units', { count: form.items.length, units: totalUnits }) }}</ion-title>
+        <ion-title size="small">{{ translate('{count} lines', { count: form.items.length }) }}, {{ translate('{count} units', countParams(totalUnits)) }}</ion-title>
         <ion-buttons slot="end">
           <ion-button fill="solid" :disabled="!canSave || saving" @click="save">{{ translate('Create purchase order') }}</ion-button>
         </ion-buttons>
@@ -127,7 +127,7 @@ import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import { requiredLabel, showToast } from '@/utils';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { errorMessage } from '@/utils/response';
-import { todayValue } from '@/utils/format';
+import { countParams, todayValue } from '@/utils/format';
 
 const seed = useSeedData();
 const { typeOptions } = useFutureInventoryTypes();

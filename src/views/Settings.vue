@@ -59,7 +59,7 @@
           <ion-item lines="none">
             <ion-select :label="translate('Select store')" label-placement="stacked" interface="popover" :value="currentProductStoreId" @ionChange="setCurrentProductStore($event)">
               <ion-select-option v-for="store in productStores" :key="store.productStoreId" :value="store.productStoreId">
-                {{ store.storeName || store.productStoreId }}
+                {{ store.label }}
               </ion-select-option>
             </ion-select>
           </ion-item>

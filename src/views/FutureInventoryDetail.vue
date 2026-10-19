@@ -201,7 +201,7 @@ import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, promptForNumber, showToast } from '@/utils';
-import { formatDate, formatDateTime, formatQuantity, formatRelativeDay, toDateInputValue } from '@/utils/format';
+import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay, toDateInputValue } from '@/utils/format';
 import { daysOverdue, overdueLabel, readableNote, shortDescription } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
@@ -333,7 +333,7 @@ async function cancel() {
   const confirmed = await confirmAction(
     translate('Cancel batch'),
     reserved > 0
-      ? translate('{reserved} reserved units stay with their orders and need moving to another batch. This cannot be undone.', { reserved: formatQuantity(reserved) })
+      ? translate('{reserved} reserved units stay with their orders and need moving to another batch. This cannot be undone.', countParams(reserved, 'reserved'))
       : translate('This cannot be undone.'),
     translate('Cancel batch'),
   );

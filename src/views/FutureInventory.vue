@@ -67,7 +67,7 @@
               @ionChange="toggleAll($event.detail.checked)"
             />
           </span>
-          <ion-label>{{ translate('{shown} of {count} batches', { shown: results.length, count: total }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} batches', { shown: formatNumber(results.length), ...countParams(total) }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="fi-sort-trigger" :options="sortOptions" />
           <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
@@ -138,7 +138,7 @@ import { confirmAction, promptForDate, showToast } from '@/utils';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { ALL, toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
-import { formatDate, formatQuantity } from '@/utils/format';
+import { countParams, formatDate, formatNumber, formatQuantity } from '@/utils/format';
 import Actions from '@/authorization/actions';
 
 const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];
@@ -245,7 +245,7 @@ async function changePromiseDate() {
   );
   if (!promiseDate) return;
   const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => updateBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' })));
-  await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
+  await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed, n: done }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
 }
 
 async function cancelBatches() {
@@ -260,7 +260,7 @@ async function cancelBatches() {
   );
   if (!confirmed) return;
   const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => cancelBatch(id, 'Cancelled in the Pre-order app')));
-  await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed }) : translate('{done} batches cancelled.', { done, count: done }));
+  await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed, n: done }) : translate('{done} batches cancelled.', { done, count: done }));
 }
 
 function exportSelected() {

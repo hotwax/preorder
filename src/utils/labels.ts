@@ -10,6 +10,14 @@ const FUTURE_INVENTORY_TYPE_NAMES: Record<string, string> = {
   FIT_BACK_ORDER: 'Back-order',
 };
 
+/** Store pickers' names: each store's name, with its id after it where another store has the same name, by id. */
+export function productStoreLabels(rows: { productStoreId: string; storeName?: string }[]): Map<string, string> {
+  const name = (row: { productStoreId: string; storeName?: string }) => row.storeName || row.productStoreId;
+  const uses = new Map<string, number>();
+  rows.forEach((row) => uses.set(name(row), (uses.get(name(row)) || 0) + 1));
+  return new Map(rows.map((row) => [row.productStoreId, (uses.get(name(row)) || 0) > 1 && row.storeName ? `${row.storeName} (${row.productStoreId})` : name(row)]));
+}
+
 /** A party id to show, or undefined for `_NA_`, the placeholder party of an order with no customer or supplier. */
 export const shownPartyId = (partyId?: string) => (partyId && partyId !== '_NA_' ? partyId : undefined);
 
