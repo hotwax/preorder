@@ -89,12 +89,13 @@ export function usePurchaseOrderActions() {
   }
 
   /**
-   * Moves the PO's open lines to an arrival date ('yyyy-MM-dd', the start of that day in the user's time zone), one
+   * Moves the PO's open lines to an arrival date ('yyyy-MM-dd', the end of that day in the user's time zone), one
    * request per line whose date differs; their batches follow. The lines are the order's own unless given. Throws when
    * a line did not move, saying how many did.
    */
   async function changeArrivalDate(orderId: string, arrivalDate: string, items?: PurchaseOrderLine[]) {
-    const estimatedDeliveryDate = toDay(arrivalDate)?.toMillis();
+    // The end of the day: a date of today must not expire the line's batch at once
+    const estimatedDeliveryDate = toDay(arrivalDate)?.endOf('day').toMillis();
     if (estimatedDeliveryDate === undefined) throw new Error(translate('The arrival date is not a valid date.'));
     const lines = linesToMove(items ?? (await fetchPurchaseOrder(orderId)).items, estimatedDeliveryDate);
     let moved = 0; const errors: string[] = [];
