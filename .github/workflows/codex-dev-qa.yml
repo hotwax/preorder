@@ -1,0 +1,53 @@
+name: Deploy exact pre-order candidate to dev for QA
+on:
+  push:
+    branches: [codex/preorder-dev-qa-20261019]
+permissions:
+  contents: read
+concurrency:
+  group: preorder-dev-deployment
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: hotwax/accxui
+          ref: 163934c83d729c0679c7d212a089e229817dc7e5
+          token: ${{ secrets.envPAT }}
+      - uses: actions/checkout@v4
+        with:
+          repository: hotwax/preorder
+          ref: 3ef296b7e235c7465e13aac47d4a48c047215749
+          path: apps/preorder
+          token: ${{ secrets.envPAT }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - name: Configure the dev build
+        working-directory: apps/preorder
+        run: cp .env.example .env
+      - name: Verify app and build
+        run: |
+          pnpm --filter preorder test:unit
+          pnpm --filter preorder build
+      - name: Save the exact build for audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: preorder-dev-3ef296b
+          path: apps/preorder/dist
+      - name: Deploy dev hosting only
+        working-directory: apps/preorder
+        env:
+          HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
+        run: |
+          test -n "$HOTWAX_PUBLIC_SECRET"
+          npx -y firebase-tools@latest deploy --project hotwax-digital-commerce --only hosting:dev --non-interactive --token "$HOTWAX_PUBLIC_SECRET" -m 'Preorder QA: 3ef296b7e235c7465e13aac47d4a48c047215749'
