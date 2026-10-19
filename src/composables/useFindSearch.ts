@@ -25,7 +25,7 @@ interface FindSearchStore {
  * old store's data), and a store-scoped list drops the old store's rows at once, so nothing of the old store shows
  * or can be acted on while the new store's search runs.
  */
-export function useFindSearch(store: FindSearchStore, { scopeByStore = true, onStoreChange }: { scopeByStore?: boolean; onStoreChange?: () => void } = {}) {
+export function useFindSearch(store: FindSearchStore, { onStoreChange }: { onStoreChange?: () => void } = {}) {
   const productStore = useProductStore();
   let debounce: ReturnType<typeof setTimeout> | undefined;
   let settleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -43,7 +43,6 @@ export function useFindSearch(store: FindSearchStore, { scopeByStore = true, onS
   watch(() => store.sort, searchNow);
   watch(() => productStore.getCurrentProductStoreId, () => {
     onStoreChange?.();
-    if (!scopeByStore) return;
     store.resetResults();
     searchNow();
   });

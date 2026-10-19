@@ -91,8 +91,8 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedParkedCount || !canUpdate || running || loading" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedIds.length || !canUpdate || running || loading" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedReleasableCount || !canUpdate || running || loading" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedWaitingCount || !canUpdate || running || loading" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -128,20 +128,21 @@ import PreorderRow from '@/components/preorders/PreorderRow.vue';
 import { usePrompts } from '@/composables/usePrompts';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { toCsv } from '@/utils/query';
+import { releasableLines, waitingLines } from '@/utils/preorderLines';
 import { downloadText } from '@/utils/download';
 import { countParams, formatDate, formatNumber } from '@/utils/format';
 import Actions from '@/authorization/actions';
 import type { PreorderOrder } from '@/types';
 
 const seed = useSeedData();
-const { confirmAction } = usePrompts();
+const { confirmAction, promptForChoice } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const store = usePreorderSearchStore();
 // Another store's orders leave with their selection, so a bulk action never runs on them under the new store
 const { refresh } = useFindSearch(store, { onStoreChange: () => clearSelection() });
 const userStore = useUserStore();
-const { releaseToBrokering, cancelPreorderItems, parkedLines } = usePreorderActions();
+const { releaseToBrokering, fetchCancelReasons, cancelPreorderItems } = usePreorderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
 const sortOptions = [
@@ -158,7 +159,9 @@ const shipmentMethodOptions = computed(() => seed.shipmentMethodOptions());
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
 const { selectMode, selectedIds, selectedRows: selectedOrders, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (order) => order.orderId);
-const selectedParkedCount = computed(() => selectedOrders.value.reduce((count, order) => count + parkedLines(order).length, 0));
+// Bulk actions take only lines still holding an open reservation: a committed or released line is no longer a pre-order
+const selectedWaitingCount = computed(() => selectedOrders.value.reduce((count, order) => count + waitingLines(order).length, 0));
+const selectedReleasableCount = computed(() => selectedOrders.value.reduce((count, order) => count + releasableLines(order).length, 0));
 
 function activate(order: PreorderOrder) {
   if (selectMode.value) toggleSelected(order.orderId);
@@ -178,7 +181,7 @@ async function loadMore(event: CustomEvent) {
 async function confirmRelease() {
   const confirmed = await confirmAction(
     translate('Release to brokering'),
-    translate('This moves {count} items waiting at pre-order or back-order parking to brokering, so routing can allocate them to a fulfillment location.', { count: selectedParkedCount.value }),
+    translate('This moves {count} items waiting at pre-order or back-order parking to brokering, so routing can allocate them to a fulfillment location.', { count: selectedReleasableCount.value }),
     translate('Release'),
   );
   if (!confirmed) return;
@@ -190,13 +193,25 @@ async function confirmRelease() {
 }
 
 async function confirmCancel() {
-  const confirmed = await confirmAction(
+  let reasons: { value: string; label: string }[] = [];
+  try {
+    reasons = await fetchCancelReasons();
+  } catch (error: any) {
+    await commonUtil.showToast(error?.message || translate('Failed to load the cancel reasons.'));
+    return;
+  }
+  if (!reasons.length) {
+    await commonUtil.showToast(translate('No cancel reason is set up, so nothing can be cancelled.'));
+    return;
+  }
+  const reason = await promptForChoice(
     translate('Cancel pre-order items'),
-    translate('This cancels the open pre-order items of the {count} selected orders and releases their future inventory. This cannot be undone.', { count: selectedIds.value.length }),
+    translate('This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?', { count: selectedWaitingCount.value }),
     translate('Cancel items'),
+    reasons,
   );
-  if (!confirmed) return;
-  const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value));
+  if (!reason) return;
+  const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value, reason));
   await commonUtil.showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed, n: cancelled }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
   useFutureInventorySearchStore().markStale();
   clearSelection();

@@ -5,6 +5,9 @@ import { toDay } from '@/utils/format';
 import { linesToMove, toSupplierOptions, type SupplierOption } from '@/utils/purchaseOrders';
 import type { InboundShipmentSummary, PurchaseOrderDetail, PurchaseOrderLine, PurchaseOrderReceipt } from '@/types';
 
+/** A stop for a backend that ignores the page index: 10,000 suppliers. */
+const MAX_SUPPLIER_PAGES = 40;
+
 const orderUrl = (orderId: string) => `oms/purchaseOrders/${encodeURIComponent(orderId)}`;
 
 export interface NewPurchaseOrder {
@@ -48,9 +51,18 @@ export function usePurchaseOrderActions() {
     return Array.isArray(data) ? data : [];
   }
 
+  /** Every SUPPLIER party, read a page at a time until the last short page (or the count OMS gave). */
   async function fetchSuppliers(): Promise<SupplierOption[]> {
-    const data = await ensureOk(api({ url: 'oms/parties/roles/SUPPLIER', method: 'get', params: { pageSize: 250 } }), 'Failed to load suppliers.');
-    return toSupplierOptions(data?.parties);
+    const pageSize = 250;
+    const parties: any[] = [];
+    for (let pageIndex = 0; pageIndex < MAX_SUPPLIER_PAGES; pageIndex++) {
+      const data = await ensureOk(api({ url: 'oms/parties/roles/SUPPLIER', method: 'get', params: { pageSize, pageIndex } }), 'Failed to load suppliers.');
+      const page = Array.isArray(data?.parties) ? data.parties : [];
+      parties.push(...page);
+      const count = Number(data?.count);
+      if (page.length < pageSize || (Number.isFinite(count) && parties.length >= count)) break;
+    }
+    return toSupplierOptions(parties);
   }
 
   /**
@@ -77,12 +89,13 @@ export function usePurchaseOrderActions() {
   }
 
   /**
-   * Moves the PO's open lines to an arrival date ('yyyy-MM-dd', the start of that day in the user's time zone), one
+   * Moves the PO's open lines to an arrival date ('yyyy-MM-dd', the end of that day in the user's time zone), one
    * request per line whose date differs; their batches follow. The lines are the order's own unless given. Throws when
    * a line did not move, saying how many did.
    */
   async function changeArrivalDate(orderId: string, arrivalDate: string, items?: PurchaseOrderLine[]) {
-    const estimatedDeliveryDate = toDay(arrivalDate)?.toMillis();
+    // The end of the day: a date of today must not expire the line's batch at once
+    const estimatedDeliveryDate = toDay(arrivalDate)?.endOf('day').toMillis();
     if (estimatedDeliveryDate === undefined) throw new Error(translate('The arrival date is not a valid date.'));
     const lines = linesToMove(items ?? (await fetchPurchaseOrder(orderId)).items, estimatedDeliveryDate);
     let moved = 0; const errors: string[] = [];
@@ -105,23 +118,17 @@ export function usePurchaseOrderActions() {
   }
 
   /**
-   * Products to add to a purchase order: sellable products (variants and simple products, never a
-   * virtual parent) of the product store from Solr, and from OMS's product list when Solr has none, as on
-   * an instance whose product index is empty. OMS's product list has no product store filter, so that
-   * fallback is not limited to the store.
+   * Products to add to a purchase order: sellable products (variants and simple products, never a virtual parent) of
+   * the product store, from Solr.
    */
   async function searchOrderableProducts(keyword: string, productStoreId?: string): Promise<any[]> {
     const filters: Record<string, { value: string }> = { isVariant: { value: '*' } };
     if (productStoreId) filters.productStoreIds_s = { value: `"${productStoreId.replace(/(["\\])/g, '\\$1')}"` };
-    const { products, total } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters });
-    if (total) return products as any[];
-    const found = new Map<string, any>();
-    for (const field of ['productId', 'productName', 'internalName']) {
-      const resp: any = await api({ url: 'oms/products', method: 'get', params: { [field]: keyword, [`${field}_op`]: 'contains', [`${field}_ic`]: 'Y', pageSize: 20 } }).catch(() => undefined);
-      (Array.isArray(resp?.data) ? resp.data : []).filter((product: any) => product.isVirtual !== 'Y').forEach((product: any) => found.set(product.productId, product));
-      if (found.size >= 10) break;
-    }
-    return [...found.values()].slice(0, 10);
+    // With a keyword, relevance first: the default name order put an exact SKU match like "100" past the 10 rows shown
+    // (preorder-maarg#87)
+    const sort = keyword?.trim() ? 'score desc, sort_productName asc' : undefined;
+    const { products } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters, ...(sort ? { sort } : {}) });
+    return products as any[];
   }
 
   async function forEachOrder(orderIds: string[], action: (orderId: string) => Promise<any>) {

@@ -42,6 +42,14 @@
         <ion-text v-if="overdueDays" color="danger">{{ overdueLabel(overdueDays) }}</ion-text>
         <template v-else>{{ formatRelativeDay(batch.promiseDate) }}</template>
       </p>
+      <!-- A phone shows only the first and last columns: the batch, its facility, status and quantities go here -->
+      <div class="fi-row-phone">
+        <p>{{ batch.futureInventoryItemId }}</p>
+        <p>{{ seed.facilityName(batch.facilityId || '') }}</p>
+        <p><ion-badge :color="statusColor(batch.statusId)">{{ seed.statusDescription(batch.statusId || '') }}</ion-badge></p>
+        <p>{{ translate('{qoo} on order', { qoo: formatQuantity(batch.quantityOnOrderTotal) }) }}</p>
+        <p>{{ translate('{atp} ATP, {reserved} reserved', { atp: formatQuantity(batch.availableToPromiseTotal), reserved: formatQuantity(batch.reservedQuantity) }) }}</p>
+      </div>
     </ion-label>
   </div>
 </template>
@@ -87,5 +95,11 @@ const overdueDays = computed(() => (isActive.value ? daysOverdue(props.batch.pro
   max-width: 10rem;
   min-width: 10rem;
   width: 10rem;
+}
+
+@media (min-width: 700px) {
+  .fi-row-phone {
+    display: none;
+  }
 }
 </style>

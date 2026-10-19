@@ -1,7 +1,7 @@
-import { api } from '@common';
+import { api, translate } from '@common';
 import { ensureOk } from '@/utils/response';
 import { readList } from '@/utils/query';
-import { PREORDER_EMAIL_CATALOG, toEmailSettingPayload, toEmailSettingRows } from '@/utils/emailSettings';
+import { PREORDER_EMAIL_CATALOG, toEmailSettingPayload, toEmailSettingRows, unsavedSettingFields } from '@/utils/emailSettings';
 import type { CommunicationEventRow, EmailGateway, EmailSettingChanges, PreorderEmailSetting } from '@/types';
 
 const settingsUrl = (productStoreId: string) => `oms/productStoreEmailSettings/${encodeURIComponent(productStoreId)}/emailSettings`;
@@ -33,16 +33,25 @@ export function useCommunications() {
     }
     const payload = toEmailSettingPayload(changes, existing.length > 0, emailTypeName);
     if (!payload) return;
-    return ensureOk(api({ url: `${settingsUrl(productStoreId)}/${encodeURIComponent(emailType)}`, method: 'put', data: payload }), 'Failed to update the email setting.');
+    const result = await ensureOk(api({ url: `${settingsUrl(productStoreId)}/${encodeURIComponent(emailType)}`, method: 'put', data: payload }), 'Failed to update the email setting.');
+    // Read it back: a 200 is no proof the setting changed (preorder-maarg#97)
+    const [saved] = rowsOf(await ensureOk(api({ url: settingsUrl(productStoreId), method: 'get', params: { emailType } }), 'Failed to update the email setting.'));
+    const unsaved = unsavedSettingFields(payload, saved);
+    if (unsaved.length) {
+      throw new Error(unsaved.includes('disabled')
+        ? translate('The email could not be turned {state}: this OMS does not store that setting yet.', { state: changes.enabled ? translate('on') : translate('off') })
+        : translate('The email setting was not saved: {fields} did not change.', { fields: unsaved.join(', ') }));
+    }
+    return result;
   }
 
   const setEmailEnabled = (productStoreId: string, emailType: string, enabled: boolean) => updateEmailSetting(productStoreId, emailType, { enabled });
 
-  /** The Unigate remotes a setting can be sent through, by description. */
+  /** The email gateways (Unigate remotes an email setting uses) a setting can be sent through, by description. */
   async function fetchEmailGateways(): Promise<EmailGateway[]> {
-    const data = await ensureOk(api({ url: 'oms/systemMessageRemotes', method: 'get', params: { orderByField: 'description' } }), 'Failed to load email gateways.');
-    return rowsOf(data?.systemMessageRemoteList)
-      .map((remote) => ({ systemMessageRemoteId: remote.systemMessageRemoteId, description: remote.description || remote.systemMessageRemoteId, sendUrl: remote.sendUrl }))
+    const data = await ensureOk(api({ url: 'oms/emailGateways', method: 'get' }), 'Failed to load email gateways.');
+    return rowsOf(data?.gateways)
+      .map((gateway) => ({ systemMessageRemoteId: gateway.systemMessageRemoteId, description: gateway.description || gateway.systemMessageRemoteId }))
       .sort((a, b) => a.description.localeCompare(b.description));
   }
 

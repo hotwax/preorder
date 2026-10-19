@@ -18,6 +18,8 @@ export interface PreorderDashboard {
   noPromiseDate: { count: number; lines: { orderId: string; orderItemSeqId: string; orderName?: string; productId: string; orderDate?: number | string }[] };
   /** Where the open reservations wait, by line facility: at most 10, most units first. */
   demandByFacility: DemandByFacility[];
+  /** How many facilities have open reservations waiting: `demandByFacility` lists only the first 10. */
+  demandFacilityCount?: number;
   delayEmails: { count: number; trend: { date: string; count: number }[] };
   topProducts: { productId: string; productName?: string; openUnits: number }[];
   /** STORE_FACILITIES, NO_STORE_FACILITIES (supply covers every facility) or ALL_STORES. */

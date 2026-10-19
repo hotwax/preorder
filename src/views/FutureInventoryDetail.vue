@@ -176,7 +176,7 @@
               </ion-label>
               <ion-label class="ion-text-end">
                 {{ formatDateTime(row.createdDate || row.createdStamp) }}
-                <p>{{ row.changedByUserId || translate('System') }}</p>
+                <p>{{ row.changedByUserName || row.changedByUserId || translate('System') }}</p>
               </ion-label>
             </div>
             <ion-item v-if="!ledger.length" lines="none">

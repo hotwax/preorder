@@ -38,6 +38,15 @@
           <DateFilterSelect v-model="filters.arrivalDateThru" :label="translate('Arrival through')" :min="filters.arrivalDateFrom" allow-future />
           <DateFilterSelect v-model="filters.orderDateFrom" :label="translate('Order date from')" :max="filters.orderDateThru" />
           <DateFilterSelect v-model="filters.orderDateThru" :label="translate('Order date through')" :min="filters.orderDateFrom" />
+
+          <ion-item lines="none">
+            <ion-checkbox :checked="filters.includeUnassigned" label-placement="end" justify="start" @ionChange="filters.includeUnassigned = $event.detail.checked">
+              <ion-label class="ion-text-wrap">
+                {{ translate('Include unassigned') }}
+                <p>{{ translate('Also lists purchase orders that name no product store.') }}</p>
+              </ion-label>
+            </ion-checkbox>
+          </ion-item>
         </UniformFilterLayout>
       </SearchFilterCard>
 
@@ -109,7 +118,7 @@
 <script setup lang="ts">
 import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFab, IonFabButton, IonFooter, IonHeader, IonIcon, IonInfiniteScroll,
-  IonInfiniteScrollContent, IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect,
+  IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect,
   IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';

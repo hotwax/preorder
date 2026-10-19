@@ -65,7 +65,16 @@ export interface PreorderLine {
   readyToRelease?: boolean;
   /** A receipt or variance committed the line to physical stock: it no longer waits on future inventory. */
   committed?: boolean;
-  reservations?: { futureInventoryItemId: string; reasonEnumId: string; quantity: number; createdDate: number | string; open: boolean }[];
+  /** The line's reservation ledger, one row per reservation or release on a batch (detail only). */
+  reservations?: PreorderReservation[];
+}
+
+export interface PreorderReservation {
+  futureInventoryItemId: string;
+  reasonEnumId: string;
+  quantity: number;
+  createdDate: number | string;
+  open: boolean;
 }
 
 export interface PreorderOrder {
@@ -85,6 +94,8 @@ export interface PreorderOrder {
   /** Lines still holding an open reservation: the items still waiting. */
   openLineCount?: number;
   parkedLineCount?: number;
+  /** The facilities where its lines with an open reservation wait. */
+  waitingFacilityIds?: string[];
   readyToReleaseLineCount?: number;
   openReservedQuantity?: number;
   earliestPromiseDate?: number | string;
@@ -235,7 +246,6 @@ export type EmailSettingChanges = Partial<Record<'subject' | 'fromAddress' | 'cc
 export interface EmailGateway {
   systemMessageRemoteId: string;
   description: string;
-  sendUrl?: string;
 }
 
 /** A row of a store's email log (GET oms/communicationEvents with productStoreId). */

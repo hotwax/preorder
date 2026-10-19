@@ -68,6 +68,8 @@
             <ion-label>
               {{ log.fileName || log.logId }}
               <p>{{ [log.logId, configLabel(log.configId)].filter(Boolean).join(' - ') }}</p>
+              <!-- A log from before uploads were stamped with a store is listed in every store (preorder-maarg#86) -->
+              <p v-if="!log.productStoreId">{{ translate('No store') }}</p>
             </ion-label>
           </ion-item>
           <ion-label class="tablet">
@@ -180,7 +182,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, 0, PAGE_SIZE);
+    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim(), productStoreId: productStore.getCurrentProductStoreId || undefined }, 0, PAGE_SIZE);
     if (request !== loadRequest) return;
     logs.value = rows;
     logsTotal.value = total;
@@ -202,7 +204,7 @@ async function loadMore(event: CustomEvent) {
   const request = loadRequest;
   loadingMore.value = true;
   try {
-    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, pageIndex.value + 1, PAGE_SIZE);
+    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim(), productStoreId: productStore.getCurrentProductStoreId || undefined }, pageIndex.value + 1, PAGE_SIZE);
     if (request !== loadRequest) return;
     logs.value = [...logs.value, ...rows];
     logsTotal.value = total;
@@ -217,6 +219,7 @@ async function loadMore(event: CustomEvent) {
 }
 
 watch(filters, load, { deep: true });
+watch(() => productStore.getCurrentProductStoreId, load);
 let logIdDebounce: ReturnType<typeof setTimeout> | undefined;
 watch(logIdQuery, () => {
   if (logIdDebounce) clearTimeout(logIdDebounce);

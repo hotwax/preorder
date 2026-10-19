@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toEmailSettingPayload, toEmailSettingRows } from '@/utils/emailSettings';
+import { toEmailSettingPayload, toEmailSettingRows, unsavedSettingFields } from '@/utils/emailSettings';
 
 describe('email setting rows', () => {
   const enums = [
@@ -43,5 +43,21 @@ describe('email setting payload', () => {
 
   it('writes nothing to turn off a type the store has no setting for', () => {
     expect(toEmailSettingPayload({ enabled: false }, false, 'Name')).toBeNull();
+  });
+});
+
+describe('unsavedSettingFields (preorder-maarg#97)', () => {
+  it('flags a turn-off the backend dropped: no disabled field reads as on', () => {
+    expect(unsavedSettingFields({ disabled: 'Y' }, { emailType: 'PREORDER_DATE_CHANGE' })).toEqual(['disabled']);
+  });
+
+  it('accepts a turn-on when the backend has no disabled field', () => {
+    expect(unsavedSettingFields({ disabled: 'N' }, { emailType: 'PREORDER_DATE_CHANGE' })).toEqual([]);
+  });
+
+  it('accepts what was stored, and flags a field that did not change or a missing row', () => {
+    expect(unsavedSettingFields({ disabled: 'Y', subject: 'Hi' }, { disabled: 'Y', subject: 'Hi' })).toEqual([]);
+    expect(unsavedSettingFields({ subject: 'Hi' }, { subject: 'Old' })).toEqual(['subject']);
+    expect(unsavedSettingFields({ subject: 'Hi' }, undefined)).toEqual(['subject']);
   });
 });

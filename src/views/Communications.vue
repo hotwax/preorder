@@ -154,7 +154,6 @@ import {
   IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter,
 } from '@ionic/vue';
 import { alertCircleOutline, checkmarkCircleOutline, createOutline, mailOutline } from 'ionicons/icons';
-import { DateTime } from 'luxon';
 import { computed, reactive, ref, watch } from 'vue';
 import { commonUtil, StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
@@ -169,7 +168,7 @@ import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
-import { countParams, dayBound, formatDateTime, formatNumber, formatRelative } from '@/utils/format';
+import { countParams, dayBound, formatDateTime, formatNumber, formatRelative, windowStartDay } from '@/utils/format';
 import { toListParams } from '@/utils/query';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -251,9 +250,6 @@ const emailStatusLabel = (statusId?: string) => {
   return EMAIL_STATUS_LABELS[statusId] ? translate(EMAIL_STATUS_LABELS[statusId]) : seed.statusDescription(statusId);
 };
 
-/** The first day of the last `days` days, in the user's time zone. */
-const daysAgo = (days: number) => dayBound(DateTime.now().minus({ days }), 'start', 'date');
-
 const gatewayLabel = (systemMessageRemoteId?: string) =>
   gateways.value.find((gateway) => gateway.systemMessageRemoteId === systemMessageRemoteId)?.description || systemMessageRemoteId || '';
 
@@ -269,8 +265,8 @@ async function loadSettings() {
   try {
     const [rows, week, month, gatewayRows] = await Promise.all([
       fetchEmailSettings(storeId),
-      fetchCounts(storeId, daysAgo(7)),
-      fetchCounts(storeId, daysAgo(30)),
+      fetchCounts(storeId, windowStartDay(7)),
+      fetchCounts(storeId, windowStartDay(30)),
       fetchEmailGateways().catch(() => [] as EmailGateway[]),
     ]);
     if (request !== loadSettingsRequest || storeId !== productStoreId.value) return;
