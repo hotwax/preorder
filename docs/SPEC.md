@@ -162,15 +162,26 @@ Detail (`/future-inventory/:id`) has:
 
 ### 3.4 Purchase orders (`/purchase-orders`)
 
+The list reads Solr, not the database. Purchase orders are indexed one doc per line (`docType:ORDER`,
+`orderTypeId:PURCHASE_ORDER`), and the page groups them by `orderId`:
+- the first query matches, sorts, pages and counts the orders (`group.ngroups`);
+- the second reads every line of the page's orders, so a line filter picks orders without trimming their totals;
+- `preorder/purchaseOrderBatchCounts` adds each order's batch count, which Solr doesn't carry.
+
+oms indexes a purchase order when it is stored or its status changes, and a line when it is updated or added.
+The supplier on the doc (`customerPartyId`) is the `BILL_FROM_VENDOR`, else the `SHIP_FROM_VENDOR`. Solr shows a
+saved change after its next commit, so a bulk action shows its change on the rows at once and the list searches
+again a moment later.
+
 Filters:
-- search: PO id, name, external id;
-- status (multi);
+- search: part of the PO id, name or external id, case-insensitive;
+- status (multi), open (created and approved) by default;
 - supplier;
-- destination facility;
-- arrival from / through;
+- destination facility: a line's facility;
+- arrival from / through: a line that is not cancelled arrives in the range;
 - order date from / through.
 
-Sort: soonest arrival, newest, oldest.
+Sort: soonest arrival (orders with no arrival date last), newest, oldest.
 
 Each row shows:
 - the PO name and id;

@@ -64,11 +64,11 @@ export function usePurchaseOrderActions() {
   }
 
   async function forEachOrder(orderIds: string[], action: (orderId: string) => Promise<any>) {
-    let done = 0; let failed = 0; const errors: string[] = [];
+    let done = 0; let failed = 0; const errors: string[] = []; const succeeded: string[] = [];
     for (const orderId of orderIds) {
-      try { await action(orderId); done++; } catch (error: any) { failed++; errors.push(`${orderId}: ${error?.message || error}`); }
+      try { await action(orderId); done++; succeeded.push(orderId); } catch (error: any) { failed++; errors.push(`${orderId}: ${error?.message || error}`); }
     }
-    return { done, failed, errors };
+    return { done, failed, errors, succeeded };
   }
 
   return { fetchPurchaseOrder, fetchSuppliers, searchOrderableProducts, createPurchaseOrder, changeStatus, changeArrivalDate, sellAsPreorder, forEachOrder };

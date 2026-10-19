@@ -6,8 +6,8 @@ import { readList, toListParams, type FilterValue } from '@/utils/query';
 import { errorMessage } from '@/utils/response';
 
 export interface FindStoreConfig<F extends Record<string, FilterValue>> {
-  /** The list resource, relative to the Maarg REST root (`preorder/purchaseOrders`). */
-  url: string;
+  /** The list resource, relative to the Maarg REST root (`preorder/futureInventoryItems`); not used with `fetchPage`. */
+  url?: string;
   /** The response key holding the rows; `<listName>Count` holds the total. */
   listName: string;
   defaultFilters: () => F;
@@ -19,6 +19,11 @@ export interface FindStoreConfig<F extends Record<string, FilterValue>> {
    * belongs to facilities, and a purchase order may name no store, so those lists are not scoped.
    */
   scopeByStore?: boolean;
+  /**
+   * Reads a page itself instead of a GET on `url`, for a list served from somewhere else (the purchase order
+   * list reads Solr). It gets the same params the GET would send.
+   */
+  fetchPage?: (params: Record<string, any>) => Promise<{ rows: any[]; total: number; extras?: Record<string, any> }>;
 }
 
 /**
@@ -65,7 +70,11 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
         };
       },
       async fetchPage(pageIndex: number) {
-        const resp: any = await api({ url: config.url, method: 'get', params: this.params(pageIndex) });
+        if (config.fetchPage) {
+          const { rows, total, extras } = await config.fetchPage(this.params(pageIndex));
+          return { rows: rows as R[], total, extras: extras || {} };
+        }
+        const resp: any = await api({ url: config.url as string, method: 'get', params: this.params(pageIndex) });
         if (commonUtil.hasError(resp)) throw new Error(resp?.data?.errors || translate('Something went wrong. Please try again.'));
         const { [config.listName]: _rows, [`${config.listName}Count`]: _count, ...extras } = resp.data || {};
         return { ...readList<R>(resp.data, config.listName), extras };
@@ -114,6 +123,15 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
         } finally {
           this.loadingMore = false;
         }
+      },
+      /**
+       * Changes loaded rows in place, for a change the list's source shows only later (Solr makes a saved change
+       * visible on its own commit). A row the update returns null for leaves the list.
+       */
+      updateRows(update: (row: R) => R | null) {
+        const before = this.results.length;
+        this.results = (this.results as R[]).map(update).filter((row): row is NonNullable<R> => row !== null) as any;
+        this.total = Math.max(0, this.total - (before - this.results.length));
       },
       /** Marks the list out of date after a change made elsewhere; it searches again when next shown. */
       markStale() {

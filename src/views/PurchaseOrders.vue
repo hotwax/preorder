@@ -114,12 +114,13 @@ import {
   IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
+import { DateTime } from 'luxon';
 import { computed, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
-import { usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { OPEN_PURCHASE_ORDER_STATUSES as OPEN_STATUSES, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useUserStore } from '@/store/user';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
@@ -137,8 +138,7 @@ import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
 import { formatDate } from '@/utils/format';
 import Actions from '@/authorization/actions';
-
-const OPEN_STATUSES = ['ORDER_CREATED', 'ORDER_APPROVED'];
+import type { PurchaseOrderSummary } from '@/types';
 
 const seed = useSeedData();
 const store = usePurchaseOrderSearchStore();
@@ -205,12 +205,23 @@ async function loadMore(event: CustomEvent) {
   (event.target as HTMLIonInfiniteScrollElement).complete();
 }
 
-async function report(result: { done: number; failed: number; errors: string[] }, success: string) {
+/** Solr shows a saved change after its next commit, about a second; the list searches again once it has. */
+const SOLR_REFRESH_DELAY_MS = 1500;
+
+/**
+ * Says how a bulk action went, shows its change on the rows it succeeded for at once, and searches again once Solr
+ * has the change.
+ */
+async function report(result: { done: number; failed: number; errors: string[]; succeeded: string[] }, success: string, patch?: (order: PurchaseOrderSummary) => PurchaseOrderSummary | null) {
   await showToast(result.failed ? translate('{done} done, {failed} failed: {errors}', { ...result, errors: result.errors.slice(0, 2).join('; ') }) : success);
   useFutureInventorySearchStore().markStale();
+  if (patch) {
+    const changed = new Set(result.succeeded);
+    store.updateRows((order) => (changed.has(order.orderId) ? patch(order) : order));
+  }
   selectMode.value = false;
   selectedIds.value = [];
-  await refresh();
+  setTimeout(() => { void refresh(); }, SOLR_REFRESH_DELAY_MS);
 }
 
 const STATUS_ACTIONS: Record<string, { header: string; message: string; confirm: string; from: string[]; done: string }> = {
@@ -224,7 +235,9 @@ async function bulkStatus(statusId: string) {
   const orderIds = selectedWithStatus(action.from);
   if (!await confirmAction(translate(action.header), translate(action.message, { count: orderIds.length }), translate(action.confirm))) return;
   const result = await forEachOrder(orderIds, (orderId) => changeStatus(orderId, statusId));
-  await report(result, translate(action.done, { done: result.done, count: result.done }));
+  const listedStatusIds = filters.value.statusId;
+  await report(result, translate(action.done, { done: result.done, count: result.done }), (order) =>
+    (listedStatusIds.length && !listedStatusIds.includes(statusId) ? null : { ...order, statusId }));
 }
 
 async function changeArrivalDate() {
@@ -236,7 +249,9 @@ async function changeArrivalDate() {
   );
   if (!arrivalDate) return;
   const result = await forEachOrder(orderIds, (orderId) => changeOrderArrivalDate(orderId, arrivalDate));
-  await report(result, translate('{done} purchase orders now arrive {date}.', { done: result.done, count: result.done, date: formatDate(arrivalDate) }));
+  const arrivalMillis = DateTime.fromISO(arrivalDate).toMillis();
+  await report(result, translate('{done} purchase orders now arrive {date}.', { done: result.done, count: result.done, date: formatDate(arrivalDate) }), (order) =>
+    ({ ...order, earliestArrivalDate: arrivalMillis, latestArrivalDate: arrivalMillis }));
 }
 
 async function sellAsPreorderBulk() {
