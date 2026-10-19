@@ -95,12 +95,12 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-footer>
@@ -111,7 +111,7 @@
 import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFab, IonFabButton, IonFooter, IonHeader, IonIcon, IonInfiniteScroll,
   IonInfiniteScrollContent, IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect,
-  IonSelectOption, IonTitle, IonToolbar, onIonViewDidLeave,
+  IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -119,7 +119,7 @@ import { storeToRefs } from 'pinia';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
-import { OPEN_PURCHASE_ORDER_STATUSES as OPEN_STATUSES, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { OPEN_PURCHASE_ORDER_STATUSES as OPEN_STATUSES, SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useUserStore } from '@/store/user';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
@@ -143,7 +143,7 @@ import type { PurchaseOrderSummary } from '@/types';
 const seed = useSeedData();
 const { running, runBulk } = useBulkAction();
 const store = usePurchaseOrderSearchStore();
-const { refresh } = useFindSearch(store, { scopeByStore: false });
+const { refresh, refreshLater } = useFindSearch(store, { scopeByStore: false, onStoreChange: clearSelection });
 const userStore = useUserStore();
 const { fetchSuppliers, changeStatus, changeArrivalDate: changeOrderArrivalDate, sellAsPreorder, forEachOrder } = usePurchaseOrderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -191,6 +191,11 @@ function toggleAll(checked: boolean) {
   selectedIds.value = checked ? results.value.map((order) => order.orderId) : [];
 }
 
+function clearSelection() {
+  selectMode.value = false;
+  selectedIds.value = [];
+}
+
 function toggleSelectMode() {
   selectMode.value = !selectMode.value;
   if (!selectMode.value) selectedIds.value = [];
@@ -206,18 +211,6 @@ async function loadMore(event: CustomEvent) {
   (event.target as HTMLIonInfiniteScrollElement).complete();
 }
 
-/** Solr shows a saved change after its next commit, about a second; the list searches again once it has. */
-const SOLR_REFRESH_DELAY_MS = 1500;
-let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-
-// Leaving before the refresh runs: drop it, and search again when the list is next shown
-onIonViewDidLeave(() => {
-  if (!refreshTimer) return;
-  clearTimeout(refreshTimer);
-  refreshTimer = undefined;
-  store.markStale();
-});
-
 /**
  * Says how a bulk action went, shows its change on the rows it succeeded for at once, and searches again once Solr
  * has the change.
@@ -231,8 +224,7 @@ async function report(result: { done: number; failed: number; errors: string[]; 
   }
   selectMode.value = false;
   selectedIds.value = [];
-  if (refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(() => { refreshTimer = undefined; void refresh(); }, SOLR_REFRESH_DELAY_MS);
+  refreshLater(SOLR_SETTLE_MS);
 }
 
 const STATUS_ACTIONS: Record<string, { header: string; message: string; confirm: string; from: string[]; done: string }> = {

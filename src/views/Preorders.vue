@@ -92,9 +92,9 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedParkedCount || !canUpdate || running" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedIds.length || !canUpdate || running" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedParkedCount || !canUpdate || running || loading" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedIds.length || !canUpdate || running || loading" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-footer>
@@ -137,7 +137,7 @@ const seed = useSeedData();
 const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const store = usePreorderSearchStore();
-const { refresh } = useFindSearch(store);
+const { refresh } = useFindSearch(store, { onStoreChange });
 const userStore = useUserStore();
 const { releaseToBrokering, cancelPreorderItems, parkedLines } = usePreorderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -181,6 +181,16 @@ function setSelected(orderId: string, checked: boolean) {
 
 function toggleAll(checked: boolean) {
   selectedIds.value = checked ? results.value.map((order) => order.orderId) : [];
+}
+
+/** Another store's orders leave with their selection, so a bulk action never runs on them under the new store. */
+function onStoreChange() {
+  clearSelection();
+}
+
+function clearSelection() {
+  selectMode.value = false;
+  selectedIds.value = [];
 }
 
 function toggleSelectMode() {

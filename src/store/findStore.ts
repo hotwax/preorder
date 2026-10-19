@@ -50,6 +50,8 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
       loadingMore: false,
       loaded: false,
       stale: false,
+      /** Until when (epoch ms) a change marked stale may still be missing from the list's source: Solr shows it after its next commit. */
+      settlesAt: 0,
       error: '',
       /** What the last search answered beside its rows and total, such as the batch list's storeScope. */
       extras: {} as Record<string, any>,
@@ -136,9 +138,22 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
         this.results = (this.results as R[]).map(update).filter((row): row is NonNullable<R> => row !== null) as any;
         this.total = Math.max(0, this.total - (before - this.results.length));
       },
-      /** Marks the list out of date after a change made elsewhere; it searches again when next shown. */
-      markStale() {
+      /**
+       * Marks the list out of date after a change made elsewhere; it searches again when next shown. `settleMs` is how
+       * long the list's source may take to show the change (Solr's commit): the list searches once more after it.
+       */
+      markStale(settleMs = 0) {
         this.stale = true;
+        this.settlesAt = Math.max(this.settlesAt, settleMs ? Date.now() + settleMs : 0);
+      },
+      /** Drops the loaded rows, for a search whose rows must not show under the new one's (another product store's). */
+      resetResults() {
+        this.results = [] as any;
+        this.total = 0;
+        this.pageIndex = 0;
+        this.loaded = false;
+        this.error = '';
+        this.extras = {};
       },
       clearFilters() {
         this.query = '';

@@ -48,11 +48,14 @@ export function usePurchaseOrderActions() {
 
   /**
    * Products to add to a purchase order: sellable products (variants and simple products, never a
-   * virtual parent) from Solr, and from OMS's product list when Solr has none, as on an instance
-   * whose product index is empty.
+   * virtual parent) of the product store from Solr, and from OMS's product list when Solr has none, as on
+   * an instance whose product index is empty. OMS's product list has no product store filter, so that
+   * fallback is not limited to the store.
    */
-  async function searchOrderableProducts(keyword: string): Promise<any[]> {
-    const { products, total } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters: { isVariant: { value: '*' } } });
+  async function searchOrderableProducts(keyword: string, productStoreId?: string): Promise<any[]> {
+    const filters: Record<string, { value: string }> = { isVariant: { value: '*' } };
+    if (productStoreId) filters.productStoreIds_s = { value: `"${productStoreId.replace(/(["\\])/g, '\\$1')}"` };
+    const { products, total } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters });
     if (total) return products as any[];
     const found = new Map<string, any>();
     for (const field of ['productId', 'productName', 'internalName']) {

@@ -99,9 +99,9 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedOpenIds.length || !canUpdate || running" @click="changePromiseDate">{{ translate('Change promise date') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedOpenIds.length || !canUpdate || running" @click="cancelBatches">{{ translate('Cancel batch') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpenIds.length || !canUpdate || running || loading" @click="changePromiseDate">{{ translate('Change promise date') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedOpenIds.length || !canUpdate || running || loading" @click="cancelBatches">{{ translate('Cancel batch') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-footer>
@@ -125,6 +125,7 @@ import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { useFindSearch } from '@/composables/useFindSearch';
 import { useBulkAction } from '@/composables/useBulkAction';
+import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -135,7 +136,7 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import FutureInventoryRow from '@/components/futureInventory/FutureInventoryRow.vue';
 import { confirmAction, promptForDate, showToast } from '@/utils';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
-import { toCsv } from '@/utils/query';
+import { ALL, toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
 import { formatDate, formatQuantity } from '@/utils/format';
 import Actions from '@/authorization/actions';
@@ -147,7 +148,7 @@ const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const productStore = useProductStore();
 const store = useFutureInventorySearchStore();
-const { refresh } = useFindSearch(store);
+const { refresh } = useFindSearch(store, { onStoreChange });
 const userStore = useUserStore();
 const { updateBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore, extras } = storeToRefs(store);
@@ -159,11 +160,8 @@ const sortOptions = [
   { label: 'Recently updated', value: '-lastUpdatedStamp' },
 ];
 const statusOptions = computed(() => seed.statusItemsByType('FII_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
-// Batches sit at receiving locations: warehouses and stores, never the virtual parking facilities.
-const facilityOptions = computed(() => seed.facilities().filter((facility: any) => {
-  const parentTypeId = seed.facilityType(facility.facilityTypeId)?.parentTypeId;
-  return parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY';
-}));
+// Batches sit at the store's receiving locations: warehouses and stores, never the virtual parking facilities.
+const { facilityOptions } = useStoreFacilities();
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 
 /** The two reservation flags as one select, since they don't combine usefully. */
@@ -202,6 +200,17 @@ function setSelected(id: string, checked: boolean) {
 
 function toggleAll(checked: boolean) {
   selectedIds.value = checked ? results.value.map((batch) => batch.futureInventoryItemId) : [];
+}
+
+/** Another store's batches leave with their selection, and a facility filter of the old store's facilities with them. */
+function onStoreChange() {
+  clearSelection();
+  filters.value.facilityId = ALL;
+}
+
+function clearSelection() {
+  selectMode.value = false;
+  selectedIds.value = [];
 }
 
 function toggleSelectMode() {

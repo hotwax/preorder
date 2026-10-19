@@ -109,14 +109,15 @@ import {
   IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue';
 import { addCircleOutline, trashOutline } from 'ionicons/icons';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { DxpShopifyImg, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useProductIdentity } from '@/composables/useProductIdentity';
+import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import { useProductStore } from '@/store/productStore';
-import { usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ProductItem from '@/components/common/ProductItem.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -132,10 +133,8 @@ const { primaryId, secondaryId } = useProductIdentity();
 const { fetchSuppliers, createPurchaseOrder, searchOrderableProducts } = usePurchaseOrderActions();
 
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
-// withSync: right after login the facilities table is still filling, which is not "no facilities"
-const facilitySync = computed(() => seed.facilities.withSync());
-const facilitiesSynced = computed(() => facilitySync.value.synced);
-const facilityOptions = computed(() => facilitySync.value.data.filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
+// The store's receiving facilities; right after login their tables are still filling, which is not "no facilities"
+const { facilityOptions, synced: facilitiesSynced } = useStoreFacilities();
 const facilityPlaceholder = computed(() => {
   if (!facilitiesSynced.value) return translate('Loading facilities');
   return facilityOptions.value.length ? translate('Select facility') : translate('No facilities');
@@ -154,6 +153,11 @@ const form = reactive({
   createFutureInventory: true,
   futureInventoryItemTypeId: 'FIT_PRE_ORDER',
   items: [] as { productId: string; productName?: string; quantity: number; unitPrice?: number; arrivalDate: string }[],
+});
+
+// A destination of another store's (after a store switch) is not offered, so it is not kept either
+watch(facilityOptions, (options) => {
+  if (form.facilityId && !options.some((facility) => facility.facilityId === form.facilityId)) form.facilityId = '';
 });
 
 const totalUnits = computed(() => form.items.reduce((sum, line) => sum + Number(line.quantity || 0), 0));
@@ -183,7 +187,7 @@ async function searchProducts() {
   }
   searching.value = true;
   try {
-    const results = await searchOrderableProducts(keyword);
+    const results = await searchOrderableProducts(keyword, productStore.getCurrentProductStoreId);
     if (keyword !== productQuery.value.trim()) return;
     searchResults.value = results;
   } catch (error) {
@@ -222,7 +226,7 @@ async function save() {
     await showToast(form.createFutureInventory
       ? translate('Purchase order {orderId} created with {count} future inventory batches.', { orderId: result.orderId, count: result.futureInventoryItemIds?.length ?? 0 })
       : translate('Purchase order {orderId} created.', { orderId: result.orderId }));
-    usePurchaseOrderSearchStore().markStale();
+    usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
     useFutureInventorySearchStore().markStale();
     router.replace(`/purchase-orders/${encodeURIComponent(result.orderId)}`);
   } catch (error) {

@@ -132,7 +132,7 @@ import { StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useUserStore } from '@/store/user';
-import { usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
@@ -186,7 +186,7 @@ onIonViewWillEnter(load);
 async function run(action: () => Promise<any>, success: string) {
   try {
     await action();
-    usePurchaseOrderSearchStore().markStale();
+    usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
     useFutureInventorySearchStore().markStale();
     await showToast(success);
     await load();
