@@ -16,25 +16,12 @@
         :show-clear="false"
       >
         <UniformFilterLayout @clear="clearFilters">
-          <ion-select v-model="filters.parking" :label="translate('At parking now')" label-placement="stacked" fill="outline" interface="popover">
-            <ion-select-option value="any">{{ translate('Any') }}</ion-select-option>
-            <ion-select-option value="parked">{{ translate('At pre-order parking') }}</ion-select-option>
-            <ion-select-option value="released">{{ translate('Released from parking') }}</ion-select-option>
-          </ion-select>
-
           <MultiSelectFilter
             v-model="filters.statusId"
             :label="translate('Status')"
             :all-label="translate('All statuses')"
             :options="orderStatusOptions"
           />
-
-          <ion-select v-model="filters.allocationState" :label="translate('Allocation state')" label-placement="stacked" fill="outline" interface="popover">
-            <ion-select-option value="All">{{ translate('All locations') }}</ion-select-option>
-            <ion-select-option value="AwaitingBrokering">{{ translate('Awaiting brokering') }}</ion-select-option>
-            <ion-select-option value="Unfillable">{{ translate('Unfillable') }}</ion-select-option>
-            <ion-select-option value="Archived">{{ translate('Archived') }}</ion-select-option>
-          </ion-select>
 
           <ion-select v-model="filters.futureInventoryItemTypeId" :label="translate('Future inventory type')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All types') }}</ion-select-option>
@@ -179,7 +166,6 @@ watch(results, () => {
   const ids = new Set(results.value.map((order) => order.orderId));
   selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
 });
-
 
 function activate(order: PreorderOrder) {
   if (selectMode.value) setSelected(order.orderId, !selectedIds.value.includes(order.orderId));
