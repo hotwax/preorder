@@ -25,7 +25,7 @@
             <p v-if="seed.enumDescription(setting.emailType) !== setting.emailType">{{ seed.enumDescription(setting.emailType) }}</p>
           </ion-card-header>
           <ion-list lines="none">
-            <ion-item :disabled="!canUpdate || !setting.wired || toggling === setting.emailType">
+            <ion-item :disabled="!canUpdate || !settingsReady || !setting.wired || toggling === setting.emailType">
               <ion-toggle :key="`${setting.emailType}-${settingsRevision}`" :checked="setting.wired && setting.exists && setting.enabled" @ionChange="toggle(setting, $event.detail.checked)">
                 {{ setting.wired ? (setting.exists && setting.enabled ? translate('Sending') : translate('Off')) : translate('Not wired') }}
               </ion-toggle>
@@ -59,7 +59,7 @@
                 </p>
               </ion-label>
             </ion-item>
-            <ion-item button :detail="true" :disabled="!canUpdate" @click="edit(setting)">
+            <ion-item button :detail="true" :disabled="!canUpdate || !settingsReady" @click="edit(setting)">
               <ion-icon slot="start" :icon="createOutline" />
               <ion-label>{{ translate('Edit email settings') }}</ion-label>
             </ion-item>
@@ -188,6 +188,10 @@ const productStoreId = computed(() => productStore.getCurrentProductStoreId);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_COMMS_UPDATE));
 
 const settings = ref<PreorderEmailSetting[]>([]);
+/** The store the settings on screen belong to: empty until the current store's settings have loaded. */
+const settingsStoreId = ref('');
+/** Edits write to the store the settings were read for, so they wait until those are the current store's. */
+const settingsReady = computed(() => !!productStoreId.value && settingsStoreId.value === productStoreId.value);
 const settingsLoading = ref(false);
 const settingsError = ref('');
 const toggling = ref('');
@@ -240,26 +244,46 @@ const daysAgo = (days: number) => DateTime.now().minus({ days }).toISODate() as 
 const gatewayLabel = (systemMessageRemoteId?: string) =>
   gateways.value.find((gateway) => gateway.systemMessageRemoteId === systemMessageRemoteId)?.description || systemMessageRemoteId || '';
 
+/** Each settings load takes a number; only the latest one's answer lands, and only for the store it was asked for. */
+let loadSettingsRequest = 0;
+
 async function loadSettings() {
-  if (!productStoreId.value) return;
+  const storeId = productStoreId.value;
+  if (!storeId) return;
+  const request = ++loadSettingsRequest;
   settingsLoading.value = true;
   settingsError.value = '';
   try {
     const [rows, week, month, gatewayRows] = await Promise.all([
-      fetchEmailSettings(productStoreId.value),
-      fetchCounts(productStoreId.value, daysAgo(7)),
-      fetchCounts(productStoreId.value, daysAgo(30)),
+      fetchEmailSettings(storeId),
+      fetchCounts(storeId, daysAgo(7)),
+      fetchCounts(storeId, daysAgo(30)),
       fetchEmailGateways().catch(() => [] as EmailGateway[]),
     ]);
+    if (request !== loadSettingsRequest || storeId !== productStoreId.value) return;
     settings.value = rows;
     gateways.value = gatewayRows;
     counts7.value = week;
     counts30.value = month;
+    settingsStoreId.value = storeId;
   } catch (err) {
+    if (request !== loadSettingsRequest) return;
     settingsError.value = errorMessage(err, translate('Failed to load email settings.'));
   } finally {
-    settingsLoading.value = false;
+    if (request === loadSettingsRequest) settingsLoading.value = false;
   }
+}
+
+/** Another store's settings never show, or get saved, under this store: they clear at once and edits wait for the new ones. */
+function clearStoreData() {
+  settings.value = [];
+  counts7.value = [];
+  counts30.value = [];
+  settingsStoreId.value = '';
+  settingsRevision.value += 1;
+  events.value = [];
+  eventsTotal.value = 0;
+  eventsLoaded.value = false;
 }
 
 function eventParams(pageIndex: number) {
@@ -320,6 +344,7 @@ watch(orderQuery, () => {
 });
 watch(eventFilters, loadEvents, { deep: true });
 watch(productStoreId, () => {
+  clearStoreData();
   void loadSettings();
   void loadEvents();
 });
@@ -338,16 +363,25 @@ function clearEventFilters() {
   orderQuery.value = '';
 }
 
+/** Whether the store the settings were read for is still the current one; says so when it is not. */
+async function stillSameStore(storeId: string) {
+  if (storeId === productStoreId.value) return true;
+  await showToast(translate('The product store changed, so the change was not saved.'));
+  return false;
+}
+
 async function edit(setting: PreorderEmailSetting) {
+  if (!settingsReady.value) return;
+  const storeId = settingsStoreId.value;
   const modal = await modalController.create({
     component: EmailSettingModal,
     componentProps: { header: emailTypeLabel(setting.emailType), setting, gateways: gateways.value },
   });
   await modal.present();
   const { data, role } = await modal.onDidDismiss<EmailSettingChanges>();
-  if (role !== 'confirm' || !data || !Object.keys(data).length) return;
+  if (role !== 'confirm' || !data || !Object.keys(data).length || !await stillSameStore(storeId)) return;
   try {
-    await updateEmailSetting(productStoreId.value, setting.emailType, data);
+    await updateEmailSetting(storeId, setting.emailType, data);
     await showToast(translate('{email} settings saved.', { email: emailTypeLabel(setting.emailType) }));
   } catch (err) {
     await showToast(errorMessage(err, translate('Failed to update the email setting.')));
@@ -358,10 +392,11 @@ async function edit(setting: PreorderEmailSetting) {
 }
 
 async function toggle(setting: PreorderEmailSetting, enabled: boolean) {
-  if ((setting.exists && setting.enabled) === enabled) return;
+  if (!settingsReady.value || (setting.exists && setting.enabled) === enabled) return;
+  const storeId = settingsStoreId.value;
   toggling.value = setting.emailType;
   try {
-    await setEmailEnabled(productStoreId.value, setting.emailType, enabled);
+    await setEmailEnabled(storeId, setting.emailType, enabled);
     await showToast(enabled ? translate('{email} turned on.', { email: emailTypeLabel(setting.emailType) }) : translate('{email} turned off.', { email: emailTypeLabel(setting.emailType) }));
   } catch (err) {
     await showToast(errorMessage(err, translate('Failed to update the email setting.')));
