@@ -1,5 +1,5 @@
 import { translate } from '@common';
-import { countParams, daysFromToday, formatDate } from '@/utils/format';
+import { countParams, daysFromToday, formatDate, formatQuantity } from '@/utils/format';
 
 /**
  * The app's short names for the future inventory types (FUTURE_INV_ITEM_TYPE enums), whose seed
@@ -16,6 +16,23 @@ export const shownPartyId = (partyId?: string) => (partyId && partyId !== '_NA_'
 /** A future inventory type's name: the app's short name, else the enum's description, else its id. */
 export const futureInventoryTypeLabel = (typeId?: string, description?: string) =>
   translate((typeId && FUTURE_INVENTORY_TYPE_NAMES[typeId]) || description || typeId || 'Unknown');
+
+/** An enum's short name: its description up to the colon, for the reasons whose description defines them ("Reallocated: an order line's ..."). */
+export const shortDescription = (description?: string) => (description || '').split(':')[0].trim();
+
+const NOTE_DATE = /\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?(?![\d-])/g;
+const NOTE_DECIMAL = /(?<![\w.])\d+\.\d+(?![\w.])/g;
+
+/**
+ * A note OMS wrote on a ledger row, as the rest of the page reads: its dates as dates ("2026-11-30 00:00" reads
+ * "Nov 30, 2026") and its quantities without trailing zeros ("Reallocated 3.0 for" reads "Reallocated 3 for").
+ */
+export function readableNote(note?: string): string {
+  if (!note) return '';
+  return note
+    .replace(NOTE_DATE, (value) => formatDate(value.slice(0, 10)) || value)
+    .replace(NOTE_DECIMAL, (value) => formatQuantity(value));
+}
 
 /** A date range as one value: "Nov 2, 2026", or "Nov 2, 2026 - Dec 1, 2026" when the ends differ. */
 export function formatDateRange(start?: number | string, end?: number | string): string {

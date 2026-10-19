@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DateTime } from 'luxon';
-import { daysOverdue, formatDateRange, futureInventoryTypeLabel, overdueLabel, shownPartyId } from '@/utils/labels';
+import { formatDate } from '@/utils/format';
+import { daysOverdue, formatDateRange, futureInventoryTypeLabel, overdueLabel, readableNote, shortDescription, shownPartyId } from '@/utils/labels';
 
 describe('labels', () => {
   it('shows a party id, but not the _NA_ placeholder', () => {
@@ -35,5 +36,21 @@ describe('labels', () => {
     expect(overdueLabel(1)).toBe('Overdue by 1 day');
     expect(overdueLabel(3)).toBe('Overdue by 3 days');
     expect(overdueLabel(1200)).toBe('Overdue by 1,200 days');
+  });
+});
+
+describe('ledger notes', () => {
+  it('shortens a reason defined by its description', () => {
+    expect(shortDescription("Reallocated: an order line's reservation moved from this batch to another")).toBe('Reallocated');
+    expect(shortDescription('Reserved')).toBe('Reserved');
+    expect(shortDescription(undefined)).toBe('');
+  });
+
+  it('reads quantities without trailing zeros and timestamps as dates', () => {
+    expect(readableNote('Reallocated 3.0 for order OR1:01 to FI100')).toBe('Reallocated 3 for order OR1:01 to FI100');
+    expect(readableNote('Released 2.500000 of 1204.000000 for cancelled order OR1:01')).toBe('Released 2.5 of 1,204 for cancelled order OR1:01');
+    expect(readableNote('Expired: promise date 2026-11-30 00:00 passed; 4.0 unsold written off')).toBe(`Expired: promise date ${formatDate('2026-11-30')} passed; 4 unsold written off`);
+    expect(readableNote('Batch FI-10.2B stays')).toBe('Batch FI-10.2B stays');
+    expect(readableNote(undefined)).toBe('');
   });
 });

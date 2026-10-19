@@ -48,15 +48,20 @@
                 <ion-note slot="end">{{ batch.externalId }}</ion-note>
               </ion-item>
             </ion-list>
-            <ion-button fill="clear" :disabled="isFinal || !canUpdate" @click="changeDate">{{ translate('Change promise date') }}</ion-button>
-            <ion-button fill="clear" :disabled="isFinal || !canUpdate" @click="adjustQuantity">{{ translate('Adjust quantity') }}</ion-button>
-            <ion-button fill="clear" color="danger" :disabled="isFinal || !canUpdate" @click="cancel">{{ translate('Cancel batch') }}</ion-button>
+            <ion-button fill="clear" :disabled="!!actionsDisabledReason" @click="changeDate">{{ translate('Change promise date') }}</ion-button>
+            <ion-button fill="clear" :disabled="!!actionsDisabledReason" @click="adjustQuantity">{{ translate('Adjust quantity') }}</ion-button>
+            <ion-button fill="clear" color="danger" :disabled="!!actionsDisabledReason" @click="cancel">{{ translate('Cancel batch') }}</ion-button>
+            <ion-item v-if="actionsDisabledReason" lines="none">
+              <ion-label class="ion-text-wrap">
+                <p>{{ actionsDisabledReason }}</p>
+              </ion-label>
+            </ion-item>
           </ion-card>
 
           <div class="stats">
             <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="promiseOverdueDays ? overdueLabel(promiseOverdueDays) : formatRelativeDay(batch.promiseDate)" />
-            <StatCard :title="translate('On hand')" :stat="formatQuantity(batch.quantityOnHandTotal)" :subtitle="translate('Supply still to arrive')" />
-            <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="Number(batch.availableToPromiseTotal) < 0 ? translate('Overcommitted') : translate('Can still be sold')" />
+            <StatCard :title="translate('On hand')" :stat="formatQuantity(batch.quantityOnHandTotal)" :subtitle="onHandCaption" />
+            <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="availableCaption" />
             <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="translate('Sold before it arrives')" />
           </div>
         </section>
@@ -72,103 +77,109 @@
           </ion-segment>
         </div>
 
-        <ion-list v-if="segment === 'lines'">
-          <ion-list-header>
-            <ion-label>{{ translate('{count} orders waiting on this batch', { count: linesTotal }) }}</ion-label>
-          </ion-list-header>
-          <div
-            v-for="line in lines"
-            :key="`${line.orderId}-${line.orderItemSeqId}`"
-            class="list-item ledger-row"
-            role="link"
-            tabindex="0"
-            @click="router.push(`/preorders/${encodeURIComponent(line.orderId)}`)"
-            @keydown.enter.prevent="router.push(`/preorders/${encodeURIComponent(line.orderId)}`)"
-          >
-            <ion-item lines="none">
-              <ion-label>
-                {{ line.customerName || line.orderName || line.orderId }}
-                <p>{{ [line.customerName ? line.orderName : '', line.orderId, line.orderItemSeqId].filter((id) => id && id !== (line.customerName || line.orderName || line.orderId)).join(' - ') }}</p>
+        <template v-if="segment === 'lines'">
+          <ErrorState v-if="linesError" :title="translate('Could not load the waiting orders')" :message="linesError" retryable @retry="loadLines" />
+          <ion-list v-else>
+            <ion-list-header>
+              <ion-label>{{ translate('{count} orders waiting on this batch', { count: linesTotal }) }}</ion-label>
+            </ion-list-header>
+            <div
+              v-for="line in lines"
+              :key="`${line.orderId}-${line.orderItemSeqId}`"
+              class="list-item ledger-row"
+              role="link"
+              tabindex="0"
+              @click="router.push(`/preorders/${encodeURIComponent(line.orderId)}`)"
+              @keydown.enter.prevent="router.push(`/preorders/${encodeURIComponent(line.orderId)}`)"
+            >
+              <ion-item lines="none">
+                <ion-label>
+                  {{ line.customerName || line.orderName || line.orderId }}
+                  <p>{{ [line.customerName ? line.orderName : '', line.orderId, line.orderItemSeqId].filter((id) => id && id !== (line.customerName || line.orderName || line.orderId)).join(' - ') }}</p>
+                </ion-label>
+              </ion-item>
+              <ion-label class="tablet">
+                {{ seed.facilityName(line.facilityId || '') }}
+                <p>{{ translate('Location') }}</p>
               </ion-label>
-            </ion-item>
-            <ion-label class="tablet">
-              {{ seed.facilityName(line.facilityId || '') }}
-              <p>{{ translate('Location') }}</p>
-            </ion-label>
-            <ion-label class="tablet">
-              {{ formatDate(line.orderDate) }}
-              <p>{{ translate('Ordered') }}</p>
-            </ion-label>
-            <ion-label class="tablet">
-              {{ formatQuantity(line.openQuantity) }}
-              <p>{{ translate('Reserved') }}</p>
-            </ion-label>
-            <ion-label class="ion-text-end">
-              {{ formatDate(line.promisedDatetime) || translate('No promise date') }}
-              <p>{{ translate('Promise date') }}</p>
-            </ion-label>
-          </div>
-          <ion-item v-if="!lines.length" lines="none">
-            <ion-label>{{ translate('No orders are waiting on this batch.') }}</ion-label>
-          </ion-item>
-          <ion-item v-else-if="linesTotal > lines.length" lines="none">
-            <ion-note>{{ translate('Showing the first {shown} of {count}.', { shown: lines.length, count: linesTotal }) }}</ion-note>
-          </ion-item>
-        </ion-list>
-
-        <ion-list v-else>
-          <ion-list-header>
-            <ion-label>{{ translate('{count} ledger entries', { count: ledgerTotal }) }}</ion-label>
-          </ion-list-header>
-          <div
-            v-for="row in ledger"
-            :key="row.futureInventoryItemDetailId"
-            class="list-item ledger-row"
-            :role="row.orderId ? 'link' : undefined"
-            :tabindex="row.orderId ? 0 : undefined"
-            @click="row.orderId && router.push(`/preorders/${encodeURIComponent(row.orderId)}`)"
-            @keydown.enter.prevent="row.orderId && router.push(`/preorders/${encodeURIComponent(row.orderId)}`)"
-          >
-            <ion-item lines="none">
-              <ion-label>
-                {{ seed.enumDescription(row.reasonEnumId) }}
-                <p>{{ row.description || row.futureInventoryItemDetailId }}</p>
+              <ion-label class="tablet">
+                {{ formatDate(line.orderDate) }}
+                <p>{{ translate('Ordered') }}</p>
               </ion-label>
-            </ion-item>
-            <ion-label class="tablet">
-              {{ signed(row.quantityOnHandDiff) }}
-              <p>{{ translate('On hand') }}</p>
-            </ion-label>
-            <ion-label class="tablet">
-              {{ signed(row.availableToPromiseDiff) }}
-              <p>{{ translate('ATP') }}</p>
-            </ion-label>
-            <ion-label class="tablet">
-              <template v-if="row.orderId">
-                {{ row.orderId }}
-                <p>{{ translate('Item {seq}', { seq: row.orderItemSeqId }) }}</p>
-              </template>
-              <template v-else-if="row.promiseDate">
-                {{ formatDate(row.promiseDate) }}
+              <ion-label class="tablet">
+                {{ formatQuantity(line.openQuantity) }}
+                <p>{{ translate('Reserved') }}</p>
+              </ion-label>
+              <ion-label class="ion-text-end">
+                {{ formatDate(line.promisedDatetime) || translate('No promise date') }}
                 <p>{{ translate('Promise date') }}</p>
-              </template>
-              <template v-else-if="row.facilityId">
-                {{ seed.facilityName(row.facilityId) }}
-                <p>{{ translate('Facility') }}</p>
-              </template>
-            </ion-label>
-            <ion-label class="ion-text-end">
-              {{ formatDateTime(row.createdDate) }}
-              <p>{{ row.changedByUserId || translate('System') }}</p>
-            </ion-label>
-          </div>
-          <ion-item v-if="!ledger.length" lines="none">
-            <ion-label>{{ translate('No ledger entries.') }}</ion-label>
-          </ion-item>
-          <ion-item v-else-if="ledgerTotal > ledger.length" lines="none">
-            <ion-note>{{ translate('Showing the latest {shown} of {count}.', { shown: ledger.length, count: ledgerTotal }) }}</ion-note>
-          </ion-item>
-        </ion-list>
+              </ion-label>
+            </div>
+            <ion-item v-if="!lines.length" lines="none">
+              <ion-label>{{ translate('No orders are waiting on this batch.') }}</ion-label>
+            </ion-item>
+            <ion-item v-else-if="linesTotal > lines.length" lines="none">
+              <ion-note>{{ translate('Showing the first {shown} of {count}.', { shown: lines.length, count: linesTotal }) }}</ion-note>
+            </ion-item>
+          </ion-list>
+        </template>
+
+        <template v-else>
+          <ErrorState v-if="ledgerError" :title="translate('Could not load the ledger')" :message="ledgerError" retryable @retry="loadLedger" />
+          <ion-list v-else>
+            <ion-list-header>
+              <ion-label>{{ translate('{count} ledger entries', { count: ledgerTotal }) }}</ion-label>
+            </ion-list-header>
+            <div
+              v-for="row in ledger"
+              :key="row.futureInventoryItemDetailId"
+              class="list-item ledger-row"
+              :role="row.orderId ? 'link' : undefined"
+              :tabindex="row.orderId ? 0 : undefined"
+              @click="row.orderId && router.push(`/preorders/${encodeURIComponent(row.orderId)}`)"
+              @keydown.enter.prevent="row.orderId && router.push(`/preorders/${encodeURIComponent(row.orderId)}`)"
+            >
+              <ion-item lines="none">
+                <ion-label>
+                  {{ shortDescription(seed.enumDescription(row.reasonEnumId)) || row.reasonEnumId }}
+                  <p v-if="row.description">{{ readableNote(row.description) }}</p>
+                </ion-label>
+              </ion-item>
+              <ion-label class="tablet">
+                {{ signed(row.quantityOnHandDiff) }}
+                <p>{{ translate('On hand') }}</p>
+              </ion-label>
+              <ion-label class="tablet">
+                {{ signed(row.availableToPromiseDiff) }}
+                <p>{{ translate('ATP') }}</p>
+              </ion-label>
+              <ion-label class="tablet">
+                <template v-if="row.orderId">
+                  {{ row.orderId }}
+                  <p>{{ translate('Item {seq}', { seq: row.orderItemSeqId }) }}</p>
+                </template>
+                <template v-else-if="row.promiseDate">
+                  {{ formatDate(row.promiseDate) }}
+                  <p>{{ translate('Promise date') }}</p>
+                </template>
+                <template v-else-if="row.facilityId">
+                  {{ seed.facilityName(row.facilityId) }}
+                  <p>{{ translate('Facility') }}</p>
+                </template>
+              </ion-label>
+              <ion-label class="ion-text-end">
+                {{ formatDateTime(row.createdDate || row.createdStamp) }}
+                <p>{{ row.changedByUserId || translate('System') }}</p>
+              </ion-label>
+            </div>
+            <ion-item v-if="!ledger.length" lines="none">
+              <ion-label>{{ translate('No ledger entries.') }}</ion-label>
+            </ion-item>
+            <ion-item v-else-if="ledgerTotal > ledger.length" lines="none">
+              <ion-note>{{ translate('Showing the latest {shown} of {count}.', { shown: ledger.length, count: ledgerTotal }) }}</ion-note>
+            </ion-item>
+          </ion-list>
+        </template>
       </template>
     </ion-content>
   </ion-page>
@@ -191,7 +202,7 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { confirmAction, promptForDate, promptForNumber, showToast } from '@/utils';
 import { formatDate, formatDateTime, formatQuantity, formatRelativeDay, toDateInputValue } from '@/utils/format';
-import { daysOverdue, overdueLabel } from '@/utils/labels';
+import { daysOverdue, overdueLabel, readableNote, shortDescription } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -213,32 +224,69 @@ const ledger = ref<any[]>([]);
 const ledgerTotal = ref(0);
 const loading = ref(false);
 const error = ref('');
+/** A failed list shows its own error: the batch and the other list still show. */
+const linesError = ref('');
+const ledgerError = ref('');
 const segment = ref('lines');
 
 /** An active batch whose promise date has passed: its supply is late. */
 const promiseOverdueDays = computed(() => (batch.value?.statusId === 'FUTURE_INV_ACTIVE' ? daysOverdue(batch.value.promiseDate) : 0));
 const isFinal = computed(() => ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'].includes(batch.value?.statusId || ''));
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
+const isReceived = computed(() => batch.value?.statusId === 'FUTURE_INV_RECEIVED');
+
+/** Why the batch actions are off, said under them: a closed batch, or no permission. */
+const actionsDisabledReason = computed(() => {
+  if (isReceived.value) return translate('A received batch cannot be changed: its stock is in the facility.');
+  if (isFinal.value) return translate('A cancelled batch cannot be changed.');
+  if (!canUpdate.value) return translate('You do not have permission to change future inventory.');
+  return '';
+});
+
+const onHandCaption = computed(() => (isReceived.value ? translate('Received into the facility') : translate('Supply still to arrive')));
+const availableCaption = computed(() => {
+  if (isFinal.value) return translate('No longer sold as pre-order');
+  return Number(batch.value?.availableToPromiseTotal) < 0 ? translate('Overcommitted') : translate('Can still be sold');
+});
 
 const signed = (value: unknown) => {
   const number = Number(value || 0);
   return number > 0 ? `+${formatQuantity(number)}` : formatQuantity(number);
 };
 
+async function loadLines() {
+  linesError.value = '';
+  try {
+    const waiting = await fetchWaitingLines(props.futureInventoryItemId);
+    lines.value = waiting.rows;
+    linesTotal.value = waiting.total;
+  } catch (err) {
+    lines.value = [];
+    linesTotal.value = 0;
+    linesError.value = errorMessage(err, translate('Failed to load the waiting lines.'));
+  }
+}
+
+async function loadLedger() {
+  ledgerError.value = '';
+  try {
+    const entries = await fetchLedger(props.futureInventoryItemId);
+    ledger.value = entries.rows;
+    ledgerTotal.value = entries.total;
+  } catch (err) {
+    ledger.value = [];
+    ledgerTotal.value = 0;
+    ledgerError.value = errorMessage(err, translate('Failed to load the ledger.'));
+  }
+}
+
+/** The batch, and its two lists beside it: a list that fails shows its own error, never hiding the batch. */
 async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const [batchRow, waiting, entries] = await Promise.all([
-      fetchBatch(props.futureInventoryItemId),
-      fetchWaitingLines(props.futureInventoryItemId),
-      fetchLedger(props.futureInventoryItemId),
-    ]);
+    const [batchRow] = await Promise.all([fetchBatch(props.futureInventoryItemId), loadLines(), loadLedger()]);
     batch.value = batchRow;
-    lines.value = waiting.rows;
-    linesTotal.value = waiting.total;
-    ledger.value = entries.rows;
-    ledgerTotal.value = entries.total;
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to load the batch.'));
   } finally {
