@@ -42,6 +42,7 @@
               <ion-button v-if="order.statusId === 'ORDER_CREATED'" fill="clear" @click="setStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
               <ion-button fill="clear" @click="changeArrival()">{{ translate('Change arrival date') }}</ion-button>
               <ion-button fill="clear" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow">{{ translate('Sell as pre-order') }}</ion-button>
+              <ion-button v-if="order.statusId === 'ORDER_APPROVED'" fill="clear" :router-link="`/purchase-orders/${orderId}/inbound-shipment`">{{ translate('Create inbound shipment') }}</ion-button>
               <ion-button v-if="order.statusId === 'ORDER_APPROVED'" fill="clear" @click="setStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
               <ion-button fill="clear" color="danger" @click="setStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
             </template>

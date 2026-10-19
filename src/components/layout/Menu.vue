@@ -79,6 +79,8 @@ const pages: MenuPage[] = [
   { title: "PO imports", url: "/po-imports", icon: cloudUploadOutline, permissionId: Actions.APP_PO_VIEW },
   { title: "Communications", url: "/communications", icon: mailOutline, permissionId: Actions.APP_COMMS_VIEW, divider: "Customers" },
   { title: "Bulk updates", url: "/bulk-updates", icon: syncOutline, permissionId: Actions.APP_PREORDER_VIEW },
+  { title: "Pre-order setup", url: "/setup", icon: settingsOutline, permissionId: Actions.APP_PREORDER_VIEW },
+  { title: "Future inventory sync", url: "/sync-events", icon: syncOutline, permissionId: Actions.APP_PREORDER_VIEW },
   { title: "Settings", url: "/settings", icon: settingsOutline, permissionId: "" },
 ];
 

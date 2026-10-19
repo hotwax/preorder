@@ -38,6 +38,7 @@
                 <ion-note slot="end">{{ formatDateTime(shipment.createdDate) }}</ion-note>
               </ion-item>
             </ion-list>
+            <ion-button v-if="canReceive" fill="clear" :disabled="receiving" @click="receive">{{ translate('Receive remaining units') }}</ion-button>
           </ion-card>
           <div class="stats">
             <StatCard :title="translate('Estimated arrival')" :stat="formatDate(shipment.estimatedArrivalDate) || '-'" :subtitle="formatRelative(shipment.estimatedArrivalDate)" />
@@ -89,10 +90,10 @@
 
 <script setup lang="ts">
 import {
-  IonBackButton, IonBadge, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonItem,
+  IonButton, alertController, IonBackButton, IonBadge, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonItem,
   IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonTitle, IonToolbar, onIonViewWillEnter,
 } from '@ionic/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { useInboundShipments } from '@/composables/useInboundShipments';
@@ -102,16 +103,33 @@ import ProductItem from '@/components/common/ProductItem.vue';
 import { formatDate, formatDateTime, formatRelative } from '@/utils/format';
 import { formatQuantity } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
+import { useUserStore } from '@/store/user';
+import Actions from '@/authorization/actions';
 import { errorMessage } from '@/utils/response';
 
 const props = defineProps<{ shipmentId: string }>();
 const seed = useSeedData();
 const { primaryIdentifier } = useProductIdentity();
-const { fetchShipment } = useInboundShipments();
+const { fetchShipment, receiveShipment } = useInboundShipments();
 
 const shipment = ref<any>();
 const loading = ref(false);
 const error = ref('');
+const receiving = ref(false);
+const user = useUserStore();
+const canReceive = computed(() => user.hasPermission(Actions.APP_PO_UPDATE) && shipment.value?.shipmentTypeId === 'PURCHASE_SHIPMENT' && ['PURCH_SHIP_CREATED', 'PURCH_SHIP_SHIPPED'].includes(shipment.value?.statusId));
+async function receive() {
+  const alert = await alertController.create({ header: translate('Receive remaining units'), message: translate('This records the remaining shipment units as received at the destination and updates physical and future inventory.'), buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: translate('Receive'), handler: () => { void confirmReceive(); } }] });
+  await alert.present();
+}
+async function confirmReceive() {
+  if (receiving.value || !canReceive.value) return;
+  receiving.value = true;
+  try { await receiveShipment(props.shipmentId); await load(); }
+  catch (err) { error.value = errorMessage(err, translate('Failed to receive the shipment.')); }
+  finally { receiving.value = false; }
+}
+
 
 async function load() {
   loading.value = true;
