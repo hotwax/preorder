@@ -56,3 +56,11 @@ Confirm supply group membership, store parking purposes, product/location activa
 ## Sandbox deployment provenance
 
 Latest observed HC build: Jenkins new-hwc-k8s-update-onpremise-maarg-uat/458, successful, recipe a4019682fd43da9ccc67f02489a15c28559474e0. Its HC-only entrypoint and unchanged RC2 component pins must remain. Update only preorder-maarg and shopify-connector pins after local verification; preserve OMS ddb29179cbe39a1f8683346bde9b0a975c0c32bc.
+
+## Sandbox acceptance, 2026-10-19
+
+- HC deployment 460 succeeded with preorder-maarg b394fc0273 and shopify-connector b819bf6bd6. Live manifest confirmed only those two components changed; OMS remains ddb29179cb. Inventory channels and metafield settings were preserved.
+- Localhost app created approved PO M100816 / HC-APP-SETUP-20261019 for existing product M100001 (SKU 100), four units at Central_Warehouse. It created and received shipment M100561 / HC-APP-SHIP-20261019-A, with receipt M100102 for two units. Independent REST readback confirms two remaining units, one receipt, parent FI M100051 at two units, and received child FI M100052 at zero.
+- Added facility IDs to destination labels because the sandbox has duplicate facility names. Added scoped publishing-job discovery and administrator pause/enable controls that preserve schedule and parameters. Restored the five previously enabled pre-order jobs that were observed paused after deployment. The authorization loader log confirms it loaded only 35 authorization records; the source of the separate job-state changes is not established.
+- Found future-dated store parking mappings. Added administrator-only parking activation, validating purpose/facility type, locking the store, retaining historical rows, superseding future rows, and making repeated activation idempotent. Seven real local database contract tests pass, including invalid facility rejection and a rolled-back activation fixture. Endpoint commit 0286f0b and test commit 1cdb130 are pushed; final HC deployment uses recipe 36cffbf.
+- Remaining: verify final endpoint rollout, activate both parking mappings through the app, confirm native event delivery and actual Shopify quantity/metafield after receipt, and refresh final PR evidence.

@@ -23,7 +23,15 @@
         </ion-card>
         <ion-card>
           <ion-card-header><ion-card-title>{{ translate('Store parking facilities') }}</ion-card-title></ion-card-header>
-          <ion-list><ion-item v-for="purpose in activePurposes" :key="`${purpose.facilityPurposeEnumId}:${purpose.fromDate}`"><ion-label>{{ seed.enumDescription(purpose.facilityPurposeEnumId) || purpose.facilityPurposeEnumId }}<p>{{ seed.facilityName(purpose.facilityId) }}</p></ion-label></ion-item><ion-item v-if="!activePurposes.length"><ion-label>{{ translate('No parking facility mappings were returned.') }}</ion-label></ion-item></ion-list>
+          <ion-list>
+            <ion-item v-for="purpose in parkingPurposes" :key="purpose.id">
+              <ion-select v-model="parkingSelections[purpose.id]" :label="translate(purpose.label)" interface="popover">
+                <ion-select-option v-for="facility in parkingOptions(purpose.type)" :key="facility.facilityId" :value="facility.facilityId">{{ facility.facilityName || facility.facilityId }} ({{ facility.facilityId }})</ion-select-option>
+              </ion-select>
+              <ion-badge slot="end" :color="activePurposes.some((row: any) => row.facilityPurposeEnumId === purpose.id) ? 'success' : 'warning'">{{ activePurposes.some((row: any) => row.facilityPurposeEnumId === purpose.id) ? translate('Active') : translate('Not active') }}</ion-badge>
+              <ion-button v-if="canConfigure" slot="end" fill="clear" :disabled="loading || !parkingSelections[purpose.id]" @click="confirmParking(purpose)">{{ translate('Activate') }}</ion-button>
+            </ion-item>
+          </ion-list>
         </ion-card>
         <ion-card>
           <ion-card-header><ion-card-title>{{ translate('Future inventory metafield') }}</ion-card-title><ion-card-subtitle>{{ translate('Shopify variant metafield, JSON') }}</ion-card-subtitle></ion-card-header>
@@ -33,7 +41,7 @@
           <ion-button fill="clear" router-link="/sync-events">{{ translate('View sync events') }}</ion-button>
         </ion-card>
         <ion-card><ion-card-header><ion-card-title>{{ translate('Publishing jobs') }}</ion-card-title></ion-card-header><ion-list>
-          <ion-item v-for="job in setup.jobs" :key="job.jobName"><ion-label class="ion-text-wrap">{{ job.jobName }}<p>{{ job.cronDescription }}</p><p v-if="job.scope">{{ job.scope }}</p><p v-if="job.latestRun">{{ translate('Last run') }}: {{ formatDateTime(job.latestRun.startTime) }} — {{ job.latestRun.hasError === 'Y' ? translate('Failed') : job.latestRun.endTime ? translate('Completed') : translate('Running') }}</p></ion-label><ion-badge slot="end" :color="job.available && job.paused === 'N' ? 'success' : 'warning'">{{ !job.available ? translate('Unavailable') : job.paused === 'Y' ? translate('Paused') : translate('Enabled') }}</ion-badge></ion-item>
+          <ion-item v-for="job in setup.jobs" :key="job.jobName"><ion-label class="ion-text-wrap">{{ job.jobName }}<p>{{ job.cronDescription }}</p><p v-if="job.scope">{{ job.scope }}</p><p v-if="job.latestRun">{{ translate('Last run') }}: {{ formatDateTime(job.latestRun.startTime) }} — {{ job.latestRun.hasError === 'Y' ? translate('Failed') : job.latestRun.endTime ? translate('Completed') : translate('Running') }}</p></ion-label><ion-badge slot="end" :color="job.available && job.paused === 'N' ? 'success' : 'warning'">{{ !job.available ? translate('Unavailable') : job.paused === 'Y' ? translate('Paused') : translate('Enabled') }}</ion-badge><ion-button v-if="canConfigure && job.available" slot="end" fill="clear" :disabled="loading" @click="changeJobState(job)">{{ job.paused === 'Y' ? translate('Enable') : translate('Pause') }}</ion-button></ion-item>
         </ion-list></ion-card>
         <ion-card><ion-card-header><ion-card-title>{{ translate('Event feeds') }}</ion-card-title></ion-card-header><ion-list><ion-item v-for="feed in setup.feeds" :key="feed.dataFeedId"><ion-label>{{ feed.dataFeedId }}</ion-label><ion-note slot="end">{{ feed.dataFeedTypeEnumId || translate('Unavailable') }}</ion-note></ion-item></ion-list></ion-card>
       </template>
@@ -42,7 +50,7 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonProgressBar, IonList, IonItem, IonLabel, IonNote, IonSelect, IonSelectOption, IonInput, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonBadge, onIonViewWillEnter } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonProgressBar, IonList, IonItem, IonLabel, IonNote, IonSelect, IonSelectOption, IonInput, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonBadge, alertController, onIonViewWillEnter } from '@ionic/vue';
 import { translate } from '@common';
 import { useLiveEntity, useSeedData } from '@common/db';
 import { preorderDb } from '@/db/preorderDb';
@@ -59,6 +67,9 @@ const productStore = useProductStore();
 const storeId = computed(() => productStore.getCurrentProductStoreId);
 const shopId = ref(''); const loading = ref(false); const error = ref('');
 const namespace = ref('hotwax'); const metafieldKey = ref('preorder_batches'); const facilityGroupId = ref(''); const shopifyLocationId = ref('');
+const parkingPurposes = [{ id: 'FP_PRE_ORDER_PARK', type: 'PRE_ORDER', label: 'Pre-order parking' }, { id: 'FP_BACKORDER_PARK', type: 'BACKORDER', label: 'Backorder parking' }];
+const parkingSelections = ref<Record<string, string>>({});
+const parkingOptions = (type: string) => seed.facilities.withSync().data.filter((row: any) => row.facilityTypeId === type);
 const canConfigure = computed(() => user.hasPermission(Actions.APP_SETUP_UPDATE));
 const { records: shops } = useLiveEntity<any>(preorderDb.tables.shopifyShops, () => ({ equals: { productStoreId: storeId.value } }));
 const { first: setup } = useLiveEntity<any>(preorderDb.tables.preorderSetup, () => ({ equals: { shopId: shopId.value } }));
@@ -76,6 +87,9 @@ const validMapping = computed(() => /^[\w-]+$/.test(namespace.value) && /^[\w-]+
 watch(shops, rows => { if (!rows.some(row => row.shopId === shopId.value)) shopId.value = rows[0]?.shopId || ''; }, { immediate: true });
 watch(shopId, () => { void load(); });
 watch(setup, value => {
+  for (const purpose of parkingPurposes) {
+    parkingSelections.value[purpose.id] = activePurposes.value.find((row: any) => row.facilityPurposeEnumId === purpose.id)?.facilityId || value?.purposes?.find((row: any) => row.facilityPurposeEnumId === purpose.id && !row.thruDate)?.facilityId || '';
+  }
   namespace.value = value?.settings?.find((row: any) => row.settingTypeEnumId === 'SHPFY_PRORD_MF_NS')?.settingValue || 'hotwax';
   metafieldKey.value = value?.settings?.find((row: any) => row.settingTypeEnumId === 'SHPFY_PRORD_MF_KEY')?.settingValue || 'preorder_batches';
   facilityGroupId.value = channel.value?.facilityGroupId || ''; shopifyLocationId.value = channel.value?.shopifyLocationId || '';
@@ -94,6 +108,38 @@ async function saveChannel() {
   if (!canConfigure.value) return;
   loading.value = true; error.value = '';
   try { await actions.saveChannel(shopId.value, storeId.value, { inventoryChannelId: channel.value?.inventoryChannelId, channelTypeEnumId: 'SICT_PRE_ORDER', facilityGroupId: facilityGroupId.value, shopifyLocationId: shopifyLocationId.value }); await showToast(translate('Pre-order channel saved.')); } catch (err) { error.value = errorMessage(err, translate('Failed to save the pre-order channel.')); } finally { loading.value = false; }
+}
+async function confirmParking(purpose: { id: string; label: string }) {
+  const facilityId = parkingSelections.value[purpose.id];
+  if (!canConfigure.value || !facilityId || loading.value) return;
+  const alert = await alertController.create({
+    header: translate('Activate parking facility'),
+    message: `${translate(purpose.label)}: ${seed.facilityName(facilityId)} (${facilityId}). ${translate('This takes effect now and replaces any active or scheduled mapping for this purpose in the selected store. Existing orders are not moved.')}`,
+    buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: translate('Activate'), handler: () => { void saveParking(purpose.id, facilityId); } }],
+  });
+  await alert.present();
+}
+async function saveParking(purposeId: string, facilityId: string) {
+  loading.value = true; error.value = '';
+  try { await actions.saveParking(shopId.value, storeId.value, purposeId, facilityId); await showToast(translate('Parking facility activated.')); }
+  catch (err) { error.value = errorMessage(err, translate('Failed to save the parking facility.')); }
+  finally { loading.value = false; }
+}
+async function changeJobState(job: any) {
+  if (!canConfigure.value || loading.value) return;
+  const paused = job.paused === 'Y' ? 'N' : 'Y';
+  const alert = await alertController.create({
+    header: paused === 'N' ? translate('Enable publishing job') : translate('Pause publishing job'),
+    message: `${job.jobName}. ${job.scope || translate('This job has no shop scope and may affect all stores.')} ${translate('The existing schedule and parameters will be preserved.')}`,
+    buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: paused === 'N' ? translate('Enable') : translate('Pause'), handler: () => { void saveJobState(job.jobName, paused); } }],
+  });
+  await alert.present();
+}
+async function saveJobState(jobName: string, paused: 'Y' | 'N') {
+  loading.value = true; error.value = '';
+  try { await actions.setJobPaused(shopId.value, storeId.value, jobName, paused); await showToast(translate('Publishing job updated.')); }
+  catch (err) { error.value = errorMessage(err, translate('Failed to update the publishing job.')); }
+  finally { loading.value = false; }
 }
 onIonViewWillEnter(load);
 </script>

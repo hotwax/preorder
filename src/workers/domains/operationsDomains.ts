@@ -2,7 +2,7 @@ import { defineSyncDomain } from '@common/db/sync/defineSyncDomain';
 import { workerGet } from '@common/core/workerRemoteApi';
 import { preorderDb } from '@/db/preorderDb';
 
-const JOBS = ['publish_PendingShopifyLocationInventoryAdjustments', 'publish_PendingShopifyPreorderMetafields', 'recover_StaleShopifyPreorderMetafieldMessages', 'expire_FutureInventoryItems', 'send_AllProducedSystemMessages_frequent', 'consume_AllReceivedSystemMessages_frequent'];
+const JOBS = ['publish_PendingShopifyLocationInventoryAdjustments', 'publish_PendingShopifyPreorderMetafields', 'recover_StaleShopifyPreorderMetafieldMessages', 'expire_FutureInventoryItems', 'reconcile_FutureInventoryPromiseDates', 'rebuild_ShopifyPreorderMetafields', 'send_AllProducedSystemMessages_frequent', 'consume_AllReceivedSystemMessages_frequent'];
 const FEEDS = ['ShopifyShopLocationInventoryEventFeed', 'ShopifyPreorderMetafieldFeed', 'FutureInventoryPromiseDateFeed'];
 export const preorderSetupDomain = defineSyncDomain({
   name: 'preorderSetup', table: 'preorderSetup', label: 'Pre-order setup', syncClass: 'C',

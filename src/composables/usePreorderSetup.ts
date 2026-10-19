@@ -18,5 +18,13 @@ export function usePreorderSetup() {
     await ensureOk(api({ url: `sob/shopify/inventoryChannels${inventoryChannelId ? `/${encodeURIComponent(inventoryChannelId)}` : ''}`, method: inventoryChannelId ? 'put' : 'post', data: inventoryChannelId ? { facilityGroupId: fields.facilityGroupId, shopifyLocationId: fields.shopifyLocationId } : { ...fields, shopId } }), 'Failed to save the pre-order channel.');
     await refresh(shopId, productStoreId);
   }
-  return { refresh, saveMetafield, saveChannel };
+  async function setJobPaused(shopId: string, productStoreId: string, jobName: string, paused: 'Y' | 'N') {
+    await ensureOk(api({ url: `admin/serviceJobs/${encodeURIComponent(jobName)}`, method: 'put', data: { paused } }), 'Failed to update the publishing job.');
+    await refresh(shopId, productStoreId);
+  }
+  async function saveParking(shopId: string, productStoreId: string, facilityPurposeEnumId: string, facilityId: string) {
+    await ensureOk(api({ url: 'preorder/storeFacilityPurposes', method: 'post', data: { productStoreId, facilityPurposeEnumId, facilityId } }), 'Failed to save the parking facility.');
+    await refresh(shopId, productStoreId);
+  }
+  return { refresh, saveMetafield, saveChannel, setJobPaused, saveParking };
 }
