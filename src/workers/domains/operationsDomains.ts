@@ -19,12 +19,32 @@ export const preorderSetupDomain = defineSyncDomain({
       read('sob/shopify/inventoryChannels', { shopId, pageSize: 250 }),
       read('sob/shopify/shopSetting', { shopId, settingTypeEnumId: ['SHPFY_PRORD_MF_NS', 'SHPFY_PRORD_MF_KEY'], settingTypeEnumId_op: 'in', pageSize: 20 }),
       read('preorder/storeFacilityPurposes', { productStoreId, pageSize: 100 }),
-      Promise.all(JOBS.map(async jobName => {
-        const detail = await read(`admin/serviceJobs/${jobName}`);
-        const runs = await read(`admin/serviceJobs/${jobName}/runs`, { pageSize: 1, orderByField: '-startTime' });
-        const job = detail?.jobDetail;
-        return { jobName, description: job?.description, paused: job?.paused, cronDescription: job?.cronDescription, latestRun: runs?.[0] ? { startTime: runs[0].startTime, endTime: runs[0].endTime, hasError: runs[0].hasError } : null, available: !!job };
-      })),
+      (async () => {
+        const baseJobs = await Promise.all(JOBS.map(async jobName => (await read(`admin/serviceJobs/${jobName}`))?.jobDetail || { jobName }));
+        const candidates = new Map<string, any>(baseJobs.map(job => [job.jobName, job]));
+        await Promise.all([...new Set(baseJobs.map(job => job.serviceName).filter(Boolean))].map(async serviceName => {
+          for (let pageIndex = 0; pageIndex < 20; pageIndex++) {
+            const result = await read('admin/serviceJobs', { serviceName, pageSize: 100, pageIndex });
+            const rows = result?.serviceJobList || [];
+            rows.forEach((job: any) => candidates.set(job.jobName, job));
+            if (!rows.length || (pageIndex + 1) * 100 >= Number(result?.serviceJobCount || rows.length)) break;
+            if (pageIndex === 19) errors.push('admin/serviceJobs: job list exceeds 2000 results');
+          }
+        }));
+        const relevantTypes = ['ShopifyPreorderMetafieldSet', 'ShopifyLocationInventoryAdjustment', 'FutureInventoryPromiseDateChange', 'ShopifyLocationInventoryEvent', 'ShopifyPreorderMetafieldEvent'];
+        const safeParameters = ['shopId', 'shopifyLocationId', 'inventoryChannelId', 'systemMessageTypeIds', 'systemMessageTypeId'];
+        const scopedJobs = [...candidates.values()].filter(job => {
+          const params = Object.fromEntries((job.serviceJobParameters || []).map((p: any) => [p.parameterName, p.parameterValue]));
+          if ((params.shopId || job.shopId) && String(params.shopId || job.shopId) !== shopId) return false;
+          const types = String(params.systemMessageTypeIds || params.systemMessageTypeId || '').split(',').map(value => value.trim()).filter(Boolean);
+          return !types.length || types.some(type => relevantTypes.includes(type));
+        });
+        return Promise.all(scopedJobs.map(async job => {
+          const runs = await read(`admin/serviceJobs/${encodeURIComponent(job.jobName)}/runs`, { pageSize: 1, orderByField: '-startTime' });
+          const scope = (job.serviceJobParameters || []).filter((p: any) => safeParameters.includes(p.parameterName) && p.parameterValue).map((p: any) => `${p.parameterName}: ${p.parameterValue}`).join('; ');
+          return { jobName: job.jobName, description: job.description, paused: job.paused, cronDescription: job.cronDescription, scope, latestRun: runs?.[0] ? { startTime: runs[0].startTime, endTime: runs[0].endTime, hasError: runs[0].hasError } : null, available: !!job.serviceName };
+        }));
+      })(),
       Promise.all(FEEDS.map(async dataFeedId => { const feed = await read(`admin/dataFeeds/${dataFeedId}`); return { dataFeedId, dataFeedTypeEnumId: feed?.dataFeedTypeEnumId, available: !!feed }; })),
     ]);
     return preorderDb.entity(preorderDb.tables.preorderSetup).upsertMany([{ shopId, productStoreId, channels: channels || [], settings: settings || [], purposes: purposes || [], jobs, feeds, errors, fetchedAt: Date.now() }]);
