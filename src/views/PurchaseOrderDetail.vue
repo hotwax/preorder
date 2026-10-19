@@ -11,7 +11,7 @@
 
     <ion-content>
       <ion-progress-bar v-if="loading" type="indeterminate" />
-      <ErrorState v-if="error" :title="translate('Could not load the purchase order')" :message="error" retryable @retry="load" />
+      <ErrorState v-if="error" :title="translate('Could not load the purchase order')" :message="error" @retry="load" />
 
       <template v-else-if="order">
         <section class="summary">
@@ -98,7 +98,7 @@
           </ion-item>
         </ion-list>
 
-        <ErrorState v-if="shipmentsError" :title="translate('Could not load the inbound shipments')" :message="shipmentsError" retryable @retry="loadShipments" />
+        <ErrorState v-if="shipmentsError" :title="translate('Could not load the inbound shipments')" :message="shipmentsError" @retry="loadShipments" />
         <ion-list v-else>
           <ion-list-header>
             <ion-label>{{ translate('Inbound shipments') }}</ion-label>
@@ -139,7 +139,7 @@ import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { usePrompts } from '@/composables/usePrompts';
-import { formatDate, formatMoney, formatNumber, formatQuantity, formatRelativeDay, toDateInputValue, toMillis } from '@/utils/format';
+import { dayBound, formatDate, formatMoney, formatNumber, formatQuantity, formatRelativeDay, toMillis } from '@/utils/format';
 import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -251,7 +251,7 @@ async function changeArrival() {
     translate('Change arrival date'),
     translate('The open lines move to this date. Their future inventory batches and waiting pre-orders follow.'),
     translate('Change date'),
-    toDateInputValue(earliestArrival.value),
+    dayBound(earliestArrival.value, 'start', 'date'),
   );
   if (arrivalDate) await run(() => changeArrivalDate(props.orderId, arrivalDate, order.value?.items), translate('Arrival date changed.'));
 }

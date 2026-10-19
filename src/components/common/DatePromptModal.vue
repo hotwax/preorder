@@ -40,11 +40,11 @@ import { formatDate, locale, todayValue } from '@/utils/format';
 
 /**
  * Asks for one date ('yyyy-MM-dd'), as a modal with the calendar the date filters use. The dates it asks for (a
- * promise or arrival date) lie ahead, so the earliest it offers is today in the user's time zone unless `min` says
- * otherwise, and a current date already past starts unselected.
+ * promise or arrival date) lie ahead, so the earliest it offers is today in the user's time zone, and a current date
+ * already past starts unselected.
  */
-const props = defineProps<{ header: string; message: string; confirmText: string; value?: string; min?: string }>();
-const earliest = props.min || todayValue();
+const props = defineProps<{ header: string; message: string; confirmText: string; value?: string }>();
+const earliest = todayValue();
 const selected = ref(props.value && props.value >= earliest ? props.value : '');
 
 const normalize = (value: string | string[] | null | undefined) => {

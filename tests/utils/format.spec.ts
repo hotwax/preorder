@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DateTime, Settings } from 'luxon';
 import { translate } from '@common/core/i18n';
 import {
-  countParams, dayBound, daysFromToday, formatQuantity, formatRelativeDay, setUserZone, toDateInputValue, toDay, todayValue, userZone,
+  countParams, dayBound, daysFromToday, formatQuantity, formatRelativeDay, setUserZone, toDay, todayValue, userZone,
 } from '@/utils/format';
 
 describe('day boundaries', () => {
@@ -31,7 +31,6 @@ describe('day boundaries', () => {
 
   it("is today in the user's time zone", () => {
     expect(todayValue('UTC')).toBe(DateTime.utc().toISODate());
-    expect(toDateInputValue('2026-11-30T18:30:00Z')).toBe(dayBound('2026-11-30T18:30:00Z', 'start', 'date'));
   });
 });
 

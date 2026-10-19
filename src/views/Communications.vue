@@ -16,7 +16,7 @@
       </div>
 
       <ion-progress-bar v-if="settingsLoading" type="indeterminate" />
-      <ErrorState v-if="settingsError" :title="translate('Could not load email settings')" :message="settingsError" retryable @retry="loadSettings" />
+      <ErrorState v-if="settingsError" :title="translate('Could not load email settings')" :message="settingsError" @retry="loadSettings" />
 
       <section v-else class="email-settings">
         <ion-card v-for="setting in settings" :key="setting.emailType">
@@ -77,7 +77,7 @@
         <h1>{{ translate('Recent emails') }}</h1>
       </div>
 
-      <SearchFilterCard v-model="orderQuery" :placeholder="translate('Order ID')" :show-clear="false">
+      <SearchFilterCard v-model="orderQuery" :placeholder="translate('Order ID')">
         <UniformFilterLayout @clear="clearEventFilters">
           <ion-select v-model="eventFilters.emailType" :label="translate('Email type')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All email types') }}</ion-select-option>
@@ -88,13 +88,13 @@
             <ion-select-option value="COM_COMPLETE">{{ emailStatusLabel('COM_COMPLETE') }}</ion-select-option>
             <ion-select-option value="COM_BOUNCED">{{ emailStatusLabel('COM_BOUNCED') }}</ion-select-option>
           </ion-select>
-          <DateFilterSelect v-model="eventFilters.fromDate" :label="translate('Sent from')" :max="eventFilters.thruDate" outlined />
-          <DateFilterSelect v-model="eventFilters.thruDate" :label="translate('Sent through')" :min="eventFilters.fromDate" outlined />
+          <DateFilterSelect v-model="eventFilters.fromDate" :label="translate('Sent from')" :max="eventFilters.thruDate" />
+          <DateFilterSelect v-model="eventFilters.thruDate" :label="translate('Sent through')" :min="eventFilters.fromDate" />
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="eventsLoading" type="indeterminate" />
-      <ErrorState v-if="eventsError" :title="translate('Could not load emails')" :message="eventsError" retryable @retry="loadEvents" />
+      <ErrorState v-if="eventsError" :title="translate('Could not load emails')" :message="eventsError" @retry="loadEvents" />
 
       <ion-list v-else>
         <ion-list-header v-if="events.length">

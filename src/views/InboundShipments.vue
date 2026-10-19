@@ -13,7 +13,6 @@
       <SearchFilterCard
         v-model="query"
         :placeholder="translate('Shipment, external ID, purchase order')"
-        :show-clear="false"
       >
         <UniformFilterLayout @clear="store.clearFilters()">
           <MultiSelectFilter
@@ -30,14 +29,14 @@
             </ion-select-option>
           </ion-select>
 
-          <DateFilterSelect v-model="filters.arrivalDateFrom" :label="translate('Arrival from')" :max="filters.arrivalDateThru" allow-future outlined />
-          <DateFilterSelect v-model="filters.arrivalDateThru" :label="translate('Arrival through')" :min="filters.arrivalDateFrom" allow-future outlined />
+          <DateFilterSelect v-model="filters.arrivalDateFrom" :label="translate('Arrival from')" :max="filters.arrivalDateThru" allow-future />
+          <DateFilterSelect v-model="filters.arrivalDateThru" :label="translate('Arrival through')" :min="filters.arrivalDateFrom" allow-future />
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
-      <ErrorState v-if="error" :title="translate('Could not load inbound shipments')" :message="error" retryable @retry="refresh()" />
+      <ErrorState v-if="error" :title="translate('Could not load inbound shipments')" :message="error" @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">

@@ -97,7 +97,6 @@ export function usePurchaseOrderActions() {
     if (errors.length) {
       throw new Error(translate('The arrival date moved on {moved} of {total} lines. {errors}', { moved, total: lines.length, errors: errors.slice(0, 2).join('; ') }));
     }
-    return { moved };
   }
 
   /** Creates an FI batch for each open line of the PO without one. */

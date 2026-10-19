@@ -11,7 +11,7 @@
 
     <ion-content>
       <ion-progress-bar v-if="loading" type="indeterminate" />
-      <ErrorState v-if="error" :title="translate('Could not load the pre-order')" :message="error" retryable @retry="load" />
+      <ErrorState v-if="error" :title="translate('Could not load the pre-order')" :message="error" @retry="load" />
 
       <template v-else-if="order">
         <section class="summary">

@@ -13,7 +13,6 @@
       <SearchFilterCard
         v-model="query"
         :placeholder="translate('Batch, product, PO, external ID')"
-        :show-clear="false"
       >
         <UniformFilterLayout @clear="clearFilters">
           <MultiSelectFilter
@@ -41,8 +40,8 @@
             <ion-select-option value="overcommitted">{{ translate('Overcommitted') }}</ion-select-option>
           </ion-select>
 
-          <DateFilterSelect v-model="filters.promiseDateFrom" :label="translate('Promise date from')" :max="filters.promiseDateThru" allow-future outlined />
-          <DateFilterSelect v-model="filters.promiseDateThru" :label="translate('Promise date through')" :min="filters.promiseDateFrom" allow-future outlined />
+          <DateFilterSelect v-model="filters.promiseDateFrom" :label="translate('Promise date from')" :max="filters.promiseDateThru" allow-future />
+          <DateFilterSelect v-model="filters.promiseDateThru" :label="translate('Promise date through')" :min="filters.promiseDateFrom" allow-future />
         </UniformFilterLayout>
       </SearchFilterCard>
 
@@ -54,7 +53,7 @@
         </ion-card-content>
       </ion-card>
 
-      <ErrorState v-if="error" :title="translate('Could not load future inventory')" :message="error" retryable @retry="refresh()" />
+      <ErrorState v-if="error" :title="translate('Could not load future inventory')" :message="error" @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">

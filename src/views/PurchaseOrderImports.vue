@@ -37,7 +37,7 @@
         </div>
       </ion-card>
 
-      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Exact log ID')" :show-clear="false">
+      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Exact log ID')">
         <UniformFilterLayout @clear="clearFilters">
           <ion-select v-model="filters.configId" :label="translate('Import type')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All imports') }}</ion-select-option>
@@ -47,13 +47,13 @@
             <ion-select-option value="All">{{ translate('All statuses') }}</ion-select-option>
             <ion-select-option v-for="status in importStatuses" :key="status.statusId" :value="status.statusId">{{ status.description || status.statusId }}</ion-select-option>
           </ion-select>
-          <DateFilterSelect v-model="filters.createdDateFrom" :label="translate('Created from')" :max="filters.createdDateThru" outlined />
-          <DateFilterSelect v-model="filters.createdDateThru" :label="translate('Created through')" :min="filters.createdDateFrom" outlined />
+          <DateFilterSelect v-model="filters.createdDateFrom" :label="translate('Created from')" :max="filters.createdDateThru" />
+          <DateFilterSelect v-model="filters.createdDateThru" :label="translate('Created through')" :min="filters.createdDateFrom" />
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
-      <ErrorState v-if="error" :title="translate('Could not load imports')" :message="error" retryable @retry="load" />
+      <ErrorState v-if="error" :title="translate('Could not load imports')" :message="error" @retry="load" />
 
       <ion-list v-else>
         <ion-list-header v-if="logs.length">

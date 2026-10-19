@@ -5,35 +5,27 @@
         :value="modelValue"
         :placeholder="placeholder"
         @ionInput="updateSearch"
-        @ionChange="$emit('search')"
       />
 
       <div class="search-filter-row">
         <div class="search-filter-controls">
           <slot />
         </div>
-        <ion-button v-if="showClear" class="search-filter-clear" fill="clear" @click="$emit('clear')">{{ translate('Clear') }}</ion-button>
       </div>
     </ion-card-content>
   </ion-card>
 </template>
 
 <script setup lang="ts">
-import { IonButton, IonCard, IonCardContent, IonSearchbar } from '@ionic/vue';
-import { translate } from '@common';
+import { IonCard, IonCardContent, IonSearchbar } from '@ionic/vue';
 
-withDefaults(defineProps<{
+defineProps<{
   modelValue: string;
   placeholder: string;
-  showClear?: boolean;
-}>(), {
-  showClear: true,
-});
+}>();
 
 const emit = defineEmits<{
   (event: 'update:modelValue', value: string): void;
-  (event: 'clear'): void;
-  (event: 'search'): void;
 }>();
 
 function updateSearch(event: CustomEvent) {
@@ -79,10 +71,6 @@ function updateSearch(event: CustomEvent) {
   max-width: 11rem;
 }
 
-.search-filter-clear {
-  flex: 0 0 auto;
-}
-
 @media (max-width: 640px) {
   .search-filter-row,
   .search-filter-controls {
@@ -97,10 +85,6 @@ function updateSearch(event: CustomEvent) {
   .search-filter-controls :slotted(.date-filter-select) {
     flex: 1 1 auto;
     max-width: none;
-  }
-
-  .search-filter-clear {
-    align-self: stretch;
   }
 }
 </style>

@@ -11,7 +11,7 @@
 
     <ion-content>
       <ion-progress-bar v-if="loading" type="indeterminate" />
-      <ErrorState v-if="error" :title="translate('Could not load the batch')" :message="error" retryable @retry="load" />
+      <ErrorState v-if="error" :title="translate('Could not load the batch')" :message="error" @retry="load" />
 
       <template v-else-if="batch">
         <section class="summary">
@@ -78,7 +78,7 @@
         </div>
 
         <template v-if="segment === 'lines'">
-          <ErrorState v-if="linesError" :title="translate('Could not load the waiting orders')" :message="linesError" retryable @retry="loadLines" />
+          <ErrorState v-if="linesError" :title="translate('Could not load the waiting orders')" :message="linesError" @retry="loadLines" />
           <ion-list v-else>
             <ion-list-header>
               <ion-label>{{ translate('{count} orders waiting on this batch', { count: linesTotal }) }}</ion-label>
@@ -125,7 +125,7 @@
         </template>
 
         <template v-else>
-          <ErrorState v-if="ledgerError" :title="translate('Could not load the ledger')" :message="ledgerError" retryable @retry="loadLedger" />
+          <ErrorState v-if="ledgerError" :title="translate('Could not load the ledger')" :message="ledgerError" @retry="loadLedger" />
           <ion-list v-else>
             <ion-list-header>
               <ion-label>{{ translate('{count} ledger entries', { count: ledgerTotal }) }}</ion-label>
@@ -201,7 +201,7 @@ import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { usePrompts } from '@/composables/usePrompts';
-import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay, toDateInputValue } from '@/utils/format';
+import { countParams, dayBound, formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
 import { daysOverdue, overdueLabel, readableNote, shortDescription } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
@@ -317,7 +317,7 @@ async function changeDate() {
     translate('Change promise date'),
     translate('Waiting pre-orders take the new date, and their customers are emailed where that email is on.'),
     translate('Change date'),
-    toDateInputValue(batch.value?.promiseDate),
+    dayBound(batch.value?.promiseDate, 'start', 'date'),
   );
   if (promiseDate) await run(() => updateBatch(props.futureInventoryItemId, { promiseDate, description: 'Promise date changed in the Pre-order app' }), translate('Promise date changed.'));
 }

@@ -169,6 +169,3 @@ export function formatRelativeDay(value: any): string {
   if (!day) return '';
   return day.toRelativeCalendar({ base: DateTime.now().setZone(zone), unit: 'days', locale: locale() }) || '';
 }
-
-/** A date as the 'yyyy-MM-dd' day it is in the user's time zone: the value `<ion-datetime>` and the date prompts bind. */
-export const toDateInputValue = (value: any): string => dayBound(value, 'start', 'date');

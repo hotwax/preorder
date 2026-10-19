@@ -81,7 +81,7 @@
           <ProductItem :product-id="line.productId" :product-name="line.productName" />
           <ion-input v-model.number="line.quantity" type="number" min="1" :label="requiredLabel('Quantity')" label-placement="stacked" fill="outline" />
           <ion-input v-model.number="line.unitPrice" type="number" min="0" :label="translate('Unit cost')" label-placement="stacked" fill="outline" />
-          <DateFilterSelect v-model="line.arrivalDate" :label="requiredLabel('Arrival date')" :min="todayValue()" allow-future outlined />
+          <DateFilterSelect v-model="line.arrivalDate" :label="requiredLabel('Arrival date')" :min="todayValue()" allow-future />
           <ion-button fill="clear" color="danger" :aria-label="translate('Remove line')" @click="form.items.splice(index, 1)">
             <ion-icon slot="icon-only" :icon="trashOutline" />
           </ion-button>
