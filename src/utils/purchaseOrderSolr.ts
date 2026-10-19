@@ -126,6 +126,8 @@ const millisOf = (value?: string) => (value ? DateTime.fromISO(value).toMillis()
  */
 export function toPurchaseOrderSummary(orderId: string, docs: any[], futureInventoryBatchCount = 0): PurchaseOrderSummary {
   const header = docs[0] || {};
+  // `_NA_` is the placeholder party of an order with no supplier
+  const hasSupplier = header.customerPartyId && header.customerPartyId !== '_NA_';
   const open = docs.filter((doc) => doc.orderItemStatusId !== 'ITEM_CANCELLED');
   const arrivals = open.map((doc) => millisOf(doc.estimatedDeliveryDate)).filter((value): value is number => value !== undefined);
   return {
@@ -137,8 +139,8 @@ export function toPurchaseOrderSummary(orderId: string, docs: any[], futureInven
     productStoreId: header.productStoreId,
     facilityId: header.facilityId,
     facilityName: header.facilityName,
-    supplierPartyId: header.customerPartyId,
-    supplierName: header.customerPartyName,
+    supplierPartyId: hasSupplier ? header.customerPartyId : undefined,
+    supplierName: hasSupplier ? header.customerPartyName : undefined,
     itemCount: open.length,
     quantityTotal: open.reduce((sum, doc) => sum + (Number(doc.quantity) || 0), 0),
     earliestArrivalDate: arrivals.length ? Math.min(...arrivals) : undefined,

@@ -76,6 +76,12 @@ describe('purchase order rows', () => {
     expect(row.futureInventoryBatchCount).toBe(0);
   });
 
+  it('has no supplier when the order names the placeholder party', () => {
+    const row = toPurchaseOrderSummary('PO3', [{ customerPartyId: '_NA_', customerPartyName: '_NA_', quantity: 1 }]);
+    expect(row.supplierPartyId).toBeUndefined();
+    expect(row.supplierName).toBeUndefined();
+  });
+
   it('reads the grouped answer in order, with the matching order count', () => {
     expect(readOrderGroups({ grouped: { orderId: { ngroups: 7, groups: [{ groupValue: 'B', doclist: { docs: [{ orderId: 'B' }] } }, { groupValue: 'A', doclist: { docs: [] } }] } } }))
       .toEqual({ groups: [{ orderId: 'B', docs: [{ orderId: 'B' }] }, { orderId: 'A', docs: [] }], total: 7 });

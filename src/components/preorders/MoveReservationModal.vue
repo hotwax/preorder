@@ -32,7 +32,7 @@
         <ion-button slot="end" fill="outline" size="small" @click="loadBatches">{{ translate('Retry') }}</ion-button>
       </ion-item>
       <ion-item v-else-if="!loading && !candidates.length" lines="none">
-        <ion-label>{{ translate('No other active batch of this product and type.') }}</ion-label>
+        <ion-label>{{ translate('No other active batch of this product and type that this item can move to.') }}</ion-label>
       </ion-item>
     </ion-list>
   </ion-content>
@@ -63,7 +63,7 @@ import { showToast } from '@/utils';
 import { errorMessage } from '@/utils/response';
 import type { FutureInventoryBatch, PreorderLine } from '@/types';
 
-const props = defineProps<{ orderId: string; line: PreorderLine }>();
+const props = defineProps<{ orderId: string; productStoreId?: string; line: PreorderLine }>();
 // The modal mounts outside the page's tree, so it opens its own seed reads
 const seed = useSeedData();
 const { fetchActiveBatches } = useFutureInventoryActions();
@@ -74,9 +74,15 @@ const loading = ref(true);
 const saving = ref(false);
 const selectedId = ref('');
 
-// The target must be another ACTIVE batch of the line's product and FI type (reallocate#'s rule).
+// Batches the line was reallocated or cancelled from: a new reservation there would not read as open, so reallocate# refuses them
+const closedBatchIds = computed(() => new Set((props.line.reservations || [])
+  .filter((row) => row.reasonEnumId === 'FID_REALLOCATED' || row.reasonEnumId === 'FID_CANCELLED')
+  .map((row) => row.futureInventoryItemId)));
+
+// The target must be another ACTIVE batch of the line's product and FI type, at the order's store, that the line never left (reallocate#'s rule).
 const candidates = computed(() => batches.value.filter((batch) =>
   batch.futureInventoryItemId !== props.line.futureInventoryItemId
+  && !closedBatchIds.value.has(batch.futureInventoryItemId)
   && (!props.line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === props.line.futureInventoryItemTypeId)));
 
 const loadError = ref('');
@@ -85,7 +91,7 @@ async function loadBatches() {
   loading.value = true;
   loadError.value = '';
   try {
-    batches.value = await fetchActiveBatches(props.line.productId);
+    batches.value = await fetchActiveBatches(props.line.productId, props.productStoreId);
   } catch (error) {
     loadError.value = errorMessage(error, translate('Failed to load batches.'));
   } finally {

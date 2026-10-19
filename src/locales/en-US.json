@@ -237,7 +237,7 @@
   "No OMS event sends this email yet.": "No OMS event sends this email yet.",
   "No open pre-orders.": "No open pre-orders.",
   "No orders are waiting on this batch.": "No orders are waiting on this batch.",
-  "No other active batch of this product and type.": "No other active batch of this product and type.",
+  "No other active batch of this product and type that this item can move to.": "No other active batch of this product and type that this item can move to.",
   "No products match this search.": "No products match this search.",
   "No promise date": "No promise date",
   "No purchase order": "No purchase order",

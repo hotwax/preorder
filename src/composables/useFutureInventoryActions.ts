@@ -19,9 +19,9 @@ export function useFutureInventoryActions() {
     return readList(await ensureOk(api({ url: `${batchUrl(id)}/lines`, method: 'get', params: { pageIndex, pageSize } }), 'Failed to load the waiting lines.'), 'lines');
   }
 
-  /** Active batches of a product, to move a line's reservation to. */
-  async function fetchActiveBatches(productId: string): Promise<FutureInventoryBatch[]> {
-    const data = await ensureOk(api({ url: 'preorder/futureInventoryItems', method: 'get', params: { productId, statusId: 'FUTURE_INV_ACTIVE', pageSize: 50 } }), 'Failed to load batches.');
+  /** The ACTIVE batches of a product at the store's facilities: the batches an order of that store can hold. */
+  async function fetchActiveBatches(productId: string, productStoreId?: string): Promise<FutureInventoryBatch[]> {
+    const data = await ensureOk(api({ url: 'preorder/futureInventoryItems', method: 'get', params: { productId, productStoreId, statusId: 'FUTURE_INV_ACTIVE', pageSize: 50 } }), 'Failed to load batches.');
     return readList<FutureInventoryBatch>(data, 'futureInventoryItems').rows;
   }
 

@@ -171,7 +171,7 @@ function openBatch(line: PreorderLine) {
 }
 
 async function openMove(line: PreorderLine) {
-  const modal = await modalController.create({ component: MoveReservationModal, componentProps: { orderId: props.orderId, line } });
+  const modal = await modalController.create({ component: MoveReservationModal, componentProps: { orderId: props.orderId, productStoreId: order.value?.productStoreId, line } });
   await modal.present();
   const { role } = await modal.onWillDismiss();
   if (role !== 'confirm') return;
