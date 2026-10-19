@@ -117,6 +117,7 @@ import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { IMPORT_CONFIGS, useImports, type ImportLog } from '@/composables/useImports';
 import { useUserStore } from '@/store/user';
+import { useProductStore } from '@/store/productStore';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -132,6 +133,7 @@ const PAGE_SIZE = 20;
 
 const seed = useSeedData();
 const userStore = useUserStore();
+const productStore = useProductStore();
 const { fetchLogs, uploadFile, downloadLogFile, downloadTemplate } = useImports();
 
 const uploadableConfigs = IMPORT_CONFIGS.filter((config) => config.uploadable);
@@ -234,7 +236,7 @@ async function upload() {
   if (!selectedFile.value) return;
   uploading.value = true;
   try {
-    const logId = await uploadFile(uploadConfigId.value, selectedFile.value);
+    const logId = await uploadFile(uploadConfigId.value, selectedFile.value, productStore.getCurrentProductStoreId || undefined);
     await commonUtil.showToast(translate('File uploaded as import {logId}.', { logId }));
     selectedFile.value = undefined;
     if (fileInput.value) fileInput.value.value = '';

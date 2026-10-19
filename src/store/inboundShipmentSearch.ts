@@ -12,7 +12,6 @@ export const useInboundShipmentSearchStore = defineFindStore<{
   arrivalDateThru: string;
 }, InboundShipmentSummary>('inboundShipmentSearch', {
   url: 'preorder/inboundShipments',
-  scopeByStore: false,
   listName: 'shipments',
   defaultSort: DEFAULT_INBOUND_SHIPMENT_SORT,
   defaultFilters: () => ({

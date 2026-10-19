@@ -62,7 +62,7 @@
             <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="promiseOverdueDays ? overdueLabel(promiseOverdueDays) : formatRelativeDay(batch.promiseDate)" />
             <StatCard :title="translate('On hand')" :stat="formatQuantity(batch.quantityOnHandTotal)" :subtitle="onHandCaption" />
             <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="availableCaption" />
-            <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="translate('Sold before it arrives')" />
+            <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="reservedCaption" />
           </div>
         </section>
 
@@ -244,6 +244,9 @@ const actionsDisabledReason = computed(() => {
   return '';
 });
 
+const reservedCaption = computed(() => (isReceived.value && Number(batch.value?.reservedQuantity || 0) > 0
+  ? translate('Batch received, ready to release')
+  : translate('Sold before it arrives')));
 const onHandCaption = computed(() => (isReceived.value ? translate('Received into the facility') : translate('Supply still to arrive')));
 const availableCaption = computed(() => {
   if (isFinal.value) return translate('No longer sold as pre-order');

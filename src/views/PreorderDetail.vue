@@ -68,7 +68,8 @@
 
             <ion-label class="tablet">
               {{ seed.facilityName(line.facilityId || '') }}
-              <p v-if="isOpen(line)">{{ line.atParking ? translate('Waiting at parking') : translate('Released from parking') }}</p>
+              <p v-if="line.readyToRelease"><ion-text color="warning">{{ translate('Batch received, ready to release') }}</ion-text></p>
+              <p v-else-if="isOpen(line)">{{ line.atParking ? translate('Waiting at parking') : translate('Released from parking') }}</p>
             </ion-label>
 
             <ion-label class="tablet">
@@ -87,7 +88,7 @@
                 <p v-if="line.autoCancelDate">{{ translate('Auto cancels {date}', { date: formatDate(line.autoCancelDate) }) }}</p>
               </ion-label>
               <ion-button
-                v-if="line.reservationOpen && line.futureInventoryItemId"
+                v-if="line.reservationOpen && line.futureInventoryItemId && line.batchStatusId === 'FUTURE_INV_ACTIVE'"
                 fill="clear"
                 size="small"
                 :disabled="!canUpdate"

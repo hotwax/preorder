@@ -22,6 +22,10 @@ describe('purchase order Solr queries', () => {
     ]);
   });
 
+  it('keeps the purchase orders of the current product store', () => {
+    expect(purchaseOrderFilters({ productStoreId: 'STORE' })).toEqual(['docType:ORDER', 'orderTypeId:PURCHASE_ORDER', 'productStoreId:"STORE"']);
+  });
+
   it("bounds dates by whole days in the user's time zone, and the arrival date by lines that are not cancelled", () => {
     const zone = Settings.defaultZone;
     Settings.defaultZone = 'Asia/Kolkata';

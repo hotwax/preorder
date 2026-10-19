@@ -21,6 +21,8 @@ export interface PurchaseOrderListParams {
   orderDateFrom?: string;
   orderDateThru?: string;
   orderBy?: string;
+  /** The current product store: a purchase order is listed under the store it was created for. */
+  productStoreId?: string;
 }
 
 /** Lines read per order for its totals; an order with more is totalled from its first ones by line id. */
@@ -52,6 +54,7 @@ export function purchaseOrderFilters(params: PurchaseOrderListParams): string[] 
   const filters = [...BASE_FILTERS];
   const statusIds = (params.statusId || '').split(',').filter(Boolean);
   if (statusIds.length) filters.push(`orderStatusId:(${statusIds.map(quote).join(' OR ')})`);
+  if (params.productStoreId) filters.push(`productStoreId:${quote(params.productStoreId)}`);
   if (params.supplierPartyId) filters.push(`customerPartyId:${quote(params.supplierPartyId)}`);
   if (params.facilityId) filters.push(`facilityId:${quote(params.facilityId)}`);
   if (params.orderDateFrom || params.orderDateThru) filters.push(`orderDate:${range(params.orderDateFrom, params.orderDateThru)}`);

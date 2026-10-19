@@ -13,6 +13,8 @@ export interface PreorderDashboard {
   pastDue: { count: number; batches: FutureInventoryBatch[] };
   exceptions: { count: number; batches: FutureInventoryBatch[] };
   overcommitted: { count: number; batches: FutureInventoryBatch[] };
+  /** Lines whose batch was received while they still wait on it. */
+  readyToRelease?: { lineCount: number; orderCount: number; quantity: number; lines: { orderId: string; orderItemSeqId: string; orderName?: string; productId: string; orderDate?: number | string; futureInventoryItemId?: string; openQuantity?: number }[] };
   noPromiseDate: { count: number; lines: { orderId: string; orderItemSeqId: string; orderName?: string; productId: string; orderDate?: number | string }[] };
   demandTrend: { date: string; units: number }[];
   delayEmails: { count: number; trend: { date: string; count: number }[] };

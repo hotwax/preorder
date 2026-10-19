@@ -51,7 +51,6 @@ export const usePurchaseOrderSearchStore = defineFindStore<{
   orderDateFrom: string;
   orderDateThru: string;
 }, PurchaseOrderSummary>('purchaseOrderSearch', {
-  scopeByStore: false,
   listName: 'orders',
   defaultSort: DEFAULT_PURCHASE_ORDER_SORT,
   fetchPage: fetchPurchaseOrderPage,

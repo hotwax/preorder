@@ -25,7 +25,8 @@
 
     <ion-label class="tablet">
       {{ translate('{count} pre-order items', { count: order.lineCount ?? order.lines?.length ?? 0 }) }}
-      <p>{{ translate('{count} at parking', { count: order.parkedLineCount }) }}</p>
+      <p v-if="order.readyToReleaseLineCount"><ion-text color="warning">{{ translate('{count} ready to release', { count: order.readyToReleaseLineCount }) }}</ion-text></p>
+      <p v-else>{{ translate('{count} at parking', { count: order.parkedLineCount }) }}</p>
     </ion-label>
 
     <ion-label class="tablet">

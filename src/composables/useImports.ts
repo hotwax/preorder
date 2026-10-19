@@ -54,8 +54,10 @@ export function useImports() {
   }
 
   /** Uploads a CSV for a config; the Data Manager queues it and returns the new log id. */
-  async function uploadFile(configId: string, file: File): Promise<string> {
+  async function uploadFile(configId: string, file: File, productStoreId?: string): Promise<string> {
     const form = new FormData();
+    // Stamps the log with the store it was uploaded for
+    if (productStoreId) form.append('productStoreId', productStoreId);
     form.append('contentFile', file, file.name);
     form.append('fileName', file.name.replace(/\.csv$/i, ''));
     form.append('configId', configId);

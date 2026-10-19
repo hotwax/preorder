@@ -103,6 +103,18 @@
           </ion-list>
         </StatCard>
 
+        <StatCard v-if="dashboard.readyToRelease" :title="translate('Ready to release')" :stat="formatNumber(dashboard.readyToRelease.lineCount)" :subtitle="translate('Items whose batch was received, waiting to be released')">
+          <ion-list lines="none" class="drilldown-list">
+            <ion-item v-for="line in dashboard.readyToRelease.lines" :key="`${line.orderId}-${line.orderItemSeqId}`" button :detail="true" :router-link="`/preorders/${encodeURIComponent(line.orderId)}`">
+              <ion-label>
+                {{ line.orderName || line.orderId }}
+                <p>{{ [productLabel(line.productId), line.futureInventoryItemId].filter(Boolean).join(' - ') }}</p>
+              </ion-label>
+              <p slot="end">{{ translate('{count} reserved', { count: formatQuantity(line.openQuantity) }) }}</p>
+            </ion-item>
+          </ion-list>
+        </StatCard>
+
         <StatCard :title="translate('No promise date')" :stat="formatNumber(dashboard.noPromiseDate.count)" :subtitle="translate('Pre-order items customers have no date for')">
           <ion-list lines="none" class="drilldown-list">
             <ion-item v-for="line in dashboard.noPromiseDate.lines" :key="`${line.orderId}-${line.orderItemSeqId}`" button :detail="true" :router-link="`/preorders/${encodeURIComponent(line.orderId)}`">

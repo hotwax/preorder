@@ -50,6 +50,8 @@ export interface PreorderLine {
   poId?: string;
   reservationOpen?: boolean;
   openQuantity?: number;
+  /** The batch was received while the line still holds it: the stock has landed and the line waits to be released. */
+  readyToRelease?: boolean;
   reservations?: { futureInventoryItemId: string; reasonEnumId: string; quantity: number; createdDate: number | string; open: boolean }[];
 }
 
@@ -67,6 +69,7 @@ export interface PreorderOrder {
   email?: string;
   lineCount?: number;
   parkedLineCount?: number;
+  readyToReleaseLineCount?: number;
   openReservedQuantity?: number;
   earliestPromiseDate?: number | string;
   latestPromiseDate?: number | string;
