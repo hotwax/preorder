@@ -13,11 +13,13 @@ export interface FacilityOption {
 /**
  * The facilities of the menu's product store that stock arrives at (warehouses and stores, never a virtual facility
  * such as parking), by name, from the app db's `productStoreFacilities` and `facilities` seed tables. A store with no
- * facilities assigned offers every such facility, as its lists then show every facility's rows. Facilities that share
- * a name tell apart by id in their `label`. `synced` is true
- * once both tables hold this login's sync, so an empty list then really is empty.
+ * facilities assigned offers every such facility, as its lists then show every facility's rows, unless the list
+ * shows none for such a store (`fallbackToAll: false`, the inbound shipments): then it offers none. Facilities that
+ * share a name tell apart by id in their `label`. `synced` is true once both tables hold this login's sync, so an
+ * empty list then really is empty; `noStoreFacilities` is true once the selected store is known to have no
+ * facility rows.
  */
-export function useStoreFacilities() {
+export function useStoreFacilities({ fallbackToAll = true }: { fallbackToAll?: boolean } = {}) {
   const seed = useSeedData();
   const productStore = useProductStore();
 
@@ -29,11 +31,12 @@ export function useStoreFacilities() {
   const storeRows = computed(() => seed.productStoreFacilities.withSync(productStore.getCurrentProductStoreId));
   const allRows = computed(() => seed.facilities.withSync());
   const synced = computed(() => storeRows.value.synced && allRows.value.synced);
+  const noStoreFacilities = computed(() => !!productStore.getCurrentProductStoreId && storeRows.value.synced && !storeRows.value.data.length);
 
   const facilityOptions = computed<FacilityOption[]>(() => {
     const own = storeRows.value.data.filter((row: any) => isReceiving(row.facilityId, row.facilityTypeId));
     // Still syncing reads as none yet, not as a store without facilities
-    const rows = own.length || !storeRows.value.synced ? own : allRows.value.data.filter((row: any) => isReceiving(row.facilityId, row.facilityTypeId));
+    const rows = own.length || !storeRows.value.synced || !fallbackToAll ? own : allRows.value.data.filter((row: any) => isReceiving(row.facilityId, row.facilityTypeId));
     const named = rows.map((row: any) => ({ facilityId: row.facilityId as string, facilityName: (row.facilityName || seed.facilityName(row.facilityId)) as string }));
     const labels = facilityLabels(named);
     return named
@@ -41,5 +44,5 @@ export function useStoreFacilities() {
       .sort((a, b) => a.facilityName.localeCompare(b.facilityName));
   });
 
-  return { facilityOptions, synced };
+  return { facilityOptions, synced, noStoreFacilities };
 }

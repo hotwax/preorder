@@ -153,6 +153,13 @@ export function dayBound(day: any, edge: 'start' | 'end', boundFormat: DayBoundF
 }
 
 /**
+ * The first day of a window of the last `days` days, today included, as 'yyyy-MM-dd' in a time zone (the user's):
+ * a window of 7 days starts 6 days before today, so it spans exactly 7 days.
+ */
+export const windowStartDay = (days: number, zone = userZone()): string =>
+  DateTime.now().setZone(zone).minus({ days: Math.max(1, Math.floor(days)) - 1 }).toISODate() as string;
+
+/**
  * Whole calendar days from today to a date in the user's time zone: 0 today, 1 tomorrow, -3 three days ago. A
  * promise or arrival date is a day, so one at any time today is today, not "17 hours ago". undefined when empty.
  */

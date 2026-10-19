@@ -50,6 +50,8 @@ export const usePurchaseOrderSearchStore = defineFindStore<{
   arrivalDateThru: string;
   orderDateFrom: string;
   orderDateThru: string;
+  /** Also list the purchase orders that name no product store, which the store's own list leaves out. */
+  includeUnassigned: boolean;
 }, PurchaseOrderSummary>('purchaseOrderSearch', {
   listName: 'orders',
   defaultSort: DEFAULT_PURCHASE_ORDER_SORT,
@@ -62,5 +64,6 @@ export const usePurchaseOrderSearchStore = defineFindStore<{
     arrivalDateThru: '',
     orderDateFrom: '',
     orderDateThru: '',
+    includeUnassigned: false,
   }),
 });

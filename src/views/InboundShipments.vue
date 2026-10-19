@@ -36,6 +36,12 @@
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
+      <ion-card v-if="noStoreFacilities" color="warning">
+        <ion-card-content>
+          {{ translate('{store} has no facilities assigned, so no inbound shipments are listed. Assign the store its facilities in the Company app to see its own.', { store: storeName }) }}
+        </ion-card-content>
+      </ion-card>
+
       <ErrorState v-if="error" :title="translate('Could not load inbound shipments')" :message="error" @retry="refresh()" />
 
       <ion-list v-else>
@@ -66,7 +72,7 @@
 
 <script setup lang="ts">
 import {
-  IonButtons, IonContent, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonLabel, IonList, IonListHeader,
+  IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonLabel, IonList, IonListHeader,
   IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { computed } from 'vue';
@@ -75,6 +81,7 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useInboundShipmentSearchStore } from '@/store/inboundShipmentSearch';
+import { useProductStore } from '@/store/productStore';
 import { useFindSearch } from '@/composables/useFindSearch';
 import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
@@ -90,6 +97,7 @@ import { ALL } from '@/utils/query';
 
 const seed = useSeedData();
 const store = useInboundShipmentSearchStore();
+const productStore = useProductStore();
 const { refresh } = useFindSearch(store, { onStoreChange });
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
@@ -100,7 +108,9 @@ const sortOptions = [
 ];
 const statusOptions = computed(() => seed.statusItemsByType('PURCH_SHIP_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
 // Shipments are bound for the store's receiving locations: warehouses and stores, never the virtual parking facilities.
-const { facilityOptions } = useStoreFacilities();
+// A store with no facilities has no shipments to list, so the picker offers no facility for it either.
+const { facilityOptions, noStoreFacilities } = useStoreFacilities({ fallbackToAll: false });
+const storeName = computed(() => (productStore.getCurrentProductStoreId ? seed.productStoreName(productStore.getCurrentProductStoreId) : translate('This store')));
 
 /** A destination filter of the old store's facilities leaves with it. */
 function onStoreChange() {

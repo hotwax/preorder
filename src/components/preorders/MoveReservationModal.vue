@@ -58,6 +58,7 @@ import { useSeedData } from '@common/db';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { usePreorderActions } from '@/composables/usePreorderActions';
 import { formatDate, formatQuantity } from '@/utils/format';
+import { moveTargets } from '@/utils/preorderLines';
 import { errorMessage } from '@/utils/response';
 import type { FutureInventoryBatch, PreorderLine } from '@/types';
 
@@ -78,10 +79,12 @@ const closedBatchIds = computed(() => new Set((props.line.reservations || [])
   .map((row) => row.futureInventoryItemId)));
 
 // The target must be another ACTIVE batch of the line's product and FI type, at the order's store, that the line never left (reallocate#'s rule).
-const candidates = computed(() => batches.value.filter((batch) =>
+// A line waiting at a facility moves only to a batch at that facility or one at the store's parking (location-less).
+const candidates = computed(() => moveTargets(props.line, batches.value.filter((batch) =>
   batch.futureInventoryItemId !== props.line.futureInventoryItemId
   && !closedBatchIds.value.has(batch.futureInventoryItemId)
-  && (!props.line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === props.line.futureInventoryItemTypeId)));
+  && (!props.line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === props.line.futureInventoryItemTypeId)),
+(facilityId) => seed.facility(facilityId)?.facilityTypeId));
 
 const loadError = ref('');
 

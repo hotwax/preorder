@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DateTime, Settings } from 'luxon';
 import { translate } from '@common/core/i18n';
 import {
-  countParams, dayBound, daysFromToday, formatQuantity, formatRelativeDay, setUserZone, toDay, todayValue, userZone,
+  countParams, dayBound, daysFromToday, formatQuantity, formatRelativeDay, setUserZone, toDay, todayValue, userZone, windowStartDay,
 } from '@/utils/format';
 
 describe('day boundaries', () => {
@@ -31,6 +31,29 @@ describe('day boundaries', () => {
 
   it("is today in the user's time zone", () => {
     expect(todayValue('UTC')).toBe(DateTime.utc().toISODate());
+  });
+});
+
+describe('day windows', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-19T23:00:00Z'));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('spans exactly N days, today included', () => {
+    expect(windowStartDay(7, 'UTC')).toBe('2026-10-13');
+    expect(windowStartDay(30, 'UTC')).toBe('2026-09-20');
+    expect(windowStartDay(1, 'UTC')).toBe('2026-10-19');
+  });
+
+  it("starts from today in the user's time zone", () => {
+    // 23:00 UTC on Oct 19 is already Oct 20 in Kolkata
+    expect(windowStartDay(7, 'Asia/Kolkata')).toBe('2026-10-14');
+  });
+
+  it('never starts after today', () => {
+    expect(windowStartDay(0, 'UTC')).toBe('2026-10-19');
   });
 });
 

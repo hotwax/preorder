@@ -26,7 +26,7 @@
     <ion-label class="tablet">
       {{ translate('{count} pre-order items', { count: order.openLineCount ?? order.lineCount ?? order.lines?.length ?? 0 }) }}
       <p v-if="order.readyToReleaseLineCount"><ion-text color="warning">{{ translate('{count} ready to release', { count: order.readyToReleaseLineCount }) }}</ion-text></p>
-      <p v-else>{{ translate('{count} at parking', { count: order.parkedLineCount }) }}</p>
+      <p v-else-if="waitingPlaces">{{ translate('Waiting at {facilities}', { facilities: waitingPlaces }) }}</p>
     </ion-label>
 
     <ion-label class="tablet">
@@ -59,6 +59,7 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import { formatDate, formatRelative, formatRelativeDay } from '@/utils/format';
 import { daysOverdue, formatDateRange, overdueLabel, shownPartyId } from '@/utils/labels';
+import { waitingFacilityIds } from '@/utils/preorderLines';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import type { PreorderOrder } from '@/types';
 
@@ -68,6 +69,8 @@ const seed = useSeedData();
 const { typeLabel: futureInventoryTypeName } = useFutureInventoryTypes();
 
 const identityLabel = computed(() => [...new Set([props.order.orderName, props.order.orderId, seed.statusDescription(props.order.statusId || '')].filter(Boolean))].join(' - '));
+/** Where the order's lines with an open reservation wait, by facility name. */
+const waitingPlaces = computed(() => waitingFacilityIds(props.order).map((facilityId) => seed.facilityName(facilityId)).join(', '));
 /** A listed pre-order still waits on its stock, so a passed promise date is late. */
 const overdueDays = computed(() => daysOverdue(props.order.earliestPromiseDate || props.order.latestPromiseDate));
 const typeLabel = computed(() => {

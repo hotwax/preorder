@@ -127,7 +127,7 @@
           </ion-list>
         </StatCard>
 
-        <StatCard v-if="dashboard.demandByFacility?.length" :title="translate('Waiting by location')" :stat="formatNumber(dashboard.demandByFacility.length)" :subtitle="translate('Locations holding the most reserved units')">
+        <StatCard v-if="dashboard.demandByFacility?.length" :title="translate('Waiting by location')" :stat="formatNumber(dashboard.demandFacilityCount ?? dashboard.demandByFacility.length)" :subtitle="translate('Locations holding the most reserved units')">
           <ion-list lines="none" class="drilldown-list">
             <DemandByFacilityItems :rows="dashboard.demandByFacility" />
           </ion-list>

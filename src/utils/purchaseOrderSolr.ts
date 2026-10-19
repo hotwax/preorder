@@ -23,6 +23,8 @@ export interface PurchaseOrderListParams {
   orderBy?: string;
   /** The current product store: a purchase order is listed under the store it was created for. */
   productStoreId?: string;
+  /** 'Y' also lists the purchase orders that name no product store, beside the current store's. */
+  includeUnassigned?: string;
 }
 
 /** Lines read per order for its totals; an order with more is totalled from its first ones by line id. */
@@ -54,7 +56,11 @@ export function purchaseOrderFilters(params: PurchaseOrderListParams): string[] 
   const filters = [...BASE_FILTERS];
   const statusIds = (params.statusId || '').split(',').filter(Boolean);
   if (statusIds.length) filters.push(`orderStatusId:(${statusIds.map(quote).join(' OR ')})`);
-  if (params.productStoreId) filters.push(`productStoreId:${quote(params.productStoreId)}`);
+  if (params.productStoreId) {
+    const ownStore = `productStoreId:${quote(params.productStoreId)}`;
+    // A purchase order may name no store: such a doc has no productStoreId at all
+    filters.push(params.includeUnassigned === 'Y' ? `(${ownStore} OR (*:* -productStoreId:[* TO *]))` : ownStore);
+  }
   if (params.supplierPartyId) filters.push(`customerPartyId:${quote(params.supplierPartyId)}`);
   if (params.facilityId) filters.push(`facilityId:${quote(params.facilityId)}`);
   if (params.orderDateFrom || params.orderDateThru) filters.push(`orderDate:${range(params.orderDateFrom, params.orderDateThru)}`);

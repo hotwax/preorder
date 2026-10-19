@@ -38,11 +38,11 @@ export function useCommunications() {
 
   const setEmailEnabled = (productStoreId: string, emailType: string, enabled: boolean) => updateEmailSetting(productStoreId, emailType, { enabled });
 
-  /** The Unigate remotes a setting can be sent through, by description. */
+  /** The email gateways (Unigate remotes an email setting uses) a setting can be sent through, by description. */
   async function fetchEmailGateways(): Promise<EmailGateway[]> {
-    const data = await ensureOk(api({ url: 'oms/systemMessageRemotes', method: 'get', params: { orderByField: 'description' } }), 'Failed to load email gateways.');
-    return rowsOf(data?.systemMessageRemoteList)
-      .map((remote) => ({ systemMessageRemoteId: remote.systemMessageRemoteId, description: remote.description || remote.systemMessageRemoteId, sendUrl: remote.sendUrl }))
+    const data = await ensureOk(api({ url: 'oms/emailGateways', method: 'get' }), 'Failed to load email gateways.');
+    return rowsOf(data?.gateways)
+      .map((gateway) => ({ systemMessageRemoteId: gateway.systemMessageRemoteId, description: gateway.description || gateway.systemMessageRemoteId }))
       .sort((a, b) => a.description.localeCompare(b.description));
   }
 

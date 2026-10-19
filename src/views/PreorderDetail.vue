@@ -40,7 +40,7 @@
           </ion-card>
 
           <StatCard :title="translate('Current promise date')" :stat="promiseLabel" :subtitle="promiseSubtitle" />
-          <StatCard :title="translate('Waiting at parking')" :stat="parkedCount" :subtitle="translate('{count} pre-order items', { count: waitingCount })" />
+          <StatCard :title="translate('Waiting')" :stat="waitingCount" :subtitle="waitingSubtitle" />
         </section>
 
         <ion-list>
@@ -102,6 +102,42 @@
             <ion-label>{{ translate('This order has no pre-order items.') }}</ion-label>
           </ion-item>
         </ion-list>
+
+        <ion-list v-if="historyLines.length">
+          <ion-list-header>
+            <ion-label>{{ translate('Reservation history') }}</ion-label>
+          </ion-list-header>
+          <ion-accordion-group multiple>
+            <ion-accordion v-for="line in historyLines" :key="line.orderItemSeqId" :value="line.orderItemSeqId">
+              <ion-item slot="header">
+                <ion-label>
+                  {{ primaryId(getProduct(line.productId), [line.productName, line.productId]) }}
+                  <p>{{ translate('Item {seq}', { seq: line.orderItemSeqId }) }}</p>
+                </ion-label>
+                <ion-note slot="end">{{ translate('{count} reservations', countParams(line.reservations?.length)) }}</ion-note>
+              </ion-item>
+              <ion-list slot="content" lines="none">
+                <ion-item
+                  v-for="(row, index) in reservationHistory(line)"
+                  :key="`${row.futureInventoryItemId}-${row.reasonEnumId}-${index}`"
+                  button
+                  :detail="false"
+                  @click="openBatchById(row.futureInventoryItemId)"
+                >
+                  <ion-label>
+                    {{ reasonLabel(row.reasonEnumId) }}
+                    <p>{{ formatDateTime(row.createdDate) }}</p>
+                  </ion-label>
+                  <ion-badge v-if="row.open" slot="end" color="success">{{ translate('Open') }}</ion-badge>
+                  <ion-label slot="end" class="ion-text-end">
+                    {{ formatQuantity(row.quantity) }}
+                    <p>{{ row.futureInventoryItemId }}</p>
+                  </ion-label>
+                </ion-item>
+              </ion-list>
+            </ion-accordion>
+          </ion-accordion-group>
+        </ion-list>
       </template>
     </ion-content>
   </ion-page>
@@ -109,7 +145,7 @@
 
 <script setup lang="ts">
 import {
-  IonBackButton, IonBadge, IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonChip, IonContent,
+  IonAccordion, IonAccordionGroup, IonBackButton, IonBadge, IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonChip, IonContent,
   IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonText, IonTitle, IonToolbar,
   modalController, onIonViewWillEnter,
 } from '@ionic/vue';
@@ -125,9 +161,11 @@ import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import MoveReservationModal from '@/components/preorders/MoveReservationModal.vue';
-import { formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
-import { daysOverdue, formatDateRange, overdueLabel, shownPartyId } from '@/utils/labels';
+import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay, toMillis } from '@/utils/format';
+import { daysOverdue, formatDateRange, overdueLabel, shortDescription, shownPartyId } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
+import { useProductIdentity } from '@/composables/useProductIdentity';
+import { waitingFacilityIds, waitingLines } from '@/utils/preorderLines';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
@@ -136,8 +174,9 @@ import type { PreorderLine, PreorderOrder } from '@/types';
 const props = defineProps<{ orderId: string }>();
 const seed = useSeedData();
 const { typeLabel } = useFutureInventoryTypes();
-const { prefetch } = useProductMaster();
-const { fetchPreorder, parkedLines } = usePreorderActions();
+const { prefetch, getProduct } = useProductMaster();
+const { primaryId } = useProductIdentity();
+const { fetchPreorder } = usePreorderActions();
 const userStore = useUserStore();
 
 const order = ref<PreorderOrder>();
@@ -145,9 +184,13 @@ const loading = ref(false);
 const error = ref('');
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
-/** The items still waiting: those holding an open reservation. The list below keeps every item the order reserved. */
-const waitingCount = computed(() => order.value?.openLineCount ?? order.value?.lineCount ?? order.value?.lines.length ?? 0);
-const parkedCount = computed(() => (order.value ? parkedLines(order.value).length : 0));
+/** The items still waiting: those holding an open reservation, at any facility. The list below keeps every item the order reserved. */
+const waitingCount = computed(() => order.value?.openLineCount ?? (order.value ? waitingLines(order.value).length : 0));
+/** Where they wait, by facility name. */
+const waitingSubtitle = computed(() => {
+  const places = order.value ? waitingFacilityIds(order.value).map((facilityId) => seed.facilityName(facilityId)).join(', ') : '';
+  return places ? translate('At {facilities}', { facilities: places }) : translate('No item is waiting on future inventory');
+});
 const isOpen = (line: PreorderLine) => !['ITEM_CANCELLED', 'ITEM_COMPLETED', 'ITEM_REJECTED'].includes(line.itemStatusId || '');
 /** Where an open line stands: waiting on future inventory (at parking, or at the warehouse a rule routed it to), committed to stock, or released. */
 const lineWaitLabel = (line: PreorderLine) => {
@@ -165,6 +208,14 @@ const promiseSubtitle = computed(() => {
   return overdue ? overdueLabel(overdue) : formatRelativeDay(date);
 });
 
+/** The lines that have a reservation ledger, the history the list above does not show. */
+const historyLines = computed(() => (order.value?.lines || []).filter((line) => line.reservations?.length));
+/** A line's ledger, newest first. */
+const reservationHistory = (line: PreorderLine) => [...(line.reservations || [])]
+  .sort((a, b) => (toMillis(b.createdDate) ?? 0) - (toMillis(a.createdDate) ?? 0));
+/** Why a reservation changed, by the reason enum's short name. */
+const reasonLabel = (reasonEnumId: string) => shortDescription(seed.enumDescription(reasonEnumId)) || reasonEnumId;
+
 async function load() {
   loading.value = true;
   error.value = '';
@@ -180,8 +231,12 @@ async function load() {
 
 onIonViewWillEnter(load);
 
+function openBatchById(futureInventoryItemId?: string) {
+  if (futureInventoryItemId) router.push(`/future-inventory/${encodeURIComponent(futureInventoryItemId)}`);
+}
+
 function openBatch(line: PreorderLine) {
-  if (line.futureInventoryItemId) router.push(`/future-inventory/${encodeURIComponent(line.futureInventoryItemId)}`);
+  openBatchById(line.futureInventoryItemId);
 }
 
 async function openMove(line: PreorderLine) {
