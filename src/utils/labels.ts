@@ -88,3 +88,26 @@ export function importProgressLabel(statusId: string, startDateTime: number | st
   if (IMPORT_RUNNING.includes(statusId)) return translate('Running');
   return statusDescription || (startDateTime ? translate('Running') : translate('Not started'));
 }
+
+/** The shipment statuses an inbound shipment is closed in: received or cancelled, nothing more arrives on it. */
+export const CLOSED_SHIPMENT_STATUSES = ['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'];
+
+/** A received or cancelled inbound shipment: no longer on its way. */
+export const isClosedShipment = (statusId?: string) => CLOSED_SHIPMENT_STATUSES.includes(statusId || '');
+
+/**
+ * An open inbound shipment some, but not all, of whose units were received (accepted or rejected). OMS keeps such a
+ * shipment in its created or shipped status until every unit is received.
+ */
+export function isPartlyReceived(shipment: { statusId?: string; quantityTotal?: number | string; receivedQuantity?: number | string; rejectedQuantity?: number | string }) {
+  if (isClosedShipment(shipment.statusId)) return false;
+  const handled = Number(shipment.receivedQuantity || 0) + Number(shipment.rejectedQuantity || 0);
+  return handled > 0 && handled < Number(shipment.quantityTotal || 0);
+}
+
+/** An inbound shipment's status as the user reads it: "Partly received" while part of it is received, else its status's description. */
+export const shipmentStatusLabel = (shipment: Parameters<typeof isPartlyReceived>[0], statusDescription: string) =>
+  (isPartlyReceived(shipment) ? translate('Partly received') : statusDescription);
+
+/** The receive button's label, in the plural form of its unit count: "Receive 1 unit", "Receive 3 units". */
+export const receiveUnitsLabel = (units: number) => translate('Receive {count} units', countParams(units));

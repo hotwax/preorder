@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { DateTime } from 'luxon';
 import { formatDate } from '@/utils/format';
 import {
-  daysOverdue, facilityLabels, formatDateRange, futureInventoryTypeLabel, importProgressLabel, overdueLabel, productStoreLabels, readableNote, shortDescription, shownPartyId,
+  daysOverdue, facilityLabels, formatDateRange, futureInventoryTypeLabel, importProgressLabel, isClosedShipment, isPartlyReceived, overdueLabel, productStoreLabels,
+  readableNote, receiveUnitsLabel, shipmentStatusLabel, shortDescription, shownPartyId,
 } from '@/utils/labels';
 
 describe('labels', () => {
@@ -38,6 +39,36 @@ describe('labels', () => {
     expect(overdueLabel(1)).toBe('Overdue by 1 day');
     expect(overdueLabel(3)).toBe('Overdue by 3 days');
     expect(overdueLabel(1200)).toBe('Overdue by 1,200 days');
+  });
+});
+
+describe('inbound shipment labels', () => {
+  it('reads a shipment as closed once received or cancelled', () => {
+    expect(isClosedShipment('PURCH_SHIP_RECEIVED')).toBe(true);
+    expect(isClosedShipment('PURCH_SHIP_CANCELLED')).toBe(true);
+    expect(isClosedShipment('PURCH_SHIP_CREATED')).toBe(false);
+    expect(isClosedShipment(undefined)).toBe(false);
+  });
+
+  it('reads an open shipment as partly received when some, not all, of its units were received or rejected', () => {
+    expect(isPartlyReceived({ statusId: 'PURCH_SHIP_CREATED', quantityTotal: 10, receivedQuantity: 4 })).toBe(true);
+    expect(isPartlyReceived({ statusId: 'PURCH_SHIP_SHIPPED', quantityTotal: '10.000000', receivedQuantity: '0.0', rejectedQuantity: '2.0' })).toBe(true);
+    expect(isPartlyReceived({ statusId: 'PURCH_SHIP_CREATED', quantityTotal: 10, receivedQuantity: 0, rejectedQuantity: 0 })).toBe(false);
+    expect(isPartlyReceived({ statusId: 'PURCH_SHIP_CREATED', quantityTotal: 10, receivedQuantity: 8, rejectedQuantity: 2 })).toBe(false);
+    expect(isPartlyReceived({ statusId: 'PURCH_SHIP_RECEIVED', quantityTotal: 10, receivedQuantity: 4 })).toBe(false);
+    expect(isPartlyReceived({ statusId: 'PURCH_SHIP_CANCELLED', quantityTotal: 10, receivedQuantity: 4 })).toBe(false);
+  });
+
+  it('labels a partly received shipment as such, and any other by its status', () => {
+    expect(shipmentStatusLabel({ statusId: 'PURCH_SHIP_CREATED', quantityTotal: 10, receivedQuantity: 4 }, 'Created')).toBe('Partly received');
+    expect(shipmentStatusLabel({ statusId: 'PURCH_SHIP_CREATED', quantityTotal: 10, receivedQuantity: 0 }, 'Created')).toBe('Created');
+    expect(shipmentStatusLabel({ statusId: 'PURCH_SHIP_RECEIVED', quantityTotal: 10, receivedQuantity: 10 }, 'Received')).toBe('Received');
+  });
+
+  it('says how many units the receive button receives, in their plural form', () => {
+    expect(receiveUnitsLabel(1)).toBe('Receive 1 unit');
+    expect(receiveUnitsLabel(3)).toBe('Receive 3 units');
+    expect(receiveUnitsLabel(1200)).toBe('Receive 1,200 units');
   });
 });
 

@@ -736,9 +736,10 @@
   "{count} left to receive": "{count} left to receive",
   "Accepted": "Accepted",
   "Rejected": "Rejected",
-  "Receive {count} units": "Receive {count} units",
+  "Receive {count} units": "Receive {count} unit | Receive {count} units",
   "Shipment received.": "Shipment received.",
   "Received; the rest of the shipment stays open.": "Received; the rest of the shipment stays open.",
+  "Partly received": "Partly received",
   "Failed to create the shipment.": "Failed to create the shipment.",
   "Unit cost can't be negative": "Unit cost can't be negative"
 }

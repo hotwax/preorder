@@ -27,7 +27,7 @@
     </ion-label>
 
     <ion-label class="tablet">
-      <ion-badge :color="statusColor(shipment.statusId)">{{ seed.statusDescription(shipment.statusId || '') }}</ion-badge>
+      <ion-badge :color="statusColor(shipment.statusId)">{{ shipmentStatusLabel(shipment, seed.statusDescription(shipment.statusId || '')) }}</ion-badge>
     </ion-label>
 
     <ion-label class="shipment-row-end ion-text-end">
@@ -51,7 +51,7 @@ import { boatOutline } from 'ionicons/icons';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import { daysFromToday, formatDate, formatQuantity, formatRelativeDay } from '@/utils/format';
-import { daysOverdue, overdueLabel } from '@/utils/labels';
+import { daysOverdue, isClosedShipment, overdueLabel, shipmentStatusLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import type { InboundShipmentSummary } from '@/types';
 
@@ -60,7 +60,7 @@ const emit = defineEmits<{ (event: 'activate'): void }>();
 const seed = useSeedData();
 const purchaseOrderLabel = computed(() => props.shipment.orderName || props.shipment.orderExternalId || props.shipment.primaryOrderId);
 /** A received or cancelled shipment is no longer on its way: it shows its arrival date and no days ahead or late. */
-const isClosed = computed(() => ['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(props.shipment.statusId || ''));
+const isClosed = computed(() => isClosedShipment(props.shipment.statusId));
 /** A shipment still on its way whose arrival date has passed. */
 const overdueDays = computed(() => (isClosed.value ? 0 : daysOverdue(props.shipment.estimatedArrivalDate)));
 </script>

@@ -46,6 +46,7 @@
               <DateFilterSelect
                 v-model="arrivalDate"
                 :label="requiredLabel('Estimated arrival')"
+                :min="todayValue()"
                 allow-future
               />
             </ion-card-content>
@@ -65,7 +66,7 @@
                   <p>{{ translate('{count} units available to ship', { count: line.unshippedQuantity }) }}</p>
                 </ProductItem>
                 <ion-input
-                  v-model="line.shipmentQuantity"
+                  v-model.number="line.shipmentQuantity"
                   type="number"
                   inputmode="decimal"
                   min="0"
@@ -159,6 +160,7 @@ import { useUserStore } from '@/store/user';
 import Actions from '@/authorization/actions';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { errorMessage } from '@/utils/response';
+import { todayValue } from '@/utils/format';
 const props = defineProps<{ orderId: string }>();
 const router = useRouter();
 const seed = useSeedData();
@@ -180,6 +182,7 @@ const valid = computed(
   () =>
     reference.value.trim() &&
     arrivalDate.value &&
+    arrivalDate.value >= todayValue() &&
     lines.value.some((line) => Number(line.shipmentQuantity) > 0) &&
     lines.value.every(
       (line) =>

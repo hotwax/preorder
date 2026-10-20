@@ -30,3 +30,6 @@ export const linesToMove = (items: PurchaseOrderLine[], arrivalMillis: number) =
 /** A unit cost a purchase order line may have: none, or a number not below 0 (preorder-maarg#101). */
 export const validUnitCost = (value: unknown) => value === undefined || value === null || value === ''
   || (Number.isFinite(Number(value)) && Number(value) >= 0);
+
+/** A cancelled or completed purchase order line: nothing more arrives on it. */
+export const isClosedLine = (item: { statusId?: string }) => CLOSED_PO_LINE_STATUSES.includes(item.statusId || '');
