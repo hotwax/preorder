@@ -7,7 +7,7 @@
         </ion-buttons>
         <ion-title>{{ order?.orderName || orderId }}</ion-title>
         <ion-buttons v-if="isOpen && canUpdate" slot="end">
-          <ion-button v-if="order?.statusId === 'ORDER_APPROVED'" :disabled="loading || sum('unshippedQuantity') <= 0" :router-link="`/purchase-orders/${orderId}/inbound-shipment`"><ion-icon slot="start" :icon="boatOutline" />{{ translate('Create shipment') }}</ion-button>
+          <ion-button v-if="order?.statusId === 'ORDER_APPROVED'" :disabled="loading || sum('unshippedQuantity') <= 0" :router-link="`/purchase-orders/${encodeURIComponent(orderId)}/shipments/new`"><ion-icon slot="start" :icon="boatOutline" />{{ translate('Create shipment') }}</ion-button>
           <ion-button :id="`po-actions-${orderId}`" :disabled="loading" :aria-label="translate('Purchase order actions')"><ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" /></ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -16,7 +16,7 @@
     <ion-popover v-if="isOpen && canUpdate" :trigger="`po-actions-${orderId}`" :dismiss-on-select="true">
       <ion-content><ion-list>
         <ion-item v-if="order?.statusId === 'ORDER_CREATED'" button :detail="false" @click="setStatus('ORDER_APPROVED')"><ion-label>{{ translate('Approve') }}</ion-label></ion-item>
-        <ion-item v-if="canUpdateFutureInventory" button :detail="false" @click="changeArrival()"><ion-label>{{ translate('Change arrival date') }}</ion-label></ion-item>
+        <ion-item v-if="canChangeArrival" button :detail="false" @click="changeArrival()"><ion-label>{{ translate('Change arrival date') }}</ion-label></ion-item>
         <ion-item v-if="canUpdateFutureInventory" button :detail="false" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow"><ion-label>{{ translate('Sell as pre-order') }}</ion-label></ion-item>
         <ion-item v-if="order?.statusId === 'ORDER_APPROVED'" button :detail="false" @click="setStatus('ORDER_COMPLETED')"><ion-label>{{ translate('Complete') }}</ion-label></ion-item>
         <ion-item button :detail="false" @click="setStatus('ORDER_CANCELLED')"><ion-label color="danger">{{ translate('Cancel order') }}</ion-label></ion-item>
@@ -176,8 +176,10 @@ const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 /** A line with units no shipment carries yet: something a new inbound shipment can ship. */
 const hasUnshipped = computed(() => (order.value?.items || []).some((item: any) => Number(item.unshippedQuantity) > 0));
-// Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
+// Selling as pre-order creates future inventory: the FI permission
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
+// Moving arrival dates updates the PO lines and moves their future inventory: both permissions
+const canChangeArrival = computed(() => canUpdate.value && canUpdateFutureInventory.value);
 const openItems = computed(() => (order.value?.items || []).filter((item) => !CLOSED_PO_LINE_STATUSES.includes(item.statusId || '')));
 const linesWithoutBatch = computed(() => openItems.value.filter((item) => !item.futureInventoryItemId).length);
 /** Lines of any status with a batch: a closed line without one is not counted as having one. */
