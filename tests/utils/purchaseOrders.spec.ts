@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DateTime } from 'luxon';
 import { linesToMove, toSupplierOptions } from '@/utils/purchaseOrders';
+import { validUnitCost } from '@/utils/purchaseOrders';
 
 describe('supplier options', () => {
   it('names a group, else a person, else the party id, by name', () => {
@@ -39,5 +40,12 @@ describe('lines a purchase order date change moves', () => {
       { orderItemSeqId: '05', productId: 'E', statusId: 'ITEM_APPROVED' },
     ], day);
     expect(lines.map((line) => line.orderItemSeqId)).toEqual(['01', '05']);
+  });
+});
+
+describe('validUnitCost (preorder-maarg#101)', () => {
+  it('takes no cost, zero and a positive cost, and refuses a negative or unreadable one', () => {
+    expect([undefined, null, '', 0, 5, '2.5'].every(validUnitCost)).toBe(true);
+    expect([-5, '-0.01', 'abc'].some(validUnitCost)).toBe(false);
   });
 });

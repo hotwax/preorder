@@ -584,5 +584,6 @@
   "Shipment received.": "Shipment received.",
   "Received; the rest of the shipment stays open.": "Received; the rest of the shipment stays open.",
   "Failed to receive the shipment.": "Failed to receive the shipment.",
-  "Failed to create the shipment.": "Failed to create the shipment."
+  "Failed to create the shipment.": "Failed to create the shipment.",
+  "Unit cost can't be negative": "Unit cost can't be negative"
 }

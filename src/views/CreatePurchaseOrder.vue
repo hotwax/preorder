@@ -80,7 +80,8 @@
         <div v-for="(line, index) in form.items" :key="line.productId" class="line">
           <ProductItem :product-id="line.productId" :product-name="line.productName" />
           <ion-input v-model.number="line.quantity" type="number" min="1" :label="requiredLabel('Quantity')" label-placement="stacked" fill="outline" />
-          <ion-input v-model.number="line.unitPrice" type="number" min="0" :label="translate('Unit cost')" label-placement="stacked" fill="outline" />
+          <ion-input v-model.number="line.unitPrice" type="number" min="0" :label="translate('Unit cost')" label-placement="stacked" fill="outline"
+            :class="{ 'ion-invalid ion-touched': !validUnitCost(line.unitPrice) }" :error-text="translate('Unit cost can\'t be negative')" />
           <DateFilterSelect v-model="line.arrivalDate" :label="requiredLabel('Arrival date')" :min="todayValue()" allow-future />
           <ion-button fill="clear" color="danger" :aria-label="translate('Remove line')" @click="form.items.splice(index, 1)">
             <ion-icon slot="icon-only" :icon="trashOutline" />
@@ -104,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import { validUnitCost } from '@/utils/purchaseOrders';
 import {
   IonBackButton, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent, IonFooter, IonHeader,
   IonIcon, IonInput, IonItem, IonLabel, IonList, IonListHeader, IonPage, IonProgressBar, IonSearchbar, IonSelect, IonSelectOption, IonThumbnail,
@@ -167,7 +169,7 @@ watch(facilityOptions, (options) => {
 
 const totalUnits = computed(() => form.items.reduce((sum, line) => sum + Number(line.quantity || 0), 0));
 const canSave = computed(() => productStore.getCurrentProductStoreId && form.supplierPartyId && form.facilityId && form.items.length
-  && form.items.every((line) => Number(line.quantity) > 0 && line.arrivalDate && line.arrivalDate >= todayValue()));
+  && form.items.every((line) => Number(line.quantity) > 0 && validUnitCost(line.unitPrice) && line.arrivalDate && line.arrivalDate >= todayValue()));
 
 const suppliersError = ref('');
 const searching = ref(false);
