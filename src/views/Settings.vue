@@ -14,7 +14,7 @@
         <ion-card>
           <ion-item lines="full">
             <ion-avatar slot="start" v-if="userProfile?.partyImageUrl">
-              <Image :src="userProfile.partyImageUrl"/>
+              <DxpShopifyImg :src="userProfile.partyImageUrl" />
             </ion-avatar>
             <ion-card-header class="ion-no-padding ion-padding-vertical">
               <ion-card-subtitle>{{ userProfile.username || userProfile.emailAddress || userProfile.userId }}</ion-card-subtitle>
@@ -50,8 +50,7 @@
 
         <ion-card>
           <ion-card-header>
-            <ion-card-subtitle>{{ translate("Product store") }}</ion-card-subtitle>
-            <ion-card-title>{{ translate("Store") }}</ion-card-title>
+            <ion-card-title>{{ translate("Product store") }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             {{ translate("A store represents a company or a unique catalog of products. If your OMS is connected to multiple eCommerce stores selling different collections of products, you may have multiple Product Stores set up in HotWax Commerce.") }}
@@ -59,7 +58,7 @@
           <ion-item lines="none">
             <ion-select :label="translate('Select store')" label-placement="stacked" interface="popover" :value="currentProductStoreId" @ionChange="setCurrentProductStore($event)">
               <ion-select-option v-for="store in productStores" :key="store.productStoreId" :value="store.productStoreId">
-                {{ store.storeName || store.productStoreId }}
+                {{ store.label }}
               </ion-select-option>
             </ion-select>
           </ion-item>
@@ -77,18 +76,18 @@
           <ion-card-content>
             {{ translate("The timezone you select is used to ensure automations you schedule are always accurate to the time you select.") }}
           </ion-card-content>
-          <ion-item v-if="showBrowserTimeZone">
+          <ion-item>
             <ion-label>
               <p class="overline">{{ translate("Browser time zone") }}</p>
               {{ browserTimeZone.id }}
-              <p v-if="showDateTime">{{ commonUtil.getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
+              <p>{{ commonUtil.getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
             </ion-label>
           </ion-item>
           <ion-item lines="none">
             <ion-label>
               <p class="overline">{{ translate("Selected time zone") }}</p>
               {{ currentTimeZone }}
-              <p v-if="showDateTime">{{ commonUtil.getCurrentTime(currentTimeZone, dateTimeFormat) }}</p>
+              <p>{{ commonUtil.getCurrentTime(currentTimeZone, dateTimeFormat) }}</p>
             </ion-label>
             <ion-button id="time-zone-modal" slot="end" fill="outline" color="dark">
               {{ translate("Change") }}
@@ -102,8 +101,7 @@
           </ion-card-header>
           <ion-item lines="none">
             <ion-select :label="translate('Select language')" label-placement="stacked" interface="popover" :value="locale" @ionChange="setLocale($event.detail.value)">
-              <ion-select-option value="en-US">English</ion-select-option>
-              <ion-select-option value="es-ES">Español</ion-select-option>
+              <ion-select-option v-for="language in languages" :key="language.code" :value="language.code">{{ language.name }}</ion-select-option>
             </ion-select>
           </ion-item>
         </ion-card>
@@ -173,20 +171,20 @@
 
         <ion-content>
           <ion-radio-group v-model="timeZoneId">
-            <ion-list v-if="showBrowserTimeZone">
+            <ion-list>
               <ion-list-header><ion-label>{{ translate("Browser time zone") }}</ion-label></ion-list-header>
               <ion-item>
                 <ion-radio label-placement="end" justify="start" :value="browserTimeZone.id">
                   <ion-label>
                     {{ browserTimeZone.label }} ({{ browserTimeZone.id }})
-                    <p v-if="showDateTime">{{ commonUtil.getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
+                    <p>{{ commonUtil.getCurrentTime(browserTimeZone.id, dateTimeFormat) }}</p>
                   </ion-label>
                 </ion-radio>
               </ion-item>
             </ion-list>
 
             <ion-list>
-              <ion-list-header v-if="showBrowserTimeZone"><ion-label>{{ translate("Select a different time zone") }}</ion-label></ion-list-header>
+              <ion-list-header><ion-label>{{ translate("Select a different time zone") }}</ion-label></ion-list-header>
               <ion-item v-if="isLoading" lines="none">
                 <ion-spinner color="secondary" name="crescent" slot="start" />
                 <ion-label>{{ translate("Fetching time zones") }}</ion-label>
@@ -199,7 +197,7 @@
                   <ion-radio label-placement="end" justify="start" :value="timeZone.id">
                     <ion-label>
                       {{ timeZone.label }} ({{ timeZone.id }})
-                      <p v-if="showDateTime">{{ commonUtil.getCurrentTime(timeZone.id, dateTimeFormat) }}</p>
+                      <p>{{ commonUtil.getCurrentTime(timeZone.id, dateTimeFormat) }}</p>
                     </ion-label>
                   </ion-radio>
                 </ion-item>
@@ -223,7 +221,7 @@
 import { IonAvatar, IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonItem, IonItemDivider, IonLabel, IonList, IonListHeader, IonMenuButton, IonModal, IonPage, IonRadio, IonRadioGroup, IonSearchbar, IonSelect, IonSelectOption, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue';
 import { checkmarkCircle, closeCircle, closeOutline, openOutline, saveOutline, syncOutline } from 'ionicons/icons';
 import { computed, onBeforeMount, ref } from 'vue';
-import { commonUtil, cookieHelper, i18n, translate } from '@common';
+import { commonUtil, cookieHelper, DxpShopifyImg, i18n, translate } from '@common';
 import { catalogFrom, useDbStatus } from '@common/db';
 import { useAuth } from '@common/composables/useAuth';
 import { useUserStore } from '@/store/user';
@@ -235,6 +233,7 @@ import DxpProductIdentifier from "@/components/settings/DxpProductIdentifier.vue
 import DxpAppVersionInfo from "@/components/settings/DxpAppVersionInfo.vue";
 import Actions from "@/authorization/actions";
 import { formatDateTime } from '@/utils/format';
+import localeMessages from '@/locales';
 
 const userStore = useUserStore();
 const userProfile = computed(() => userStore.getUserProfile);
@@ -245,25 +244,16 @@ const omsInstance = computed(() => cookieHelper().get('oms') || userStore.oms);
 
 const locale = computed(() => i18n.global.locale.value);
 
+/** Each language's name in itself: only the languages the app has messages for are offered. */
+const LANGUAGE_NAMES: Record<string, string> = { 'en-US': 'English', 'es-ES': 'Español' };
+const languages = Object.keys(localeMessages).map((code) => ({ code, name: LANGUAGE_NAMES[code] || code }));
+
 function setLocale(newLocale: string) {
   i18n.global.locale.value = newLocale;
   cookieHelper().set('locale', newLocale, 60 * 60 * 24 * 365);
 }
 
-const props = defineProps({
-  showBrowserTimeZone: {
-    type: Boolean,
-    default: true
-  },
-  showDateTime: {
-    type: Boolean,
-    default: true
-  },
-  dateTimeFormat: {
-    type: String,
-    default: 't ZZZZ'
-  }
-});
+const dateTimeFormat = 't ZZZZ';
 
 const isLoading = ref(true);
 const isSavingTimeZone = ref(false);
@@ -283,9 +273,7 @@ onBeforeMount(async () => {
   await userStore.fetchAvailableTimeZones();
   timeZoneId.value = currentTimeZone.value;
 
-  if (props.showBrowserTimeZone) {
-    browserTimeZone.value.label = timeZones.value.find((timeZone: any) => timeZone.id.toLowerCase().includes(browserTimeZone.value.id.toLowerCase()))?.label || browserTimeZone.value.id;
-  }
+  browserTimeZone.value.label = timeZones.value.find((timeZone: any) => timeZone.id.toLowerCase().includes(browserTimeZone.value.id.toLowerCase()))?.label || browserTimeZone.value.id;
 
   findTimeZone();
   isLoading.value = false;
@@ -331,10 +319,7 @@ function closeModal() {
 function findTimeZone() {
   const searchedString = queryString.value.toLowerCase();
   filteredTimeZones.value = timeZones.value.filter((timeZone: any) => timeZone.id.toLowerCase().includes(searchedString) || timeZone.label.toLowerCase().includes(searchedString));
-
-  if (props.showBrowserTimeZone) {
-    filteredTimeZones.value = filteredTimeZones.value.filter((timeZone: any) => !timeZone.id.toLowerCase().includes(browserTimeZone.value.id.toLowerCase()));
-  }
+  filteredTimeZones.value = filteredTimeZones.value.filter((timeZone: any) => !timeZone.id.toLowerCase().includes(browserTimeZone.value.id.toLowerCase()));
 }
 
 async function selectSearchBarText(event: any) {

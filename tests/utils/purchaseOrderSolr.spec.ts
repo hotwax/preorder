@@ -22,6 +22,21 @@ describe('purchase order Solr queries', () => {
     ]);
   });
 
+  it('keeps the purchase orders of the current product store', () => {
+    expect(purchaseOrderFilters({ productStoreId: 'STORE' })).toEqual(['docType:ORDER', 'orderTypeId:PURCHASE_ORDER', 'productStoreId:"STORE"']);
+  });
+
+  it('also keeps the purchase orders with no product store when asked', () => {
+    expect(purchaseOrderFilters({ productStoreId: 'STORE', includeUnassigned: 'Y' })).toEqual([
+      'docType:ORDER',
+      'orderTypeId:PURCHASE_ORDER',
+      '(productStoreId:"STORE" OR (*:* -productStoreId:[* TO *]))',
+    ]);
+    // With no store selected there is nothing to widen; unasked, the store's own orders only
+    expect(purchaseOrderFilters({ includeUnassigned: 'Y' })).toEqual(['docType:ORDER', 'orderTypeId:PURCHASE_ORDER']);
+    expect(purchaseOrderFilters({ productStoreId: 'STORE', includeUnassigned: 'N' }).slice(2)).toEqual(['productStoreId:"STORE"']);
+  });
+
   it("bounds dates by whole days in the user's time zone, and the arrival date by lines that are not cancelled", () => {
     const zone = Settings.defaultZone;
     Settings.defaultZone = 'Asia/Kolkata';

@@ -29,7 +29,7 @@ import "@common/css/theme.css"
 
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-import { commonUtil, cookieHelper, createDxpI18n, imagePreview, initialiseConfig, logger, segmentHeight } from '@common';
+import { commonUtil, cookieHelper, createDxpI18n, initialiseConfig, logger } from '@common';
 import { preorderDb } from './db/preorderDb';
 import { useUserStore } from './store/user';
 import localeMessages from './locales';
@@ -71,7 +71,5 @@ initialiseConfig({
 app.use(router)
 
 router.isReady().then(async () => {
-  app.directive('image-preview', imagePreview)
-  app.directive('segment-height', segmentHeight)
   app.mount('#app');
 });

@@ -46,7 +46,7 @@
 import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon, IonItem, IonLabel, IonSelect, IonSelectOption, IonThumbnail } from '@ionic/vue';
 import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user'
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { commonUtil, DxpShopifyImg, translate } from "@common";
 import { shuffleOutline } from "ionicons/icons";
 import Actions from "@/authorization/actions";
@@ -63,6 +63,9 @@ onMounted(() => {
   productStore.fetchProductStoreSettings(productStore.getCurrentProductStoreId);
   productStore.fetchProducts(); 
 })
+
+// Another store's sample products never preview under this store
+watch(() => productStore.getCurrentProductStoreId, () => productStore.fetchProducts());
 
 function setProductIdentificationPref(value: string | any, id: string) {
   const updatedPreference = JSON.parse(JSON.stringify(productIdentificationPref.value)) as any

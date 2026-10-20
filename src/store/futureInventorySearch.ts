@@ -15,7 +15,7 @@ export const useFutureInventorySearchStore = defineFindStore<{
   promiseDateThru: string;
   poId: string;
 }, FutureInventoryBatch>('futureInventorySearch', {
-  url: 'preorder/futureInventoryItems',
+  url: 'oms/futureInventoryItems',
   listName: 'futureInventoryItems',
   defaultSort: DEFAULT_FUTURE_INVENTORY_SORT,
   defaultFilters: () => ({

@@ -53,13 +53,12 @@ import {
 } from '@ionic/vue';
 import { closeOutline } from 'ionicons/icons';
 import { computed, onMounted, ref } from 'vue';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { usePreorderActions } from '@/composables/usePreorderActions';
-import { formatDate } from '@/utils/format';
-import { formatQuantity } from '@/utils/labels';
-import { showToast } from '@/utils';
+import { formatDate, formatQuantity } from '@/utils/format';
+import { moveTargets } from '@/utils/preorderLines';
 import { errorMessage } from '@/utils/response';
 import type { FutureInventoryBatch, PreorderLine } from '@/types';
 
@@ -74,16 +73,8 @@ const loading = ref(true);
 const saving = ref(false);
 const selectedId = ref('');
 
-// Batches the line was reallocated or cancelled from: a new reservation there would not read as open, so reallocate# refuses them
-const closedBatchIds = computed(() => new Set((props.line.reservations || [])
-  .filter((row) => row.reasonEnumId === 'FID_REALLOCATED' || row.reasonEnumId === 'FID_CANCELLED')
-  .map((row) => row.futureInventoryItemId)));
-
-// The target must be another ACTIVE batch of the line's product and FI type, at the order's store, that the line never left (reallocate#'s rule).
-const candidates = computed(() => batches.value.filter((batch) =>
-  batch.futureInventoryItemId !== props.line.futureInventoryItemId
-  && !closedBatchIds.value.has(batch.futureInventoryItemId)
-  && (!props.line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === props.line.futureInventoryItemTypeId)));
+// reallocate#'s rule, read from the line's current reservation and the batches only (preorder-maarg#93)
+const candidates = computed(() => moveTargets(props.line, batches.value, (facilityId) => seed.facility(facilityId)?.facilityTypeId));
 
 const loadError = ref('');
 
@@ -110,10 +101,10 @@ async function save() {
   saving.value = true;
   try {
     await reallocateLine(props.orderId, props.line.orderItemSeqId, props.line.futureInventoryItemId, selectedId.value);
-    await showToast(translate('Reservation moved.'));
+    await commonUtil.showToast(translate('Reservation moved.'));
     dismiss('confirm');
   } catch (error) {
-    await showToast(errorMessage(error, translate('Failed to move the reservation.')));
+    await commonUtil.showToast(errorMessage(error, translate('Failed to move the reservation.')));
   } finally {
     saving.value = false;
   }

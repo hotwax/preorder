@@ -33,6 +33,7 @@
       <ion-card class="global-stat">
         <ion-card-content v-if="error" class="section-error">
           <p>{{ translate("Couldn't load the dashboard") }}</p>
+          <p>{{ error }}</p>
           <ion-button fill="outline" size="small" @click="load">
             <ion-icon slot="start" :icon="refreshOutline" />
             {{ translate('Retry') }}
@@ -66,14 +67,14 @@
       </ion-card>
 
       <section v-if="dashboard && !error" class="drilldown ion-padding">
-        <StatCard :title="translate('Arriving in {days} days', { days: ARRIVAL_DAYS })" :stat="formatNumber(dashboard.arrivingSoon.count)" :subtitle="translate('{quantity} units, {reserved} already sold', { quantity: formatQuantity(dashboard.arrivingSoon.quantity), reserved: formatQuantity(dashboard.arrivingSoon.reserved) })">
+        <StatCard :title="translate('Arriving in {days} days', { days: ARRIVAL_DAYS })" :stat="formatNumber(dashboard.arrivingSoon.count)" :subtitle="translate('{quantity} units, {reserved} already sold', { ...countParams(dashboard.arrivingSoon.quantity, 'quantity'), reserved: formatQuantity(dashboard.arrivingSoon.reserved) })">
           <ion-list lines="none" class="drilldown-list">
             <ion-item v-for="batch in dashboard.arrivingSoon.batches" :key="batch.futureInventoryItemId" button :detail="true" :router-link="batchRoute(batch.futureInventoryItemId)">
               <ion-label>
                 {{ productLabel(batch.productId, batch.productName) }}
                 <p>{{ formatDate(batch.promiseDate) }}</p>
               </ion-label>
-              <p slot="end">{{ formatQuantity(batch.quantityOnHandTotal) }}</p>
+              <p slot="end">{{ formatQuantity(batch.quantityOnOrderTotal) }}</p>
             </ion-item>
           </ion-list>
         </StatCard>
@@ -85,7 +86,7 @@
                 {{ productLabel(batch.productId, batch.productName) }}
                 <p>{{ [batch.poId, formatDate(batch.promiseDate)].filter(Boolean).join(' - ') }}</p>
               </ion-label>
-              <p slot="end">{{ formatRelative(batch.promiseDate) }}</p>
+              <p slot="end">{{ daysOverdue(batch.promiseDate) ? overdueLabel(daysOverdue(batch.promiseDate)) : formatRelativeDay(batch.promiseDate) }}</p>
             </ion-item>
           </ion-list>
         </StatCard>
@@ -102,6 +103,18 @@
           </ion-list>
         </StatCard>
 
+        <StatCard v-if="dashboard.readyToRelease" :title="translate('Ready to release')" :stat="formatNumber(dashboard.readyToRelease.lineCount)" :subtitle="translate('Items whose batch was received, waiting to be released')">
+          <ion-list lines="none" class="drilldown-list">
+            <ion-item v-for="line in dashboard.readyToRelease.lines" :key="`${line.orderId}-${line.orderItemSeqId}`" button :detail="true" :router-link="`/preorders/${encodeURIComponent(line.orderId)}`">
+              <ion-label>
+                {{ line.orderName || line.orderId }}
+                <p>{{ [productLabel(line.productId), line.futureInventoryItemId].filter(Boolean).join(' - ') }}</p>
+              </ion-label>
+              <p slot="end">{{ translate('{count} reserved', { count: formatQuantity(line.openQuantity) }) }}</p>
+            </ion-item>
+          </ion-list>
+        </StatCard>
+
         <StatCard :title="translate('No promise date')" :stat="formatNumber(dashboard.noPromiseDate.count)" :subtitle="translate('Pre-order items customers have no date for')">
           <ion-list lines="none" class="drilldown-list">
             <ion-item v-for="line in dashboard.noPromiseDate.lines" :key="`${line.orderId}-${line.orderItemSeqId}`" button :detail="true" :router-link="`/preorders/${encodeURIComponent(line.orderId)}`">
@@ -114,11 +127,13 @@
           </ion-list>
         </StatCard>
 
-        <StatCard :title="translate('Pre-order demand')" :stat="formatNumber(demandTotal)" :subtitle="translate('Units reserved in the last {days} days', { days: TREND_DAYS })">
-          <Sparkline v-if="demandPoints.length > 1" :points="demandPoints" :label="translate('Units reserved per day')" color="primary" />
+        <StatCard v-if="dashboard.demandByFacility?.length" :title="translate('Waiting by location')" :stat="formatNumber(dashboard.demandFacilityCount ?? dashboard.demandByFacility.length)" :subtitle="translate('Locations holding the most reserved units')">
+          <ion-list lines="none" class="drilldown-list">
+            <DemandByFacilityItems :rows="dashboard.demandByFacility" />
+          </ion-list>
         </StatCard>
 
-        <StatCard :title="translate('Delay emails')" :stat="formatNumber(dashboard.delayEmails.count)" :subtitle="translate('{changes} promise date changes in the last {days} days', { changes: formatNumber(dashboard.promiseDateChanges), days: TREND_DAYS })">
+        <StatCard :title="translate('Delay emails')" :stat="formatNumber(dashboard.delayEmails.count)" :subtitle="translate('Sent in the last {days} days', { days: TREND_DAYS })">
           <Sparkline v-if="emailPoints.length > 1" :points="emailPoints" :label="translate('Delay emails per day')" color="warning" />
           <ion-list lines="none" class="drilldown-list">
             <ion-item button :detail="true" router-link="/communications">
@@ -167,15 +182,17 @@ import {
 } from '@ionic/vue';
 import { globeOutline, pricetagsOutline, refreshOutline } from 'ionicons/icons';
 import { computed, ref, watch } from 'vue';
-import { Sparkline, StatCard, translate } from '@common';
+import { logger, Sparkline, StatCard, translate } from '@common';
 import { useProductMaster, useSeedData } from '@common/db';
 import router from '@/router';
+import DemandByFacilityItems from '@/components/preorders/DemandByFacilityItems.vue';
 import { useDashboard, type PreorderDashboard } from '@/composables/useDashboard';
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import { useProductStore } from '@/store/productStore';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
-import { formatDate, formatNumber, formatRelative } from '@/utils/format';
-import { formatQuantity } from '@/utils/labels';
+import { countParams, formatDate, formatNumber, formatQuantity, formatRelativeDay } from '@/utils/format';
+import { daysOverdue, overdueLabel } from '@/utils/labels';
+import { errorMessage } from '@/utils/response';
 
 const ARRIVAL_DAYS = 7;
 const TREND_DAYS = 30;
@@ -189,7 +206,8 @@ const { fetchDashboard } = useDashboard();
 
 const dashboard = ref<PreorderDashboard>();
 const loading = ref(false);
-const error = ref(false);
+/** Why the dashboard did not load, as the server or the request said; empty when it did. */
+const error = ref('');
 
 const productStoreId = computed(() => productStore.getCurrentProductStoreId);
 const storeName = computed(() => (productStoreId.value ? seed.productStoreName(productStoreId.value) : translate('All stores')));
@@ -201,19 +219,17 @@ const metrics = computed(() => {
   if (!data) return [];
   const preorderUnits = Number(data.openUnitsByType?.FIT_PRE_ORDER || 0);
   const backorderUnits = Number(data.openUnitsByType?.FIT_BACK_ORDER || 0);
-  const supply = Number(data.supply?.quantityOnHand || 0);
+  const supply = Number(data.supply?.quantityOnOrder || 0);
   const reserved = Number(data.supply?.reserved || 0);
   return [
-    { id: 'preorder', label: translate('On pre-order'), percent: percent(preorderUnits, data.openUnits), value: data.openUnits ? preorderUnits / data.openUnits : 0, note: translate('{count} units', { count: formatQuantity(preorderUnits) }) },
-    { id: 'backorder', label: translate('On back-order'), percent: percent(backorderUnits, data.openUnits), value: data.openUnits ? backorderUnits / data.openUnits : 0, note: translate('{count} units', { count: formatQuantity(backorderUnits) }) },
-    { id: 'parked', label: translate('Waiting at parking'), percent: percent(data.parkedLines, data.openLines), value: data.openLines ? data.parkedLines / data.openLines : 0, note: translate('{shown} / {total} items', { shown: formatNumber(data.parkedLines), total: formatNumber(data.openLines) }) },
-    { id: 'sellThrough', label: translate('Future inventory sold'), percent: percent(reserved, supply), value: supply ? Math.min(reserved / supply, 1) : 0, note: translate('{reserved} of {supply} units on {batches} active batches', { reserved: formatQuantity(reserved), supply: formatQuantity(supply), batches: formatNumber(data.supply?.activeBatches) }) },
+    { id: 'preorder', label: translate('On pre-order'), percent: percent(preorderUnits, data.openUnits), value: data.openUnits ? preorderUnits / data.openUnits : 0, note: translate('{count} units', countParams(preorderUnits)) },
+    { id: 'backorder', label: translate('On back-order'), percent: percent(backorderUnits, data.openUnits), value: data.openUnits ? backorderUnits / data.openUnits : 0, note: translate('{count} units', countParams(backorderUnits)) },
+    { id: 'parked', label: translate('Waiting at parking'), percent: percent(data.parkedLines, data.openLines), value: data.openLines ? data.parkedLines / data.openLines : 0, note: translate('{shown} / {total} items', { ...countParams(data.openLines, 'total'), shown: formatNumber(data.parkedLines) }) },
+    { id: 'sellThrough', label: translate('Future inventory sold'), percent: percent(reserved, supply), value: supply ? Math.min(reserved / supply, 1) : 0, note: `${translate('{reserved} of {supply} units', { ...countParams(supply, 'supply'), reserved: formatQuantity(reserved) })}, ${translate('{count} active batches', countParams(data.supply?.activeBatches ?? 0))}` },
   ];
 });
 
 const attentionBatches = computed(() => [...(dashboard.value?.overcommitted.batches || []), ...(dashboard.value?.exceptions.batches || [])].slice(0, 5));
-const demandPoints = computed(() => (dashboard.value?.demandTrend || []).map((point) => Number(point.units || 0)));
-const demandTotal = computed(() => demandPoints.value.reduce((sum, units) => sum + units, 0));
 const emailPoints = computed(() => (dashboard.value?.delayEmails.trend || []).map((point) => Number(point.count || 0)));
 const topProductMax = computed(() => Math.max(0, ...(dashboard.value?.topProducts || []).map((product) => Number(product.openUnits || 0))));
 
@@ -226,7 +242,7 @@ let requestId = 0;
 async function load() {
   const current = ++requestId;
   loading.value = true;
-  error.value = false;
+  error.value = '';
   try {
     const data = await fetchDashboard(productStoreId.value, TREND_DAYS, ARRIVAL_DAYS);
     if (current !== requestId) return;
@@ -235,8 +251,10 @@ async function load() {
       ...data.arrivingSoon.batches, ...data.pastDue.batches, ...data.exceptions.batches, ...data.overcommitted.batches,
       ...data.noPromiseDate.lines, ...data.topProducts,
     ].map((row: any) => row.productId).filter(Boolean));
-  } catch {
-    if (current === requestId) error.value = true;
+  } catch (err) {
+    if (current !== requestId) return;
+    logger.error('Failed to load the dashboard', err);
+    error.value = errorMessage(err, translate('Failed to load the dashboard.'));
   } finally {
     if (current === requestId) loading.value = false;
   }

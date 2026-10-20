@@ -74,4 +74,9 @@ function toggle(value: string, checked: boolean) {
 .multi-select-filter-trigger {
   cursor: pointer;
 }
+
+/* A long status name wraps instead of ending in an ellipsis */
+ion-checkbox::part(label) {
+  white-space: normal;
+}
 </style>

@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import type { RouteRecordRaw } from 'vue-router';
-import { Login, translate } from '@common';
+import { commonUtil, Login, translate } from '@common';
 import { useAuth } from '@common/composables/useAuth';
 import { useUserStore } from '@/store/user';
-import { showToast } from '@/utils';
 import Actions from '@/authorization/actions';
 import Dashboard from '@/views/Dashboard.vue';
 import Preorders from '@/views/Preorders.vue';
@@ -13,11 +12,14 @@ import FutureInventoryDetail from '@/views/FutureInventoryDetail.vue';
 import PurchaseOrders from '@/views/PurchaseOrders.vue';
 import PurchaseOrderDetail from '@/views/PurchaseOrderDetail.vue';
 import CreatePurchaseOrder from '@/views/CreatePurchaseOrder.vue';
+import CreateInboundShipment from '@/views/CreateInboundShipment.vue';
 import InboundShipments from '@/views/InboundShipments.vue';
 import InboundShipmentDetail from '@/views/InboundShipmentDetail.vue';
 import PurchaseOrderImports from '@/views/PurchaseOrderImports.vue';
 import Communications from '@/views/Communications.vue';
 import BulkUpdates from '@/views/BulkUpdates.vue';
+import PreorderSetup from '@/views/PreorderSetup.vue';
+import PreorderSyncEvents from '@/views/PreorderSyncEvents.vue';
 import Settings from '@/views/Settings.vue';
 
 const authGuard = async () => {
@@ -45,12 +47,15 @@ const routes: RouteRecordRaw[] = [
   page('/future-inventory/:futureInventoryItemId', 'FutureInventoryDetail', FutureInventoryDetail, Actions.APP_PREORDER_VIEW),
   page('/purchase-orders', 'PurchaseOrders', PurchaseOrders, Actions.APP_PO_VIEW),
   page('/purchase-orders/create', 'CreatePurchaseOrder', CreatePurchaseOrder, Actions.APP_PO_UPDATE),
+  page('/purchase-orders/:orderId/shipments/new', 'CreateInboundShipment', CreateInboundShipment, Actions.APP_PO_UPDATE),
   page('/purchase-orders/:orderId', 'PurchaseOrderDetail', PurchaseOrderDetail, Actions.APP_PO_VIEW),
   page('/inbound-shipments', 'InboundShipments', InboundShipments, Actions.APP_PO_VIEW),
   page('/inbound-shipments/:shipmentId', 'InboundShipmentDetail', InboundShipmentDetail, Actions.APP_PO_VIEW),
   page('/po-imports', 'PurchaseOrderImports', PurchaseOrderImports, Actions.APP_PO_VIEW),
   page('/communications', 'Communications', Communications, Actions.APP_COMMS_VIEW),
   page('/bulk-updates', 'BulkUpdates', BulkUpdates, Actions.APP_PREORDER_VIEW),
+  page('/setup', 'PreorderSetup', PreorderSetup, Actions.APP_PREORDER_VIEW),
+  page('/sync-events', 'PreorderSyncEvents', PreorderSyncEvents, Actions.APP_PREORDER_VIEW),
   page('/settings', 'Settings', Settings),
   { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
 ];
@@ -68,7 +73,7 @@ router.beforeEach((to, from) => {
     let redirectToPath = from.path;
     // From the login page or on page load, land on Settings without a toast.
     if (redirectToPath == "/login" || redirectToPath == "/") redirectToPath = "/settings";
-    else showToast(translate('You do not have permission to access this page.'));
+    else commonUtil.showToast(translate('You do not have permission to access this page.'));
     return { path: redirectToPath };
   }
 });

@@ -8,6 +8,9 @@ import type { PurchaseOrderSummary } from '@/types';
 
 export const DEFAULT_PURCHASE_ORDER_SORT = 'earliestArrivalDate';
 
+/** Solr shows a saved change after its next commit, about a second: a list showing it searches again after this long. */
+export const SOLR_SETTLE_MS = 1500;
+
 /** The statuses a purchase order is open in: the list starts on these, and completed or cancelled ones are a filter away. */
 export const OPEN_PURCHASE_ORDER_STATUSES = ['ORDER_CREATED', 'ORDER_APPROVED'];
 
@@ -29,7 +32,7 @@ async function fetchPurchaseOrderPage(params: Record<string, any>) {
 
   const [lines, counts]: any[] = await Promise.all([
     solrQuery(purchaseOrderLinesQuery(orderIds)),
-    api({ url: 'preorder/purchaseOrderBatchCounts', method: 'get', params: { orderIds: orderIds.join(',') } }),
+    api({ url: 'oms/futureInventoryItems/purchaseOrderCounts', method: 'get', params: { orderIds: orderIds.join(',') } }),
   ]);
   if (commonUtil.hasError(counts)) throw new Error(counts?.data?.errors || translate('Something went wrong. Please try again.'));
   const docsByOrder = new Map(readOrderGroups(lines).groups.map((group) => [group.orderId, group.docs]));
@@ -47,8 +50,9 @@ export const usePurchaseOrderSearchStore = defineFindStore<{
   arrivalDateThru: string;
   orderDateFrom: string;
   orderDateThru: string;
+  /** Also list the purchase orders that name no product store, which the store's own list leaves out. */
+  includeUnassigned: boolean;
 }, PurchaseOrderSummary>('purchaseOrderSearch', {
-  scopeByStore: false,
   listName: 'orders',
   defaultSort: DEFAULT_PURCHASE_ORDER_SORT,
   fetchPage: fetchPurchaseOrderPage,
@@ -60,5 +64,6 @@ export const usePurchaseOrderSearchStore = defineFindStore<{
     arrivalDateThru: '',
     orderDateFrom: '',
     orderDateThru: '',
+    includeUnassigned: false,
   }),
 });

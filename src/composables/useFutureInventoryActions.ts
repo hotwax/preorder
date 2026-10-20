@@ -3,7 +3,7 @@ import { ensureOk } from '@/utils/response';
 import { readList } from '@/utils/query';
 import type { FutureInventoryBatch, FutureInventoryBatchDetail } from '@/types';
 
-const batchUrl = (id: string) => `preorder/futureInventory/${encodeURIComponent(id)}`;
+const batchUrl = (id: string) => `oms/futureInventoryItems/${encodeURIComponent(id)}`;
 
 /** Future inventory batch requests: one batch, its ledger and waiting lines, and the batch actions. */
 export function useFutureInventoryActions() {
@@ -21,11 +21,11 @@ export function useFutureInventoryActions() {
 
   /** The ACTIVE batches of a product at the store's facilities: the batches an order of that store can hold. */
   async function fetchActiveBatches(productId: string, productStoreId?: string): Promise<FutureInventoryBatch[]> {
-    const data = await ensureOk(api({ url: 'preorder/futureInventoryItems', method: 'get', params: { productId, productStoreId, statusId: 'FUTURE_INV_ACTIVE', pageSize: 50 } }), 'Failed to load batches.');
+    const data = await ensureOk(api({ url: 'oms/futureInventoryItems', method: 'get', params: { productId, productStoreId, statusId: 'FUTURE_INV_ACTIVE', pageSize: 50 } }), 'Failed to load batches.');
     return readList<FutureInventoryBatch>(data, 'futureInventoryItems').rows;
   }
 
-  /** Updates a batch (PUT futureInventory/{id}): one FID_ADJUSTED ledger row with a quantity change, a new promise date ('yyyy-MM-dd'), or both. */
+  /** Updates a batch (PUT futureInventoryItems/{id}): one FID_ADJUSTED ledger row with a quantity change, a new promise date ('yyyy-MM-dd'), or both. */
   async function updateBatch(id: string, change: { quantityDiff?: number; promiseDate?: string; description?: string }) {
     return ensureOk(api({ url: batchUrl(id), method: 'put', data: change }), 'Failed to update the batch.');
   }

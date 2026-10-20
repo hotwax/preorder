@@ -16,7 +16,7 @@ export const usePreorderSearchStore = defineFindStore<{
   orderDateFrom: string;
   orderDateThru: string;
 }, PreorderOrder>('preorderSearch', {
-  url: 'preorder/preorders',
+  url: 'oms/preorders',
   listName: 'orders',
   defaultSort: DEFAULT_PREORDER_SORT,
   defaultFilters: () => ({

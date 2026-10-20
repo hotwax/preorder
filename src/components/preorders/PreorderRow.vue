@@ -24,8 +24,9 @@
     </ion-item>
 
     <ion-label class="tablet">
-      {{ translate('{count} pre-order items', { count: order.lineCount ?? order.lines?.length ?? 0 }) }}
-      <p>{{ translate('{count} at parking', { count: order.parkedLineCount }) }}</p>
+      {{ translate('{count} pre-order items', { count: order.openLineCount ?? order.lineCount ?? order.lines?.length ?? 0 }) }}
+      <p v-if="order.readyToReleaseLineCount"><ion-text color="warning">{{ translate('{count} ready to release', { count: order.readyToReleaseLineCount }) }}</ion-text></p>
+      <p v-else-if="waitingPlaces">{{ translate('Waiting at {facilities}', { facilities: waitingPlaces }) }}</p>
     </ion-label>
 
     <ion-label class="tablet">
@@ -41,7 +42,10 @@
     <ion-label class="preorder-row-end ion-text-end">
       <template v-if="order.earliestPromiseDate || order.latestPromiseDate">
         {{ formatDateRange(order.earliestPromiseDate, order.latestPromiseDate) }}
-        <p>{{ translate('Promised {age}', { age: formatRelative(order.earliestPromiseDate || order.latestPromiseDate) }) }}</p>
+        <p>
+          <ion-text v-if="overdueDays" color="danger">{{ overdueLabel(overdueDays) }}</ion-text>
+          <template v-else>{{ translate('Promised {age}', { age: formatRelativeDay(order.earliestPromiseDate || order.latestPromiseDate) }) }}</template>
+        </p>
       </template>
       <ion-note v-else color="danger">{{ translate('No promise date') }}</ion-note>
     </ion-label>
@@ -49,12 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import { IonCheckbox, IonItem, IonLabel, IonNote } from '@ionic/vue';
+import { IonCheckbox, IonItem, IonLabel, IonNote, IonText } from '@ionic/vue';
 import { computed } from 'vue';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
-import { formatDate, formatRelative } from '@/utils/format';
-import { formatDateRange, shownPartyId } from '@/utils/labels';
+import { formatDate, formatRelative, formatRelativeDay } from '@/utils/format';
+import { daysOverdue, formatDateRange, overdueLabel, shownPartyId } from '@/utils/labels';
+import { waitingFacilityIds } from '@/utils/preorderLines';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import type { PreorderOrder } from '@/types';
 
@@ -64,6 +69,10 @@ const seed = useSeedData();
 const { typeLabel: futureInventoryTypeName } = useFutureInventoryTypes();
 
 const identityLabel = computed(() => [...new Set([props.order.orderName, props.order.orderId, seed.statusDescription(props.order.statusId || '')].filter(Boolean))].join(' - '));
+/** Where the order's lines with an open reservation wait, by facility name. */
+const waitingPlaces = computed(() => waitingFacilityIds(props.order).map((facilityId) => seed.facilityName(facilityId)).join(', '));
+/** A listed pre-order still waits on its stock, so a passed promise date is late. */
+const overdueDays = computed(() => daysOverdue(props.order.earliestPromiseDate || props.order.latestPromiseDate));
 const typeLabel = computed(() => {
   const types = props.order.futureInventoryItemTypeIds || [];
   return types.length ? types.map((type) => futureInventoryTypeName(type)).join(', ') : translate('Pre-order');

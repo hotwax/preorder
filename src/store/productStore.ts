@@ -28,7 +28,6 @@ export const useProductStore = defineStore('productStore', {
 
   getters: {
     getCurrentProductStoreId: (state) => state.currentProductStoreId,
-    getSettings: (state) => state.settings,
     getProductIdentificationPref: (state) => state.settings.productIdentifier.productIdentificationPref,
     getProductIdentificationOptions: (state) => state.settings.productIdentifier.productIdentificationOptions,
     getCurrentSampleProduct: (state) => state.settings.productIdentifier.currentSampleProduct,
@@ -123,6 +122,8 @@ export const useProductStore = defineStore('productStore', {
           logger.error("Failed to fetch settings", error)
         }
       }
+      // The store changed while this was in flight: its settings, or the defaults, must not land on the new one
+      if (productStoreId !== this.currentProductStoreId) return
 
       Object.entries(defaultProductStoreSettings).forEach(([settingTypeEnumId, setting]: any) => {
         const { stateKey, value } = setting;
@@ -216,9 +217,10 @@ export const useProductStore = defineStore('productStore', {
           }
         });
 
-        fetchedGoodIdentificationOptions = resp.data
+        // An error body or an unexpected shape adds no options, rather than breaking the merge below
+        fetchedGoodIdentificationOptions = Array.isArray(resp?.data) ? resp.data : []
       } catch (error) {
-        console.error('Failed to fetch good identification types', error)
+        logger.error('Failed to fetch good identification types', error)
       }
 
       // Merge the arrays and remove duplicates
@@ -227,8 +229,12 @@ export const useProductStore = defineStore('productStore', {
 
     async fetchProducts() {
       try {
+        // Sample products are the current store's: another store's products would preview identifiers it does not sell
+        const filters: Record<string, { value: string }> = {}
+        if (this.currentProductStoreId) filters.productStoreIds_s = { value: `"${this.currentProductStoreId.replace(/(["\\])/g, '\\$1')}"` }
         const resp = await useSolrSearch().searchProducts({
-          viewSize: 10
+          viewSize: 10,
+          filters
         })
 
         // searchProducts returns an array of docs on hits, and {} when the
@@ -237,7 +243,7 @@ export const useProductStore = defineStore('productStore', {
         this.settings.productIdentifier.sampleProducts = Array.isArray(resp.products) ? resp.products : []
         this.shuffleProduct()
       } catch (error: any) {
-        console.error("Failed to fetch sample products", error)
+        logger.error("Failed to fetch sample products", error)
       }
     },
     shuffleProduct() {
