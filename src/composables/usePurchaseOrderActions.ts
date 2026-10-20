@@ -132,12 +132,16 @@ export function usePurchaseOrderActions() {
     if (!term || term.includes('"')) return search(term);
     // common's searchProducts orders every keyword search by name and ignores a sort, so an exact SKU like "100" fell past
     // the 10 rows shown, behind its prefix matches (preorder-maarg#87). The exact matches are fetched on their own and
-    // listed first, a product whose id, internal name or SKU is the keyword ahead of the rest.
+    // listed first, a product whose id, internal name, SKU or any identification is the keyword ahead of the rest. The SKU
+    // the app shows comes from goodIdentifications ("SKU/Kg-100"): on Shopify products the sku field holds a Shopify id.
     const [exact, broad] = await Promise.all([
       search(`"${useSolrSearch().escapeSolrSpecialChars(term)}"`).catch(() => []),
       search(term)
     ]);
-    const isIdentifier = (product: any) => [product.productId, product.internalName, product.sku]
+    const identifications = (product: any) => (Array.isArray(product.goodIdentifications) ? product.goodIdentifications : [])
+      .map((entry: any) => String(entry ?? '')).filter((entry: string) => entry.includes('/'))
+      .map((entry: string) => entry.slice(entry.indexOf('/') + 1));
+    const isIdentifier = (product: any) => [product.productId, product.internalName, product.sku, ...identifications(product)]
       .some((value) => String(value ?? '').toLowerCase() === term.toLowerCase());
     const seen = new Set<string>();
     return [...exact.filter(isIdentifier), ...exact, ...broad]
@@ -148,7 +152,12 @@ export function usePurchaseOrderActions() {
   async function forEachOrder(orderIds: string[], action: (orderId: string) => Promise<any>) {
     let done = 0; let failed = 0; const errors: string[] = []; const succeeded: string[] = [];
     for (const orderId of orderIds) {
-      try { await action(orderId); done++; succeeded.push(orderId); } catch (error: any) { failed++; errors.push(`${orderId}: ${error?.message || error}`); }
+      try {
+        await action(orderId); done++; succeeded.push(orderId);
+      } catch (error: any) {
+        // The server's reason, such as a line with no estimated delivery date, not the transport status (preorder-maarg#104)
+        failed++; errors.push(`${orderId}: ${errorMessage(error, typeof error === 'string' && error ? error : translate('Something went wrong'))}`);
+      }
     }
     return { done, failed, errors, succeeded };
   }

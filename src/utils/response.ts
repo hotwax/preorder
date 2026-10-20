@@ -9,6 +9,8 @@ export async function ensureOk(request: Promise<any>, message: string) {
 
 /** The server's message from a failed request, for a toast. */
 export function errorMessage(error: any, fallback: string): string {
-  const errors = error?.response?.data?.errors ?? error?.message;
-  return typeof errors === 'string' && errors ? errors : fallback;
+  let errors = error?.response?.data?.errors;
+  if (Array.isArray(errors)) errors = errors.filter((entry) => typeof entry === 'string' && entry.trim()).map((entry) => entry.trim()).join('; ');
+  if (typeof errors === 'string' && errors.trim()) return errors.trim();
+  return typeof error?.message === 'string' && error.message ? error.message : fallback;
 }
