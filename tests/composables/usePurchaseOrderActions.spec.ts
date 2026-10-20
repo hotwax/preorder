@@ -25,6 +25,39 @@ describe('purchase order product search', () => {
     expect(products.map((p: any) => p.productId)).toEqual(['M10', 'M11', 'M20', 'M21', 'M22', 'M23', 'M24', 'M25', 'M26', 'M27']);
   });
 
+  /** Answers the exact search with exactDocs and the broad one with broadDocs. */
+  const answer = (exactDocs: any[], broadDocs: any[] = []) => searchProducts.mockImplementation(async (params: any) => ({
+    products: params.keyword.startsWith('"') ? exactDocs : broadDocs
+  }));
+  // M174340 and M174341 as hc-sandbox's Solr has them: sku and internalName hold the Shopify id, the SKU the app shows
+  // is only in goodIdentifications
+  const kg100 = { productId: 'M174340', productName: '100 / Blue', internalName: '50721864384676', sku: '50721864384676',
+    goodIdentifications: ['SKU/Kg-100', 'UPCA/870', 'ShopifyShopProduct/10000/50721864384676'] };
+  const kg100Blue = { productId: 'M174341', productName: '100 / Blue', internalName: '50721926283428', sku: '50721926283428',
+    goodIdentifications: ['SKU/KG-100-BLUE', 'ShopifyShopProduct/10000/50721926283428'] };
+
+  it('puts a product whose SKU, found only in goodIdentifications, is the keyword first, in any case', async () => {
+    answer([kg100Blue, kg100]);
+    expect((await usePurchaseOrderActions().searchOrderableProducts('Kg-100')).map((p: any) => p.productId)).toEqual(['M174340', 'M174341']);
+    expect((await usePurchaseOrderActions().searchOrderableProducts('kg-100')).map((p: any) => p.productId)).toEqual(['M174340', 'M174341']);
+  });
+
+  it('matches any identification type the product identifier setting can show, such as a UPC', async () => {
+    answer([kg100Blue, kg100]);
+    expect((await usePurchaseOrderActions().searchOrderableProducts('870'))[0].productId).toBe('M174340');
+  });
+
+  it('puts "100" first on hc-sandbox, where its internal name and sku are 100', async () => {
+    answer([{ productId: 'M100075', internalName: 'WP07-28-Black', sku: 'WP07-28-Black', goodIdentifications: ['SKU/WP07-28-Black'] },
+      { productId: 'M100001', internalName: '100', sku: '100', goodIdentifications: ['SKU/100'] }]);
+    expect((await usePurchaseOrderActions().searchOrderableProducts('100')).map((p: any) => p.productId)).toEqual(['M100001', 'M100075']);
+  });
+
+  it('puts the product whose id is the keyword first', async () => {
+    answer([kg100Blue, kg100]);
+    expect((await usePurchaseOrderActions().searchOrderableProducts('m174340'))[0].productId).toBe('M174340');
+  });
+
   it('escapes the exact search, and falls back to the broad results when it fails', async () => {
     searchProducts.mockImplementation(async (params: any) => {
       if (params.keyword.startsWith('"')) throw new Error('bad query');
