@@ -124,11 +124,25 @@ export function usePurchaseOrderActions() {
   async function searchOrderableProducts(keyword: string, productStoreId?: string): Promise<any[]> {
     const filters: Record<string, { value: string }> = { isVariant: { value: '*' } };
     if (productStoreId) filters.productStoreIds_s = { value: `"${productStoreId.replace(/(["\\])/g, '\\$1')}"` };
-    // With a keyword, relevance first: the default name order put an exact SKU match like "100" past the 10 rows shown
-    // (preorder-maarg#87)
-    const sort = keyword?.trim() ? 'score desc, sort_productName asc' : undefined;
-    const { products } = await useSolrSearch().searchProducts({ keyword, viewSize: 10, filters, ...(sort ? { sort } : {}) });
-    return products as any[];
+    const search = async (term: string) => {
+      const { products } = await useSolrSearch().searchProducts({ keyword: term, viewSize: 10, filters });
+      return Array.isArray(products) ? products : [];
+    };
+    const term = keyword?.trim();
+    if (!term || term.includes('"')) return search(term);
+    // common's searchProducts orders every keyword search by name and ignores a sort, so an exact SKU like "100" fell past
+    // the 10 rows shown, behind its prefix matches (preorder-maarg#87). The exact matches are fetched on their own and
+    // listed first, a product whose id, internal name or SKU is the keyword ahead of the rest.
+    const [exact, broad] = await Promise.all([
+      search(`"${useSolrSearch().escapeSolrSpecialChars(term)}"`).catch(() => []),
+      search(term)
+    ]);
+    const isIdentifier = (product: any) => [product.productId, product.internalName, product.sku]
+      .some((value) => String(value ?? '').toLowerCase() === term.toLowerCase());
+    const seen = new Set<string>();
+    return [...exact.filter(isIdentifier), ...exact, ...broad]
+      .filter((product: any) => !seen.has(product.productId) && !!seen.add(product.productId))
+      .slice(0, 10);
   }
 
   async function forEachOrder(orderIds: string[], action: (orderId: string) => Promise<any>) {
