@@ -47,7 +47,7 @@ const routes: RouteRecordRaw[] = [
   page('/future-inventory/:futureInventoryItemId', 'FutureInventoryDetail', FutureInventoryDetail, Actions.APP_PREORDER_VIEW),
   page('/purchase-orders', 'PurchaseOrders', PurchaseOrders, Actions.APP_PO_VIEW),
   page('/purchase-orders/create', 'CreatePurchaseOrder', CreatePurchaseOrder, Actions.APP_PO_UPDATE),
-  page('/purchase-orders/:orderId/inbound-shipment', 'CreateInboundShipment', CreateInboundShipment, Actions.APP_PO_UPDATE),
+  page('/purchase-orders/:orderId/shipments/new', 'CreateInboundShipment', CreateInboundShipment, Actions.APP_PO_UPDATE),
   page('/purchase-orders/:orderId', 'PurchaseOrderDetail', PurchaseOrderDetail, Actions.APP_PO_VIEW),
   page('/inbound-shipments', 'InboundShipments', InboundShipments, Actions.APP_PO_VIEW),
   page('/inbound-shipments/:shipmentId', 'InboundShipmentDetail', InboundShipmentDetail, Actions.APP_PO_VIEW),

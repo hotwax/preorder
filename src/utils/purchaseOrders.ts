@@ -26,3 +26,7 @@ export function toSupplierOptions(parties: any[]): SupplierOption[] {
 /** The open lines (not cancelled or completed) whose arrival date is not already `arrivalMillis`: the ones a date change moves. */
 export const linesToMove = (items: PurchaseOrderLine[], arrivalMillis: number) => items
   .filter((item) => !CLOSED_PO_LINE_STATUSES.includes(item.statusId || '') && toMillis(item.estimatedDeliveryDate) !== arrivalMillis);
+
+/** A unit cost a purchase order line may have: none, or a number not below 0 (preorder-maarg#101). */
+export const validUnitCost = (value: unknown) => value === undefined || value === null || value === ''
+  || (Number.isFinite(Number(value)) && Number(value) >= 0);
