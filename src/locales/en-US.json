@@ -603,7 +603,7 @@
   "Monitor publishing": "Monitor publishing",
   "Follow inventory changes from OMS to Shopify.": "Follow inventory changes from OMS to Shopify.",
   "Events, delivery status and metafield mappings": "Events, delivery status and metafield mappings",
-  "{count} schedules enabled": "{count} schedules enabled",
+  "{count} schedules enabled": "{count} schedule enabled | {count} schedules enabled",
   "Find a publishing job": "Find a publishing job",
   "No schedule": "No schedule",
   "Schedule name": "Schedule name",
