@@ -20,7 +20,7 @@
       <ion-icon slot="end" :icon="chevronDownOutline" color="medium" aria-hidden="true" />
     </ion-input>
 
-    <ion-popover :trigger="triggerId" trigger-action="click" :show-backdrop="false" @willPresent="refreshToday">
+    <ion-popover class="date-filter-popover" :trigger="triggerId" trigger-action="click" :show-backdrop="false" @willPresent="refreshToday">
       <ion-datetime
         presentation="date"
         :show-default-buttons="true"
@@ -99,6 +99,8 @@ function activateTrigger(event: KeyboardEvent) {
 </script>
 
 <style scoped>
+.date-filter-popover { --width: 320px; --max-width: calc(100vw - var(--spacer-lg)); }
+
 .date-filter-select {
   flex: 0 0 11rem;
   max-width: 11rem;

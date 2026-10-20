@@ -6,9 +6,22 @@
           <ion-back-button default-href="/purchase-orders" />
         </ion-buttons>
         <ion-title>{{ order?.orderName || orderId }}</ion-title>
+        <ion-buttons v-if="isOpen && canUpdate" slot="end">
+          <ion-button v-if="order?.statusId === 'ORDER_APPROVED'" :disabled="loading || sum('unshippedQuantity') <= 0" :router-link="`/purchase-orders/${orderId}/inbound-shipment`"><ion-icon slot="start" :icon="boatOutline" />{{ translate('Create shipment') }}</ion-button>
+          <ion-button :id="`po-actions-${orderId}`" :disabled="loading" :aria-label="translate('Purchase order actions')"><ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" /></ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
+    <ion-popover v-if="isOpen && canUpdate" :trigger="`po-actions-${orderId}`" :dismiss-on-select="true">
+      <ion-content><ion-list>
+        <ion-item v-if="order?.statusId === 'ORDER_CREATED'" button :detail="false" @click="setStatus('ORDER_APPROVED')"><ion-label>{{ translate('Approve') }}</ion-label></ion-item>
+        <ion-item v-if="canUpdateFutureInventory" button :detail="false" @click="changeArrival()"><ion-label>{{ translate('Change arrival date') }}</ion-label></ion-item>
+        <ion-item v-if="canUpdateFutureInventory" button :detail="false" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow"><ion-label>{{ translate('Sell as pre-order') }}</ion-label></ion-item>
+        <ion-item v-if="order?.statusId === 'ORDER_APPROVED'" button :detail="false" @click="setStatus('ORDER_COMPLETED')"><ion-label>{{ translate('Complete') }}</ion-label></ion-item>
+        <ion-item button :detail="false" @click="setStatus('ORDER_CANCELLED')"><ion-label color="danger">{{ translate('Cancel order') }}</ion-label></ion-item>
+      </ion-list></ion-content>
+    </ion-popover>
     <ion-content>
       <ion-progress-bar v-if="loading" type="indeterminate" />
       <ErrorState v-if="error" :title="translate('Could not load the purchase order')" :message="error" @retry="load" />
@@ -38,13 +51,7 @@
                 <ion-note slot="end">{{ formatMoney(order.grandTotal, order.currencyUom) }}</ion-note>
               </ion-item>
             </ion-list>
-            <template v-if="isOpen">
-              <ion-button v-if="canUpdate && order.statusId === 'ORDER_CREATED'" fill="clear" @click="setStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
-              <ion-button v-if="canUpdateFutureInventory" fill="clear" @click="changeArrival()">{{ translate('Change arrival date') }}</ion-button>
-              <ion-button v-if="canUpdateFutureInventory" fill="clear" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow">{{ translate('Sell as pre-order') }}</ion-button>
-              <ion-button v-if="canUpdate && order.statusId === 'ORDER_APPROVED'" fill="clear" @click="setStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
-              <ion-button v-if="canUpdate" fill="clear" color="danger" @click="setStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
-            </template>
+
           </ion-card>
 
           <div class="stats">
@@ -124,10 +131,10 @@
 <script setup lang="ts">
 import {
   IonBackButton, IonBadge, IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonChip, IonContent,
-  IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonText, IonTitle, IonToolbar,
+  IonPopover, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonText, IonTitle, IonToolbar,
   onIonViewWillEnter,
 } from '@ionic/vue';
-import { boatOutline, layersOutline } from 'ionicons/icons';
+import { boatOutline, ellipsisVerticalOutline, layersOutline } from 'ionicons/icons';
 import { computed, ref } from 'vue';
 import { commonUtil, StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
@@ -300,5 +307,11 @@ async function sellAsPreorderNow() {
 
 .po-line-row > ion-label {
   width: 100%;
+}
+@media (min-width: 700px) {
+  .po-line-row { grid-template-columns: minmax(12rem, 2fr) repeat(2, minmax(3rem, .6fr)) minmax(8rem, 1.3fr) minmax(6rem, 1fr); }
+}
+@media (min-width: 991px) {
+  .po-line-row { grid-template-columns: minmax(12rem, 2fr) repeat(2, minmax(3rem, .6fr)) minmax(8rem, 1.3fr) minmax(5rem, .7fr) minmax(6rem, 1fr); }
 }
 </style>

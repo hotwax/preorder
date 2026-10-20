@@ -6,6 +6,7 @@
           <ion-back-button default-href="/inbound-shipments" />
         </ion-buttons>
         <ion-title>{{ shipment?.externalId || shipmentId }}</ion-title>
+        <ion-buttons v-if="canReceive" slot="end"><ion-button :disabled="receiving || loading" @click="receive">{{ translate('Receive remaining units') }}</ion-button></ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -30,7 +31,7 @@
                 <ion-note slot="end">{{ shipment.orderName || shipment.orderExternalId || shipment.primaryOrderId }}</ion-note>
               </ion-item>
               <ion-item>
-                <ion-label>{{ translate('Shipped') }}</ion-label>
+                <ion-label>{{ translate('Ship date') }}</ion-label>
                 <ion-note slot="end">{{ formatDate(shipment.estimatedShipDate) || '-' }}</ion-note>
               </ion-item>
               <ion-item>
@@ -76,8 +77,7 @@
               {{ primaryIdentifier(receipt.productId) || receipt.productId }}
               <p>{{ [receipt.receiptId, receipt.receivedByUserLoginId].filter(Boolean).join(' - ') }}</p>
             </ion-label>
-            <ion-note slot="end">{{ translate('{accepted} accepted, {rejected} rejected', { accepted: formatQuantity(receipt.quantityAccepted), rejected: formatQuantity(receipt.quantityRejected) }) }}</ion-note>
-            <ion-note slot="end">{{ formatDateTime(receipt.datetimeReceived) }}</ion-note>
+            <ion-label slot="end" class="ion-text-end ion-text-wrap">{{ translate('{accepted} accepted, {rejected} rejected', { accepted: formatQuantity(receipt.quantityAccepted), rejected: formatQuantity(receipt.quantityRejected) }) }}<p>{{ formatDateTime(receipt.datetimeReceived) }}</p></ion-label>
           </ion-item>
           <ion-item v-if="!shipment.receipts.length" lines="none">
             <ion-label>{{ translate('Nothing received yet.') }}</ion-label>
@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import {
-  IonBackButton, IonBadge, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonItem,
+  IonButton, alertController, IonBackButton, IonBadge, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonItem,
   IonLabel, IonList, IonListHeader, IonNote, IonPage, IonProgressBar, IonText, IonTitle, IonToolbar, onIonViewWillEnter,
 } from '@ionic/vue';
 import { computed, ref } from 'vue';
@@ -103,13 +103,15 @@ import ProductItem from '@/components/common/ProductItem.vue';
 import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
 import { daysOverdue, overdueLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
+import { useUserStore } from '@/store/user';
+import Actions from '@/authorization/actions';
 import { errorMessage } from '@/utils/response';
 import type { InboundShipmentDetail } from '@/types';
 
 const props = defineProps<{ shipmentId: string }>();
 const seed = useSeedData();
 const { primaryIdentifier } = useProductIdentity();
-const { fetchShipment } = useInboundShipments();
+const { fetchShipment, receiveShipment } = useInboundShipments();
 
 const shipment = ref<InboundShipmentDetail>();
 const loading = ref(false);
@@ -122,6 +124,21 @@ const arrivalSubtitle = computed(() => {
   if (isClosed.value) return '';
   return arrivalOverdueDays.value ? overdueLabel(arrivalOverdueDays.value) : formatRelativeDay(shipment.value?.estimatedArrivalDate);
 });
+const receiving = ref(false);
+const user = useUserStore();
+const canReceive = computed(() => user.hasPermission(Actions.APP_PO_UPDATE) && shipment.value?.shipmentTypeId === 'PURCHASE_SHIPMENT' && ['PURCH_SHIP_CREATED', 'PURCH_SHIP_SHIPPED'].includes(shipment.value?.statusId));
+async function receive() {
+  const alert = await alertController.create({ header: translate('Receive remaining units'), message: translate('This records the remaining shipment units as received at the destination and updates physical and future inventory.'), buttons: [{ text: translate('Cancel'), role: 'cancel' }, { text: translate('Receive'), handler: () => { void confirmReceive(); } }] });
+  await alert.present();
+}
+async function confirmReceive() {
+  if (receiving.value || !canReceive.value) return;
+  receiving.value = true;
+  try { await receiveShipment(props.shipmentId); await load(); }
+  catch (err) { error.value = errorMessage(err, translate('Failed to receive the shipment.')); }
+  finally { receiving.value = false; }
+}
+
 
 async function load() {
   loading.value = true;
