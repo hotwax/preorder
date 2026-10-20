@@ -98,8 +98,7 @@
               {{ primaryIdentifier(receipt.productId) || receipt.productId }}
               <p>{{ [receipt.receiptId, receipt.receivedByUserLoginId].filter(Boolean).join(' - ') }}</p>
             </ion-label>
-            <ion-note slot="end">{{ translate('{accepted} accepted, {rejected} rejected', { accepted: formatQuantity(receipt.quantityAccepted), rejected: formatQuantity(receipt.quantityRejected) }) }}</ion-note>
-            <ion-note slot="end">{{ formatDateTime(receipt.datetimeReceived) }}</ion-note>
+            <ion-label slot="end" class="ion-text-end ion-text-wrap">{{ translate('{accepted} accepted, {rejected} rejected', { accepted: formatQuantity(receipt.quantityAccepted), rejected: formatQuantity(receipt.quantityRejected) }) }}<p>{{ formatDateTime(receipt.datetimeReceived) }}</p></ion-label>
           </ion-item>
           <ion-item v-if="!shipment.receipts.length" lines="none">
             <ion-label>{{ translate('Nothing received yet.') }}</ion-label>
