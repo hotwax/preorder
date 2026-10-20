@@ -241,7 +241,7 @@
                 <ion-item button @click="section = 'automation'"
                   ><ion-icon slot="start" :icon="timeOutline" /><ion-label
                     >{{ translate('Publishing jobs') }}
-                    <p>{{ translate('{count} schedules enabled', { count: enabledJobCount }) }}</p></ion-label
+                    <p>{{ translate('{count} schedules enabled', countParams(enabledJobCount)) }}</p></ion-label
                   ></ion-item
                 >
               </ion-list>
@@ -252,7 +252,7 @@
               <ion-card-header>
                 <ion-card-title>{{ translate('Publishing jobs') }}</ion-card-title>
                 <ion-card-subtitle>{{
-                  translate('{count} schedules enabled', { count: enabledJobCount })
+                  translate('{count} schedules enabled', countParams(enabledJobCount))
                 }}</ion-card-subtitle>
               </ion-card-header>
               <ion-searchbar v-model="jobQuery" :placeholder="translate('Find a publishing job')" />
@@ -395,7 +395,7 @@ import { usePreorderSetup } from '@/composables/usePreorderSetup';
 import Actions from '@/authorization/actions';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { errorMessage } from '@/utils/response';
-import { formatDateTime } from '@/utils/format';
+import { countParams, formatDateTime } from '@/utils/format';
 import { commonUtil } from '@common';
 const user = useUserStore();
 const seed = useSeedData();
