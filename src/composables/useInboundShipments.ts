@@ -1,5 +1,9 @@
 import { api } from '@common';
 import { ensureOk } from '@/utils/response';
+import { useInboundShipmentSearchStore } from '@/store/inboundShipmentSearch';
+import { SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
+import { usePreorderSearchStore } from '@/store/preorderSearch';
 import type { InboundShipmentDetail } from '@/types';
 
 /** A line of a new inbound shipment: the purchase order line and how much of it ships. */
@@ -19,12 +23,22 @@ export function useInboundShipments() {
    * reference, lines and date again returns the shipment already created.
    */
   async function createShipment(data: { orderId: string; externalId: string; arrivalDate: string; items: NewShipmentLine[] }): Promise<{ shipmentId: string }> {
-    return ensureOk(api({ url: 'poorti/purchaseShipments', method: 'post', data }), 'Failed to create the shipment.');
+    const result = await ensureOk(api({ url: 'poorti/purchaseShipments', method: 'post', data }), 'Failed to create the shipment.');
+    useInboundShipmentSearchStore().markStale();
+    usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
+    useFutureInventorySearchStore().markStale();
+    usePreorderSearchStore().markStale();
+    return result;
   }
 
   /** Receives a shipment, in part or in full; the shipment is received once every item is. */
   async function receiveShipment(shipmentId: string, items: ShipmentReceiptLine[]): Promise<{ receiptIds?: string[]; fullyReceived?: boolean }> {
-    return ensureOk(api({ url: `poorti/purchaseShipments/${encodeURIComponent(shipmentId)}/receive`, method: 'post', data: { shipmentId, items } }), 'Failed to receive the shipment.');
+    const result = await ensureOk(api({ url: `poorti/purchaseShipments/${encodeURIComponent(shipmentId)}/receive`, method: 'post', data: { shipmentId, items } }), 'Failed to receive the shipment.');
+    useInboundShipmentSearchStore().markStale();
+    usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
+    useFutureInventorySearchStore().markStale();
+    usePreorderSearchStore().markStale();
+    return result;
   }
 
   return { fetchShipment, createShipment, receiveShipment };

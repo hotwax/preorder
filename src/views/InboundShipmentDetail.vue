@@ -88,7 +88,7 @@
               :label="translate('Rejected')" label-placement="stacked" fill="outline" :class="{ 'ion-invalid ion-touched': lineInvalid(item) }" />
           </div>
           <ion-item lines="none">
-            <ion-button slot="end" :disabled="receiving || !receiptValid" @click="receive">{{ receiveUnitsLabel(receivingUnits) }}</ion-button>
+            <ion-button slot="end" :disabled="receiving || loading || !receiptValid" @click="receive">{{ receiveUnitsLabel(receivingUnits) }}</ion-button>
           </ion-item>
         </ion-list>
 
@@ -170,7 +170,7 @@ const receivingUnits = computed(() => receivableItems.value.reduce((total, item:
 const receiptValid = computed(() => receivingUnits.value > 0 && receivableItems.value.every((item) => !lineInvalid(item)));
 
 async function receive() {
-  if (!receiptValid.value || receiving.value) return;
+  if (!receiptValid.value || receiving.value || loading.value || error.value || !canReceive.value) return;
   receiving.value = true;
   try {
     const items = receivableItems.value
@@ -183,8 +183,9 @@ async function receive() {
   } catch (err) {
     await commonUtil.showToast(errorMessage(err, translate('Failed to receive the shipment.')));
   } finally {
-    receiving.value = false;
+    // A receipt is a delta: the previous quantities cannot be submitted again while its readback is pending.
     await load();
+    receiving.value = false;
   }
 }
 

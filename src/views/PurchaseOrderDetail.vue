@@ -147,6 +147,7 @@ import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useUserStore } from '@/store/user';
 import { SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
+import { usePreorderSearchStore } from '@/store/preorderSearch';
 import router from '@/router';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
@@ -236,12 +237,15 @@ onIonViewWillEnter(load);
 async function run(action: () => Promise<any>, success: string) {
   try {
     await action();
-    usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
-    useFutureInventorySearchStore().markStale();
     await commonUtil.showToast(success);
-    await load();
   } catch (err) {
     await commonUtil.showToast(errorMessage(err, translate('The change was not saved.')));
+  } finally {
+    // Arrival dates save line by line: a failure can follow committed changes, which still need to be shown.
+    usePurchaseOrderSearchStore().markStale(SOLR_SETTLE_MS);
+    useFutureInventorySearchStore().markStale();
+    usePreorderSearchStore().markStale();
+    await load();
   }
 }
 
