@@ -148,7 +148,12 @@ export function usePurchaseOrderActions() {
   async function forEachOrder(orderIds: string[], action: (orderId: string) => Promise<any>) {
     let done = 0; let failed = 0; const errors: string[] = []; const succeeded: string[] = [];
     for (const orderId of orderIds) {
-      try { await action(orderId); done++; succeeded.push(orderId); } catch (error: any) { failed++; errors.push(`${orderId}: ${error?.message || error}`); }
+      try {
+        await action(orderId); done++; succeeded.push(orderId);
+      } catch (error: any) {
+        // The server's reason, such as a line with no estimated delivery date, not the transport status (preorder-maarg#104)
+        failed++; errors.push(`${orderId}: ${errorMessage(error, typeof error === 'string' && error ? error : translate('Something went wrong'))}`);
+      }
     }
     return { done, failed, errors, succeeded };
   }
