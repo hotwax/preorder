@@ -12,6 +12,7 @@ import FutureInventoryDetail from '@/views/FutureInventoryDetail.vue';
 import PurchaseOrders from '@/views/PurchaseOrders.vue';
 import PurchaseOrderDetail from '@/views/PurchaseOrderDetail.vue';
 import CreatePurchaseOrder from '@/views/CreatePurchaseOrder.vue';
+import CreateInboundShipment from '@/views/CreateInboundShipment.vue';
 import InboundShipments from '@/views/InboundShipments.vue';
 import InboundShipmentDetail from '@/views/InboundShipmentDetail.vue';
 import PurchaseOrderImports from '@/views/PurchaseOrderImports.vue';
@@ -44,6 +45,7 @@ const routes: RouteRecordRaw[] = [
   page('/future-inventory/:futureInventoryItemId', 'FutureInventoryDetail', FutureInventoryDetail, Actions.APP_PREORDER_VIEW),
   page('/purchase-orders', 'PurchaseOrders', PurchaseOrders, Actions.APP_PO_VIEW),
   page('/purchase-orders/create', 'CreatePurchaseOrder', CreatePurchaseOrder, Actions.APP_PO_UPDATE),
+  page('/purchase-orders/:orderId/shipments/new', 'CreateInboundShipment', CreateInboundShipment, Actions.APP_PO_UPDATE),
   page('/purchase-orders/:orderId', 'PurchaseOrderDetail', PurchaseOrderDetail, Actions.APP_PO_VIEW),
   page('/inbound-shipments', 'InboundShipments', InboundShipments, Actions.APP_PO_VIEW),
   page('/inbound-shipments/:shipmentId', 'InboundShipmentDetail', InboundShipmentDetail, Actions.APP_PO_VIEW),

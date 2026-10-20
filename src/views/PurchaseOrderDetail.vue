@@ -102,6 +102,9 @@
         <ion-list v-else>
           <ion-list-header>
             <ion-label>{{ translate('Inbound shipments') }}</ion-label>
+            <ion-button v-if="canUpdate && order.statusId === 'ORDER_APPROVED' && hasUnshipped" :router-link="`/purchase-orders/${encodeURIComponent(orderId)}/shipments/new`">
+              {{ translate('Create shipment') }}
+            </ion-button>
           </ion-list-header>
           <ion-item v-for="shipment in shipments" :key="shipment.shipmentId" button :router-link="`/inbound-shipments/${encodeURIComponent(shipment.shipmentId)}`">
             <ion-icon slot="start" :icon="boatOutline" />
@@ -164,6 +167,8 @@ const receiptsError = ref('');
 
 const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order.value?.statusId || ''));
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
+/** A line with units no shipment carries yet: something a new inbound shipment can ship. */
+const hasUnshipped = computed(() => (order.value?.items || []).some((item: any) => Number(item.unshippedQuantity) > 0));
 // Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 const openItems = computed(() => (order.value?.items || []).filter((item) => !CLOSED_PO_LINE_STATUSES.includes(item.statusId || '')));
