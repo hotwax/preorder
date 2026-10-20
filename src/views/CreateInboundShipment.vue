@@ -63,7 +63,7 @@
             <ion-list>
               <div v-for="line in lines" :key="line.orderItemSeqId" class="shipment-line">
                 <ProductItem :product-id="line.productId" :product-name="line.productName">
-                  <p>{{ translate('{count} units available to ship', { count: line.unshippedQuantity }) }}</p>
+                  <p>{{ translate('{count} units available to ship', countParams(line.unshippedQuantity)) }}</p>
                 </ProductItem>
                 <ion-input
                   v-model.number="line.shipmentQuantity"
@@ -111,7 +111,7 @@
         <div class="shipment-footer">
           <ion-note
             >{{ translate('{count} lines', { count: selectedLines.length }) }},
-            {{ translate('{count} units', { count: totalUnits }) }}</ion-note
+            {{ translate('{count} units', countParams(totalUnits)) }}</ion-note
           >
           <ion-button v-if="canUpdate" :disabled="loading || !valid" @click="save">{{
             translate('Create shipment')
@@ -160,7 +160,7 @@ import { useUserStore } from '@/store/user';
 import Actions from '@/authorization/actions';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { errorMessage } from '@/utils/response';
-import { todayValue } from '@/utils/format';
+import { countParams, todayValue } from '@/utils/format';
 const props = defineProps<{ orderId: string }>();
 const router = useRouter();
 const seed = useSeedData();

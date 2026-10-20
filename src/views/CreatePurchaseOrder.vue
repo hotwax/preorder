@@ -95,7 +95,7 @@
 
     <ion-footer>
       <ion-toolbar>
-        <ion-title size="small">{{ translate('{count} lines', { count: form.items.length }) }}, {{ translate('{count} units', countParams(totalUnits)) }}</ion-title>
+        <ion-title size="small">{{ translate('{count} lines', countParams(form.items.length)) }}, {{ translate('{count} units', countParams(totalUnits)) }}</ion-title>
         <ion-buttons slot="end">
           <ion-button fill="solid" :disabled="!canSave || saving" @click="save">{{ translate('Create purchase order') }}</ion-button>
         </ion-buttons>
