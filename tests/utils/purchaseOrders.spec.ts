@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DateTime } from 'luxon';
-import { linesToMove, toSupplierOptions } from '@/utils/purchaseOrders';
+import { isClosedLine, linesToMove, toSupplierOptions } from '@/utils/purchaseOrders';
 import { validUnitCost } from '@/utils/purchaseOrders';
 
 describe('supplier options', () => {
@@ -47,5 +47,14 @@ describe('validUnitCost (preorder-maarg#101)', () => {
   it('takes no cost, zero and a positive cost, and refuses a negative or unreadable one', () => {
     expect([undefined, null, '', 0, 5, '2.5'].every(validUnitCost)).toBe(true);
     expect([-5, '-0.01', 'abc'].some(validUnitCost)).toBe(false);
+  });
+});
+
+describe('closed lines', () => {
+  it('reads a cancelled or completed line as closed', () => {
+    expect(isClosedLine({ statusId: 'ITEM_COMPLETED' })).toBe(true);
+    expect(isClosedLine({ statusId: 'ITEM_CANCELLED' })).toBe(true);
+    expect(isClosedLine({ statusId: 'ITEM_APPROVED' })).toBe(false);
+    expect(isClosedLine({})).toBe(false);
   });
 });

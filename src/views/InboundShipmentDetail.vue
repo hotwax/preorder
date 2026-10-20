@@ -23,15 +23,15 @@
             <ion-list lines="none">
               <ion-item>
                 <ion-label>{{ translate('Status') }}</ion-label>
-                <ion-badge slot="end" :color="statusColor(shipment.statusId)">{{ seed.statusDescription(shipment.statusId || '') }}</ion-badge>
+                <ion-badge slot="end" :color="statusColor(shipment.statusId)">{{ shipmentStatusLabel(shipment, seed.statusDescription(shipment.statusId || '')) }}</ion-badge>
               </ion-item>
               <ion-item v-if="shipment.primaryOrderId" button :router-link="`/purchase-orders/${encodeURIComponent(shipment.primaryOrderId)}`">
                 <ion-label>{{ translate('Purchase order') }}</ion-label>
                 <ion-note slot="end">{{ shipment.orderName || shipment.orderExternalId || shipment.primaryOrderId }}</ion-note>
               </ion-item>
-              <ion-item>
+              <ion-item v-if="formatDate(shipment.estimatedShipDate)">
                 <ion-label>{{ translate('Shipped') }}</ion-label>
-                <ion-note slot="end">{{ formatDate(shipment.estimatedShipDate) || '-' }}</ion-note>
+                <ion-note slot="end">{{ formatDate(shipment.estimatedShipDate) }}</ion-note>
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Created') }}</ion-label>
@@ -78,14 +78,14 @@
             <ProductItem :product-id="item.productId" :product-name="item.productName">
               <p>{{ translate('{count} left to receive', countParams(remaining(item))) }}</p>
             </ProductItem>
-            <ion-input v-model="receipt[item.shipmentItemSeqId].quantityAccepted" type="number" inputmode="decimal" min="0" :max="remaining(item)"
+            <ion-input v-model.number="receipt[item.shipmentItemSeqId].quantityAccepted" type="number" inputmode="decimal" min="0" :max="remaining(item)"
               :label="translate('Accepted')" label-placement="stacked" fill="outline"
               :class="{ 'ion-invalid ion-touched': lineInvalid(item) }" :error-text="translate('Enter 0 to {count}', { count: remaining(item) })" />
-            <ion-input v-model="receipt[item.shipmentItemSeqId].quantityRejected" type="number" inputmode="decimal" min="0" :max="remaining(item)"
+            <ion-input v-model.number="receipt[item.shipmentItemSeqId].quantityRejected" type="number" inputmode="decimal" min="0" :max="remaining(item)"
               :label="translate('Rejected')" label-placement="stacked" fill="outline" :class="{ 'ion-invalid ion-touched': lineInvalid(item) }" />
           </div>
           <ion-item lines="none">
-            <ion-button slot="end" :disabled="receiving || !receiptValid" @click="receive">{{ translate('Receive {count} units', countParams(receivingUnits)) }}</ion-button>
+            <ion-button slot="end" :disabled="receiving || !receiptValid" @click="receive">{{ receiveUnitsLabel(receivingUnits) }}</ion-button>
           </ion-item>
         </ion-list>
 
@@ -125,7 +125,7 @@ import { useProductIdentity } from '@/composables/useProductIdentity';
 import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
-import { daysOverdue, overdueLabel } from '@/utils/labels';
+import { daysOverdue, isClosedShipment, overdueLabel, receiveUnitsLabel, shipmentStatusLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import type { InboundShipmentDetail } from '@/types';
@@ -140,7 +140,7 @@ const shipment = ref<InboundShipmentDetail>();
 const loading = ref(false);
 const error = ref('');
 /** A received or cancelled shipment is no longer on its way: it says nothing of days ahead or late. */
-const isClosed = computed(() => ['PURCH_SHIP_RECEIVED', 'PURCH_SHIP_CANCELLED'].includes(shipment.value?.statusId || ''));
+const isClosed = computed(() => isClosedShipment(shipment.value?.statusId));
 /** A shipment still on its way whose arrival date has passed. */
 const arrivalOverdueDays = computed(() => (isClosed.value ? 0 : daysOverdue(shipment.value?.estimatedArrivalDate)));
 const arrivalSubtitle = computed(() => {

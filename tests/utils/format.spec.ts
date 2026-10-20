@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DateTime, Settings } from 'luxon';
 import { translate } from '@common/core/i18n';
 import {
-  countParams, dayBound, daysFromToday, formatQuantity, formatRelativeDay, setUserZone, toDay, todayValue, userZone, windowStartDay,
+  countParams, dayBound, daysFromDay, daysFromToday, formatQuantity, formatRelativeDay, formatRelativeDayAt, setUserZone, toDay, todayValue, userZone,
+  windowStartDay, windowStartDayAt,
 } from '@/utils/format';
 
 describe('day boundaries', () => {
@@ -120,5 +121,30 @@ describe('quantities', () => {
     expect(translate('{count} units', countParams(1))).toBe('1 unit');
     expect(translate('{count} units', countParams(1204))).toBe('1,204 units');
     expect(translate('{count} units', countParams(0))).toBe('0 units');
+  });
+});
+
+describe('pure day cores', () => {
+  // 23:00 UTC on Oct 19 is already Oct 20 in Kolkata: the cores read today from `now` and `zone` alone, no clock
+  const now = DateTime.fromISO('2026-10-19T23:00:00Z');
+
+  it('starts a window from the day `now` falls on in the zone', () => {
+    expect(windowStartDayAt(7, now, 'UTC')).toBe('2026-10-13');
+    expect(windowStartDayAt(7, now, 'Asia/Kolkata')).toBe('2026-10-14');
+    expect(windowStartDayAt(0, now, 'UTC')).toBe('2026-10-19');
+  });
+
+  it('counts whole days from the day `now` falls on in the zone', () => {
+    expect(daysFromDay('2026-10-20', now, 'Asia/Kolkata')).toBe(0);
+    expect(daysFromDay('2026-10-20', now, 'UTC')).toBe(1);
+    expect(daysFromDay('2026-10-16', now, 'UTC')).toBe(-3);
+    expect(daysFromDay(undefined, now, 'UTC')).toBeUndefined();
+  });
+
+  it('says a relative day against `now` in the zone and language given', () => {
+    expect(formatRelativeDayAt('2026-10-19', now, 'UTC', 'en')).toBe('today');
+    expect(formatRelativeDayAt('2026-10-20', now, 'UTC', 'en')).toBe('tomorrow');
+    expect(formatRelativeDayAt('2026-10-20', now, 'Asia/Kolkata', 'en')).toBe('today');
+    expect(formatRelativeDayAt('', now, 'UTC', 'en')).toBe('');
   });
 });

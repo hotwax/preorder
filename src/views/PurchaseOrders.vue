@@ -104,7 +104,7 @@
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
           <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdateFutureInventory || running || loading" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canChangeArrival || running || loading" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdateFutureInventory || running || loading" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
           <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
@@ -170,8 +170,10 @@ const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS')
 const { facilityOptions } = useStoreFacilities();
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
-// Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
+// Selling as pre-order creates future inventory: the FI permission
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
+// Moving arrival dates updates the PO lines and moves their future inventory: both permissions
+const canChangeArrival = computed(() => canUpdate.value && canUpdateFutureInventory.value);
 
 const { selectMode, selectedIds, selectedRows: selectedOrders, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (order) => order.orderId);
 const selectedWithStatus = (statusIds: string[]) => selectedOrders.value.filter((order) => statusIds.includes(order.statusId || '')).map((order) => order.orderId);

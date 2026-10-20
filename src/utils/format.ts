@@ -153,26 +153,38 @@ export function dayBound(day: any, edge: 'start' | 'end', boundFormat: DayBoundF
 }
 
 /**
- * The first day of a window of the last `days` days, today included, as 'yyyy-MM-dd' in a time zone (the user's):
- * a window of 7 days starts 6 days before today, so it spans exactly 7 days.
+ * The first day of a window of the last `days` days, today included, as 'yyyy-MM-dd' in a time zone: a window of 7
+ * days starts 6 days before today, so it spans exactly 7 days. Pure: today is the day `now` falls on in `zone`.
  */
-export const windowStartDay = (days: number, zone = userZone()): string =>
-  DateTime.now().setZone(zone).minus({ days: Math.max(1, Math.floor(days)) - 1 }).toISODate() as string;
+export const windowStartDayAt = (days: number, now: DateTime, zone: string): string =>
+  now.setZone(zone).minus({ days: Math.max(1, Math.floor(days)) - 1 }).toISODate() as string;
+
+/** `windowStartDayAt` from now, in a time zone (the user's). */
+export const windowStartDay = (days: number, zone = userZone()): string => windowStartDayAt(days, DateTime.now(), zone);
 
 /**
- * Whole calendar days from today to a date in the user's time zone: 0 today, 1 tomorrow, -3 three days ago. A
- * promise or arrival date is a day, so one at any time today is today, not "17 hours ago". undefined when empty.
+ * Whole calendar days from today to a date in a time zone: 0 today, 1 tomorrow, -3 three days ago. A promise or
+ * arrival date is a day, so one at any time today is today, not "17 hours ago". undefined when empty. Pure: today is
+ * the day `now` falls on in `zone`.
  */
-export function daysFromToday(value: any, zone = userZone()): number | undefined {
+export function daysFromDay(value: any, now: DateTime, zone: string): number | undefined {
   const day = toDay(value, zone);
   if (!day) return undefined;
-  return Math.round(day.diff(DateTime.now().setZone(zone).startOf('day'), 'days').days);
+  return Math.round(day.diff(now.setZone(zone).startOf('day'), 'days').days);
 }
 
-/** A date-only value (a promise or arrival date) against today, by calendar day: "today", "tomorrow", "in 3 days", "3 days ago". */
-export function formatRelativeDay(value: any): string {
-  const zone = userZone();
+/** `daysFromDay` from now, in a time zone (the user's). */
+export const daysFromToday = (value: any, zone = userZone()): number | undefined => daysFromDay(value, DateTime.now(), zone);
+
+/**
+ * A date-only value (a promise or arrival date) against today, by calendar day, in a language: "today", "tomorrow",
+ * "in 3 days", "3 days ago". Pure: today is the day `now` falls on in `zone`.
+ */
+export function formatRelativeDayAt(value: any, now: DateTime, zone: string, language?: string): string {
   const day = toDay(value, zone);
   if (!day) return '';
-  return day.toRelativeCalendar({ base: DateTime.now().setZone(zone), unit: 'days', locale: locale() }) || '';
+  return day.toRelativeCalendar({ base: now.setZone(zone), unit: 'days', locale: language }) || '';
 }
+
+/** `formatRelativeDayAt` from now, in the user's time zone and language. */
+export const formatRelativeDay = (value: any): string => formatRelativeDayAt(value, DateTime.now(), userZone(), locale());

@@ -7,7 +7,6 @@
         </ion-buttons>
         <ion-title>{{ order?.orderName || orderId }}</ion-title>
         <ion-buttons v-if="isOpen && canUpdate" slot="end">
-          <ion-button v-if="order?.statusId === 'ORDER_APPROVED'" :disabled="loading || sum('unshippedQuantity') <= 0" :router-link="`/purchase-orders/${orderId}/inbound-shipment`"><ion-icon slot="start" :icon="boatOutline" />{{ translate('Create shipment') }}</ion-button>
           <ion-button :id="`po-actions-${orderId}`" :disabled="loading" :aria-label="translate('Purchase order actions')"><ion-icon slot="icon-only" :icon="ellipsisVerticalOutline" /></ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -16,7 +15,7 @@
     <ion-popover v-if="isOpen && canUpdate" :trigger="`po-actions-${orderId}`" :dismiss-on-select="true">
       <ion-content><ion-list>
         <ion-item v-if="order?.statusId === 'ORDER_CREATED'" button :detail="false" @click="setStatus('ORDER_APPROVED')"><ion-label>{{ translate('Approve') }}</ion-label></ion-item>
-        <ion-item v-if="canUpdateFutureInventory" button :detail="false" @click="changeArrival()"><ion-label>{{ translate('Change arrival date') }}</ion-label></ion-item>
+        <ion-item v-if="canChangeArrival" button :detail="false" @click="changeArrival()"><ion-label>{{ translate('Change arrival date') }}</ion-label></ion-item>
         <ion-item v-if="canUpdateFutureInventory" button :detail="false" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow"><ion-label>{{ translate('Sell as pre-order') }}</ion-label></ion-item>
         <ion-item v-if="order?.statusId === 'ORDER_APPROVED'" button :detail="false" @click="setStatus('ORDER_COMPLETED')"><ion-label>{{ translate('Complete') }}</ion-label></ion-item>
         <ion-item button :detail="false" @click="setStatus('ORDER_CANCELLED')"><ion-label color="danger">{{ translate('Cancel order') }}</ion-label></ion-item>
@@ -97,7 +96,7 @@
             <ion-label class="ion-text-end">
               {{ formatDate(item.estimatedDeliveryDate) || translate('No arrival date') }}
               <p v-if="lineOverdueDays(item)"><ion-text color="danger">{{ overdueLabel(lineOverdueDays(item)) }}</ion-text></p>
-              <p v-else>{{ formatRelativeDay(item.estimatedDeliveryDate) }}</p>
+              <p v-else-if="!isClosedLine(item)">{{ formatRelativeDay(item.estimatedDeliveryDate) }}</p>
             </ion-label>
           </div>
           <ion-item v-if="!order.items.length" lines="none">
@@ -119,7 +118,7 @@
               {{ shipment.externalId || shipment.shipmentId }}
               <p>{{ translate('{received} of {total} received', { received: formatQuantity(shipment.receivedQuantity), total: formatQuantity(shipment.quantityTotal) }) }}</p>
             </ion-label>
-            <ion-badge slot="end" :color="statusColor(shipment.statusId)">{{ seed.statusDescription(shipment.statusId || '') }}</ion-badge>
+            <ion-badge slot="end" :color="statusColor(shipment.statusId)">{{ shipmentStatusLabel(shipment, seed.statusDescription(shipment.statusId || '')) }}</ion-badge>
             <ion-note slot="end">{{ formatDate(shipment.estimatedArrivalDate) }}</ion-note>
           </ion-item>
           <ion-item v-if="!shipments.length" lines="none">
@@ -150,10 +149,10 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { usePrompts } from '@/composables/usePrompts';
 import { dayBound, formatDate, formatMoney, formatNumber, formatQuantity, formatRelativeDay, toMillis } from '@/utils/format';
-import { daysOverdue, overdueLabel } from '@/utils/labels';
+import { daysOverdue, overdueLabel, shipmentStatusLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
-import { CLOSED_PO_LINE_STATUSES } from '@/utils/purchaseOrders';
+import { isClosedLine } from '@/utils/purchaseOrders';
 import type { InboundShipmentSummary, PurchaseOrderDetail, PurchaseOrderLine, PurchaseOrderReceipt } from '@/types';
 import Actions from '@/authorization/actions';
 
@@ -176,9 +175,11 @@ const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 /** A line with units no shipment carries yet: something a new inbound shipment can ship. */
 const hasUnshipped = computed(() => (order.value?.items || []).some((item: any) => Number(item.unshippedQuantity) > 0));
-// Moving arrival dates and selling as pre-order create or move future inventory: the FI permission, not the PO one
+// Selling as pre-order creates future inventory: the FI permission
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
-const openItems = computed(() => (order.value?.items || []).filter((item) => !CLOSED_PO_LINE_STATUSES.includes(item.statusId || '')));
+// Moving arrival dates updates the PO lines and moves their future inventory: both permissions
+const canChangeArrival = computed(() => canUpdate.value && canUpdateFutureInventory.value);
+const openItems = computed(() => (order.value?.items || []).filter((item) => !isClosedLine(item)));
 const linesWithoutBatch = computed(() => openItems.value.filter((item) => !item.futureInventoryItemId).length);
 /** Lines of any status with a batch: a closed line without one is not counted as having one. */
 const linesWithBatch = computed(() => (order.value?.items || []).filter((item) => item.futureInventoryItemId).length);
@@ -187,7 +188,7 @@ const idsBesideTitle = computed(() => [order.value?.orderId, order.value?.extern
 const earliestArrival = computed(() => openItems.value.map((item) => toMillis(item.estimatedDeliveryDate)).filter((millis): millis is number => !!millis).sort((a, b) => a - b)[0]);
 
 /** An open line whose arrival date has passed: its supply is late. */
-const lineOverdueDays = (item: PurchaseOrderLine) => (CLOSED_PO_LINE_STATUSES.includes(item.statusId || '') ? 0 : daysOverdue(item.estimatedDeliveryDate));
+const lineOverdueDays = (item: PurchaseOrderLine) => (isClosedLine(item) ? 0 : daysOverdue(item.estimatedDeliveryDate));
 
 type LineQuantity = 'quantity' | 'cancelQuantity' | 'receivedQuantity' | 'openQuantity' | 'futureInventoryReserved';
 const sum = (field: LineQuantity) => (order.value?.items || []).reduce((total, item) => total + Number(item[field] || 0), 0);

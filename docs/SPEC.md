@@ -217,7 +217,8 @@ Create (`/purchase-orders/create`):
 
 ### 3.5 Inbound shipments (`/inbound-shipments`)
 
-These are `INCOMING_SHIPMENT` / `PURCHASE_SHIPMENT` shipments against POs. The page is view only.
+These are `INCOMING_SHIPMENT` / `PURCHASE_SHIPMENT` shipments against POs. A shipment is created from an approved
+PO's detail (`/purchase-orders/:orderId/shipments/new`) and received, in part or in full, on its detail page.
 
 Filters:
 - search: shipment id, external id, PO;
@@ -284,7 +285,7 @@ There is no DataFeed behind these emails, so the "feed" toggle is a switch on th
 - A batch promise date change reaches its waiting order lines in bulk, not in the transaction that
   moved it: a data feed queues a `FutureInventoryPromiseDateChange` system message, consuming it
   writes the batch's FI-backed lines to an `IMP_FI_PROMISE_DATE` Data Manager file, and Data
-  Manager updates each line in its own transaction and sends its delay email (§4.3).
+  Manager updates each line in its own transaction and sends its delay email (§4.5).
 - The page lists those imports, newest first: the batch (linking to it), status, lines and failed
   lines, when it was queued and finished, and the lines and error files to download. A header shows
   how many date changes are received and not yet queued.
@@ -340,6 +341,8 @@ retired `preorder/*` resources are not used. Every path below is one a request i
 | GET `oms/parties/roles/SUPPLIER` | the suppliers, paged until the last page |
 | GET `poorti/purchaseShipments` | the Inbound shipments list, and a PO's shipments |
 | GET `poorti/purchaseShipments/{shipmentId}` | shipment detail: items and receipts |
+| POST `poorti/purchaseShipments` | Create shipment, for open lines of an approved PO: `{orderId, externalId, arrivalDate, items: [{orderItemSeqId, quantity}]}`, `arrivalDate` a 'yyyy-MM-dd' and only lines with a quantity above 0; returns `{shipmentId}`. `externalId` is the retry key: the same reference, lines and date return the shipment already created |
+| POST `poorti/purchaseShipments/{shipmentId}/receive` | Receive, in part or in full: `{shipmentId, items: [{shipmentItemSeqId, quantityAccepted, quantityRejected}]}`, only items receiving more than 0; returns `{receiptIds, fullyReceived}` |
 
 ### 4.3 Communications, imports and shared (`oms`, `admin`)
 
@@ -348,12 +351,35 @@ retired `preorder/*` resources are not used. Every path below is one a request i
 | GET/PUT `oms/productStoreEmailSettings/{productStoreId}/emailSettings[/{emailType}]` | email settings per store and type |
 | GET `oms/emailGateways` | the gateways an email setting can use: `{gateways: [{systemMessageRemoteId, description}]}` |
 | GET `oms/communicationEvents`, `oms/communicationEvents/counts` | the email log, and sends since a date (7 and 30 day windows count today) |
-| GET `admin/enums` | email types |
+| GET `admin/enums` | email types, and the order item cancel reasons (`ODR_ITM_CH_REASON`) |
 | GET `admin/dataManager/details`, `admin/dataManager/downloadDataManagerFile`, `admin/dataManager/{configId}/downloadTemplate`, POST `admin/uploadDataManagerFile` | import tracking, downloads and uploads |
 | GET `admin/systemMessages` | received promise date changes not yet queued |
 | `admin/user/*`, `admin/productStores/{id}/settings`, `oms/dataDocumentView`, `oms/goodIdentificationTypes` | the user, permissions, product store settings and identifiers |
 
-### 4.4 Backend changes behind the app (oms)
+### 4.4 Pre-order setup and sync monitoring (`sob`, `oms`, `admin`)
+
+The `/setup` and `/sync-events` pages read through the app database's on-demand snapshots
+(`src/workers/domains/operationsDomains.ts`); their saves refetch the snapshot.
+
+| Method + path | Use |
+|---|---|
+| GET `sob/shopify/inventoryChannels` | the shop's pre-order channels |
+| POST `sob/shopify/inventoryChannels`, PUT `sob/shopify/inventoryChannels/{inventoryChannelId}` | add a channel `{channelTypeEnumId, facilityGroupId, shopifyLocationId, shopId}`, or change one's `{facilityGroupId, shopifyLocationId}` |
+| GET `sob/shopify/shopSetting` | the pre-order metafield namespace and key (`SHPFY_PRORD_MF_NS`, `SHPFY_PRORD_MF_KEY`) |
+| POST `sob/shopify/shopSetting` | save one of them: `{shopId, settingTypeEnumId, settingValue}`, one request per setting |
+| GET `oms/productStoreFacilityPurposes` | the store's facility purposes (parking) |
+| POST `oms/productStoreFacilityPurposes` | set a parking facility: `{productStoreId, facilityPurposeEnumId, facilityId}` |
+| GET `admin/serviceJobs/{jobName}`, GET `admin/serviceJobs` (by `serviceName`), GET `admin/serviceJobs/{jobName}/runs` | the publishing jobs, their copies scoped to the shop, and each one's latest run |
+| PUT `admin/serviceJobs/{jobName}` | pause or resume a job: `{paused}` |
+| POST `admin/serviceJobs/{jobName}/clone` | copy a schedule: `{newJobName, copyParameters: true}`, then GET the copy to check its `parentJobName` |
+| GET `admin/dataFeeds/{dataFeedId}` | whether each pre-order data feed exists |
+| GET `sob/shopify/locationInventoryAdjustmentDetails`, `sob/shopify/preorderMetafieldDetails`, `sob/shopify/preorderMetafields`, `sob/shopify/productFacilityActivations` | the sync events pages: quantity events, metafield events, published metafields and activations |
+
+The seed tables in `src/db/preorderDb.ts` (stores and their facilities, statuses, enums, facilities,
+products, Shopify shops and locations, facility groups) are filled by common's seed domains, which send
+their own requests.
+
+### 4.5 Backend changes behind the app (oms)
 
 - `ProductStoreEmailSetting.disabled` (indicator). `send#EmailOnOrderEvents` skips a disabled
   setting, as it skips a missing one.
