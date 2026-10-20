@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: hotwax/preorder
-          ref: 1b1689f1ba3bcc31782ab8509def0dd8688e88ae
+          ref: 315646aa3d6758dfd6424e68978260b7ff88d3be
           path: apps/preorder
       - uses: pnpm/action-setup@v4
         with:
@@ -40,7 +40,7 @@ jobs:
       - name: Save the exact build for audit
         uses: actions/upload-artifact@v4
         with:
-          name: preorder-dev-1b1689f
+          name: preorder-dev-315646a
           path: apps/preorder/dist
       - name: Deploy dev hosting only
         working-directory: apps/preorder
@@ -48,4 +48,4 @@ jobs:
           HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
         run: |
           test -n "$HOTWAX_PUBLIC_SECRET"
-          npx -y firebase-tools@latest deploy --project hotwax-digital-commerce --only hosting:dev --non-interactive --token "$HOTWAX_PUBLIC_SECRET" -m 'Preorder QA: 1b1689f1ba3bcc31782ab8509def0dd8688e88ae'
+          npx -y firebase-tools@latest deploy --project hotwax-digital-commerce --only hosting:dev --non-interactive --token "$HOTWAX_PUBLIC_SECRET" -m 'Preorder QA: 315646aa3d6758dfd6424e68978260b7ff88d3be'
