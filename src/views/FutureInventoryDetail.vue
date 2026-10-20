@@ -19,33 +19,44 @@
             <ProductItem :product-id="batch.productId" :product-name="batch.product?.productName || batch.product?.internalName" />
             <ion-list lines="none">
               <ion-item>
-                <ion-label>{{ translate('Status') }}</ion-label>
-                <ion-badge slot="end" :color="statusColor(batch.statusId)">{{ seed.statusDescription(batch.statusId || '') }}</ion-badge>
+                <!-- A short status in the badge, its explanation wrapping under the label: the full description was clipped in the badge -->
+                <ion-label class="ion-text-wrap">
+                  {{ translate('Status') }}
+                  <p v-if="statusExplanation">{{ statusExplanation }}</p>
+                </ion-label>
+                <ion-badge slot="end" :color="statusColor(batch.statusId)">{{ futureInventoryStatusLabel(batch.statusId, statusDescription) }}</ion-badge>
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Type') }}</ion-label>
                 <ion-note slot="end">{{ typeLabel(batch.futureInventoryItemTypeId) }}</ion-note>
               </ion-item>
+              <!-- Names and external ids sit under their label and wrap: a long value in the end slot squeezed the label into broken words -->
               <ion-item>
-                <ion-label>{{ translate('Facility') }}</ion-label>
-                <ion-note slot="end">{{ seed.facilityName(batch.facilityId || '') }}</ion-note>
+                <ion-label class="ion-text-wrap">
+                  <p class="overline">{{ translate('Facility') }}</p>
+                  {{ seed.facilityName(batch.facilityId || '') }}
+                </ion-label>
               </ion-item>
               <ion-item v-if="batch.poId" button :router-link="`/purchase-orders/${encodeURIComponent(batch.poId)}`">
-                <ion-label>
-                  {{ translate('Purchase order') }}
+                <ion-label class="ion-text-wrap">
+                  <p class="overline">{{ translate('Purchase order') }}</p>
+                  {{ po?.orderName || po?.externalId || batch.poId }}
                   <p v-if="poItem">{{ translate('Line {seq}, {quantity} ordered', { seq: poItem.orderItemSeqId, quantity: formatQuantity(poItem.quantity) }) }}</p>
                   <p v-if="poItem?.estimatedDeliveryDate">{{ translate('Expected {date}', { date: formatDate(poItem.estimatedDeliveryDate) }) }}</p>
                   <p v-if="po?.statusId">{{ seed.statusDescription(po.statusId) }}</p>
                 </ion-label>
-                <ion-note slot="end">{{ po?.orderName || po?.externalId || batch.poId }}</ion-note>
               </ion-item>
               <ion-item v-if="batch.shipmentExternalId">
-                <ion-label>{{ translate('Inbound shipment') }}</ion-label>
-                <ion-note slot="end">{{ batch.shipmentExternalId }}</ion-note>
+                <ion-label class="ion-text-wrap">
+                  <p class="overline">{{ translate('Inbound shipment') }}</p>
+                  {{ batch.shipmentExternalId }}
+                </ion-label>
               </ion-item>
               <ion-item v-if="batch.externalId">
-                <ion-label>{{ translate('External ID') }}</ion-label>
-                <ion-note slot="end">{{ batch.externalId }}</ion-note>
+                <ion-label class="ion-text-wrap">
+                  <p class="overline">{{ translate('External ID') }}</p>
+                  {{ batch.externalId }}
+                </ion-label>
               </ion-item>
             </ion-list>
             <ion-button fill="clear" :disabled="!!actionsDisabledReason" @click="changeDate">{{ translate('Change promise date') }}</ion-button>
@@ -210,7 +221,7 @@ import ProductItem from '@/components/common/ProductItem.vue';
 import DemandByFacilityItems from '@/components/preorders/DemandByFacilityItems.vue';
 import { usePrompts } from '@/composables/usePrompts';
 import { countParams, dayBound, formatDate, formatDateTime, formatQuantity, formatRelativeDay } from '@/utils/format';
-import { daysOverdue, overdueLabel, readableNote, shortDescription } from '@/utils/labels';
+import { daysOverdue, descriptionExplanation, futureInventoryStatusLabel, overdueLabel, readableNote, shortDescription } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -237,6 +248,10 @@ const error = ref('');
 const linesError = ref('');
 const ledgerError = ref('');
 const segment = ref('lines');
+
+/** The batch status's seed description ("Cancelled: the quantity on order cancelled to 0"): the badge shows its short name, the label its explanation. */
+const statusDescription = computed(() => seed.statusDescription(batch.value?.statusId || ''));
+const statusExplanation = computed(() => descriptionExplanation(statusDescription.value));
 
 /** An active batch whose promise date has passed: its supply is late. */
 const promiseOverdueDays = computed(() => (batch.value?.statusId === 'FUTURE_INV_ACTIVE' ? daysOverdue(batch.value.promiseDate) : 0));

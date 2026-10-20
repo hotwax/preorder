@@ -32,9 +32,12 @@
                 <ion-label>{{ translate('Status') }}</ion-label>
                 <ion-badge slot="end" :color="statusColor(order.statusId)">{{ seed.statusDescription(order.statusId || '') }}</ion-badge>
               </ion-item>
+              <!-- The label above the channel's description, which wraps: a long one in the end slot squeezed the label into broken words -->
               <ion-item v-if="order.salesChannelEnumId">
-                <ion-label>{{ translate('Sales channel') }}</ion-label>
-                <ion-note slot="end">{{ seed.enumDescription(order.salesChannelEnumId) }}</ion-note>
+                <ion-label class="ion-text-wrap">
+                  <p class="overline">{{ translate('Sales channel') }}</p>
+                  {{ seed.enumDescription(order.salesChannelEnumId) }}
+                </ion-label>
               </ion-item>
             </ion-list>
           </ion-card>

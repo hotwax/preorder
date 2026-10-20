@@ -37,9 +37,12 @@
                 <ion-label>{{ translate('Status') }}</ion-label>
                 <ion-badge slot="end" :color="statusColor(order.statusId)">{{ seed.statusDescription(order.statusId || '') }}</ion-badge>
               </ion-item>
+              <!-- The label above the facility name, which wraps: a long name in the end slot squeezed the label into broken words -->
               <ion-item>
-                <ion-label>{{ translate('Destination') }}</ion-label>
-                <ion-note slot="end">{{ seed.facilityName(order.facilityId || '') }}</ion-note>
+                <ion-label class="ion-text-wrap">
+                  <p class="overline">{{ translate('Destination') }}</p>
+                  {{ seed.facilityName(order.facilityId || '') }}
+                </ion-label>
               </ion-item>
               <ion-item>
                 <ion-label>{{ translate('Ordered') }}</ion-label>

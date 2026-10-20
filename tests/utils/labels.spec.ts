@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DateTime } from 'luxon';
 import { formatDate } from '@/utils/format';
 import {
-  daysOverdue, facilityLabels, formatDateRange, futureInventoryTypeLabel, importProgressLabel, isClosedShipment, isPartlyReceived, overdueLabel, productStoreLabels,
+  daysOverdue, descriptionExplanation, facilityLabels, formatDateRange, futureInventoryStatusLabel, futureInventoryTypeLabel, importProgressLabel, isClosedShipment, isPartlyReceived, overdueLabel, productStoreLabels,
   readableNote, receiveUnitsLabel, shipmentStatusLabel, shortDescription, shownPartyId,
 } from '@/utils/labels';
 
@@ -77,6 +77,25 @@ describe('ledger notes', () => {
     expect(shortDescription("Reallocated: an order line's reservation moved from this batch to another")).toBe('Reallocated');
     expect(shortDescription('Reserved')).toBe('Reserved');
     expect(shortDescription(undefined)).toBe('');
+  });
+
+  it('names future inventory batch statuses briefly, falling back to the description name or id', () => {
+    expect(futureInventoryStatusLabel('FUTURE_INV_ACTIVE', 'Active Inbound Supply')).toBe('Active');
+    expect(futureInventoryStatusLabel('FUTURE_INV_EXPIRED', 'Expired: the promise date passed; a future date reactivates it')).toBe('Expired');
+    expect(futureInventoryStatusLabel('FUTURE_INV_RECEIVED', 'Received: all of the quantity on order issued to receipts')).toBe('Received');
+    expect(futureInventoryStatusLabel('FUTURE_INV_CANCELLED', 'Cancelled: the quantity on order cancelled to 0')).toBe('Cancelled');
+    expect(futureInventoryStatusLabel('FUTURE_INV_INACTIVE', 'Inactive: set only before this release, by the old ATP rule; the ledger no longer sets it')).toBe('Inactive');
+    expect(futureInventoryStatusLabel('FUTURE_INV_NEW', 'Held: waiting on approval')).toBe('Held');
+    expect(futureInventoryStatusLabel('FUTURE_INV_NEW')).toBe('FUTURE_INV_NEW');
+    expect(futureInventoryStatusLabel(undefined)).toBe('Unknown');
+  });
+
+  it('explains a description after its name, from a capital', () => {
+    expect(descriptionExplanation('Cancelled: the quantity on order cancelled to 0')).toBe('The quantity on order cancelled to 0');
+    expect(descriptionExplanation('Expired: the promise date passed; a future date reactivates it')).toBe('The promise date passed; a future date reactivates it');
+    expect(descriptionExplanation('Active Inbound Supply')).toBe('');
+    expect(descriptionExplanation('Cancelled:')).toBe('');
+    expect(descriptionExplanation(undefined)).toBe('');
   });
 
   it('reads quantities without trailing zeros and timestamps as dates', () => {

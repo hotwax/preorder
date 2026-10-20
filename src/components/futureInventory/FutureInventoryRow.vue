@@ -28,7 +28,7 @@
 
     <ion-label class="tablet">
       {{ seed.facilityName(batch.facilityId || '') }}
-      <p><ion-badge :color="statusColor(batch.statusId)">{{ seed.statusDescription(batch.statusId || '') }}</ion-badge></p>
+      <p><ion-badge :color="statusColor(batch.statusId)">{{ futureInventoryStatusLabel(batch.statusId, seed.statusDescription(batch.statusId || '')) }}</ion-badge></p>
     </ion-label>
 
     <ion-label class="tablet">
@@ -46,7 +46,7 @@
       <div class="fi-row-phone">
         <p>{{ batch.futureInventoryItemId }}</p>
         <p>{{ seed.facilityName(batch.facilityId || '') }}</p>
-        <p><ion-badge :color="statusColor(batch.statusId)">{{ seed.statusDescription(batch.statusId || '') }}</ion-badge></p>
+        <p><ion-badge :color="statusColor(batch.statusId)">{{ futureInventoryStatusLabel(batch.statusId, seed.statusDescription(batch.statusId || '')) }}</ion-badge></p>
         <p>{{ translate('{qoo} on order', { qoo: formatQuantity(batch.quantityOnOrderTotal) }) }}</p>
         <p>{{ translate('{atp} ATP, {reserved} reserved', { atp: formatQuantity(batch.availableToPromiseTotal), reserved: formatQuantity(batch.reservedQuantity) }) }}</p>
       </div>
@@ -61,7 +61,7 @@ import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import ProductItem from '@/components/common/ProductItem.vue';
 import { formatDate, formatQuantity, formatRelativeDay } from '@/utils/format';
-import { daysOverdue, overdueLabel } from '@/utils/labels';
+import { daysOverdue, futureInventoryStatusLabel, overdueLabel } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import type { FutureInventoryBatch } from '@/types';

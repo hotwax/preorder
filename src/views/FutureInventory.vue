@@ -139,6 +139,7 @@ import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { ALL, toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
 import { countParams, formatDate, formatNumber, formatQuantity } from '@/utils/format';
+import { futureInventoryStatusLabel } from '@/utils/labels';
 import Actions from '@/authorization/actions';
 
 const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];
@@ -160,7 +161,8 @@ const sortOptions = [
   { label: 'Latest promise date', value: '-promiseDate' },
   { label: 'Recently updated', value: '-lastUpdatedStamp' },
 ];
-const statusOptions = computed(() => seed.statusItemsByType('FII_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
+/** Each status by its short name, as the rows' badges name it. */
+const statusOptions = computed(() => seed.statusItemsByType('FII_STATUS').map((status: any) => ({ value: status.statusId, label: futureInventoryStatusLabel(status.statusId, status.description) })));
 // Batches sit at the store's receiving locations: warehouses and stores, never the virtual parking facilities.
 const { facilityOptions } = useStoreFacilities();
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
