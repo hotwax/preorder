@@ -16,6 +16,9 @@
         </ion-card-header>
         <ion-card-content>
           {{ translate('Purchase order CSVs create or update purchase orders, one row per line. Future inventory CSVs create or update batches to sell before stock arrives. Each upload is queued, imported by the Data Manager, and tracked below.') }}
+          <p v-if="uploadConfigId === 'SYNC_PREORDER'" class="ion-padding-top">
+            {{ translate('For an external-only future inventory parent, shipment rows transfer quantity out of the parent. Later parent updates must use ordered quantity minus quantity allocated to shipments. For example, after allocating 2 of 4 units to a shipment, send parent quantity 2 and shipment quantity 2. Sending parent quantity 4 again increases the total supply to 6.') }}
+          </p>
         </ion-card-content>
         <div class="upload-row ion-padding-horizontal ion-padding-bottom">
           <ion-select v-model="uploadConfigId" :label="translate('Import type')" label-placement="stacked" fill="outline" interface="popover">
