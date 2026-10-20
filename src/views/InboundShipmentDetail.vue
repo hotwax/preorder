@@ -26,8 +26,11 @@
                 <ion-badge slot="end" :color="statusColor(shipment.statusId)">{{ shipmentStatusLabel(shipment, seed.statusDescription(shipment.statusId || '')) }}</ion-badge>
               </ion-item>
               <ion-item v-if="shipment.primaryOrderId" button :router-link="`/purchase-orders/${encodeURIComponent(shipment.primaryOrderId)}`">
-                <ion-label>{{ translate('Purchase order') }}</ion-label>
-                <ion-note slot="end">{{ shipment.orderName || shipment.orderExternalId || shipment.primaryOrderId }}</ion-note>
+                <!-- The label above the order name, which wraps: a long name in the end slot squeezed the label into broken words -->
+                <ion-label class="ion-text-wrap">
+                  <p class="overline">{{ translate('Purchase order') }}</p>
+                  {{ shipment.orderName || shipment.orderExternalId || shipment.primaryOrderId }}
+                </ion-label>
               </ion-item>
               <ion-item v-if="formatDate(shipment.estimatedShipDate)">
                 <ion-label>{{ translate('Shipped') }}</ion-label>

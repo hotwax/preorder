@@ -1,7 +1,7 @@
 import { api, logger, translate, useSolrSearch } from '@common';
 import { ensureOk, errorMessage } from '@/utils/response';
 import { readList } from '@/utils/query';
-import { toDay } from '@/utils/format';
+import { countParams, toDay } from '@/utils/format';
 import { linesToMove, toSupplierOptions, type SupplierOption } from '@/utils/purchaseOrders';
 import type { InboundShipmentSummary, PurchaseOrderDetail, PurchaseOrderLine, PurchaseOrderReceipt } from '@/types';
 
@@ -108,7 +108,7 @@ export function usePurchaseOrderActions() {
       }
     }
     if (errors.length) {
-      throw new Error(translate('The arrival date moved on {moved} of {total} lines. {errors}', { moved, total: lines.length, errors: errors.slice(0, 2).join('; ') }));
+      throw new Error(translate('The arrival date moved on {moved} of {total} lines. {errors}', { ...countParams(lines.length, 'total'), moved, errors: errors.slice(0, 2).join('; ') }));
     }
   }
 

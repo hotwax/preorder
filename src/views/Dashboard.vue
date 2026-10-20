@@ -67,7 +67,7 @@
       </ion-card>
 
       <section v-if="dashboard && !error" class="drilldown ion-padding">
-        <StatCard :title="translate('Arriving in {days} days', { days: ARRIVAL_DAYS })" :stat="formatNumber(dashboard.arrivingSoon.count)" :subtitle="translate('{quantity} units, {reserved} already sold', { quantity: formatQuantity(dashboard.arrivingSoon.quantity), reserved: formatQuantity(dashboard.arrivingSoon.reserved) })">
+        <StatCard :title="translate('Arriving in {days} days', { days: ARRIVAL_DAYS })" :stat="formatNumber(dashboard.arrivingSoon.count)" :subtitle="translate('{quantity} units, {reserved} already sold', { ...countParams(dashboard.arrivingSoon.quantity, 'quantity'), reserved: formatQuantity(dashboard.arrivingSoon.reserved) })">
           <ion-list lines="none" class="drilldown-list">
             <ion-item v-for="batch in dashboard.arrivingSoon.batches" :key="batch.futureInventoryItemId" button :detail="true" :router-link="batchRoute(batch.futureInventoryItemId)">
               <ion-label>
@@ -224,8 +224,8 @@ const metrics = computed(() => {
   return [
     { id: 'preorder', label: translate('On pre-order'), percent: percent(preorderUnits, data.openUnits), value: data.openUnits ? preorderUnits / data.openUnits : 0, note: translate('{count} units', countParams(preorderUnits)) },
     { id: 'backorder', label: translate('On back-order'), percent: percent(backorderUnits, data.openUnits), value: data.openUnits ? backorderUnits / data.openUnits : 0, note: translate('{count} units', countParams(backorderUnits)) },
-    { id: 'parked', label: translate('Waiting at parking'), percent: percent(data.parkedLines, data.openLines), value: data.openLines ? data.parkedLines / data.openLines : 0, note: translate('{shown} / {total} items', { shown: formatNumber(data.parkedLines), total: formatNumber(data.openLines) }) },
-    { id: 'sellThrough', label: translate('Future inventory sold'), percent: percent(reserved, supply), value: supply ? Math.min(reserved / supply, 1) : 0, note: translate('{reserved} of {supply} units on {batches} active batches', { reserved: formatQuantity(reserved), supply: formatQuantity(supply), batches: formatNumber(data.supply?.activeBatches) }) },
+    { id: 'parked', label: translate('Waiting at parking'), percent: percent(data.parkedLines, data.openLines), value: data.openLines ? data.parkedLines / data.openLines : 0, note: translate('{shown} / {total} items', { ...countParams(data.openLines, 'total'), shown: formatNumber(data.parkedLines) }) },
+    { id: 'sellThrough', label: translate('Future inventory sold'), percent: percent(reserved, supply), value: supply ? Math.min(reserved / supply, 1) : 0, note: `${translate('{reserved} of {supply} units', { ...countParams(supply, 'supply'), reserved: formatQuantity(reserved) })}, ${translate('{count} active batches', countParams(data.supply?.activeBatches ?? 0))}` },
   ];
 });
 

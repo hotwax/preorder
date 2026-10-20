@@ -206,7 +206,7 @@ async function confirmCancel() {
   }
   const reason = await promptForChoice(
     translate('Cancel pre-order items'),
-    translate('This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?', { count: selectedWaitingCount.value }),
+    translate('This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?', countParams(selectedWaitingCount.value)),
     translate('Cancel items'),
     reasons,
   );
