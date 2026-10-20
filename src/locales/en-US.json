@@ -730,5 +730,15 @@
   "The email could not be turned {state}: this OMS does not store that setting yet.": "The email could not be turned {state}: this OMS does not store that setting yet.",
   "The email setting was not saved: {fields} did not change.": "The email setting was not saved: {fields} did not change.",
   "on": "on",
-  "off": "off"
+  "off": "off",
+  "Pre-order supply moves to this shipment, and the pre-orders waiting at its destination move with it, oldest first.": "Pre-order supply moves to this shipment, and the pre-orders waiting at its destination move with it, oldest first.",
+  "Enter what arrived of each item: everything left is filled in. Receiving part of it keeps the shipment open for the rest.": "Enter what arrived of each item: everything left is filled in. Receiving part of it keeps the shipment open for the rest.",
+  "{count} left to receive": "{count} left to receive",
+  "Accepted": "Accepted",
+  "Rejected": "Rejected",
+  "Receive {count} units": "Receive {count} units",
+  "Shipment received.": "Shipment received.",
+  "Received; the rest of the shipment stays open.": "Received; the rest of the shipment stays open.",
+  "Failed to create the shipment.": "Failed to create the shipment.",
+  "Unit cost can't be negative": "Unit cost can't be negative"
 }

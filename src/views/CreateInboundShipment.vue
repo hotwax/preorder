@@ -46,7 +46,6 @@
               <DateFilterSelect
                 v-model="arrivalDate"
                 :label="requiredLabel('Estimated arrival')"
-                outlined
                 allow-future
               />
             </ion-card-content>
@@ -97,7 +96,7 @@
               ><p>
                 {{
                   translate(
-                    'Pre-order supply moves to this shipment. Existing reservations stay on their original batch.'
+                    'Pre-order supply moves to this shipment, and the pre-orders waiting at its destination move with it, oldest first.'
                   )
                 }}
               </p></ion-label
