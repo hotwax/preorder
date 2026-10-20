@@ -41,6 +41,39 @@ export const futureInventoryTypeLabel = (typeId?: string, description?: string) 
 /** An enum's short name: its description up to the colon, for the reasons whose description defines them ("Reallocated: an order line's ..."). */
 export const shortDescription = (description?: string) => (description || '').split(':')[0].trim();
 
+/**
+ * What a description says after its name, from a capital: "The quantity on order cancelled to 0" for "Cancelled: the
+ * quantity on order cancelled to 0". Empty for a description with no colon ("Active Inbound Supply").
+ */
+export function descriptionExplanation(description?: string): string {
+  const colon = (description || '').indexOf(':');
+  if (colon < 0) return '';
+  const explanation = (description || '').slice(colon + 1).trim();
+  return explanation.charAt(0).toUpperCase() + explanation.slice(1);
+}
+
+/**
+ * The app's short names for the future inventory batch statuses (FII_STATUS), whose seed descriptions explain them
+ * ("Cancelled: the quantity on order cancelled to 0") and are too long for a badge.
+ */
+const FUTURE_INVENTORY_STATUS_NAMES: Record<string, string> = {
+  FUTURE_INV_ACTIVE: 'Active',
+  FUTURE_INV_EXPIRED: 'Expired',
+  FUTURE_INV_RECEIVED: 'Received',
+  FUTURE_INV_CANCELLED: 'Cancelled',
+  FUTURE_INV_INACTIVE: 'Inactive',
+};
+
+/**
+ * A future inventory batch status's badge label: the app's short name (translated), else the description's name
+ * before its colon, else the id. Its explanation is descriptionExplanation(description).
+ */
+export const futureInventoryStatusLabel = (statusId?: string, description?: string) => {
+  const name = statusId && FUTURE_INVENTORY_STATUS_NAMES[statusId];
+  if (name) return translate(name);
+  return shortDescription(description) || statusId || translate('Unknown');
+};
+
 const NOTE_DATE = /\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?(?![\d-])/g;
 const NOTE_DECIMAL = /(?<![\w.])\d+\.\d+(?![\w.])/g;
 
