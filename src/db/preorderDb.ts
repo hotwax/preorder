@@ -5,10 +5,10 @@
  * barrel re-exports modules that import `vue`.
  */
 
-import { defineAppDb } from "@common/db/schema/defineAppDb";
-import { mergeSchemas } from '@common/db/schema/defineSchema';
+import { defineAppDb } from "@common/db/model/defineAppDb";
+import { mergeSchemas } from '@common/db/model/defineSchema';
 import { operationsSchema } from './operationsSchema';
-import { commonSchema } from "@common/db/seed/seedSchema";
+import { commonSchema } from "@common/db/schema/commonSchema";
 
 /**
  * The seed tables the app reads: labels (statuses, enums, facilities and their types, shipment

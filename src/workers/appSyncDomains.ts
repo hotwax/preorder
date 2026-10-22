@@ -1,6 +1,6 @@
 import { preorderSetupDomain, preorderSyncPageDomain } from './domains/operationsDomains';
 import type { SyncDomain } from "@common/db/types";
-import { commonDomains } from "@common/db/seed/seedDomains";
+import { commonDomains } from "@common/db/domain/commonDomains";
 import { preorderDb } from "@/db/preorderDb";
 
 /** Seed tables the app fills with a domain of its own instead of the framework's: none yet. */
@@ -11,4 +11,4 @@ const OVERRIDDEN_SEED_TABLES = new Set<string>([]);
  * Settings builds its data status card from this list too, so the card and the worker agree.
  */
 export const appSyncDomains: SyncDomain[] = [...Object.values(commonDomains).filter((domain) =>
-  domain.table && preorderDb.seedTables.has(domain.table) && !OVERRIDDEN_SEED_TABLES.has(domain.table)), preorderSetupDomain, preorderSyncPageDomain];
+  domain.table && preorderDb.frameworkTables.has(domain.table) && !OVERRIDDEN_SEED_TABLES.has(domain.table)), preorderSetupDomain, preorderSyncPageDomain];
