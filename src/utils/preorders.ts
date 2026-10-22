@@ -44,3 +44,14 @@ export function attachLines(orders: Omit<PreorderOrder, 'lines'>[], lines: (Preo
   lines.forEach((line) => byOrder.set(line.orderId, [...(byOrder.get(line.orderId) || []), line]));
   return orders.map((order) => ({ ...order, lines: byOrder.get(order.orderId) || [] }));
 }
+
+/** The orders of these lines, each once, in the order they first appear. */
+export function distinctOrderIds(lines: { orderId: string }[]): string[] {
+  return [...new Set((lines || []).map((line) => line.orderId))];
+}
+
+/** Puts rows in the order of `ids`, dropping an id that has no row. */
+export function inIdOrder<T extends { orderId: string }>(rows: T[], ids: string[]): T[] {
+  const byId = new Map(rows.map((row) => [row.orderId, row]));
+  return ids.map((id) => byId.get(id)).filter((row): row is T => !!row);
+}

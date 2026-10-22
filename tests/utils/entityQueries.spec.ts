@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toBatchQuery, toOrderLinesQuery, toPreorderQuery } from '@/utils/entityQueries';
+import { hasLineFilters, toBatchQuery, toFilteredLinesQuery, toOrderHeadersQuery, toOrderLinesQuery, toPreorderQuery } from '@/utils/entityQueries';
 
 describe('toBatchQuery', () => {
   const page = { orderBy: 'promiseDate', pageIndex: 0, pageSize: 20 };
@@ -43,5 +43,32 @@ describe('toPreorderQuery', () => {
   it('reads the lines of several orders in one request', () => {
     expect(toOrderLinesQuery(['A', 'B'])).toMatchObject({ orderId: 'A,B', orderId_op: 'in', pageSize: 1000, orderByField: 'orderId,orderItemSeqId,futureInventoryItemId' });
     expect(toOrderLinesQuery(['A'])).toMatchObject({ orderId: 'A' });
+  });
+});
+
+describe('line filters of the pre-order list', () => {
+  const search = { productStoreId: 'STORE', statusId: 'ORDER_APPROVED', orderBy: '-orderDate' };
+
+  it('knows when a filter belongs to the lines', () => {
+    expect(hasLineFilters(search)).toBe(false);
+    expect(hasLineFilters({ ...search, futureInventoryItemTypeId: 'All', shipmentMethodTypeId: '' })).toBe(false);
+    expect(hasLineFilters({ ...search, futureInventoryItemTypeId: 'FIT_PRE_ORDER' })).toBe(true);
+    expect(hasLineFilters({ ...search, shipmentMethodTypeId: 'NEXT_DAY' })).toBe(true);
+  });
+
+  it('reads the matching lines with the header filters and the line filters, in the list order', () => {
+    expect(toFilteredLinesQuery({
+      ...search, salesChannelEnumId: 'WEB_SALES_CHANNEL', orderDateFrom: '2026-10-01', keyword: '#10',
+      futureInventoryItemTypeId: 'FIT_PRE_ORDER', shipmentMethodTypeId: 'NEXT_DAY',
+    }, 2)).toEqual({
+      productStoreId: 'STORE', statusId: 'ORDER_APPROVED', salesChannelEnumId: 'WEB_SALES_CHANNEL', orderDate_from: '2026-10-01',
+      orderName: '#10', orderName_op: 'contains', orderName_ic: 'Y', futureInventoryItemTypeId: 'FIT_PRE_ORDER', shipmentMethodTypeId: 'NEXT_DAY',
+      orderByField: '-orderDate,orderId,orderItemSeqId,futureInventoryItemId', pageIndex: 2, pageSize: 1000,
+    });
+  });
+
+  it('reads the headers of a page of orders in one request', () => {
+    expect(toOrderHeadersQuery(['A', 'B'])).toEqual({ orderId: 'A,B', orderId_op: 'in', pageIndex: 0, pageSize: 2 });
+    expect(toOrderHeadersQuery(['A'])).toEqual({ orderId: 'A', pageIndex: 0, pageSize: 1 });
   });
 });

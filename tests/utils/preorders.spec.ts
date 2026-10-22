@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attachLines, isOpenLine, summarizePreorderLines } from '@/utils/preorders';
+import { attachLines, distinctOrderIds, inIdOrder, isOpenLine, summarizePreorderLines } from '@/utils/preorders';
 import type { PreorderLine } from '@/types';
 
 const line = (extra: Partial<PreorderLine>): PreorderLine => ({ orderItemSeqId: '00001', productId: 'P1', ...extra });
@@ -33,5 +33,16 @@ describe('attachLines', () => {
     const orders = attachLines([{ orderId: 'A' }, { orderId: 'B' }], [{ ...line({}), orderId: 'A' }, { ...line({ orderItemSeqId: '00002' }), orderId: 'A' }]);
     expect(orders[0].lines).toHaveLength(2);
     expect(orders[1].lines).toEqual([]);
+  });
+});
+
+describe('distinctOrderIds and inIdOrder', () => {
+  it('lists each order once in first-seen order', () => {
+    expect(distinctOrderIds([{ orderId: 'B' }, { orderId: 'A' }, { orderId: 'B' }, { orderId: 'C' }])).toEqual(['B', 'A', 'C']);
+    expect(distinctOrderIds([])).toEqual([]);
+  });
+
+  it('orders rows by the ids and drops an id with no row', () => {
+    expect(inIdOrder([{ orderId: 'A' }, { orderId: 'C' }, { orderId: 'B' }], ['B', 'X', 'A'])).toEqual([{ orderId: 'B' }, { orderId: 'A' }]);
   });
 });

@@ -23,6 +23,10 @@
             :options="orderStatusOptions"
           />
 
+          <ion-select v-model="filters.futureInventoryItemTypeId" :label="translate('Future inventory type')" label-placement="stacked" fill="outline" interface="popover">
+            <ion-select-option value="All">{{ translate('All types') }}</ion-select-option>
+            <ion-select-option v-for="type in typeOptions" :key="type.value" :value="type.value">{{ type.label }}</ion-select-option>
+          </ion-select>
 
           <ion-select v-model="filters.salesChannelEnumId" :label="translate('Sales channel')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All channels') }}</ion-select-option>
@@ -31,6 +35,10 @@
             </ion-select-option>
           </ion-select>
 
+          <ion-select v-model="filters.shipmentMethodTypeId" :label="translate('Shipping method')" label-placement="stacked" fill="outline" interface="popover">
+            <ion-select-option value="All">{{ translate('All methods') }}</ion-select-option>
+            <ion-select-option v-for="option in shipmentMethodOptions" :key="option.id" :value="option.id">{{ option.label }}</ion-select-option>
+          </ion-select>
 
           <DateFilterSelect v-model="filters.orderDateFrom" :label="translate('Order date from')" :max="filters.orderDateThru" outlined />
           <DateFilterSelect v-model="filters.orderDateThru" :label="translate('Order date through')" :min="filters.orderDateFrom" outlined />
@@ -128,7 +136,7 @@ import type { PreorderOrder } from '@/types';
 
 const seed = useSeedData();
 const { running, runBulk } = useBulkAction();
-const { typeLabel } = useFutureInventoryTypes();
+const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const { isParking } = useParkingFacilities();
 const store = usePreorderSearchStore();
 const { refresh } = useFindSearch(store);
@@ -146,6 +154,7 @@ const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS')
   .filter((status: any) => !CLOSED_ORDER_STATUSES.includes(status.statusId))
   .map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
 const salesChannels = computed(() => seed.enumsByType('ORDER_SALES_CHANNEL'));
+const shipmentMethodOptions = computed(() => seed.shipmentMethodOptions());
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
 const selectMode = ref(false);
