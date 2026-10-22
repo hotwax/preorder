@@ -58,7 +58,7 @@ PO imports; **Customers**: Communications, Bulk updates; Settings.
 
 Inspired by eBike's Tathya "E-Bike - Dashboard" (id 34: backorder units, YoY revenue, inventory
 arriving soon, PO arriving soon, backdated POs, backorders with no promise date, on/off backorder)
-and rebuilt on the FI model, in Funnel's layout. One request: `GET preorder/dashboard`.
+and rebuilt on the FI model, in Funnel's layout. One request: `GET oms/preorderDashboard`.
 
 1. **Global stat card**: open pre-order units (big number) with orders and lines, and progress
    metrics: share on pre-order vs back-order FI, lines waiting at parking, FI sell-through
@@ -166,7 +166,7 @@ The list reads Solr, not the database. Purchase orders are indexed one doc per l
 `orderTypeId:PURCHASE_ORDER`), and the page groups them by `orderId`:
 - the first query matches, sorts, pages and counts the orders (`group.ngroups`);
 - the second reads every line of the page's orders, so a line filter picks orders without trimming their totals;
-- `preorder/purchaseOrderBatchCounts` adds each order's batch count, which Solr doesn't carry.
+- `oms/futureInventoryItems/purchaseOrderCounts` adds each order's batch count, which Solr doesn't carry.
 
 oms indexes a purchase order when it is stored or its status changes, and a line when it is updated or added.
 The supplier on the doc (`customerPartyId`) is the `BILL_FROM_VENDOR`, else the `SHIP_FROM_VENDOR`. Solr shows a
@@ -313,7 +313,7 @@ All paths are relative to `/rest/s1/`.
 | `GET oms/purchaseOrders/{orderId}/receipts` | PO receipts |
 | `POST oms/orders/{orderId}/moveItemToParking` | release to brokering |
 | `POST oms/orders/{orderId}/items/cancel` | cancel pre-order items |
-| `GET preorder/futureInventory` | FI entity list |
+| `GET oms/futureInventoryItems` | FI entity list |
 | `POST admin/uploadDataManagerFile` | uploads |
 | `GET admin/dataManager/details` | import tracking |
 | `GET admin/dataManager/downloadDataManagerFile` | import file downloads |
@@ -321,30 +321,32 @@ All paths are relative to `/rest/s1/`.
 | `GET/PUT/POST oms/productStoreEmailSettings...` | email settings |
 | `admin/search/query` | product search in Create PO |
 
-### 4.2 New: `preorder` REST (preorder-maarg, branch `feat/preorder-app-api`)
+### 4.2 The pre-order REST contract: `oms` and poorti (OMS #1202, `/rest/s1/preorder` is gone)
 
-| Method + path | Backing | Notes |
+preorder-maarg is retired into OMS, which exposes the future inventory (FI) model as entity resources and a few services.
+Entity lists answer a bare array with the unpaged total in `X-Total-Count`, and read filters from field names
+(`field`, `field_op` = equals/like/contains/begins/empty/in, `field_ic=Y`, `field_not=Y`, `field_from` / `field_thru`,
+`orderByField`, `pageIndex`, `pageSize`; see `src/utils/query.ts`). Services answer their out-parameters. Source of truth:
+`service/oms.rest.xml`, `entity/FutureInventoryViewEntities.xml`, `entity/FutureInventoryWaitingLine.xml` and poorti's
+`poorti.rest.xml`; the upgrade notes' REST table lags it (it still lists `oms/preorders`, `oms/purchaseOrders/{id}/shipments`).
+
+| Screen | Request | Notes |
 |---|---|---|
-| GET `preorder/dashboard` | `get#PreorderDashboard` | all dashboard figures for a store |
-| GET `preorder/preorders` | `get#PreorderOrders` over `PreorderOpenLine` | filters as in 3.2; page ids first, then `get#PreorderOrderDetails` for that page. Returns `{orders, ordersCount}`; each order carries its FI lines |
-| GET `preorder/preorders/{orderId}` | `get#PreorderOrder` | header and FI lines with batches |
-| POST `preorder/preorders/{orderId}/items/{orderItemSeqId}/reallocate` | `reallocate#FutureInventoryReservation` | |
-| GET `preorder/futureInventory/{futureInventoryItemId}` | `get#FutureInventoryItem` over the `FutureInventoryItem` `default` master | the batch with `product`, `purchaseOrderHeader` and `purchaseOrderItem` (the PO two absent with no PO), plus `reservedQuantity`, `waitingLineCount` and `waitingQuantity`; `{futureInventoryItem}`. The facility name comes from seed data |
-| GET `preorder/futureInventoryItems` | `get#FutureInventoryItems` over `FutureInventoryItemAndProduct` | product and facility names, computed `reservedQuantity`; `{futureInventoryItems, futureInventoryItemsCount}` |
-| GET `preorder/futureInventory/{id}/details` | FutureInventoryItemDetail list | the ledger |
-| GET `preorder/futureInventory/{id}/lines` | FutureInventoryBackedLine list | waiting lines |
-| PUT `preorder/futureInventory/{id}` | `update#FutureInventoryItem` | a quantity diff and/or a new promise date; one `FID_ADJUSTED` row (the ledger is append-only, so no field is set directly) |
-| POST `preorder/futureInventory/{id}/cancel` | `cancel#FutureInventoryItem` | |
-| GET `preorder/purchaseOrders` | `PurchaseOrderSummary` view | supplier, facility, line and unit totals, earliest arrival; `{orders, ordersCount}` |
-| POST `preorder/purchaseOrders` | `create#PurchaseOrder` | header and lines through `store#PurchaseOrder` (the import path); optional FI batches |
-| POST `preorder/purchaseOrders/{orderId}/arrivalDate` | `update#PurchaseOrderArrivalDate` | open lines' date plus `OrderItemChange`, so FI follows |
-| POST `preorder/purchaseOrders/{orderId}/futureInventory` | `create#PurchaseOrderFutureInventory` | a batch per open line without one |
-| GET `preorder/inboundShipments` | `InboundShipmentSummary` view | `{shipments, shipmentsCount}` |
-| GET `preorder/inboundShipments/{shipmentId}` | `get#InboundShipment` | items with received quantity, and receipts |
-| GET `preorder/communicationEvents` | `CommunicationEventOrderStore` view | email events scoped to a store through their order; `{communicationEvents, communicationEventsCount}` |
-| GET `preorder/communicationEventCounts` | count view | by email type and status, since a date |
-| GET `preorder/emailSettings` | `get#PreorderEmailSettings` | pre-order email types with setting, enabled, gateway and wired state |
-| POST `preorder/emailSettings/{emailType}` | `update#PreorderEmailSetting` | enable or disable; creates the setting on first enable |
+| Dashboard | GET `oms/preorderDashboard` | `get#PreorderDashboard`; supply is on-order, not on-hand; no demand trend or promise-date-change count |
+| Pre-orders list | GET `oms/orders/futureInventory` + GET `oms/futureInventoryItems/lines?orderId=<page ids>&orderId_op=in` | header view only (store, status, channel, order date, order name); counts, parking and promise range come from the lines. No filter by FI type or shipping method |
+| Pre-order detail | GET `oms/orders/{orderId}` (`get#SalesOrder`: customer, item statuses) + GET `oms/futureInventoryItems/lines?orderId=` | open reservations only; closed ones are not rows |
+| Reallocate | POST `oms/orders/{orderId}/items/{seq}/reallocate` | the move modal reads `oms/orders/{id}/futureInventoryDetails` for batches the item left |
+| Batch list | GET `oms/futureInventoryItems` | `FutureInventoryItemAndProduct`: product name, computed `reservedQuantity`. Batches have no store: the store scope is `facilityId in` its current `oms/productStores/{id}/facilities`. Search is the product name; has-reservations is `reservedQuantity_from`, overcommitted is `availableToPromiseTotal_thru` |
+| Batch detail | GET `oms/futureInventoryItems/{id}` (default master) + `/details` (ledger) + `/lines` (waiting lines) | ledger rows carry `quantityOnOrderDiff` and the composite `futureInventoryItemDetailSeqId` |
+| Batch change | PUT `oms/futureInventoryItems/{id}` (`quantityDiff` and/or `promiseDate`); POST `.../quantity`, `.../cancel` | one ledger row per change |
+| PO list | Solr, plus GET `oms/futureInventoryItems/purchaseOrderCounts?poId=<ids>&poId_op=in` | |
+| PO detail | GET `oms/purchaseOrders/{id}` + GET poorti `purchaseShipments?primaryOrderId=` + GET `oms/purchaseOrders/{id}/receipts` | |
+| PO create / arrival date / batches | POST `oms/purchaseOrders`; PUT `oms/purchaseOrders/{id}/items/{seq}` (`estimatedDeliveryDate`, per line); POST `oms/purchaseOrders/{id}/futureInventory` | creation no longer makes batches: the app calls `futureInventory` after it |
+| Suppliers | GET `oms/parties/roles/SUPPLIER` | |
+| Inbound shipments | GET / POST poorti `purchaseShipments`, GET `purchaseShipments/{id}`, POST `.../receive` | same shapes as the old resources |
+| Communications | GET `oms/communicationEvents?productStoreId=` (`{communicationEventList, communicationEventsCount}`), GET `oms/communicationEvents/counts`, GET `oms/emailGateways` | |
+| Email settings | GET `admin/enums?enumTypeId=PreorderAppEmail` (catalog) + GET/PUT `oms/productStoreEmailSettings/{store}/emailSettings[/{type}]` | `enabled` reads the setting's `disabled` flag, which exists only with the order email queue (oms#1195) |
+| Setup | GET/POST `oms/productStoreFacilityPurposes` | |
 
 ### 4.3 New: oms (branch `feat/preorder-app-api`)
 
