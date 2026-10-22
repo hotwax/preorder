@@ -71,6 +71,10 @@ export interface FutureInventoryBatchDetail extends Omit<FutureInventoryBatch, '
   purchaseOrderItem?: { orderItemSeqId: string; quantity?: number; estimatedDeliveryDate?: number | string; statusId?: string };
 }
 
+/**
+ * One order line holding a future inventory reservation: a row of `oms/futureInventoryItems/lines` (the open reservations),
+ * with the item's status and quantity added from the order when the detail page reads it.
+ */
 export interface PreorderLine {
   orderItemSeqId: string;
   shipGroupSeqId?: string;
@@ -78,21 +82,23 @@ export interface PreorderLine {
   productName?: string;
   itemStatusId?: string;
   quantity?: number;
+  /** Where the line sits now: its parking facility while it waits, the fulfillment facility once released. */
   facilityId?: string;
-  facilityTypeId?: string;
-  atParking?: boolean;
   promisedDatetime?: number | string;
-  autoCancelDate?: number | string;
+  reservedDatetime?: number | string;
   futureInventoryItemId?: string;
   futureInventoryItemTypeId?: string;
+  batchFacilityId?: string;
   batchPromiseDate?: number | string;
   batchStatusId?: string;
-  poId?: string;
-  reservationOpen?: boolean;
+  /** Units still reserved on the batch. */
   openQuantity?: number;
-  reservations?: { futureInventoryItemId: string; reasonEnumId: string; quantity: number; createdDate: number | string; open: boolean }[];
 }
 
+/**
+ * An order with open future inventory lines: the header from `oms/orders/futureInventory` (or `oms/orders/{id}` on the
+ * detail page) and its reserved lines. Counts, promise range and parking are derived from the lines (`summarizePreorderLines`).
+ */
 export interface PreorderOrder {
   orderId: string;
   orderName?: string;
@@ -101,16 +107,9 @@ export interface PreorderOrder {
   statusId?: string;
   productStoreId?: string;
   salesChannelEnumId?: string;
-  shipmentMethodTypeId?: string;
   customerPartyId?: string;
   customerName?: string;
   email?: string;
-  lineCount?: number;
-  parkedLineCount?: number;
-  openReservedQuantity?: number;
-  earliestPromiseDate?: number | string;
-  latestPromiseDate?: number | string;
-  futureInventoryItemTypeIds?: string[];
   lines: PreorderLine[];
 }
 

@@ -12,7 +12,7 @@
     <ion-content>
       <SearchFilterCard
         v-model="query"
-        :placeholder="translate('Order, external ID, customer, email')"
+        :placeholder="translate('Order name')"
         :show-clear="false"
       >
         <UniformFilterLayout @clear="clearFilters">
@@ -23,10 +23,6 @@
             :options="orderStatusOptions"
           />
 
-          <ion-select v-model="filters.futureInventoryItemTypeId" :label="translate('Future inventory type')" label-placement="stacked" fill="outline" interface="popover">
-            <ion-select-option value="All">{{ translate('All types') }}</ion-select-option>
-            <ion-select-option v-for="type in typeOptions" :key="type.value" :value="type.value">{{ type.label }}</ion-select-option>
-          </ion-select>
 
           <ion-select v-model="filters.salesChannelEnumId" :label="translate('Sales channel')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All channels') }}</ion-select-option>
@@ -35,10 +31,6 @@
             </ion-select-option>
           </ion-select>
 
-          <ion-select v-model="filters.shipmentMethodTypeId" :label="translate('Shipping method')" label-placement="stacked" fill="outline" interface="popover">
-            <ion-select-option value="All">{{ translate('All methods') }}</ion-select-option>
-            <ion-select-option v-for="option in shipmentMethodOptions" :key="option.id" :value="option.id">{{ option.label }}</ion-select-option>
-          </ion-select>
 
           <DateFilterSelect v-model="filters.orderDateFrom" :label="translate('Order date from')" :max="filters.orderDateThru" outlined />
           <DateFilterSelect v-model="filters.orderDateThru" :label="translate('Order date through')" :min="filters.orderDateFrom" outlined />
@@ -127,6 +119,7 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import PreorderRow from '@/components/preorders/PreorderRow.vue';
 import { confirmAction, showToast } from '@/utils';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
+import { useParkingFacilities } from '@/composables/useParkingFacilities';
 import { toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
 import { formatDate } from '@/utils/format';
@@ -135,7 +128,8 @@ import type { PreorderOrder } from '@/types';
 
 const seed = useSeedData();
 const { running, runBulk } = useBulkAction();
-const { typeLabel, typeOptions } = useFutureInventoryTypes();
+const { typeLabel } = useFutureInventoryTypes();
+const { isParking } = useParkingFacilities();
 const store = usePreorderSearchStore();
 const { refresh } = useFindSearch(store);
 const userStore = useUserStore();
@@ -152,7 +146,6 @@ const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS')
   .filter((status: any) => !CLOSED_ORDER_STATUSES.includes(status.statusId))
   .map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
 const salesChannels = computed(() => seed.enumsByType('ORDER_SALES_CHANNEL'));
-const shipmentMethodOptions = computed(() => seed.shipmentMethodOptions());
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
 const selectMode = ref(false);
@@ -232,20 +225,18 @@ function exportSelected() {
   const rows = selectedOrders.value.flatMap((order) => (order.lines || []).map((line) => ({
     orderId: order.orderId,
     orderName: order.orderName,
-    customer: order.customerName,
-    email: order.email,
     orderDate: formatDate(order.orderDate),
     status: seed.statusDescription(order.statusId || ''),
     orderItemSeqId: line.orderItemSeqId,
     productId: line.productId,
     type: typeLabel(line.futureInventoryItemTypeId),
     batch: line.futureInventoryItemId,
-    atParking: line.atParking ? 'Y' : 'N',
+    atParking: isParking(line.facilityId) ? 'Y' : 'N',
     promiseDate: formatDate(line.promisedDatetime),
   })));
   downloadText('pre-orders.csv', toCsv(rows, [
-    { key: 'orderId', label: 'Order ID' }, { key: 'orderName', label: 'Order name' }, { key: 'customer', label: 'Customer' },
-    { key: 'email', label: 'Email' }, { key: 'orderDate', label: 'Order date' }, { key: 'status', label: 'Status' },
+    { key: 'orderId', label: 'Order ID' }, { key: 'orderName', label: 'Order name' },
+    { key: 'orderDate', label: 'Order date' }, { key: 'status', label: 'Status' },
     { key: 'orderItemSeqId', label: 'Item' }, { key: 'productId', label: 'Product ID' }, { key: 'type', label: 'Type' },
     { key: 'batch', label: 'Future inventory' }, { key: 'atParking', label: 'At parking' }, { key: 'promiseDate', label: 'Promise date' },
   ]));

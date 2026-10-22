@@ -40,7 +40,7 @@
           </ion-card>
 
           <StatCard :title="translate('Current promise date')" :stat="promiseLabel" :subtitle="promiseSubtitle" />
-          <StatCard :title="translate('Waiting at parking')" :stat="parkedCount" :subtitle="translate('{count} pre-order items', { count: order.lines.length })" />
+          <StatCard :title="translate('Waiting at parking')" :stat="parkedCount" :subtitle="translate('{count} pre-order items', { count: summary.lineCount })" />
         </section>
 
         <ion-list>
@@ -63,17 +63,17 @@
                 <ion-icon :icon="layersOutline" />
                 <ion-label>{{ line.futureInventoryItemId || translate('No batch') }}</ion-label>
               </ion-chip>
-              <p>{{ typeLabel(line.futureInventoryItemTypeId) }}<template v-if="line.poId">{{ ' - ' + line.poId }}</template></p>
+              <p>{{ typeLabel(line.futureInventoryItemTypeId) }}</p>
             </ion-label>
 
             <ion-label class="tablet">
               {{ seed.facilityName(line.facilityId || '') }}
-              <p v-if="isOpen(line)">{{ line.atParking ? translate('Waiting at parking') : translate('Released from parking') }}</p>
+              <p v-if="isOpen(line)">{{ isParking(line.facilityId) ? translate('Waiting at parking') : translate('Released from parking') }}</p>
             </ion-label>
 
             <ion-label class="tablet">
               <ion-badge :color="statusColor(line.itemStatusId)">{{ seed.statusDescription(line.itemStatusId || '') }}</ion-badge>
-              <p>{{ line.reservationOpen ? translate('{count} reserved', { count: formatQuantity(line.openQuantity) }) : translate('Reservation closed') }}</p>
+              <p>{{ translate('{count} reserved', { count: formatQuantity(line.openQuantity) }) }}</p>
             </ion-label>
 
             <div class="line-row-end">
@@ -83,10 +83,9 @@
                   <p>{{ formatRelative(line.promisedDatetime) }}</p>
                 </template>
                 <ion-note v-else color="danger">{{ translate('No promise date') }}</ion-note>
-                <p v-if="line.autoCancelDate">{{ translate('Auto cancels {date}', { date: formatDate(line.autoCancelDate) }) }}</p>
               </ion-label>
               <ion-button
-                v-if="line.reservationOpen && line.futureInventoryItemId"
+                v-if="line.futureInventoryItemId"
                 fill="clear"
                 size="small"
                 :disabled="!canUpdate"
@@ -126,6 +125,8 @@ import MoveReservationModal from '@/components/preorders/MoveReservationModal.vu
 import { formatDate, formatDateTime, formatRelative } from '@/utils/format';
 import { formatDateRange, formatQuantity, shownPartyId } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
+import { useParkingFacilities } from '@/composables/useParkingFacilities';
+import { isOpenLine, summarizePreorderLines } from '@/utils/preorders';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
@@ -136,6 +137,7 @@ const seed = useSeedData();
 const { typeLabel } = useFutureInventoryTypes();
 const { prefetch } = useProductMaster();
 const { fetchPreorder, parkedLines } = usePreorderActions();
+const { isParking, summarize } = useParkingFacilities();
 const userStore = useUserStore();
 
 const order = ref<PreorderOrder>();
@@ -144,10 +146,11 @@ const error = ref('');
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
 const parkedCount = computed(() => (order.value ? parkedLines(order.value).length : 0));
-const isOpen = (line: PreorderLine) => !['ITEM_CANCELLED', 'ITEM_COMPLETED', 'ITEM_REJECTED'].includes(line.itemStatusId || '');
-const promiseLabel = computed(() => formatDateRange(order.value?.earliestPromiseDate, order.value?.latestPromiseDate) || translate('None'));
+const isOpen = isOpenLine;
+const summary = computed(() => (order.value ? summarize(order.value) : summarizePreorderLines([], isParking)));
+const promiseLabel = computed(() => formatDateRange(summary.value.earliestPromiseDate, summary.value.latestPromiseDate) || translate('None'));
 const promiseSubtitle = computed(() => {
-  const date = order.value?.earliestPromiseDate || order.value?.latestPromiseDate;
+  const date = summary.value.earliestPromiseDate || summary.value.latestPromiseDate;
   return date ? formatRelative(date) : translate('No item has a promise date');
 });
 

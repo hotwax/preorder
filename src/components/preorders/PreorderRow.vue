@@ -18,14 +18,14 @@
         @ion-change="emit('selectionChange', $event.detail.checked)"
       />
       <ion-label>
-        {{ order.customerName || order.email || shownPartyId(order.customerPartyId) || translate('Unknown customer') }}
+        {{ order.orderName || order.externalId || order.orderId }}
         <p>{{ identityLabel }}</p>
       </ion-label>
     </ion-item>
 
     <ion-label class="tablet">
-      {{ translate('{count} pre-order items', { count: order.lineCount ?? order.lines?.length ?? 0 }) }}
-      <p>{{ translate('{count} at parking', { count: order.parkedLineCount }) }}</p>
+      {{ translate('{count} pre-order items', { count: summary.lineCount }) }}
+      <p>{{ translate('{count} at parking', { count: summary.parkedLineCount }) }}</p>
     </ion-label>
 
     <ion-label class="tablet">
@@ -39,9 +39,9 @@
     </ion-label>
 
     <ion-label class="preorder-row-end ion-text-end">
-      <template v-if="order.earliestPromiseDate || order.latestPromiseDate">
-        {{ formatDateRange(order.earliestPromiseDate, order.latestPromiseDate) }}
-        <p>{{ translate('Promised {age}', { age: formatRelative(order.earliestPromiseDate || order.latestPromiseDate) }) }}</p>
+      <template v-if="summary.earliestPromiseDate || summary.latestPromiseDate">
+        {{ formatDateRange(summary.earliestPromiseDate, summary.latestPromiseDate) }}
+        <p>{{ translate('Promised {age}', { age: formatRelative(summary.earliestPromiseDate || summary.latestPromiseDate) }) }}</p>
       </template>
       <ion-note v-else color="danger">{{ translate('No promise date') }}</ion-note>
     </ion-label>
@@ -54,7 +54,8 @@ import { computed } from 'vue';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import { formatDate, formatRelative } from '@/utils/format';
-import { formatDateRange, shownPartyId } from '@/utils/labels';
+import { formatDateRange } from '@/utils/labels';
+import { useParkingFacilities } from '@/composables/useParkingFacilities';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import type { PreorderOrder } from '@/types';
 
@@ -62,10 +63,12 @@ const props = defineProps<{ order: PreorderOrder; selectMode?: boolean; selected
 const emit = defineEmits<{ (event: 'activate'): void; (event: 'selectionChange', selected: boolean): void }>();
 const seed = useSeedData();
 const { typeLabel: futureInventoryTypeName } = useFutureInventoryTypes();
+const { summarize } = useParkingFacilities();
+const summary = computed(() => summarize(props.order));
 
-const identityLabel = computed(() => [...new Set([props.order.orderName, props.order.orderId, seed.statusDescription(props.order.statusId || '')].filter(Boolean))].join(' - '));
+const identityLabel = computed(() => [...new Set([props.order.orderName ? props.order.orderId : '', props.order.externalId, seed.statusDescription(props.order.statusId || '')].filter(Boolean))].join(' - '));
 const typeLabel = computed(() => {
-  const types = props.order.futureInventoryItemTypeIds || [];
+  const types = summary.value.futureInventoryItemTypeIds;
   return types.length ? types.map((type) => futureInventoryTypeName(type)).join(', ') : translate('Pre-order');
 });
 </script>

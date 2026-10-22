@@ -67,7 +67,7 @@ const props = defineProps<{ orderId: string; productStoreId?: string; line: Preo
 // The modal mounts outside the page's tree, so it opens its own seed reads
 const seed = useSeedData();
 const { fetchActiveBatches } = useFutureInventoryActions();
-const { reallocateLine } = usePreorderActions();
+const { reallocateLine, fetchClosedBatchIds } = usePreorderActions();
 
 const batches = ref<FutureInventoryBatch[]>([]);
 const loading = ref(true);
@@ -75,9 +75,7 @@ const saving = ref(false);
 const selectedId = ref('');
 
 // Batches the line was reallocated or cancelled from: a new reservation there would not read as open, so reallocate# refuses them
-const closedBatchIds = computed(() => new Set((props.line.reservations || [])
-  .filter((row) => row.reasonEnumId === 'FID_REALLOCATED' || row.reasonEnumId === 'FID_CANCELLED')
-  .map((row) => row.futureInventoryItemId)));
+const closedBatchIds = ref<Set<string>>(new Set());
 
 // The target must be another ACTIVE batch of the line's product and FI type, at the order's store, that the line never left (reallocate#'s rule).
 const candidates = computed(() => batches.value.filter((batch) =>
@@ -91,7 +89,10 @@ async function loadBatches() {
   loading.value = true;
   loadError.value = '';
   try {
-    batches.value = await fetchActiveBatches(props.line.productId, props.productStoreId);
+    [batches.value, closedBatchIds.value] = await Promise.all([
+      fetchActiveBatches(props.line.productId, props.productStoreId),
+      fetchClosedBatchIds(props.orderId, props.line.orderItemSeqId),
+    ]);
   } catch (error) {
     loadError.value = errorMessage(error, translate('Failed to load batches.'));
   } finally {

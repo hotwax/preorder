@@ -27,3 +27,26 @@ export function toBatchQuery(params: Record<string, any>, facilityIds: string[] 
   withPaging(query, { orderBy: params.orderBy, tieBreaker: 'futureInventoryItemId', pageIndex: params.pageIndex, pageSize: params.pageSize });
   return query;
 }
+
+/**
+ * The entity query for the pre-order list: the find page's params as `oms/orders/futureInventory` header filters. That view
+ * carries header fields only, so the list cannot filter by future inventory type or shipping method, which belong to the lines.
+ */
+export function toPreorderQuery(params: Record<string, any>): EntityParams {
+  const query: EntityParams = {};
+  whereEquals(query, 'productStoreId', params.productStoreId);
+  whereIn(query, 'statusId', params.statusId);
+  whereEquals(query, 'salesChannelEnumId', params.salesChannelEnumId);
+  whereBetween(query, 'orderDate', params.orderDateFrom, params.orderDateThru);
+  whereContains(query, 'orderName', params.keyword);
+  withPaging(query, { orderBy: params.orderBy, tieBreaker: 'orderId', pageIndex: params.pageIndex, pageSize: params.pageSize });
+  return query;
+}
+
+/** The waiting lines of these orders in one read (`oms/futureInventoryItems/lines`), by order and item. */
+export function toOrderLinesQuery(orderIds: string[]): EntityParams {
+  const query: EntityParams = {};
+  whereIn(query, 'orderId', orderIds);
+  withPaging(query, { orderBy: 'orderId,orderItemSeqId', tieBreaker: 'futureInventoryItemId', pageIndex: 0, pageSize: 1000 });
+  return query;
+}
