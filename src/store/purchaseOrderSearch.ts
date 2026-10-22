@@ -1,6 +1,7 @@
 import { api, commonUtil, translate, useSolrSearch } from '@common';
 import { defineFindStore } from '@/store/findStore';
-import { ALL } from '@/utils/query';
+import { ALL, readEntityList } from '@/utils/query';
+import { toPurchaseOrderCountsQuery } from '@/utils/entityQueries';
 import {
   purchaseOrderLinesQuery, purchaseOrderPageQuery, readOrderGroups, toPurchaseOrderSummary, type PurchaseOrderListParams,
 } from '@/utils/purchaseOrderSolr';
@@ -29,11 +30,11 @@ async function fetchPurchaseOrderPage(params: Record<string, any>) {
 
   const [lines, counts]: any[] = await Promise.all([
     solrQuery(purchaseOrderLinesQuery(orderIds)),
-    api({ url: 'preorder/purchaseOrderBatchCounts', method: 'get', params: { orderIds: orderIds.join(',') } }),
+    api({ url: 'oms/futureInventoryItems/purchaseOrderCounts', method: 'get', params: toPurchaseOrderCountsQuery(orderIds) }),
   ]);
   if (commonUtil.hasError(counts)) throw new Error(counts?.data?.errors || translate('Something went wrong. Please try again.'));
   const docsByOrder = new Map(readOrderGroups(lines).groups.map((group) => [group.orderId, group.docs]));
-  const batchCountByOrder = new Map<string, number>((counts.data?.batchCounts || []).map((row: any) => [row.orderId, Number(row.batchCount) || 0]));
+  const batchCountByOrder = new Map<string, number>(readEntityList<{ poId: string; batchCount: number }>(counts).rows.map((row) => [row.poId, Number(row.batchCount) || 0]));
   const rows = orderIds.map((orderId) => toPurchaseOrderSummary(orderId, docsByOrder.get(orderId) || [], batchCountByOrder.get(orderId) || 0));
   return { rows, total: page.total };
 }

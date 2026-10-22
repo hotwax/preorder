@@ -18,7 +18,7 @@ export const preorderSetupDomain = defineSyncDomain({
     const [channels, settings, purposes, jobs, feeds] = await Promise.all([
       read('sob/shopify/inventoryChannels', { shopId, pageSize: 250 }),
       read('sob/shopify/shopSetting', { shopId, settingTypeEnumId: ['SHPFY_PRORD_MF_NS', 'SHPFY_PRORD_MF_KEY'], settingTypeEnumId_op: 'in', pageSize: 20 }),
-      read('preorder/storeFacilityPurposes', { productStoreId, pageSize: 100 }),
+      read('oms/productStoreFacilityPurposes', { productStoreId, pageSize: 100 }),
       (async () => {
         const baseJobs = await Promise.all(JOBS.map(async jobName => (await read(`admin/serviceJobs/${jobName}`))?.jobDetail || { jobName }));
         const candidates = new Map<string, any>(baseJobs.map(job => [job.jobName, job]));

@@ -23,7 +23,7 @@ export function usePreorderSetup() {
     await refresh(shopId, productStoreId);
   }
   async function saveParking(shopId: string, productStoreId: string, facilityPurposeEnumId: string, facilityId: string) {
-    await ensureOk(api({ url: 'preorder/storeFacilityPurposes', method: 'post', data: { productStoreId, facilityPurposeEnumId, facilityId } }), 'Failed to save the parking facility.');
+    await ensureOk(api({ url: 'oms/productStoreFacilityPurposes', method: 'post', data: { productStoreId, facilityPurposeEnumId, facilityId } }), 'Failed to save the parking facility.');
     await refresh(shopId, productStoreId);
   }
   async function copyJob(shopId: string, productStoreId: string, jobName: string, newJobName: string) {

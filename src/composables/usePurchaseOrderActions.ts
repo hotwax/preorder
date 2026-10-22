@@ -1,7 +1,9 @@
 import { api, useSolrSearch } from '@common';
-import { ensureOk } from '@/utils/response';
+import { ensureOk, ensureResponse } from '@/utils/response';
+import { readEntityList } from '@/utils/query';
 
-const orderUrl = (orderId: string) => `preorder/purchaseOrders/${encodeURIComponent(orderId)}`;
+const orderUrl = (orderId: string) => `oms/purchaseOrders/${encodeURIComponent(orderId)}`;
+const CLOSED_LINE_STATUSES = ['ITEM_CANCELLED', 'ITEM_COMPLETED', 'ITEM_REJECTED'];
 
 export interface NewPurchaseOrder {
   externalId?: string;
@@ -18,17 +20,37 @@ export interface NewPurchaseOrder {
 
 /** Purchase order requests: detail, create, and the bulk actions on the find page. */
 export function usePurchaseOrderActions() {
+  /**
+   * One purchase order: the order with its lines and their batches (`oms/purchaseOrders/{id}`), plus the inbound shipments
+   * against it (poorti `purchaseShipments`) and its receipts, which the order read leaves to their own resources.
+   */
   async function fetchPurchaseOrder(orderId: string) {
-    return (await ensureOk(api({ url: orderUrl(orderId), method: 'get' }), 'Failed to load the purchase order.')).order;
+    const [orderData, shipmentsResp, receiptsResp] = await Promise.all([
+      ensureOk(api({ url: orderUrl(orderId), method: 'get' }), 'Failed to load the purchase order.'),
+      ensureOk(api({ url: 'poorti/purchaseShipments', method: 'get', params: { primaryOrderId: orderId, pageSize: 100, orderBy: '-estimatedArrivalDate' } }), 'Failed to load the inbound shipments.'),
+      ensureResponse(api({ url: `${orderUrl(orderId)}/receipts`, method: 'get', params: { pageSize: 500 } }), 'Failed to load the receipts.'),
+    ]);
+    return { ...orderData.order, shipments: shipmentsResp.shipments || [], receipts: readEntityList(receiptsResp).rows };
   }
 
+  /** The parties with the SUPPLIER role, named as a company or a person. */
   async function fetchSuppliers(): Promise<{ partyId: string; name: string }[]> {
-    const data = await ensureOk(api({ url: 'preorder/suppliers', method: 'get' }), 'Failed to load suppliers.');
-    return data.suppliers || [];
+    const data = await ensureOk(api({ url: 'oms/parties/roles/SUPPLIER', method: 'get', params: { pageSize: 500 } }), 'Failed to load suppliers.');
+    return (data.parties || [])
+      .map((party: any) => ({ partyId: party.partyId, name: party.groupName || [party.firstName, party.lastName].filter(Boolean).join(' ') || party.partyId }))
+      .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name));
   }
 
+  /**
+   * Creates the purchase order, then its future inventory when asked: the order service creates the order only, and
+   * `futureInventory` makes a batch for each open line without one.
+   */
   async function createPurchaseOrder(order: NewPurchaseOrder): Promise<{ orderId: string; futureInventoryItemIds: string[] }> {
-    return ensureOk(api({ url: 'preorder/purchaseOrders', method: 'post', data: order }), 'Failed to create the purchase order.');
+    const { createFutureInventory, futureInventoryItemTypeId, ...fields } = order;
+    const created = await ensureOk(api({ url: 'oms/purchaseOrders', method: 'post', data: fields }), 'Failed to create the purchase order.');
+    if (!createFutureInventory) return { orderId: created.orderId, futureInventoryItemIds: [] };
+    const batches = await sellAsPreorder(created.orderId, futureInventoryItemTypeId);
+    return { orderId: created.orderId, futureInventoryItemIds: batches.futureInventoryItemIds || [] };
   }
 
   /** Approve, cancel or complete, through OMS's purchase order status change. */
@@ -36,9 +58,18 @@ export function usePurchaseOrderActions() {
     return ensureOk(api({ url: `oms/purchaseOrders/${encodeURIComponent(orderId)}/status`, method: 'post', data: { orderId, statusId, setItemStatus: true } }), 'Failed to change the status.');
   }
 
-  /** Sets the arrival date ('yyyy-MM-dd') on the PO's open lines; their FI batches follow. */
+  /**
+   * Sets the arrival date ('yyyy-MM-dd', end of that day) on the order's open lines, or on the given ones; each change
+   * is recorded on the line and its batch follows. One request per line.
+   */
   async function changeArrivalDate(orderId: string, arrivalDate: string, orderItemSeqIds?: string[]) {
-    return ensureOk(api({ url: `${orderUrl(orderId)}/arrivalDate`, method: 'post', data: { arrivalDate, orderItemSeqIds } }), 'Failed to change the arrival date.');
+    const seqIds = orderItemSeqIds?.length
+      ? orderItemSeqIds
+      : ((await fetchPurchaseOrder(orderId)).items || []).filter((item: any) => !CLOSED_LINE_STATUSES.includes(item.statusId)).map((item: any) => item.orderItemSeqId);
+    for (const orderItemSeqId of seqIds) {
+      await ensureOk(api({ url: `${orderUrl(orderId)}/items/${encodeURIComponent(orderItemSeqId)}`, method: 'put', data: { estimatedDeliveryDate: `${arrivalDate} 23:59:59.999` } }), 'Failed to change the arrival date.');
+    }
+    return { orderId, orderItemSeqIds: seqIds };
   }
 
   /** Creates an FI batch for each open line of the PO without one. */

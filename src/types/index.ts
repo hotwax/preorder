@@ -62,7 +62,7 @@ export interface FutureInventoryWaitingLine {
 }
 
 /**
- * One batch from GET preorder/futureInventory/{id}: the FutureInventoryItem default master, so its product and its
+ * One batch from GET oms/futureInventoryItems/{id}: the FutureInventoryItem default master, so its product and its
  * purchase order header and line ride along. The facility name comes from seed data.
  */
 export interface FutureInventoryBatchDetail extends Omit<FutureInventoryBatch, 'productName' | 'facilityName' | 'exceptionReason'> {

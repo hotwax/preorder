@@ -50,3 +50,11 @@ export function toOrderLinesQuery(orderIds: string[]): EntityParams {
   withPaging(query, { orderBy: 'orderId,orderItemSeqId', tieBreaker: 'futureInventoryItemId', pageIndex: 0, pageSize: 1000 });
   return query;
 }
+
+/** How many batches each of these purchase orders has: one row per order that has any (`oms/futureInventoryItems/purchaseOrderCounts`). */
+export function toPurchaseOrderCountsQuery(orderIds: string[]): EntityParams {
+  const query: EntityParams = {};
+  whereIn(query, 'poId', orderIds);
+  withPaging(query, { pageIndex: 0, pageSize: Math.max(orderIds.length, 1) });
+  return query;
+}

@@ -11,7 +11,7 @@ export const useInboundShipmentSearchStore = defineFindStore<{
   arrivalDateFrom: string;
   arrivalDateThru: string;
 }, InboundShipmentSummary>('inboundShipmentSearch', {
-  url: 'preorder/inboundShipments',
+  url: 'poorti/purchaseShipments',
   scopeByStore: false,
   listName: 'shipments',
   defaultSort: DEFAULT_INBOUND_SHIPMENT_SORT,
