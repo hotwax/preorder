@@ -26,7 +26,7 @@ export interface PreorderDashboard {
   storeScope?: string;
 }
 
-/** The dashboard's figures for a store, in one request. */
+/** The dashboard's figures for a store, in one request (`oms/preorderDashboard`). */
 export function useDashboard() {
   async function fetchDashboard(productStoreId: string, days = 30, arrivalDays = 7): Promise<PreorderDashboard> {
     return ensureOk(api({ url: 'oms/preorderDashboard', method: 'get', params: { productStoreId, days, arrivalDays } }), 'Failed to load the dashboard.');

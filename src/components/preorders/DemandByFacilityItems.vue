@@ -1,7 +1,7 @@
 <template>
   <ion-item v-for="row in rows" :key="row.facilityId" lines="none">
     <ion-label>
-      {{ row.facilityName || row.facilityId }}
+      {{ row.facilityName || seed.facilityName(row.facilityId) || row.facilityId }}
       <p v-if="row.parking">{{ translate('At parking') }}</p>
     </ion-label>
     <ion-label slot="end" class="ion-text-end">
@@ -14,9 +14,11 @@
 <script setup lang="ts">
 import { IonItem, IonLabel } from '@ionic/vue';
 import { translate } from '@common';
+import { useSeedData } from '@common/db';
 import { countParams } from '@/utils/format';
 import type { DemandByFacility } from '@/types';
 
 /** The rows of where open pre-order reservations wait: the facility, a parking note, and its units and items. */
 defineProps<{ rows: DemandByFacility[] }>();
+const seed = useSeedData();
 </script>

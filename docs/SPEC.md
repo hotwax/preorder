@@ -313,19 +313,19 @@ retired `preorder/*` resources are not used. Every path below is one a request i
 
 | Method + path | Use |
 |---|---|
-| GET `oms/preorders` | the Pre-orders list: `{orders, ordersCount}`, each order with its FI lines, `openLineCount`, `parkedLineCount`, `readyToReleaseLineCount` and `waitingFacilityIds` |
-| GET `oms/preorders/{orderId}` | the detail: the order and its lines, each with its facility, `atParking`, `reservationOpen`, `committed`, `readyToRelease` and its `reservations` ledger |
+| GET `oms/orders/futureInventory`, then GET `oms/futureInventoryItems/lines?orderId=<page ids>&orderId_op=in` | the Pre-orders list: order headers (store, status, channel, order date, order name filters) and the page's waiting lines; the app derives `openLineCount`, `parkedLineCount`, `readyToReleaseLineCount`, `waitingFacilityIds` and the promise range from the lines. With a filter on FI type or shipping method (line fields) it reads the matching lines first (`oms/futureInventoryItems/lines` with every filter, up to 10 pages of 1,000), collects their orders in list order, pages those client-side and reads their headers with `orderId_op=in`; the total is the count of those orders |
+| GET `oms/orders/{orderId}` (`get#SalesOrder`: customer, item statuses) and GET `oms/futureInventoryItems/lines?orderId=` | the detail: the order and its open reservation lines; the app marks each `atParking` (its facility is a parking one), `reservationOpen` and `readyToRelease` (its batch is received). Closed reservations are not rows |
 | POST `oms/orders/{orderId}/moveItemToParking` | Release to brokering (`toFacilityId: _NA_`) |
 | POST `oms/orders/{orderId}/items/cancel` | Cancel pre-order items (only lines with an open reservation) |
 | POST `oms/orders/{orderId}/items/{orderItemSeqId}/reallocate` | Move a line's reservation to another batch; a line not at parking moves only to a batch at its own facility or a location-less one |
 | GET `oms/preorderDashboard` | all dashboard figures for a store, with `demandFacilityCount` |
-| GET `oms/futureInventoryItems` | the FI list, and the active batches a line can move to; `{futureInventoryItems, futureInventoryItemsCount}` |
-| GET `oms/futureInventoryItems/{id}` | one batch, with its product and PO |
+| GET `oms/futureInventoryItems` | the FI list (`FutureInventoryItemAndProduct`: product name, computed `reservedQuantity`) and the active batches a line can move to. An entity list: a bare array with the total in `X-Total-Count`, filters by field name (`field`, `field_op`, `field_from`/`field_thru`, `orderByField`). Batches have no store: the store scope is `facilityId in` the store's facilities (`oms/productStores/{id}/facilities`). Search is the product name |
+| GET `oms/futureInventoryItems/{id}` | one batch, with its product and PO; the app adds `reservedQuantity` (on order minus ATP) and `demandByFacility` from the batch's waiting lines |
 | PUT `oms/futureInventoryItems/{id}` | adjust quantity and/or change the promise date |
 | POST `oms/futureInventoryItems/{id}/cancel` | cancel a batch |
-| GET `oms/futureInventoryItems/{id}/details` | the ledger, rows with `changedByUserName` |
+| GET `oms/futureInventoryItems/{id}/details` | the ledger, rows with `quantityOnOrderDiff`, the composite `futureInventoryItemDetailSeqId` and `changedByUserId` |
 | GET `oms/futureInventoryItems/{id}/lines` | the lines waiting on the batch |
-| GET `oms/futureInventoryItems/purchaseOrderCounts` | each listed PO's batch count (Solr does not carry it) |
+| GET `oms/futureInventoryItems/purchaseOrderCounts?poId=<ids>&poId_op=in` | each listed PO's batch count (Solr does not carry it) |
 
 ### 4.2 Purchase orders and inbound shipments (`oms`, `poorti`)
 

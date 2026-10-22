@@ -12,7 +12,7 @@
     <ion-content>
       <SearchFilterCard
         v-model="query"
-        :placeholder="translate('Batch, product, PO, external ID')"
+        :placeholder="translate('Product name')"
       >
         <UniformFilterLayout @clear="clearFilters">
           <MultiSelectFilter

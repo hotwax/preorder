@@ -12,7 +12,7 @@
     <ion-content>
       <SearchFilterCard
         v-model="query"
-        :placeholder="translate('Order, external ID, customer, email')"
+        :placeholder="translate('Order name')"
       >
         <UniformFilterLayout @clear="clearFilters">
           <MultiSelectFilter
@@ -127,6 +127,7 @@ import ErrorState from '@/components/common/ErrorState.vue';
 import PreorderRow from '@/components/preorders/PreorderRow.vue';
 import { usePrompts } from '@/composables/usePrompts';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
+import { useParkingFacilities } from '@/composables/useParkingFacilities';
 import { toCsv } from '@/utils/query';
 import { releasableLines, waitingLines } from '@/utils/preorderLines';
 import { downloadText } from '@/utils/download';
@@ -143,7 +144,10 @@ const store = usePreorderSearchStore();
 const { refresh } = useFindSearch(store, { onStoreChange: () => clearSelection() });
 const userStore = useUserStore();
 const { releaseToBrokering, fetchCancelReasons, cancelPreorderItems } = usePreorderActions();
-const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
+const { query, filters, sort, results: rawResults, total, loading, loaded, error, hasMore } = storeToRefs(store);
+const { shape } = useParkingFacilities();
+/** The loaded orders with their lines marked at parking or not, and the counts the rows show. */
+const results = computed<PreorderOrder[]>(() => rawResults.value.map(shape));
 
 const sortOptions = [
   { label: 'Newest first', value: '-orderDate' },
@@ -222,8 +226,6 @@ function exportSelected() {
   const rows = selectedOrders.value.flatMap((order) => (order.lines || []).map((line) => ({
     orderId: order.orderId,
     orderName: order.orderName,
-    customer: order.customerName,
-    email: order.email,
     orderDate: formatDate(order.orderDate),
     status: seed.statusDescription(order.statusId || ''),
     orderItemSeqId: line.orderItemSeqId,
@@ -234,8 +236,7 @@ function exportSelected() {
     promiseDate: formatDate(line.promisedDatetime),
   })));
   downloadText('pre-orders.csv', toCsv(rows, [
-    { key: 'orderId', label: translate('Order ID') }, { key: 'orderName', label: translate('Order name') }, { key: 'customer', label: translate('Customer') },
-    { key: 'email', label: translate('Email') }, { key: 'orderDate', label: translate('Order date') }, { key: 'status', label: translate('Status') },
+    { key: 'orderId', label: translate('Order ID') }, { key: 'orderName', label: translate('Order name') }, { key: 'orderDate', label: translate('Order date') }, { key: 'status', label: translate('Status') },
     { key: 'orderItemSeqId', label: translate('Item') }, { key: 'productId', label: translate('Product ID') }, { key: 'type', label: translate('Type') },
     { key: 'batch', label: translate('Future inventory') }, { key: 'atParking', label: translate('At parking') }, { key: 'promiseDate', label: translate('Promise date') },
   ]));

@@ -18,7 +18,7 @@
         @ion-change="emit('selectionChange', $event.detail.checked)"
       />
       <ion-label>
-        {{ order.customerName || order.email || shownPartyId(order.customerPartyId) || translate('Unknown customer') }}
+        {{ order.customerName || order.email || shownPartyId(order.customerPartyId) || order.orderName || order.externalId || order.orderId }}
         <p>{{ identityLabel }}</p>
       </ion-label>
     </ion-item>

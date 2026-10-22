@@ -167,6 +167,7 @@ import MoveReservationModal from '@/components/preorders/MoveReservationModal.vu
 import { countParams, formatDate, formatDateTime, formatQuantity, formatRelativeDay, toMillis } from '@/utils/format';
 import { daysOverdue, formatDateRange, overdueLabel, shortDescription, shownPartyId } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
+import { useParkingFacilities } from '@/composables/useParkingFacilities';
 import { useProductIdentity } from '@/composables/useProductIdentity';
 import { waitingFacilityIds, waitingLines } from '@/utils/preorderLines';
 import { statusColor } from '@/utils/statusColors';
@@ -180,6 +181,7 @@ const { typeLabel } = useFutureInventoryTypes();
 const { prefetch, getProduct } = useProductMaster();
 const { primaryId } = useProductIdentity();
 const { fetchPreorder } = usePreorderActions();
+const { shape } = useParkingFacilities();
 const userStore = useUserStore();
 
 const order = ref<PreorderOrder>();
@@ -223,7 +225,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    order.value = await fetchPreorder(props.orderId);
+    order.value = shape(await fetchPreorder(props.orderId));
     void prefetch(order.value.lines.map((line) => line.productId));
   } catch (err) {
     error.value = errorMessage(err, translate('Failed to load the pre-order.'));

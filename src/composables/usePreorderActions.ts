@@ -1,16 +1,55 @@
 import { api } from '@common';
-import { ensureOk } from '@/utils/response';
+import { ensureOk, ensureResponse } from '@/utils/response';
+import { readEntityList } from '@/utils/query';
+import { toOrderLinesQuery } from '@/utils/entityQueries';
+import { reservationHistory, toPreorderLine } from '@/utils/preorders';
 import { releasableLines, waitingLines } from '@/utils/preorderLines';
-import type { PreorderOrder } from '@/types';
+import type { PreorderLine, PreorderOrder } from '@/types';
 
 /** Cancel reasons only an integration sets: a Shopify cancel, a BOPIS conversion. */
 const SYSTEM_CANCEL_REASONS = ['SHOPIFY_CANCELLATION', 'CH_BOPIS_TO_STS'];
 
 /** Pre-order requests: one order, and the bulk and line actions the Pre-orders pages offer. */
 export function usePreorderActions() {
+  /**
+   * One order: its details (`oms/orders/{id}`: customer, item statuses), the lines holding future inventory
+   * (`oms/futureInventoryItems/lines`) joined by item, and each item's reservation history (`oms/orders/{id}/futureInventoryDetails`).
+   * The page marks which lines are at parking and totals them (`useParkingFacilities().shape`).
+   */
   async function fetchPreorder(orderId: string): Promise<PreorderOrder> {
-    const data = await ensureOk(api({ url: `oms/preorders/${encodeURIComponent(orderId)}`, method: 'get' }), 'Failed to load the pre-order.');
-    return data.order;
+    const [orderData, linesResp, historyResp] = await Promise.all([
+      ensureOk(api({ url: `oms/orders/${encodeURIComponent(orderId)}`, method: 'get' }), 'Failed to load the pre-order.'),
+      ensureResponse(api({ url: 'oms/futureInventoryItems/lines', method: 'get', params: toOrderLinesQuery([orderId]) }), 'Failed to load the pre-order lines.'),
+      ensureResponse(api({ url: `oms/orders/${encodeURIComponent(orderId)}/futureInventoryDetails`, method: 'get', params: { orderByField: 'createdDate,futureInventoryItemDetailSeqId', pageSize: 500 } }), 'Failed to load the reservation history.'),
+    ]);
+    const detail = orderData?.orderDetail || {};
+    const items = new Map<string, any>();
+    (detail.shipGroups || []).forEach((group: any) => (group.items || []).forEach((item: any) => items.set(String(item.orderItemSeqId), item)));
+    const waiting = readEntityList<PreorderLine>(linesResp).rows;
+    const openBatches = new Map<string, Set<string>>();
+    waiting.forEach((line) => openBatches.set(line.orderItemSeqId, new Set([...(openBatches.get(line.orderItemSeqId) || []), line.futureInventoryItemId as string])));
+    const history = reservationHistory(readEntityList<any>(historyResp).rows, openBatches);
+    const lines = waiting.map((line) => toPreorderLine({
+      ...line,
+      itemStatusId: items.get(String(line.orderItemSeqId))?.itemStatusId,
+      quantity: items.get(String(line.orderItemSeqId))?.quantity,
+      reservations: history.get(line.orderItemSeqId),
+    }));
+    // An order without ship group roles has no detail: its header fields ride on its waiting lines
+    const header: Record<string, any> = lines[0] || {};
+    return {
+      orderId,
+      orderName: detail.orderName ?? header.orderName,
+      externalId: detail.orderExternalId ?? header.externalId,
+      orderDate: detail.orderDate ?? header.orderDate,
+      statusId: detail.orderStatusId ?? header.statusId,
+      productStoreId: detail.productStoreId ?? header.productStoreId,
+      salesChannelEnumId: header.salesChannelEnumId,
+      customerPartyId: detail.partyId,
+      customerName: [detail.customerFirstName, detail.customerLastName].filter(Boolean).join(' ') || undefined,
+      email: detail.billingEmail,
+      lines,
+    };
   }
 
   /**
