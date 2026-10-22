@@ -73,7 +73,7 @@
                 {{ productLabel(batch.productId, batch.productName) }}
                 <p>{{ formatDate(batch.promiseDate) }}</p>
               </ion-label>
-              <p slot="end">{{ formatQuantity(batch.quantityOnHandTotal) }}</p>
+              <p slot="end">{{ formatQuantity(batch.quantityOnOrderTotal) }}</p>
             </ion-item>
           </ion-list>
         </StatCard>
@@ -118,7 +118,7 @@
           <Sparkline v-if="demandPoints.length > 1" :points="demandPoints" :label="translate('Units reserved per day')" color="primary" />
         </StatCard>
 
-        <StatCard :title="translate('Delay emails')" :stat="formatNumber(dashboard.delayEmails.count)" :subtitle="translate('{changes} promise date changes in the last {days} days', { changes: formatNumber(dashboard.promiseDateChanges), days: TREND_DAYS })">
+        <StatCard :title="translate('Delay emails')" :stat="formatNumber(dashboard.delayEmails.count)" :subtitle="translate('Promise date change emails in the last {days} days', { days: TREND_DAYS })">
           <Sparkline v-if="emailPoints.length > 1" :points="emailPoints" :label="translate('Delay emails per day')" color="warning" />
           <ion-list lines="none" class="drilldown-list">
             <ion-item button :detail="true" router-link="/communications">
@@ -201,7 +201,7 @@ const metrics = computed(() => {
   if (!data) return [];
   const preorderUnits = Number(data.openUnitsByType?.FIT_PRE_ORDER || 0);
   const backorderUnits = Number(data.openUnitsByType?.FIT_BACK_ORDER || 0);
-  const supply = Number(data.supply?.quantityOnHand || 0);
+  const supply = Number(data.supply?.quantityOnOrder || 0);
   const reserved = Number(data.supply?.reserved || 0);
   return [
     { id: 'preorder', label: translate('On pre-order'), percent: percent(preorderUnits, data.openUnits), value: data.openUnits ? preorderUnits / data.openUnits : 0, note: translate('{count} units', { count: formatQuantity(preorderUnits) }) },
