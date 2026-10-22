@@ -32,7 +32,7 @@
     </ion-label>
 
     <ion-label class="tablet">
-      {{ translate('{qoh} on hand', { qoh: formatQuantity(batch.quantityOnHandTotal) }) }}
+      {{ translate('{qoo} on order', { qoo: formatQuantity(batch.quantityOnOrderTotal) }) }}
       <p>{{ translate('{atp} ATP, {reserved} reserved', { atp: formatQuantity(batch.availableToPromiseTotal), reserved: formatQuantity(batch.reservedQuantity) }) }}</p>
     </ion-label>
 

@@ -39,9 +39,9 @@
                 </ion-label>
                 <ion-note slot="end">{{ po?.orderName || po?.externalId || batch.poId }}</ion-note>
               </ion-item>
-              <ion-item v-if="batch.shipmentExternalId">
+              <ion-item v-if="batch.shipmentId">
                 <ion-label>{{ translate('Inbound shipment') }}</ion-label>
-                <ion-note slot="end">{{ batch.shipmentExternalId }}</ion-note>
+                <ion-note slot="end">{{ batch.shipmentId }}</ion-note>
               </ion-item>
               <ion-item v-if="batch.externalId">
                 <ion-label>{{ translate('External ID') }}</ion-label>
@@ -55,7 +55,7 @@
 
           <div class="stats">
             <StatCard :title="translate('Promise date')" :stat="formatDate(batch.promiseDate)" :subtitle="formatRelative(batch.promiseDate)" />
-            <StatCard :title="translate('On hand')" :stat="formatQuantity(batch.quantityOnHandTotal)" :subtitle="translate('Supply still to arrive')" />
+            <StatCard :title="translate('On order')" :stat="formatQuantity(batch.quantityOnOrderTotal)" :subtitle="translate('Supply still to arrive')" />
             <StatCard :title="translate('Available to promise')" :stat="formatQuantity(batch.availableToPromiseTotal)" :subtitle="Number(batch.availableToPromiseTotal) < 0 ? translate('Overcommitted') : translate('Can still be sold')" />
             <StatCard :title="translate('Reserved')" :stat="formatQuantity(batch.reservedQuantity)" :subtitle="translate('Sold before it arrives')" />
           </div>
@@ -87,8 +87,8 @@
           >
             <ion-item lines="none">
               <ion-label>
-                {{ line.customerName || line.orderName || line.orderId }}
-                <p>{{ [line.customerName ? line.orderName : '', line.orderId, line.orderItemSeqId].filter((id) => id && id !== (line.customerName || line.orderName || line.orderId)).join(' - ') }}</p>
+                {{ line.orderName || line.orderId }}
+                <p>{{ [line.orderId, line.orderItemSeqId].filter((id) => id && id !== (line.orderName || line.orderId)).join(' - ') }}</p>
               </ion-label>
             </ion-item>
             <ion-label class="tablet">
@@ -122,7 +122,7 @@
           </ion-list-header>
           <div
             v-for="row in ledger"
-            :key="row.futureInventoryItemDetailId"
+            :key="row.futureInventoryItemDetailSeqId"
             class="list-item ledger-row"
             :role="row.orderId ? 'link' : undefined"
             :tabindex="row.orderId ? 0 : undefined"
@@ -132,12 +132,12 @@
             <ion-item lines="none">
               <ion-label>
                 {{ seed.enumDescription(row.reasonEnumId) }}
-                <p>{{ row.description || row.futureInventoryItemDetailId }}</p>
+                <p>{{ row.description || row.futureInventoryItemDetailSeqId }}</p>
               </ion-label>
             </ion-item>
             <ion-label class="tablet">
-              {{ signed(row.quantityOnHandDiff) }}
-              <p>{{ translate('On hand') }}</p>
+              {{ signed(row.quantityOnOrderDiff) }}
+              <p>{{ translate('On order') }}</p>
             </ion-label>
             <ion-label class="tablet">
               {{ signed(row.availableToPromiseDiff) }}
@@ -271,7 +271,7 @@ async function changeDate() {
 async function adjustQuantity() {
   const quantityDiff = await promptForNumber(
     translate('Adjust quantity'),
-    translate('Add or remove units from this batch: a negative number removes them. On hand and available to promise change together.'),
+    translate('Add or remove units from this batch: a negative number removes them. On order and available to promise change together.'),
     translate('Adjust'),
     '-5',
   );

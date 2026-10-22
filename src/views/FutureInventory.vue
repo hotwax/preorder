@@ -12,7 +12,7 @@
     <ion-content>
       <SearchFilterCard
         v-model="query"
-        :placeholder="translate('Batch, product, PO, external ID')"
+        :placeholder="translate('Product name')"
         :show-clear="false"
       >
         <UniformFilterLayout @clear="clearFilters">
@@ -266,7 +266,7 @@ function exportSelected() {
   downloadText('future-inventory.csv', toCsv(rows, [
     { key: 'futureInventoryItemId', label: 'Batch' }, { key: 'productId', label: 'Product ID' }, { key: 'productName', label: 'Product' },
     { key: 'type', label: 'Type' }, { key: 'facilityName', label: 'Facility' }, { key: 'poId', label: 'PO' },
-    { key: 'promiseDate', label: 'Promise date' }, { key: 'quantityOnHandTotal', label: 'On hand' },
+    { key: 'promiseDate', label: 'Promise date' }, { key: 'quantityOnOrderTotal', label: 'On order' },
     { key: 'availableToPromiseTotal', label: 'ATP' }, { key: 'reservedQuantity', label: 'Reserved' }, { key: 'status', label: 'Status' },
   ]));
 }
