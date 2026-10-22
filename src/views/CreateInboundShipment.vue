@@ -46,7 +46,7 @@
               <DateFilterSelect
                 v-model="arrivalDate"
                 :label="requiredLabel('Estimated arrival')"
-                outlined
+                :min="todayValue()"
                 allow-future
               />
             </ion-card-content>
@@ -63,10 +63,10 @@
             <ion-list>
               <div v-for="line in lines" :key="line.orderItemSeqId" class="shipment-line">
                 <ProductItem :product-id="line.productId" :product-name="line.productName">
-                  <p>{{ translate('{count} units available to ship', { count: line.unshippedQuantity }) }}</p>
+                  <p>{{ translate('{count} units available to ship', countParams(line.unshippedQuantity)) }}</p>
                 </ProductItem>
                 <ion-input
-                  v-model="line.shipmentQuantity"
+                  v-model.number="line.shipmentQuantity"
                   type="number"
                   inputmode="decimal"
                   min="0"
@@ -97,7 +97,7 @@
               ><p>
                 {{
                   translate(
-                    'Pre-order supply moves to this shipment. Existing reservations stay on their original batch.'
+                    'Pre-order supply moves to this shipment, and the pre-orders waiting at its destination move with it, oldest first.'
                   )
                 }}
               </p></ion-label
@@ -111,7 +111,7 @@
         <div class="shipment-footer">
           <ion-note
             >{{ translate('{count} lines', { count: selectedLines.length }) }},
-            {{ translate('{count} units', { count: totalUnits }) }}</ion-note
+            {{ translate('{count} units', countParams(totalUnits)) }}</ion-note
           >
           <ion-button v-if="canUpdate" :disabled="loading || !valid" @click="save">{{
             translate('Create shipment')
@@ -160,6 +160,7 @@ import { useUserStore } from '@/store/user';
 import Actions from '@/authorization/actions';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { errorMessage } from '@/utils/response';
+import { countParams, todayValue } from '@/utils/format';
 const props = defineProps<{ orderId: string }>();
 const router = useRouter();
 const seed = useSeedData();
@@ -181,6 +182,7 @@ const valid = computed(
   () =>
     reference.value.trim() &&
     arrivalDate.value &&
+    arrivalDate.value >= todayValue() &&
     lines.value.some((line) => Number(line.shipmentQuantity) > 0) &&
     lines.value.every(
       (line) =>

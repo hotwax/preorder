@@ -2,16 +2,27 @@ import { api } from '@common';
 import { ensureOk, ensureResponse } from '@/utils/response';
 import { readEntityList, whereEquals, whereIn, withPaging } from '@/utils/query';
 import { useStoreFacilitiesStore } from '@/store/storeFacilities';
+import { useParkingFacilities } from '@/composables/useParkingFacilities';
+import { demandByFacility } from '@/utils/preorders';
 import type { FutureInventoryBatch, FutureInventoryBatchDetail, FutureInventoryLedgerRow, FutureInventoryWaitingLine } from '@/types';
 
 const batchUrl = (id: string) => `oms/futureInventoryItems/${encodeURIComponent(id)}`;
 
 /** Future inventory batch requests: one batch, its ledger and waiting lines, and the batch actions. */
 export function useFutureInventoryActions() {
-  /** One batch (the entity with its product and purchase order header and line), plus the units reserved on it. */
+  const { isParking } = useParkingFacilities();
+
+  /** One batch (the entity with its product and purchase order header and line), plus the units reserved on it and where they wait. */
   async function fetchBatch(id: string): Promise<FutureInventoryBatchDetail> {
-    const batch = await ensureOk(api({ url: batchUrl(id), method: 'get' }), 'Failed to load the batch.');
-    return { ...batch, reservedQuantity: Number(batch.quantityOnOrderTotal || 0) - Number(batch.availableToPromiseTotal || 0) };
+    const [batch, waiting] = await Promise.all([
+      ensureOk(api({ url: batchUrl(id), method: 'get' }), 'Failed to load the batch.'),
+      fetchWaitingLines(id, 0, 1000).catch(() => ({ rows: [] as FutureInventoryWaitingLine[], total: 0 })),
+    ]);
+    return {
+      ...batch,
+      reservedQuantity: Number(batch.quantityOnOrderTotal || 0) - Number(batch.availableToPromiseTotal || 0),
+      demandByFacility: demandByFacility(waiting.rows, isParking),
+    };
   }
 
   /** The batch's ledger, newest first. */

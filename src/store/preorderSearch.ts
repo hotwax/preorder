@@ -3,7 +3,7 @@ import { defineFindStore } from '@/store/findStore';
 import { hasLineFilters, LINES_PAGE_SIZE, toFilteredLinesQuery, toOrderHeadersQuery, toOrderLinesQuery, toPreorderQuery } from '@/utils/entityQueries';
 import { ALL, readEntityList } from '@/utils/query';
 import { ensureResponse } from '@/utils/response';
-import { attachLines, distinctOrderIds, inIdOrder } from '@/utils/preorders';
+import { attachLines, distinctOrderIds, inIdOrder, toPreorderLine } from '@/utils/preorders';
 import type { PreorderLine, PreorderOrder } from '@/types';
 
 export const DEFAULT_PREORDER_SORT = '-orderDate';
@@ -14,7 +14,7 @@ async function withLines(headers: Omit<PreorderOrder, 'lines'>[]) {
   const { rows: lines } = readEntityList<PreorderLine & { orderId: string }>(
     await ensureResponse(api({ url: 'oms/futureInventoryItems/lines', method: 'get', params: toOrderLinesQuery(headers.map((header) => header.orderId)) }), 'Failed to load the pre-order lines.'),
   );
-  return attachLines(headers, lines);
+  return attachLines(headers, lines.map((line) => ({ ...toPreorderLine(line), orderId: line.orderId })));
 }
 
 /** The most pages of matching lines read to learn which orders match a line filter (10,000 lines). */

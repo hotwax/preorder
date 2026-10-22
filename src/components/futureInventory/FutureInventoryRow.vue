@@ -28,7 +28,7 @@
 
     <ion-label class="tablet">
       {{ seed.facilityName(batch.facilityId || '') }}
-      <p><ion-badge :color="statusColor(batch.statusId)">{{ seed.statusDescription(batch.statusId || '') }}</ion-badge></p>
+      <p><ion-badge :color="statusColor(batch.statusId)">{{ futureInventoryStatusLabel(batch.statusId, seed.statusDescription(batch.statusId || '')) }}</ion-badge></p>
     </ion-label>
 
     <ion-label class="tablet">
@@ -38,28 +38,42 @@
 
     <ion-label class="fi-row-end ion-text-end">
       {{ formatDate(batch.promiseDate) }}
-      <p>
-        <ion-text :color="batch.statusId === 'FUTURE_INV_ACTIVE' && isPast(batch.promiseDate) ? 'danger' : undefined">{{ formatRelative(batch.promiseDate) }}</ion-text>
+      <p v-if="isActive">
+        <ion-text v-if="overdueDays" color="danger">{{ overdueLabel(overdueDays) }}</ion-text>
+        <template v-else>{{ formatRelativeDay(batch.promiseDate) }}</template>
       </p>
+      <!-- A phone shows only the first and last columns: the batch, its facility, status and quantities go here -->
+      <div class="fi-row-phone">
+        <p>{{ batch.futureInventoryItemId }}</p>
+        <p>{{ seed.facilityName(batch.facilityId || '') }}</p>
+        <p><ion-badge :color="statusColor(batch.statusId)">{{ futureInventoryStatusLabel(batch.statusId, seed.statusDescription(batch.statusId || '')) }}</ion-badge></p>
+        <p>{{ translate('{qoo} on order', { qoo: formatQuantity(batch.quantityOnOrderTotal) }) }}</p>
+        <p>{{ translate('{atp} ATP, {reserved} reserved', { atp: formatQuantity(batch.availableToPromiseTotal), reserved: formatQuantity(batch.reservedQuantity) }) }}</p>
+      </div>
     </ion-label>
   </div>
 </template>
 
 <script setup lang="ts">
 import { IonBadge, IonCheckbox, IonLabel, IonText } from '@ionic/vue';
+import { computed } from 'vue';
 import { translate } from '@common';
 import { useSeedData } from '@common/db';
 import ProductItem from '@/components/common/ProductItem.vue';
-import { formatDate, formatRelative } from '@/utils/format';
-import { formatQuantity, isPast } from '@/utils/labels';
+import { formatDate, formatQuantity, formatRelativeDay } from '@/utils/format';
+import { daysOverdue, futureInventoryStatusLabel, overdueLabel } from '@/utils/labels';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { statusColor } from '@/utils/statusColors';
 import type { FutureInventoryBatch } from '@/types';
 
-defineProps<{ batch: FutureInventoryBatch; selectMode?: boolean; selected?: boolean }>();
+const props = defineProps<{ batch: FutureInventoryBatch; selectMode?: boolean; selected?: boolean }>();
 const emit = defineEmits<{ (event: 'activate'): void; (event: 'selectionChange', selected: boolean): void }>();
 const seed = useSeedData();
 const { typeLabel } = useFutureInventoryTypes();
+/** Only an active batch is still expected: a received or cancelled one shows no days ahead or late. */
+const isActive = computed(() => props.batch.statusId === 'FUTURE_INV_ACTIVE');
+/** An active batch's promise date that has passed: its supply is late. */
+const overdueDays = computed(() => (isActive.value ? daysOverdue(props.batch.promiseDate) : 0));
 </script>
 
 <style scoped>
@@ -81,5 +95,11 @@ const { typeLabel } = useFutureInventoryTypes();
   max-width: 10rem;
   min-width: 10rem;
   width: 10rem;
+}
+
+@media (min-width: 700px) {
+  .fi-row-phone {
+    display: none;
+  }
 }
 </style>

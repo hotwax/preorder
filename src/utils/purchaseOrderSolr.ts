@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import type { PurchaseOrderSummary } from '@/types';
+import { dayBound } from '@/utils/format';
 import { shownPartyId } from '@/utils/labels';
 
 /**
@@ -20,6 +21,10 @@ export interface PurchaseOrderListParams {
   orderDateFrom?: string;
   orderDateThru?: string;
   orderBy?: string;
+  /** The current product store: a purchase order is listed under the store it was created for. */
+  productStoreId?: string;
+  /** 'Y' also lists the purchase orders that name no product store, beside the current store's. */
+  includeUnassigned?: string;
 }
 
 /** Lines read per order for its totals; an order with more is totalled from its first ones by line id. */
@@ -43,20 +48,19 @@ export const escapeSolr = (value: string) => value.replace(/([+\-&|!(){}[\]^"~*?
 
 const quote = (value: string) => `"${value.replace(/(["\\])/g, '\\$1')}"`;
 
-/** A yyyy-MM-dd day in the user's time zone as the Solr range bound at its start, or its end. */
-function dayBound(day: string | undefined, end: boolean): string {
-  if (!day) return '*';
-  const date = DateTime.fromISO(day);
-  return (end ? date.endOf('day') : date.startOf('day')).toUTC().toISO() || '*';
-}
-
-const range = (from?: string, thru?: string) => `[${dayBound(from, false)} TO ${dayBound(thru, true)}]`;
+/** A range of whole days in the user's time zone, as Solr reads it; an open end is `*`. */
+const range = (from?: string, thru?: string) => `[${dayBound(from, 'start', 'iso') || '*'} TO ${dayBound(thru, 'end', 'iso') || '*'}]`;
 
 /** The filters that pick a page's orders. */
 export function purchaseOrderFilters(params: PurchaseOrderListParams): string[] {
   const filters = [...BASE_FILTERS];
   const statusIds = (params.statusId || '').split(',').filter(Boolean);
   if (statusIds.length) filters.push(`orderStatusId:(${statusIds.map(quote).join(' OR ')})`);
+  if (params.productStoreId) {
+    const ownStore = `productStoreId:${quote(params.productStoreId)}`;
+    // A purchase order may name no store: such a doc has no productStoreId at all
+    filters.push(params.includeUnassigned === 'Y' ? `(${ownStore} OR (*:* -productStoreId:[* TO *]))` : ownStore);
+  }
   if (params.supplierPartyId) filters.push(`customerPartyId:${quote(params.supplierPartyId)}`);
   if (params.facilityId) filters.push(`facilityId:${quote(params.facilityId)}`);
   if (params.orderDateFrom || params.orderDateThru) filters.push(`orderDate:${range(params.orderDateFrom, params.orderDateThru)}`);

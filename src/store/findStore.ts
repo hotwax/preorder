@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { api, commonUtil, logger, translate } from '@common';
 import { useProductStore } from '@/store/productStore';
-import { showToast } from '@/utils';
 import { readList, toListParams, type FilterValue } from '@/utils/query';
 import { errorMessage } from '@/utils/response';
 
@@ -14,11 +13,6 @@ export interface FindStoreConfig<F extends Record<string, FilterValue>> {
   defaultSort: string;
   /** The request param the search text goes in. */
   queryParam?: string;
-  /**
-   * Whether the menu's product store scopes the list. Supply (purchase orders, inbound shipments)
-   * belongs to facilities, and a purchase order may name no store, so those lists are not scoped.
-   */
-  scopeByStore?: boolean;
   /**
    * Reads a page itself instead of a GET on `url`, for a list served from somewhere else (the purchase order
    * list reads Solr). It gets the same params the GET would send.
@@ -50,6 +44,8 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
       loadingMore: false,
       loaded: false,
       stale: false,
+      /** Until when (epoch ms) a change marked stale may still be missing from the list's source: Solr shows it after its next commit. */
+      settlesAt: 0,
       error: '',
       /** What the last search answered beside its rows and total, such as the batch list's storeScope. */
       extras: {} as Record<string, any>,
@@ -61,7 +57,7 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
     },
     actions: {
       params(pageIndex: number) {
-        const productStoreId = config.scopeByStore === false ? undefined : useProductStore().getCurrentProductStoreId || undefined;
+        const productStoreId = useProductStore().getCurrentProductStoreId || undefined;
         return {
           ...toListParams({ ...(this.filters as Record<string, FilterValue>), productStoreId, [config.queryParam || 'keyword']: this.query.trim() }),
           orderBy: this.sort,
@@ -94,7 +90,8 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
           this.extras = extras;
           this.pageIndex = 0;
           this.results = rows as any;
-          this.total = total;
+          // A short page is the last one, whatever count came with it: the list stops asking for more
+          this.total = rows.length < this.pageSize ? rows.length : total;
           this.loaded = true;
         } catch (error: any) {
           if (requestId !== this.requestId) return;
@@ -118,11 +115,12 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
           if (requestId !== this.requestId) return;
           this.pageIndex = next;
           this.results = [...this.results, ...rows] as any;
-          this.total = total;
+          // An empty or short page is the last one: infinite scroll stops instead of asking again
+          this.total = rows.length < this.pageSize ? this.results.length : total;
         } catch (error: any) {
           if (requestId !== this.requestId) return;
           logger.error(`Failed to load more ${config.listName}`, error);
-          await showToast(errorMessage(error, translate('Could not load more rows. Scroll to try again.')));
+          await commonUtil.showToast(errorMessage(error, translate('Could not load more rows. Scroll to try again.')));
         } finally {
           this.loadingMore = false;
         }
@@ -136,9 +134,22 @@ export function defineFindStore<F extends Record<string, FilterValue>, R = any>(
         this.results = (this.results as R[]).map(update).filter((row): row is NonNullable<R> => row !== null) as any;
         this.total = Math.max(0, this.total - (before - this.results.length));
       },
-      /** Marks the list out of date after a change made elsewhere; it searches again when next shown. */
-      markStale() {
+      /**
+       * Marks the list out of date after a change made elsewhere; it searches again when next shown. `settleMs` is how
+       * long the list's source may take to show the change (Solr's commit): the list searches once more after it.
+       */
+      markStale(settleMs = 0) {
         this.stale = true;
+        this.settlesAt = Math.max(this.settlesAt, settleMs ? Date.now() + settleMs : 0);
+      },
+      /** Drops the loaded rows, for a search whose rows must not show under the new one's (another product store's). */
+      resetResults() {
+        this.results = [] as any;
+        this.total = 0;
+        this.pageIndex = 0;
+        this.loaded = false;
+        this.error = '';
+        this.extras = {};
       },
       clearFilters() {
         this.query = '';

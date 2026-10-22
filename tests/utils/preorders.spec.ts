@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attachLines, distinctOrderIds, inIdOrder, isOpenLine, summarizePreorderLines } from '@/utils/preorders';
+import { attachLines, demandByFacility, distinctOrderIds, inIdOrder, isOpenLine, reservationHistory, shapeOrder, summarizePreorderLines, toPreorderLine } from '@/utils/preorders';
 import type { PreorderLine } from '@/types';
 
 const line = (extra: Partial<PreorderLine>): PreorderLine => ({ orderItemSeqId: '00001', productId: 'P1', ...extra });
@@ -44,5 +44,63 @@ describe('distinctOrderIds and inIdOrder', () => {
 
   it('orders rows by the ids and drops an id with no row', () => {
     expect(inIdOrder([{ orderId: 'A' }, { orderId: 'C' }, { orderId: 'B' }], ['B', 'X', 'A'])).toEqual([{ orderId: 'B' }, { orderId: 'A' }]);
+  });
+});
+
+describe('toPreorderLine and shapeOrder', () => {
+  it('marks a waiting line open, and ready to release once its batch is received', () => {
+    expect(toPreorderLine(line({ batchStatusId: 'FUTURE_INV_ACTIVE' }))).toMatchObject({ reservationOpen: true, readyToRelease: false, committed: false });
+    expect(toPreorderLine(line({ batchStatusId: 'FUTURE_INV_RECEIVED' }))).toMatchObject({ readyToRelease: true });
+  });
+
+  it('marks lines at parking and adds the counts, facilities and ready-to-release items the rows show', () => {
+    const shaped = shapeOrder({
+      orderId: 'O1',
+      lines: [
+        toPreorderLine(line({ orderItemSeqId: '00001', facilityId: 'PRE_ORDER_PARKING', openQuantity: 2, batchStatusId: 'FUTURE_INV_RECEIVED' })),
+        toPreorderLine(line({ orderItemSeqId: '00002', facilityId: 'STORE_1', openQuantity: 1 })),
+      ],
+    }, isParking);
+    expect(shaped.lines.map((entry) => entry.atParking)).toEqual([true, false]);
+    expect(shaped).toMatchObject({ openLineCount: 2, parkedLineCount: 1, readyToReleaseLineCount: 1, openReservedQuantity: 3, waitingFacilityIds: ['PRE_ORDER_PARKING', 'STORE_1'] });
+  });
+});
+
+describe('reservationHistory', () => {
+  const rows = [
+    { orderItemSeqId: '00001', futureInventoryItemId: 'A', reasonEnumId: 'FID_RESERVED', availableToPromiseDiff: -2, createdDate: 1 },
+    { orderItemSeqId: '00001', futureInventoryItemId: 'A', reasonEnumId: 'FID_REALLOCATED_FROM', availableToPromiseDiff: 2, createdDate: 2 },
+    { orderItemSeqId: '00001', futureInventoryItemId: 'B', reasonEnumId: 'FID_REALLOCATED_TO', availableToPromiseDiff: -2, createdDate: 2 },
+    { orderItemSeqId: '00001', futureInventoryItemId: 'A', reasonEnumId: 'FID_PO_QTY_CHG', availableToPromiseDiff: 5, createdDate: 3 },
+    { futureInventoryItemId: 'A', reasonEnumId: 'FID_RESERVED', availableToPromiseDiff: -1, createdDate: 4 },
+  ];
+
+  it('keeps an item\'s reservation, release and move rows, with the quantity as a positive number', () => {
+    const history = reservationHistory(rows, new Map([['00001', new Set(['B'])]]));
+    expect(history.get('00001')?.map((entry) => [entry.futureInventoryItemId, entry.reasonEnumId, entry.quantity])).toEqual([
+      ['A', 'FID_RESERVED', 2], ['A', 'FID_REALLOCATED_FROM', 2], ['B', 'FID_REALLOCATED_TO', 2],
+    ]);
+  });
+
+  it('calls an entry open only when it reserved the batch the item still waits on', () => {
+    const history = reservationHistory(rows, new Map([['00001', new Set(['B'])]]));
+    expect(history.get('00001')?.map((entry) => entry.open)).toEqual([false, false, true]);
+  });
+});
+
+describe('demandByFacility', () => {
+  const facilityName = (id: string) => ({ W1: 'Warehouse', P1: 'Parking' } as Record<string, string>)[id];
+
+  it('adds units and items per facility, most units first, and flags parking', () => {
+    const rows = demandByFacility([
+      { orderId: 'O1', orderItemSeqId: '1', facilityId: 'P1', openQuantity: 1 },
+      { orderId: 'O2', orderItemSeqId: '1', facilityId: 'W1', openQuantity: 3 },
+      { orderId: 'O3', orderItemSeqId: '1', facilityId: 'P1', openQuantity: 1 },
+      { orderId: 'O4', orderItemSeqId: '1', openQuantity: 9 },
+    ], (id) => id === 'P1', facilityName);
+    expect(rows).toEqual([
+      { facilityId: 'W1', facilityName: 'Warehouse', parking: false, units: 3, lines: 1 },
+      { facilityId: 'P1', facilityName: 'Parking', parking: true, units: 2, lines: 2 },
+    ]);
   });
 });

@@ -12,11 +12,11 @@ import { commonSchema } from "@common/db/schema/commonSchema";
 
 /**
  * The seed tables the app reads: labels (statuses, enums, facilities and their types, shipment
- * methods), the product store picker, and the `products` master. Setup and monitoring snapshots
- * are fetched on demand by worker domains; existing transactional searches remain live.
+ * methods), store facilities and products. Setup and monitoring snapshots are fetched on demand.
  */
 const PREORDER_SEED_TABLES = [
   "productStores",
+  "productStoreFacilities",
   "statuses",
   "enums",
   "facilities",
@@ -31,8 +31,8 @@ const PREORDER_SEED_TABLES = [
 
 export const preorderDb = defineAppDb({
   suffix: "PreorderDB",
-  // v3: setup/monitoring snapshots and their Shopify/facility reference tables
-  version: 3,
+  // v4: combine the store facility cache and the setup/monitoring snapshots.
+  version: 4,
   schema: mergeSchemas(commonSchema.pick([...PREORDER_SEED_TABLES]), operationsSchema),
 });
 preorderDb.setOmsInstanceResolver(() => "default");

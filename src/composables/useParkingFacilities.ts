@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import { useSeedData } from '@common/db';
-import { summarizePreorderLines } from '@/utils/preorders';
+import { shapeOrder, summarizePreorderLines } from '@/utils/preorders';
 import type { PreorderOrder } from '@/types';
 
 /** The facility types orders wait in: pre-order and back-order parking (PreorderTypes.PARKING_FACILITY_TYPES in OMS). */
@@ -14,5 +14,7 @@ export function useParkingFacilities() {
     .map((facility: any) => facility.facilityId)));
   const isParking = (facilityId?: string) => !!facilityId && parkingIds.value.has(facilityId);
   const summarize = (order: Pick<PreorderOrder, 'lines'>) => summarizePreorderLines(order.lines || [], isParking);
-  return { isParking, summarize };
+  /** The order with its lines marked at parking or not and the counts they add up to (the list and the detail show these). */
+  const shape = (order: PreorderOrder) => shapeOrder(order, isParking);
+  return { isParking, summarize, shape };
 }

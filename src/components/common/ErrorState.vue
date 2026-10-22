@@ -7,7 +7,6 @@
       {{ message }}
     </ion-card-content>
     <ion-button
-      v-if="retryable"
       color="light"
       fill="clear"
       class="retry-button"
@@ -25,7 +24,6 @@ import { translate } from '@common';
 defineProps<{
   title: string;
   message?: string;
-  retryable?: boolean;
 }>();
 
 defineEmits<{

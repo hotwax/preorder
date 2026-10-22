@@ -1,10 +1,14 @@
 import { api } from '@common';
 import { ensureOk } from '@/utils/response';
+import { dayBound } from '@/utils/format';
 
-/** The Data Manager configs this app tracks: purchase order and future inventory imports. */
-export const IMPORT_CONFIGS = [
-  { configId: 'IMPORT_PO', label: 'Purchase orders (CSV)', uploadable: true },
-  { configId: 'SYNC_PREORDER', label: 'Future inventory (CSV)', uploadable: true },
+/**
+ * The Data Manager configs this app tracks: purchase order and future inventory imports. An uploadable one names
+ * the app action (src/authorization/actions) an upload needs: a future inventory file creates or moves batches.
+ */
+export const IMPORT_CONFIGS: { configId: string; label: string; uploadable: boolean; uploadAction?: 'APP_PO_UPDATE' | 'APP_FI_UPDATE' }[] = [
+  { configId: 'IMPORT_PO', label: 'Purchase orders (CSV)', uploadable: true, uploadAction: 'APP_PO_UPDATE' },
+  { configId: 'SYNC_PREORDER', label: 'Future inventory (CSV)', uploadable: true, uploadAction: 'APP_FI_UPDATE' },
   { configId: 'IMP_NS_PURCHASE_ORDER', label: 'Purchase orders (NetSuite)', uploadable: false },
   { configId: 'IMP_NS_INB_SHIPMENT', label: 'Inbound shipments (NetSuite)', uploadable: false },
 ];
@@ -29,24 +33,36 @@ export interface ImportLog {
   logContentId?: string;
   errorFileName?: string;
   errorLogContentId?: string;
+  /** The store the upload was stamped with; none on logs from before the stamp, which every store lists. */
+  productStoreId?: string;
 }
 
 /** Import tracking and CSV upload, through the Data Manager endpoints. */
 export function useImports() {
-  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string; logId?: string }, pageIndex: number, pageSize: number, configs: { configId: string }[] = IMPORT_CONFIGS): Promise<ImportLog[]> {
+  /**
+   * A page of import logs, newest first. `total` is the matching count when the Data Manager sends one
+   * (`dataManagerLogsCount`), else undefined: then a short page is the last one.
+   */
+  async function fetchLogs(filters: { configId: string; statusId: string; createdDateFrom: string; createdDateThru: string; logId?: string; productStoreId?: string }, pageIndex: number, pageSize: number, configs: { configId: string }[] = IMPORT_CONFIGS): Promise<{ rows: ImportLog[]; total?: number }> {
     const configIds = filters.configId && filters.configId !== 'All' ? [filters.configId] : configs.map((config) => config.configId);
     const params: Record<string, any> = { configId: configIds.join(','), configId_op: 'in', pageIndex, pageSize, orderByField: '-createdDate' };
     if (filters.logId) params.logId = filters.logId;
+    // The store the upload was stamped with (uploadFile); maarg-util get#DataManagerLogDetails filters on it once it
+    // takes the parameter (preorder-maarg#86)
+    if (filters.productStoreId) params.productStoreId = filters.productStoreId;
     if (filters.statusId && filters.statusId !== 'All') params.statusId = filters.statusId;
-    if (filters.createdDateFrom) params.createdDate_from = `${filters.createdDateFrom} 00:00:00`;
-    if (filters.createdDateThru) params.createdDate_thru = `${filters.createdDateThru} 23:59:59`;
+    if (filters.createdDateFrom) params.createdDate_from = dayBound(filters.createdDateFrom, 'start', 'timestamp');
+    if (filters.createdDateThru) params.createdDate_thru = dayBound(filters.createdDateThru, 'end', 'timestamp');
     const data = await ensureOk(api({ url: 'admin/dataManager/details', method: 'get', params }), 'Failed to load imports.');
-    return data.dataManagerLogs || [];
+    const total = Number(data.dataManagerLogsCount);
+    return { rows: data.dataManagerLogs || [], total: data.dataManagerLogsCount !== undefined && data.dataManagerLogsCount !== null && Number.isFinite(total) ? total : undefined };
   }
 
   /** Uploads a CSV for a config; the Data Manager queues it and returns the new log id. */
-  async function uploadFile(configId: string, file: File): Promise<string> {
+  async function uploadFile(configId: string, file: File, productStoreId?: string): Promise<string> {
     const form = new FormData();
+    // Stamps the log with the store it was uploaded for
+    if (productStoreId) form.append('productStoreId', productStoreId);
     form.append('contentFile', file, file.name);
     form.append('fileName', file.name.replace(/\.csv$/i, ''));
     form.append('configId', configId);

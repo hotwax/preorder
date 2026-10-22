@@ -16,7 +16,7 @@
       </div>
 
       <ion-progress-bar v-if="settingsLoading" type="indeterminate" />
-      <ErrorState v-if="settingsError" :title="translate('Could not load email settings')" :message="settingsError" retryable @retry="loadSettings" />
+      <ErrorState v-if="settingsError" :title="translate('Could not load email settings')" :message="settingsError" @retry="loadSettings" />
 
       <section v-else class="email-settings">
         <ion-card v-for="setting in settings" :key="setting.emailType">
@@ -25,15 +25,15 @@
             <p v-if="seed.enumDescription(setting.emailType) !== setting.emailType">{{ seed.enumDescription(setting.emailType) }}</p>
           </ion-card-header>
           <ion-list lines="none">
-            <ion-item :disabled="!canUpdate || !setting.wired || toggling === setting.emailType">
+            <ion-item :disabled="!canUpdate || !settingsReady || !setting.wired || toggling === setting.emailType">
               <ion-toggle :key="`${setting.emailType}-${settingsRevision}`" :checked="setting.wired && setting.exists && setting.enabled" @ionChange="toggle(setting, $event.detail.checked)">
-                {{ setting.wired ? (setting.exists && setting.enabled ? translate('Sending') : translate('Off')) : translate('Not wired') }}
+                {{ setting.wired ? (setting.exists && setting.enabled ? translate('Sending') : translate('Off')) : translate('Not available yet') }}
               </ion-toggle>
             </ion-item>
             <ion-item>
               <ion-label class="ion-text-wrap">
                 <p class="overline">{{ translate('When') }}</p>
-                {{ setting.triggerDescription || translate('No OMS event sends this email yet.') }}
+                {{ triggerLabel(setting) }}
               </ion-label>
             </ion-item>
             <ion-item>
@@ -59,7 +59,7 @@
                 </p>
               </ion-label>
             </ion-item>
-            <ion-item button :detail="true" :disabled="!canUpdate" @click="edit(setting)">
+            <ion-item button :detail="true" :disabled="!canUpdate || !settingsReady" @click="edit(setting)">
               <ion-icon slot="start" :icon="createOutline" />
               <ion-label>{{ translate('Edit email settings') }}</ion-label>
             </ion-item>
@@ -77,7 +77,7 @@
         <h1>{{ translate('Recent emails') }}</h1>
       </div>
 
-      <SearchFilterCard v-model="orderQuery" :placeholder="translate('Order ID')" :show-clear="false">
+      <SearchFilterCard v-model="orderQuery" :placeholder="translate('Order ID')">
         <UniformFilterLayout @clear="clearEventFilters">
           <ion-select v-model="eventFilters.emailType" :label="translate('Email type')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All email types') }}</ion-select-option>
@@ -88,17 +88,17 @@
             <ion-select-option value="COM_COMPLETE">{{ emailStatusLabel('COM_COMPLETE') }}</ion-select-option>
             <ion-select-option value="COM_BOUNCED">{{ emailStatusLabel('COM_BOUNCED') }}</ion-select-option>
           </ion-select>
-          <DateFilterSelect v-model="eventFilters.fromDate" :label="translate('Sent from')" :max="eventFilters.thruDate" outlined />
-          <DateFilterSelect v-model="eventFilters.thruDate" :label="translate('Sent through')" :min="eventFilters.fromDate" outlined />
+          <DateFilterSelect v-model="eventFilters.fromDate" :label="translate('Sent from')" :max="eventFilters.thruDate" />
+          <DateFilterSelect v-model="eventFilters.thruDate" :label="translate('Sent through')" :min="eventFilters.fromDate" />
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="eventsLoading" type="indeterminate" />
-      <ErrorState v-if="eventsError" :title="translate('Could not load emails')" :message="eventsError" retryable @retry="loadEvents" />
+      <ErrorState v-if="eventsError" :title="translate('Could not load emails')" :message="eventsError" @retry="loadEvents" />
 
       <ion-list v-else>
         <ion-list-header v-if="events.length">
-          <ion-label>{{ translate('{shown} of {count} emails', { shown: events.length, count: eventsTotal }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} emails', { shown: formatNumber(events.length), ...countParams(eventsTotal) }) }}</ion-label>
         </ion-list-header>
         <div
           v-for="event in events"
@@ -154,11 +154,11 @@ import {
   IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToggle, IonToolbar, modalController, onIonViewWillEnter,
 } from '@ionic/vue';
 import { alertCircleOutline, checkmarkCircleOutline, createOutline, mailOutline } from 'ionicons/icons';
-import { DateTime } from 'luxon';
 import { computed, reactive, ref, watch } from 'vue';
-import { StatCard, translate } from '@common';
+import { commonUtil, StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
-import { useCommunications, type CommunicationEventRow, type EmailGateway, type EmailSettingChanges, type PreorderEmailSetting } from '@/composables/useCommunications';
+import { useCommunications } from '@/composables/useCommunications';
+import type { CommunicationEventRow, EmailGateway, EmailSettingChanges, PreorderEmailSetting } from '@/types';
 import EmailSettingModal from '@/components/communications/EmailSettingModal.vue';
 import { useProductStore } from '@/store/productStore';
 import { useUserStore } from '@/store/user';
@@ -168,8 +168,7 @@ import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
-import { showToast } from '@/utils';
-import { formatDateTime, formatRelative } from '@/utils/format';
+import { countParams, dayBound, formatDateTime, formatNumber, formatRelative, windowStartDay } from '@/utils/format';
 import { toListParams } from '@/utils/query';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
@@ -188,6 +187,10 @@ const productStoreId = computed(() => productStore.getCurrentProductStoreId);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_COMMS_UPDATE));
 
 const settings = ref<PreorderEmailSetting[]>([]);
+/** The store the settings on screen belong to: empty until the current store's settings have loaded. */
+const settingsStoreId = ref('');
+/** Edits write to the store the settings were read for, so they wait until those are the current store's. */
+const settingsReady = computed(() => !!productStoreId.value && settingsStoreId.value === productStoreId.value);
 const settingsLoading = ref(false);
 const settingsError = ref('');
 const toggling = ref('');
@@ -216,6 +219,18 @@ const emailTypeLabel = (emailType?: string) => {
   return enumRow?.enumName || enumRow?.description || emailType;
 };
 
+/**
+ * When each email type is sent, in the app's words; OMS's own description of a type the app does not know shows
+ * as it is, and a type nothing sends says so.
+ */
+const EMAIL_TRIGGERS: Record<string, string> = {
+  PREORDER_DATE_CHANGE: "Sent when a batch's promise date moves and the orders waiting on it get the new date.",
+};
+const triggerLabel = (setting: PreorderEmailSetting) => {
+  if (!setting.wired) return translate('No OMS event sends this email yet.');
+  return EMAIL_TRIGGERS[setting.emailType] ? translate(EMAIL_TRIGGERS[setting.emailType]) : setting.triggerDescription || translate('No OMS event sends this email yet.');
+};
+
 const emailTypeOptions = computed(() => [
   ...settings.value.map((setting) => ({ value: setting.emailType, label: emailTypeLabel(setting.emailType) })),
   { value: UNKNOWN_EMAIL_TYPE, label: translate('Unknown type') },
@@ -235,36 +250,60 @@ const emailStatusLabel = (statusId?: string) => {
   return EMAIL_STATUS_LABELS[statusId] ? translate(EMAIL_STATUS_LABELS[statusId]) : seed.statusDescription(statusId);
 };
 
-const daysAgo = (days: number) => DateTime.now().minus({ days }).toISODate() as string;
-
 const gatewayLabel = (systemMessageRemoteId?: string) =>
   gateways.value.find((gateway) => gateway.systemMessageRemoteId === systemMessageRemoteId)?.description || systemMessageRemoteId || '';
 
+/** Each settings load takes a number; only the latest one's answer lands, and only for the store it was asked for. */
+let loadSettingsRequest = 0;
+
 async function loadSettings() {
-  if (!productStoreId.value) return;
+  const storeId = productStoreId.value;
+  if (!storeId) return;
+  const request = ++loadSettingsRequest;
   settingsLoading.value = true;
   settingsError.value = '';
   try {
     const [rows, week, month, gatewayRows] = await Promise.all([
-      fetchEmailSettings(productStoreId.value),
-      fetchCounts(productStoreId.value, daysAgo(7)),
-      fetchCounts(productStoreId.value, daysAgo(30)),
+      fetchEmailSettings(storeId),
+      fetchCounts(storeId, windowStartDay(7)),
+      fetchCounts(storeId, windowStartDay(30)),
       fetchEmailGateways().catch(() => [] as EmailGateway[]),
     ]);
+    if (request !== loadSettingsRequest || storeId !== productStoreId.value) return;
     settings.value = rows;
     gateways.value = gatewayRows;
     counts7.value = week;
     counts30.value = month;
+    settingsStoreId.value = storeId;
   } catch (err) {
+    if (request !== loadSettingsRequest) return;
     settingsError.value = errorMessage(err, translate('Failed to load email settings.'));
   } finally {
-    settingsLoading.value = false;
+    if (request === loadSettingsRequest) settingsLoading.value = false;
   }
+}
+
+/** Another store's settings never show, or get saved, under this store: they clear at once and edits wait for the new ones. */
+function clearStoreData() {
+  settings.value = [];
+  counts7.value = [];
+  counts30.value = [];
+  settingsStoreId.value = '';
+  settingsRevision.value += 1;
+  events.value = [];
+  eventsTotal.value = 0;
+  eventsLoaded.value = false;
 }
 
 function eventParams(pageIndex: number) {
   return {
-    ...toListParams({ ...eventFilters, orderId: orderQuery.value.trim(), productStoreId: productStoreId.value }),
+    ...toListParams({
+      ...eventFilters,
+      fromDate: dayBound(eventFilters.fromDate, 'start', 'date'),
+      thruDate: dayBound(eventFilters.thruDate, 'end', 'date'),
+      orderId: orderQuery.value.trim(),
+      productStoreId: productStoreId.value,
+    }),
     pageIndex,
     pageSize: PAGE_SIZE,
   };
@@ -282,7 +321,8 @@ async function loadEvents() {
     const { rows, total } = await fetchEvents(eventParams(0));
     if (request !== loadEventsRequest) return;
     events.value = rows;
-    eventsTotal.value = total;
+    // A short page is the last one, whatever count came with it
+    eventsTotal.value = rows.length < PAGE_SIZE ? rows.length : total;
     eventsPage.value = 0;
     eventsLoaded.value = true;
   } catch (err) {
@@ -303,10 +343,12 @@ async function loadMoreEvents(event: CustomEvent) {
     const { rows, total } = await fetchEvents(eventParams(eventsPage.value + 1));
     if (request !== loadEventsRequest) return;
     events.value = [...events.value, ...rows];
-    eventsTotal.value = total;
+    // An empty or short page is the last one: infinite scroll stops instead of asking again
+    eventsTotal.value = rows.length < PAGE_SIZE ? events.value.length : total;
     eventsPage.value += 1;
   } catch (err) {
-    await showToast(errorMessage(err, translate('Could not load more emails. Scroll to try again.')));
+    if (request !== loadEventsRequest) return;
+    await commonUtil.showToast(errorMessage(err, translate('Could not load more emails. Scroll to try again.')));
   } finally {
     eventsLoadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
@@ -320,6 +362,7 @@ watch(orderQuery, () => {
 });
 watch(eventFilters, loadEvents, { deep: true });
 watch(productStoreId, () => {
+  clearStoreData();
   void loadSettings();
   void loadEvents();
 });
@@ -338,19 +381,28 @@ function clearEventFilters() {
   orderQuery.value = '';
 }
 
+/** Whether the store the settings were read for is still the current one; says so when it is not. */
+async function stillSameStore(storeId: string) {
+  if (storeId === productStoreId.value) return true;
+  await commonUtil.showToast(translate('The product store changed, so the change was not saved.'));
+  return false;
+}
+
 async function edit(setting: PreorderEmailSetting) {
+  if (!settingsReady.value) return;
+  const storeId = settingsStoreId.value;
   const modal = await modalController.create({
     component: EmailSettingModal,
     componentProps: { header: emailTypeLabel(setting.emailType), setting, gateways: gateways.value },
   });
   await modal.present();
   const { data, role } = await modal.onDidDismiss<EmailSettingChanges>();
-  if (role !== 'confirm' || !data || !Object.keys(data).length) return;
+  if (role !== 'confirm' || !data || !Object.keys(data).length || !await stillSameStore(storeId)) return;
   try {
-    await updateEmailSetting(productStoreId.value, setting.emailType, data);
-    await showToast(translate('{email} settings saved.', { email: emailTypeLabel(setting.emailType) }));
+    await updateEmailSetting(storeId, setting.emailType, data);
+    await commonUtil.showToast(translate('{email} settings saved.', { email: emailTypeLabel(setting.emailType) }));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to update the email setting.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to update the email setting.')));
   } finally {
     await loadSettings();
     settingsRevision.value += 1;
@@ -358,13 +410,14 @@ async function edit(setting: PreorderEmailSetting) {
 }
 
 async function toggle(setting: PreorderEmailSetting, enabled: boolean) {
-  if ((setting.exists && setting.enabled) === enabled) return;
+  if (!settingsReady.value || (setting.exists && setting.enabled) === enabled) return;
+  const storeId = settingsStoreId.value;
   toggling.value = setting.emailType;
   try {
-    await setEmailEnabled(productStoreId.value, setting.emailType, enabled);
-    await showToast(enabled ? translate('{email} turned on.', { email: emailTypeLabel(setting.emailType) }) : translate('{email} turned off.', { email: emailTypeLabel(setting.emailType) }));
+    await setEmailEnabled(storeId, setting.emailType, enabled);
+    await commonUtil.showToast(enabled ? translate('{email} turned on.', { email: emailTypeLabel(setting.emailType) }) : translate('{email} turned off.', { email: emailTypeLabel(setting.emailType) }));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to update the email setting.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to update the email setting.')));
   } finally {
     toggling.value = '';
     await loadSettings();

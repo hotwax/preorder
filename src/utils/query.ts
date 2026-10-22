@@ -1,6 +1,6 @@
 /**
  * Request parameter helpers for the find pages: one place that turns a page's filter state into the
- * query string the preorder REST resources read, so every find page drops "All" and empty values the
+ * query string the oms and poorti list resources read, so every find page drops "All" and empty values the
  * same way and sends multi-selects as the comma lists the backend splits.
  */
 

@@ -13,7 +13,6 @@
       <SearchFilterCard
         v-model="query"
         :placeholder="translate('PO, name, external ID')"
-        :show-clear="false"
       >
         <UniformFilterLayout @clear="clearFilters">
           <MultiSelectFilter
@@ -31,20 +30,29 @@
           <ion-select v-model="filters.facilityId" :label="translate('Destination')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All facilities') }}</ion-select-option>
             <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">
-              {{ facility.facilityName || facility.facilityId }}
+              {{ facility.label }}
             </ion-select-option>
           </ion-select>
 
-          <DateFilterSelect v-model="filters.arrivalDateFrom" :label="translate('Arrival from')" :max="filters.arrivalDateThru" allow-future outlined />
-          <DateFilterSelect v-model="filters.arrivalDateThru" :label="translate('Arrival through')" :min="filters.arrivalDateFrom" allow-future outlined />
-          <DateFilterSelect v-model="filters.orderDateFrom" :label="translate('Order date from')" :max="filters.orderDateThru" outlined />
-          <DateFilterSelect v-model="filters.orderDateThru" :label="translate('Order date through')" :min="filters.orderDateFrom" outlined />
+          <DateFilterSelect v-model="filters.arrivalDateFrom" :label="translate('Arrival from')" :max="filters.arrivalDateThru" allow-future />
+          <DateFilterSelect v-model="filters.arrivalDateThru" :label="translate('Arrival through')" :min="filters.arrivalDateFrom" allow-future />
+          <DateFilterSelect v-model="filters.orderDateFrom" :label="translate('Order date from')" :max="filters.orderDateThru" />
+          <DateFilterSelect v-model="filters.orderDateThru" :label="translate('Order date through')" :min="filters.orderDateFrom" />
+
+          <ion-item lines="none">
+            <ion-checkbox :checked="filters.includeUnassigned" label-placement="end" justify="start" @ionChange="filters.includeUnassigned = $event.detail.checked">
+              <ion-label class="ion-text-wrap">
+                {{ translate('Include unassigned') }}
+                <p>{{ translate('Also lists purchase orders that name no product store.') }}</p>
+              </ion-label>
+            </ion-checkbox>
+          </ion-item>
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
-      <ErrorState v-if="error" :title="translate('Could not load purchase orders')" :message="error" retryable @retry="refresh()" />
+      <ErrorState v-if="error" :title="translate('Could not load purchase orders')" :message="error" @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
@@ -57,7 +65,7 @@
               @ionChange="toggleAll($event.detail.checked)"
             />
           </span>
-          <ion-label>{{ translate('{shown} of {count} purchase orders', { shown: results.length, count: total }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} purchase orders', { shown: formatNumber(results.length), ...countParams(total) }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="po-sort-trigger" :options="sortOptions" />
           <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
@@ -95,12 +103,12 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdate || running" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canChangeArrival || running || loading" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdateFutureInventory || running || loading" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-footer>
@@ -110,21 +118,22 @@
 <script setup lang="ts">
 import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFab, IonFabButton, IonFooter, IonHeader, IonIcon, IonInfiniteScroll,
-  IonInfiniteScrollContent, IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect,
-  IonSelectOption, IonTitle, IonToolbar, onIonViewDidLeave,
+  IonInfiniteScrollContent, IonItem, IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect,
+  IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
 import { addOutline } from 'ionicons/icons';
-import { DateTime } from 'luxon';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { translate } from '@common';
+import { commonUtil, logger, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
-import { OPEN_PURCHASE_ORDER_STATUSES as OPEN_STATUSES, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
+import { OPEN_PURCHASE_ORDER_STATUSES as OPEN_STATUSES, SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useUserStore } from '@/store/user';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
 import { useFindSearch } from '@/composables/useFindSearch';
+import { useRowSelection } from '@/composables/useRowSelection';
+import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import { useBulkAction } from '@/composables/useBulkAction';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
@@ -134,17 +143,19 @@ import SortPopover from '@/components/common/SortPopover.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import PurchaseOrderRow from '@/components/purchaseOrders/PurchaseOrderRow.vue';
-import { confirmAction, promptForDate, showToast } from '@/utils';
-import { toCsv } from '@/utils/query';
+import { usePrompts } from '@/composables/usePrompts';
+import { ALL, toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
-import { formatDate } from '@/utils/format';
+import { errorMessage } from '@/utils/response';
+import { countParams, formatDate, formatNumber, toMillis } from '@/utils/format';
 import Actions from '@/authorization/actions';
 import type { PurchaseOrderSummary } from '@/types';
 
 const seed = useSeedData();
+const { confirmAction, promptForDate } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const store = usePurchaseOrderSearchStore();
-const { refresh } = useFindSearch(store, { scopeByStore: false });
+const { refresh, refreshLater } = useFindSearch(store, { onStoreChange });
 const userStore = useUserStore();
 const { fetchSuppliers, changeStatus, changeArrivalDate: changeOrderArrivalDate, sellAsPreorder, forEachOrder } = usePurchaseOrderActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
@@ -155,51 +166,42 @@ const sortOptions = [
   { label: 'Oldest first', value: 'orderDate' },
 ];
 const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
-const facilityOptions = computed(() => seed.facilities().filter((facility: any) => seed.facilityType(facility.facilityTypeId)?.parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY'));
+// Orders are bound for the store's receiving locations: warehouses and stores, never the virtual parking facilities.
+const { facilityOptions } = useStoreFacilities();
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
+// Selling as pre-order creates future inventory: the FI permission
+const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
+// Moving arrival dates updates the PO lines and moves their future inventory: both permissions
+const canChangeArrival = computed(() => canUpdate.value && canUpdateFutureInventory.value);
 
-const selectMode = ref(false);
-const selectedIds = ref<string[]>([]);
-const selectedOrders = computed(() => results.value.filter((order) => selectedIds.value.includes(order.orderId)));
+const { selectMode, selectedIds, selectedRows: selectedOrders, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (order) => order.orderId);
 const selectedWithStatus = (statusIds: string[]) => selectedOrders.value.filter((order) => statusIds.includes(order.statusId || '')).map((order) => order.orderId);
 const selectedOpen = computed(() => selectedWithStatus(OPEN_STATUSES));
-const allSelected = computed(() => results.value.length > 0 && results.value.every((order) => selectedIds.value.includes(order.orderId)));
-const someSelected = computed(() => results.value.some((order) => selectedIds.value.includes(order.orderId)));
-
-watch(results, () => {
-  const ids = new Set(results.value.map((order) => order.orderId));
-  selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
-});
 
 onMounted(async () => {
-  suppliers.value = await fetchSuppliers().catch(() => []);
+  try {
+    suppliers.value = await fetchSuppliers();
+  } catch (error) {
+    logger.error('Failed to load suppliers', error);
+    await commonUtil.showToast(errorMessage(error, translate('Suppliers could not be loaded.')));
+  }
 });
 
 function activate(orderId: string) {
-  if (selectMode.value) setSelected(orderId, !selectedIds.value.includes(orderId));
+  if (selectMode.value) toggleSelected(orderId);
   else router.push(`/purchase-orders/${encodeURIComponent(orderId)}`);
 }
 
-function setSelected(orderId: string, checked: boolean) {
-  const next = new Set(selectedIds.value);
-  if (checked) next.add(orderId);
-  else next.delete(orderId);
-  selectedIds.value = [...next];
-}
-
-function toggleAll(checked: boolean) {
-  selectedIds.value = checked ? results.value.map((order) => order.orderId) : [];
-}
-
-function toggleSelectMode() {
-  selectMode.value = !selectMode.value;
-  if (!selectMode.value) selectedIds.value = [];
+/** Another store's orders leave with their selection, and a destination filter of the old store's facilities with them. */
+function onStoreChange() {
+  clearSelection();
+  filters.value.facilityId = ALL;
 }
 
 function clearFilters() {
   store.clearFilters();
-  selectedIds.value = [];
+  deselectAll();
 }
 
 async function loadMore(event: CustomEvent) {
@@ -207,33 +209,19 @@ async function loadMore(event: CustomEvent) {
   (event.target as HTMLIonInfiniteScrollElement).complete();
 }
 
-/** Solr shows a saved change after its next commit, about a second; the list searches again once it has. */
-const SOLR_REFRESH_DELAY_MS = 1500;
-let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-
-// Leaving before the refresh runs: drop it, and search again when the list is next shown
-onIonViewDidLeave(() => {
-  if (!refreshTimer) return;
-  clearTimeout(refreshTimer);
-  refreshTimer = undefined;
-  store.markStale();
-});
-
 /**
  * Says how a bulk action went, shows its change on the rows it succeeded for at once, and searches again once Solr
  * has the change.
  */
 async function report(result: { done: number; failed: number; errors: string[]; succeeded: string[] }, success: string, patch?: (order: PurchaseOrderSummary) => PurchaseOrderSummary | null) {
-  await showToast(result.failed ? translate('{done} done, {failed} failed: {errors}', { ...result, errors: result.errors.slice(0, 2).join('; ') }) : success);
+  await commonUtil.showToast(result.failed ? translate('{done} done, {failed} failed: {errors}', { ...result, errors: result.errors.slice(0, 2).join('; ') }) : success);
   useFutureInventorySearchStore().markStale();
   if (patch) {
     const changed = new Set(result.succeeded);
     store.updateRows((order) => (changed.has(order.orderId) ? patch(order) : order));
   }
-  selectMode.value = false;
-  selectedIds.value = [];
-  if (refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(() => { refreshTimer = undefined; void refresh(); }, SOLR_REFRESH_DELAY_MS);
+  clearSelection();
+  refreshLater(SOLR_SETTLE_MS);
 }
 
 const STATUS_ACTIONS: Record<string, { header: string; message: string; confirm: string; from: string[]; done: string }> = {
@@ -261,7 +249,7 @@ async function changeArrivalDate() {
   );
   if (!arrivalDate) return;
   const result = await runBulk(() => forEachOrder(orderIds, (orderId) => changeOrderArrivalDate(orderId, arrivalDate)));
-  const arrivalMillis = DateTime.fromISO(arrivalDate).toMillis();
+  const arrivalMillis = toMillis(arrivalDate);
   await report(result, translate('{done} purchase orders now arrive {date}.', { done: result.done, count: result.done, date: formatDate(arrivalDate) }), (order) =>
     ({ ...order, earliestArrivalDate: arrivalMillis, latestArrivalDate: arrivalMillis }));
 }
@@ -286,10 +274,10 @@ function exportSelected() {
     earliestArrivalDate: formatDate(order.earliestArrivalDate),
   }));
   downloadText('purchase-orders.csv', toCsv(rows, [
-    { key: 'orderId', label: 'PO' }, { key: 'orderName', label: 'Name' }, { key: 'externalId', label: 'External ID' },
-    { key: 'supplierName', label: 'Supplier' }, { key: 'facilityName', label: 'Destination' }, { key: 'status', label: 'Status' },
-    { key: 'orderDate', label: 'Order date' }, { key: 'earliestArrivalDate', label: 'Arrival' }, { key: 'itemCount', label: 'Lines' },
-    { key: 'quantityTotal', label: 'Units' },
+    { key: 'orderId', label: translate('PO') }, { key: 'orderName', label: translate('Name') }, { key: 'externalId', label: translate('External ID') },
+    { key: 'supplierName', label: translate('Supplier') }, { key: 'facilityName', label: translate('Destination') }, { key: 'status', label: translate('Status') },
+    { key: 'orderDate', label: translate('Order date') }, { key: 'earliestArrivalDate', label: translate('Arrival') }, { key: 'itemCount', label: translate('Lines') },
+    { key: 'quantityTotal', label: translate('Units') },
   ]));
 }
 </script>

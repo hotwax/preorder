@@ -13,7 +13,6 @@
       <SearchFilterCard
         v-model="query"
         :placeholder="translate('Product name')"
-        :show-clear="false"
       >
         <UniformFilterLayout @clear="clearFilters">
           <MultiSelectFilter
@@ -31,7 +30,7 @@
           <ion-select v-model="filters.facilityId" :label="translate('Facility')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All facilities') }}</ion-select-option>
             <ion-select-option v-for="facility in facilityOptions" :key="facility.facilityId" :value="facility.facilityId">
-              {{ facility.facilityName || facility.facilityId }}
+              {{ facility.label }}
             </ion-select-option>
           </ion-select>
 
@@ -41,8 +40,8 @@
             <ion-select-option value="overcommitted">{{ translate('Overcommitted') }}</ion-select-option>
           </ion-select>
 
-          <DateFilterSelect v-model="filters.promiseDateFrom" :label="translate('Promise date from')" :max="filters.promiseDateThru" allow-future outlined />
-          <DateFilterSelect v-model="filters.promiseDateThru" :label="translate('Promise date through')" :min="filters.promiseDateFrom" allow-future outlined />
+          <DateFilterSelect v-model="filters.promiseDateFrom" :label="translate('Promise date from')" :max="filters.promiseDateThru" allow-future />
+          <DateFilterSelect v-model="filters.promiseDateThru" :label="translate('Promise date through')" :min="filters.promiseDateFrom" allow-future />
         </UniformFilterLayout>
       </SearchFilterCard>
 
@@ -54,7 +53,7 @@
         </ion-card-content>
       </ion-card>
 
-      <ErrorState v-if="error" :title="translate('Could not load future inventory')" :message="error" retryable @retry="refresh()" />
+      <ErrorState v-if="error" :title="translate('Could not load future inventory')" :message="error" @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
@@ -67,7 +66,7 @@
               @ionChange="toggleAll($event.detail.checked)"
             />
           </span>
-          <ion-label>{{ translate('{shown} of {count} batches', { shown: results.length, count: total }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} batches', { shown: formatNumber(results.length), ...countParams(total) }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="fi-sort-trigger" :options="sortOptions" />
           <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
@@ -99,9 +98,9 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedOpenIds.length || !canUpdate || running" @click="changePromiseDate">{{ translate('Change promise date') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedOpenIds.length || !canUpdate || running" @click="cancelBatches">{{ translate('Cancel batch') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpenIds.length || !canUpdate || running || loading" @click="changePromiseDate">{{ translate('Change promise date') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedOpenIds.length || !canUpdate || running || loading" @click="cancelBatches">{{ translate('Cancel batch') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-footer>
@@ -113,9 +112,9 @@ import {
   IonButton, IonButtons, IonCard, IonCardContent, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
   IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
@@ -125,6 +124,8 @@ import { usePreorderSearchStore } from '@/store/preorderSearch';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { useFindSearch } from '@/composables/useFindSearch';
 import { useBulkAction } from '@/composables/useBulkAction';
+import { useRowSelection } from '@/composables/useRowSelection';
+import { useStoreFacilities } from '@/composables/useStoreFacilities';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -133,22 +134,23 @@ import SortPopover from '@/components/common/SortPopover.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import FutureInventoryRow from '@/components/futureInventory/FutureInventoryRow.vue';
-import { confirmAction, promptForDate, showToast } from '@/utils';
-import { formatQuantity } from '@/utils/labels';
+import { usePrompts } from '@/composables/usePrompts';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
-import { toCsv } from '@/utils/query';
+import { ALL, toCsv } from '@/utils/query';
 import { downloadText } from '@/utils/download';
-import { formatDate } from '@/utils/format';
+import { countParams, formatDate, formatNumber, formatQuantity } from '@/utils/format';
+import { futureInventoryStatusLabel } from '@/utils/labels';
 import Actions from '@/authorization/actions';
 
 const FINAL_STATUSES = ['FUTURE_INV_CANCELLED', 'FUTURE_INV_RECEIVED'];
 
 const seed = useSeedData();
+const { confirmAction, promptForDate } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
 const productStore = useProductStore();
 const store = useFutureInventorySearchStore();
-const { refresh } = useFindSearch(store);
+const { refresh } = useFindSearch(store, { onStoreChange });
 const userStore = useUserStore();
 const { updateBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore, extras } = storeToRefs(store);
@@ -159,12 +161,10 @@ const sortOptions = [
   { label: 'Latest promise date', value: '-promiseDate' },
   { label: 'Recently updated', value: '-lastUpdatedStamp' },
 ];
-const statusOptions = computed(() => seed.statusItemsByType('FII_STATUS').map((status: any) => ({ value: status.statusId, label: status.description || status.statusId })));
-// Batches sit at receiving locations: warehouses and stores, never the virtual parking facilities.
-const facilityOptions = computed(() => seed.facilities().filter((facility: any) => {
-  const parentTypeId = seed.facilityType(facility.facilityTypeId)?.parentTypeId;
-  return parentTypeId !== 'VIRTUAL_FACILITY' && facility.facilityTypeId !== 'VIRTUAL_FACILITY';
-}));
+/** Each status by its short name, as the rows' badges name it. */
+const statusOptions = computed(() => seed.statusItemsByType('FII_STATUS').map((status: any) => ({ value: status.statusId, label: futureInventoryStatusLabel(status.statusId, status.description) })));
+// Batches sit at the store's receiving locations: warehouses and stores, never the virtual parking facilities.
+const { facilityOptions } = useStoreFacilities();
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 
 /** The two reservation flags as one select, since they don't combine usefully. */
@@ -176,43 +176,23 @@ const reservationFilter = computed({
   },
 });
 
-const selectMode = ref(false);
-const selectedIds = ref<string[]>([]);
-const selectedBatches = computed(() => results.value.filter((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
+const { selectMode, selectedIds, selectedRows: selectedBatches, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (batch) => batch.futureInventoryItemId);
 const selectedOpenIds = computed(() => selectedBatches.value.filter((batch) => !FINAL_STATUSES.includes(batch.statusId || '')).map((batch) => batch.futureInventoryItemId));
-const allSelected = computed(() => results.value.length > 0 && results.value.every((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
-const someSelected = computed(() => results.value.some((batch) => selectedIds.value.includes(batch.futureInventoryItemId)));
-
-watch(results, () => {
-  const ids = new Set(results.value.map((batch) => batch.futureInventoryItemId));
-  selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
-});
-
 
 function activate(id: string) {
-  if (selectMode.value) setSelected(id, !selectedIds.value.includes(id));
+  if (selectMode.value) toggleSelected(id);
   else router.push(`/future-inventory/${encodeURIComponent(id)}`);
 }
 
-function setSelected(id: string, checked: boolean) {
-  const next = new Set(selectedIds.value);
-  if (checked) next.add(id);
-  else next.delete(id);
-  selectedIds.value = [...next];
-}
-
-function toggleAll(checked: boolean) {
-  selectedIds.value = checked ? results.value.map((batch) => batch.futureInventoryItemId) : [];
-}
-
-function toggleSelectMode() {
-  selectMode.value = !selectMode.value;
-  if (!selectMode.value) selectedIds.value = [];
+/** Another store's batches leave with their selection, and a facility filter of the old store's facilities with them. */
+function onStoreChange() {
+  clearSelection();
+  filters.value.facilityId = ALL;
 }
 
 function clearFilters() {
   store.clearFilters();
-  selectedIds.value = [];
+  deselectAll();
 }
 
 async function loadMore(event: CustomEvent) {
@@ -222,9 +202,8 @@ async function loadMore(event: CustomEvent) {
 
 async function finish(message: string) {
   usePreorderSearchStore().markStale();
-  await showToast(message);
-  selectMode.value = false;
-  selectedIds.value = [];
+  await commonUtil.showToast(message);
+  clearSelection();
   await refresh();
 }
 
@@ -237,7 +216,7 @@ async function changePromiseDate() {
   );
   if (!promiseDate) return;
   const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => updateBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' })));
-  await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
+  await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed, n: done }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
 }
 
 async function cancelBatches() {
@@ -252,7 +231,7 @@ async function cancelBatches() {
   );
   if (!confirmed) return;
   const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => cancelBatch(id, 'Cancelled in the Pre-order app')));
-  await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed }) : translate('{done} batches cancelled.', { done, count: done }));
+  await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed, n: done }) : translate('{done} batches cancelled.', { done, count: done }));
 }
 
 function exportSelected() {
@@ -264,10 +243,10 @@ function exportSelected() {
     promiseDate: formatDate(batch.promiseDate),
   }));
   downloadText('future-inventory.csv', toCsv(rows, [
-    { key: 'futureInventoryItemId', label: 'Batch' }, { key: 'productId', label: 'Product ID' }, { key: 'productName', label: 'Product' },
-    { key: 'type', label: 'Type' }, { key: 'facilityName', label: 'Facility' }, { key: 'poId', label: 'PO' },
-    { key: 'promiseDate', label: 'Promise date' }, { key: 'quantityOnOrderTotal', label: 'On order' },
-    { key: 'availableToPromiseTotal', label: 'ATP' }, { key: 'reservedQuantity', label: 'Reserved' }, { key: 'status', label: 'Status' },
+    { key: 'futureInventoryItemId', label: translate('Batch') }, { key: 'productId', label: translate('Product ID') }, { key: 'productName', label: translate('Product') },
+    { key: 'type', label: translate('Type') }, { key: 'facilityName', label: translate('Facility') }, { key: 'poId', label: translate('PO') },
+    { key: 'promiseDate', label: translate('Promise date') }, { key: 'quantityOnOrderTotal', label: translate('On order') },
+    { key: 'availableToPromiseTotal', label: translate('ATP') }, { key: 'reservedQuantity', label: translate('Reserved') }, { key: 'status', label: translate('Status') },
   ]));
 }
 </script>

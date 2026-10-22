@@ -13,7 +13,6 @@
       <SearchFilterCard
         v-model="query"
         :placeholder="translate('Order name')"
-        :show-clear="false"
       >
         <UniformFilterLayout @clear="clearFilters">
           <MultiSelectFilter
@@ -40,14 +39,14 @@
             <ion-select-option v-for="option in shipmentMethodOptions" :key="option.id" :value="option.id">{{ option.label }}</ion-select-option>
           </ion-select>
 
-          <DateFilterSelect v-model="filters.orderDateFrom" :label="translate('Order date from')" :max="filters.orderDateThru" outlined />
-          <DateFilterSelect v-model="filters.orderDateThru" :label="translate('Order date through')" :min="filters.orderDateFrom" outlined />
+          <DateFilterSelect v-model="filters.orderDateFrom" :label="translate('Order date from')" :max="filters.orderDateThru" />
+          <DateFilterSelect v-model="filters.orderDateThru" :label="translate('Order date through')" :min="filters.orderDateFrom" />
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
 
-      <ErrorState v-if="error" :title="translate('Could not load pre-orders')" :message="error" retryable @retry="refresh()" />
+      <ErrorState v-if="error" :title="translate('Could not load pre-orders')" :message="error" @retry="refresh()" />
 
       <ion-list v-else>
         <ion-list-header v-if="results.length" class="results-header">
@@ -60,7 +59,7 @@
               @ionChange="toggleAll($event.detail.checked)"
             />
           </span>
-          <ion-label>{{ translate('{shown} of {count} pre-orders', { shown: results.length, count: total }) }}</ion-label>
+          <ion-label>{{ translate('{shown} of {count} pre-orders', { shown: formatNumber(results.length), ...countParams(total) }) }}</ion-label>
           <SortPopover v-model="sort" trigger-id="preorder-sort-trigger" :options="sortOptions" />
           <ion-button fill="clear" size="small" :disabled="running" @click="toggleSelectMode">
             {{ selectMode ? translate('Done') : translate('Select') }}
@@ -92,9 +91,9 @@
       <ion-toolbar>
         <ion-title size="small">{{ translate('{count} selected', { count: selectedIds.length }) }}</ion-title>
         <ion-buttons slot="end" class="bulk-action-buttons">
-          <ion-button fill="outline" :disabled="!selectedParkedCount || !canUpdate || running" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
-          <ion-button fill="outline" color="danger" :disabled="!selectedIds.length || !canUpdate || running" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedIds.length" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedReleasableCount || !canUpdate || running || loading" @click="confirmRelease">{{ translate('Release to brokering') }}</ion-button>
+          <ion-button fill="outline" color="danger" :disabled="!selectedWaitingCount || !canUpdate || running || loading" @click="confirmCancel">{{ translate('Cancel pre-order items') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-footer>
@@ -106,9 +105,9 @@ import {
   IonButton, IonButtons, IonCheckbox, IonContent, IonFooter, IonHeader, IonInfiniteScroll, IonInfiniteScrollContent,
   IonLabel, IonList, IonListHeader, IonMenuButton, IonPage, IonProgressBar, IonSelect, IonSelectOption, IonTitle, IonToolbar,
 } from '@ionic/vue';
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import router from '@/router';
 import { usePreorderSearchStore } from '@/store/preorderSearch';
@@ -117,6 +116,7 @@ import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePreorderActions } from '@/composables/usePreorderActions';
 import { useFindSearch } from '@/composables/useFindSearch';
 import { useBulkAction } from '@/composables/useBulkAction';
+import { useRowSelection } from '@/composables/useRowSelection';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
@@ -125,24 +125,29 @@ import SortPopover from '@/components/common/SortPopover.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import PreorderRow from '@/components/preorders/PreorderRow.vue';
-import { confirmAction, showToast } from '@/utils';
+import { usePrompts } from '@/composables/usePrompts';
 import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { useParkingFacilities } from '@/composables/useParkingFacilities';
 import { toCsv } from '@/utils/query';
+import { releasableLines, waitingLines } from '@/utils/preorderLines';
 import { downloadText } from '@/utils/download';
-import { formatDate } from '@/utils/format';
+import { countParams, formatDate, formatNumber } from '@/utils/format';
 import Actions from '@/authorization/actions';
 import type { PreorderOrder } from '@/types';
 
 const seed = useSeedData();
+const { confirmAction, promptForChoice } = usePrompts();
 const { running, runBulk } = useBulkAction();
 const { typeLabel, typeOptions } = useFutureInventoryTypes();
-const { isParking } = useParkingFacilities();
 const store = usePreorderSearchStore();
-const { refresh } = useFindSearch(store);
+// Another store's orders leave with their selection, so a bulk action never runs on them under the new store
+const { refresh } = useFindSearch(store, { onStoreChange: () => clearSelection() });
 const userStore = useUserStore();
-const { releaseToBrokering, cancelPreorderItems, parkedLines } = usePreorderActions();
-const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
+const { releaseToBrokering, fetchCancelReasons, cancelPreorderItems } = usePreorderActions();
+const { query, filters, sort, results: rawResults, total, loading, loaded, error, hasMore } = storeToRefs(store);
+const { shape } = useParkingFacilities();
+/** The loaded orders with their lines marked at parking or not, and the counts the rows show. */
+const results = computed<PreorderOrder[]>(() => rawResults.value.map(shape));
 
 const sortOptions = [
   { label: 'Newest first', value: '-orderDate' },
@@ -157,42 +162,19 @@ const salesChannels = computed(() => seed.enumsByType('ORDER_SALES_CHANNEL'));
 const shipmentMethodOptions = computed(() => seed.shipmentMethodOptions());
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PREORDER_UPDATE));
 
-const selectMode = ref(false);
-const selectedIds = ref<string[]>([]);
-const selectedOrders = computed(() => results.value.filter((order) => selectedIds.value.includes(order.orderId)));
-const selectedParkedCount = computed(() => selectedOrders.value.reduce((count, order) => count + parkedLines(order).length, 0));
-const allSelected = computed(() => results.value.length > 0 && results.value.every((order) => selectedIds.value.includes(order.orderId)));
-const someSelected = computed(() => results.value.some((order) => selectedIds.value.includes(order.orderId)));
-
-watch(results, () => {
-  const ids = new Set(results.value.map((order) => order.orderId));
-  selectedIds.value = selectedIds.value.filter((id) => ids.has(id));
-});
+const { selectMode, selectedIds, selectedRows: selectedOrders, allSelected, someSelected, setSelected, toggleSelected, toggleAll, deselectAll, clearSelection, toggleSelectMode } = useRowSelection(results, (order) => order.orderId);
+// Bulk actions take only lines still holding an open reservation: a committed or released line is no longer a pre-order
+const selectedWaitingCount = computed(() => selectedOrders.value.reduce((count, order) => count + waitingLines(order).length, 0));
+const selectedReleasableCount = computed(() => selectedOrders.value.reduce((count, order) => count + releasableLines(order).length, 0));
 
 function activate(order: PreorderOrder) {
-  if (selectMode.value) setSelected(order.orderId, !selectedIds.value.includes(order.orderId));
+  if (selectMode.value) toggleSelected(order.orderId);
   else router.push(`/preorders/${encodeURIComponent(order.orderId)}`);
-}
-
-function setSelected(orderId: string, checked: boolean) {
-  const next = new Set(selectedIds.value);
-  if (checked) next.add(orderId);
-  else next.delete(orderId);
-  selectedIds.value = [...next];
-}
-
-function toggleAll(checked: boolean) {
-  selectedIds.value = checked ? results.value.map((order) => order.orderId) : [];
-}
-
-function toggleSelectMode() {
-  selectMode.value = !selectMode.value;
-  if (!selectMode.value) selectedIds.value = [];
 }
 
 function clearFilters() {
   store.clearFilters();
-  selectedIds.value = [];
+  deselectAll();
 }
 
 async function loadMore(event: CustomEvent) {
@@ -203,30 +185,40 @@ async function loadMore(event: CustomEvent) {
 async function confirmRelease() {
   const confirmed = await confirmAction(
     translate('Release to brokering'),
-    translate('This moves {count} items waiting at pre-order or back-order parking to brokering, so routing can allocate them to a fulfillment location.', { count: selectedParkedCount.value }),
+    translate('This moves {count} items waiting at pre-order or back-order parking to brokering, so routing can allocate them to a fulfillment location.', { count: selectedReleasableCount.value }),
     translate('Release'),
   );
   if (!confirmed) return;
   const { moved, failed } = await runBulk(() => releaseToBrokering(selectedOrders.value));
-  await showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed }) : translate('{moved} items released to brokering.', { moved, count: moved }));
+  await commonUtil.showToast(failed ? translate('{moved} items released, {failed} failed.', { moved, failed, n: moved }) : translate('{moved} items released to brokering.', { moved, count: moved }));
   useFutureInventorySearchStore().markStale();
-  selectMode.value = false;
-  selectedIds.value = [];
+  clearSelection();
   await refresh();
 }
 
 async function confirmCancel() {
-  const confirmed = await confirmAction(
+  let reasons: { value: string; label: string }[] = [];
+  try {
+    reasons = await fetchCancelReasons();
+  } catch (error: any) {
+    await commonUtil.showToast(error?.message || translate('Failed to load the cancel reasons.'));
+    return;
+  }
+  if (!reasons.length) {
+    await commonUtil.showToast(translate('No cancel reason is set up, so nothing can be cancelled.'));
+    return;
+  }
+  const reason = await promptForChoice(
     translate('Cancel pre-order items'),
-    translate('This cancels the open pre-order items of the {count} selected orders and releases their future inventory. This cannot be undone.', { count: selectedIds.value.length }),
+    translate('This cancels the {count} items still waiting on future inventory in the selected orders and releases their reservations. This cannot be undone. Why are they cancelled?', countParams(selectedWaitingCount.value)),
     translate('Cancel items'),
+    reasons,
   );
-  if (!confirmed) return;
-  const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value));
-  await showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
+  if (!reason) return;
+  const { cancelled, failed } = await runBulk(() => cancelPreorderItems(selectedOrders.value, reason));
+  await commonUtil.showToast(failed ? translate('{cancelled} items cancelled, {failed} failed.', { cancelled, failed, n: cancelled }) : translate('{cancelled} items cancelled.', { cancelled, count: cancelled }));
   useFutureInventorySearchStore().markStale();
-  selectMode.value = false;
-  selectedIds.value = [];
+  clearSelection();
   await refresh();
 }
 
@@ -240,14 +232,13 @@ function exportSelected() {
     productId: line.productId,
     type: typeLabel(line.futureInventoryItemTypeId),
     batch: line.futureInventoryItemId,
-    atParking: isParking(line.facilityId) ? 'Y' : 'N',
+    atParking: line.atParking ? translate('Yes') : translate('No'),
     promiseDate: formatDate(line.promisedDatetime),
   })));
   downloadText('pre-orders.csv', toCsv(rows, [
-    { key: 'orderId', label: 'Order ID' }, { key: 'orderName', label: 'Order name' },
-    { key: 'orderDate', label: 'Order date' }, { key: 'status', label: 'Status' },
-    { key: 'orderItemSeqId', label: 'Item' }, { key: 'productId', label: 'Product ID' }, { key: 'type', label: 'Type' },
-    { key: 'batch', label: 'Future inventory' }, { key: 'atParking', label: 'At parking' }, { key: 'promiseDate', label: 'Promise date' },
+    { key: 'orderId', label: translate('Order ID') }, { key: 'orderName', label: translate('Order name') }, { key: 'orderDate', label: translate('Order date') }, { key: 'status', label: translate('Status') },
+    { key: 'orderItemSeqId', label: translate('Item') }, { key: 'productId', label: translate('Product ID') }, { key: 'type', label: translate('Type') },
+    { key: 'batch', label: translate('Future inventory') }, { key: 'atParking', label: translate('At parking') }, { key: 'promiseDate', label: translate('Promise date') },
   ]));
 }
 </script>

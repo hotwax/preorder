@@ -12,7 +12,7 @@
     <ion-content>
       <ion-card>
         <ion-card-content>
-          {{ translate('When a batch\'s promise date changes, the orders waiting on it are updated in bulk: the change is queued, then the Data Manager moves each waiting line to the new date and sends its delay email. Each row is one batch\'s date change; a line that could not be updated is in its error file.') }}
+          {{ translate('When a batch\'s promise date changes, the orders waiting on it are updated in bulk: the change is queued, then the Data Manager moves each waiting line to the new date and emails its customer where that email is on. Each row is one batch\'s date change; a line that could not be updated is in its error file.') }}
         </ion-card-content>
         <ion-item lines="none">
           <ion-label>{{ translate('Date changes waiting to be queued') }}</ion-label>
@@ -20,23 +20,23 @@
         </ion-item>
       </ion-card>
 
-      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Exact log ID')" :show-clear="false">
+      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Exact log ID')">
         <UniformFilterLayout @clear="clearFilters">
           <ion-select v-model="filters.statusId" :label="translate('Status')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All statuses') }}</ion-select-option>
             <ion-select-option v-for="status in importStatuses" :key="status.statusId" :value="status.statusId">{{ status.description || status.statusId }}</ion-select-option>
           </ion-select>
-          <DateFilterSelect v-model="filters.createdDateFrom" :label="translate('Created from')" :max="filters.createdDateThru" outlined />
-          <DateFilterSelect v-model="filters.createdDateThru" :label="translate('Created through')" :min="filters.createdDateFrom" outlined />
+          <DateFilterSelect v-model="filters.createdDateFrom" :label="translate('Created from')" :max="filters.createdDateThru" />
+          <DateFilterSelect v-model="filters.createdDateThru" :label="translate('Created through')" :min="filters.createdDateFrom" />
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
-      <ErrorState v-if="error" :title="translate('Could not load bulk updates')" :message="error" retryable @retry="load" />
+      <ErrorState v-if="error" :title="translate('Could not load bulk updates')" :message="error" @retry="load" />
 
       <ion-list v-else>
         <ion-list-header v-if="logs.length">
-          <ion-label>{{ translate('{count} bulk updates', { count: logs.length }) }}</ion-label>
+          <ion-label>{{ countLabel }}</ion-label>
           <ion-button fill="clear" size="small" :aria-label="translate('Refresh')" @click="load">
             <ion-icon slot="icon-only" :icon="refreshOutline" />
           </ion-button>
@@ -51,7 +51,7 @@
           </ion-item>
           <ion-label class="tablet">
             <ion-badge :color="statusColor(log.statusId)">{{ seed.statusDescription(log.statusId) }}</ion-badge>
-            <p v-if="log.totalRecordCount !== undefined && log.totalRecordCount !== null">{{ translate('{total} lines, {failed} failed', { total: log.totalRecordCount, failed: log.failedRecordCount ?? 0 }) }}</p>
+            <p v-if="log.totalRecordCount !== undefined && log.totalRecordCount !== null">{{ translate('{total} lines, {failed} failed', { ...countParams(log.totalRecordCount, 'total'), failed: formatNumber(log.failedRecordCount ?? 0) }) }}</p>
           </ion-label>
           <ion-label class="tablet">
             {{ formatDateTime(log.createdDate) }}
@@ -62,11 +62,11 @@
               {{ formatDateTime(log.finishDateTime) }}
               <p>{{ translate('Finished') }}</p>
             </template>
-            <template v-else>{{ log.startDateTime ? translate('Running') : translate('Not started') }}</template>
+            <template v-else>{{ importProgressLabel(log.statusId, log.startDateTime, seed.statusDescription(log.statusId)) }}</template>
           </ion-label>
           <div class="bulk-row-end">
             <ion-button fill="clear" size="small" :disabled="!log.logContentId" @click="downloadFile(log, false)">{{ translate('Lines') }}</ion-button>
-            <ion-button fill="clear" size="small" color="danger" :disabled="!log.errorLogContentId" @click="downloadFile(log, true)">{{ translate('Errors') }}</ion-button>
+            <ion-button fill="clear" size="small" :color="log.errorLogContentId ? 'danger' : undefined" :disabled="!log.errorLogContentId" @click="downloadFile(log, true)">{{ translate('Errors') }}</ion-button>
           </div>
         </div>
       </ion-list>
@@ -92,7 +92,7 @@ import {
 } from '@ionic/vue';
 import { calendarOutline, refreshOutline } from 'ionicons/icons';
 import { computed, reactive, ref, watch } from 'vue';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { BULK_UPDATE_CONFIGS, useImports, type ImportLog } from '@/composables/useImports';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
@@ -100,9 +100,9 @@ import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
-import { showToast } from '@/utils';
 import { downloadText } from '@/utils/download';
-import { formatDateTime, formatNumber } from '@/utils/format';
+import { countParams, formatDateTime, formatNumber } from '@/utils/format';
+import { importProgressLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 
@@ -120,6 +120,17 @@ const logs = ref<ImportLog[]>([]);
 const waitingCount = ref<number>();
 const pageIndex = ref(0);
 const hasMore = ref(false);
+/** The matching count, when the Data Manager sends one. */
+const logsTotal = ref<number>();
+
+/** Whether another page may follow: never after a short or empty page, nor once the count is loaded. */
+const morePages = (pageLength: number, total?: number) => pageLength === PAGE_SIZE && (total === undefined || logs.value.length < total);
+
+/** The loaded rows against the count; without a count, a list with more to load says it shows the latest. */
+const countLabel = computed(() => {
+  if (logsTotal.value !== undefined) return translate('{shown} of {count} bulk updates', { shown: formatNumber(logs.value.length), ...countParams(logsTotal.value) });
+  return hasMore.value ? translate('Latest {count} bulk updates', countParams(logs.value.length)) : translate('{count} bulk updates', countParams(logs.value.length));
+});
 const loading = ref(false);
 const loaded = ref(false);
 const error = ref('');
@@ -137,15 +148,16 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const [rows, waiting] = await Promise.all([
+    const [{ rows, total }, waiting] = await Promise.all([
       fetchLogs(query(), 0, PAGE_SIZE, BULK_UPDATE_CONFIGS),
       countWaitingMessages(PROMISE_DATE.messageTypeId).catch(() => undefined),
     ]);
     if (request !== loadRequest) return;
     logs.value = rows;
+    logsTotal.value = total;
     waitingCount.value = waiting;
     pageIndex.value = 0;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
     loaded.value = true;
   } catch (err) {
     if (request !== loadRequest) return;
@@ -162,13 +174,14 @@ async function loadMore(event: CustomEvent) {
   const request = loadRequest;
   loadingMore.value = true;
   try {
-    const rows = await fetchLogs(query(), pageIndex.value + 1, PAGE_SIZE, BULK_UPDATE_CONFIGS);
+    const { rows, total } = await fetchLogs(query(), pageIndex.value + 1, PAGE_SIZE, BULK_UPDATE_CONFIGS);
     if (request !== loadRequest) return;
     logs.value = [...logs.value, ...rows];
+    logsTotal.value = total;
     pageIndex.value += 1;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
   } catch (err) {
-    await showToast(errorMessage(err, translate('Could not load more bulk updates. Scroll to try again.')));
+    await commonUtil.showToast(errorMessage(err, translate('Could not load more bulk updates. Scroll to try again.')));
   } finally {
     loadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
@@ -195,7 +208,7 @@ async function downloadFile(log: ImportLog, errors: boolean) {
     const name = (errors ? log.errorFileName : log.fileName) || `${log.logId}${errors ? '-errors' : ''}.json`;
     downloadText(name, await downloadLogFile(log.configId, logContentId), 'application/json;charset=utf-8');
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to download the file.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to download the file.')));
   }
 }
 </script>

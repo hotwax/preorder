@@ -35,7 +35,7 @@ The app is built the way Order Manager is built and follows its design language:
 | `/preorders/:orderId` | Pre-order detail | `APP_PREORDER_VIEW` |
 | `/future-inventory` | Find future inventory | `APP_PREORDER_VIEW` |
 | `/future-inventory/:futureInventoryItemId` | FI batch detail (ledger, waiting lines) | `APP_PREORDER_VIEW` |
-| `/purchase-orders` | Find purchase orders (not scoped to the menu's store: supply belongs to facilities, and a PO may name no store) | `APP_PO_VIEW` |
+| `/purchase-orders` | Find purchase orders (scoped to the menu's store; "Include unassigned" also lists the POs that name no store) | `APP_PO_VIEW` |
 | `/purchase-orders/create` | Create purchase order | `APP_PO_UPDATE` |
 | `/purchase-orders/:orderId` | PO detail | `APP_PO_VIEW` |
 | `/inbound-shipments` | Find inbound shipments | `APP_PO_VIEW` |
@@ -103,25 +103,28 @@ Sort: newest first (default) or oldest first.
 
 Each row shows:
 - the customer, with order name, id and status;
-- pre-order lines, and how many are at parking now;
+- pre-order lines, and the facilities where they wait (a line with an open reservation, at parking or at a warehouse);
 - the FI type and the channel;
 - the order date;
 - the **current promise date**: the earliest and latest `OrderItem.promisedDatetime` across the
   order's FI lines, read from the database (not Solr, which can lag the date cascade).
 
 Bulk actions (select mode):
-- **Release to brokering**: moves lines waiting at pre-order or back-order parking to `_NA_` with
+- **Release to brokering**: moves lines with an open reservation at pre-order or back-order parking to `_NA_` with
   `POST oms/orders/{orderId}/moveItemToParking`, so routing can broker them.
-- **Cancel pre-order items**: `POST oms/orders/{orderId}/items/cancel` on the open FI lines; the
-  cancel SECA releases their reservations.
+- **Cancel pre-order items**: `POST oms/orders/{orderId}/items/cancel` on the lines with an open
+  reservation (a committed or released line stays); the cancel SECA releases their reservations.
 - **Export CSV**.
 
 Detail (`/preorders/:orderId`) shows each line with:
 - its product, status and facility;
 - its batch (FI id, type, batch promise date, PO);
-- its own promise date and auto-cancel date.
+- its own promise date and auto-cancel date;
+- a **Reservation history** section: each line's ledger rows (date, reason, batch, quantity).
 
-Line action: **Move to another batch**, which calls `reallocate#FutureInventoryReservation`.
+Line action: **Move to another batch**. A line waiting at parking can move to any active batch of its
+product and type; a line waiting at a facility only to a batch at that facility or one at the store's
+parking (location-less).
 
 ### 3.3 Future inventory (`/future-inventory`)
 
@@ -208,13 +211,14 @@ Detail:
 
 Create (`/purchase-orders/create`):
 - supplier, destination facility, product store, currency and external id;
-- lines: product search (Solr, sellable variants and simple products; falls back to OMS's
-  product list when Solr has no product documents), quantity, unit cost and arrival date;
+- lines: product search (Solr, the store's sellable variants and simple products), quantity, unit
+  cost and arrival date;
 - an optional "Sell as pre-order" toggle with an FI type, which creates a batch per line.
 
 ### 3.5 Inbound shipments (`/inbound-shipments`)
 
-These are `INCOMING_SHIPMENT` / `PURCHASE_SHIPMENT` shipments against POs. The page is view only.
+These are `INCOMING_SHIPMENT` / `PURCHASE_SHIPMENT` shipments against POs. A shipment is created from an approved
+PO's detail (`/purchase-orders/:orderId/shipments/new`) and received, in part or in full, on its detail page.
 
 Filters:
 - search: shipment id, external id, PO;
@@ -281,7 +285,7 @@ There is no DataFeed behind these emails, so the "feed" toggle is a switch on th
 - A batch promise date change reaches its waiting order lines in bulk, not in the transaction that
   moved it: a data feed queues a `FutureInventoryPromiseDateChange` system message, consuming it
   writes the batch's FI-backed lines to an `IMP_FI_PROMISE_DATE` Data Manager file, and Data
-  Manager updates each line in its own transaction and sends its delay email (§4.3).
+  Manager updates each line in its own transaction and sends its delay email (§4.5).
 - The page lists those imports, newest first: the batch (linking to it), status, lines and failed
   lines, when it was queued and finished, and the lines and error files to download. A header shows
   how many date changes are received and not yet queued.
@@ -302,53 +306,80 @@ Settings has these cards:
 
 ## 4. Backend contract
 
-All paths are relative to `/rest/s1/`.
+All paths are relative to `/rest/s1/`. The app calls `oms/*` and `poorti/*` (and the shared `admin/*`); the
+retired `preorder/*` resources are not used. Every path below is one a request in `src/` sends.
 
-### 4.1 Existing endpoints used
+### 4.1 Pre-orders and future inventory (`oms`)
 
-| Path | Use |
+| Method + path | Use |
 |---|---|
-| `GET oms/purchaseOrders/{orderId}` | PO detail with items |
-| `POST oms/purchaseOrders/{orderId}/status` | approve, cancel and complete |
-| `GET oms/purchaseOrders/{orderId}/receipts` | PO receipts |
-| `POST oms/orders/{orderId}/moveItemToParking` | release to brokering |
-| `POST oms/orders/{orderId}/items/cancel` | cancel pre-order items |
-| `GET oms/futureInventoryItems` | FI entity list |
-| `POST admin/uploadDataManagerFile` | uploads |
-| `GET admin/dataManager/details` | import tracking |
-| `GET admin/dataManager/downloadDataManagerFile` | import file downloads |
-| `GET admin/dataManager/{configId}/downloadTemplate` | import templates |
-| `GET/PUT/POST oms/productStoreEmailSettings...` | email settings |
-| `admin/search/query` | product search in Create PO |
+| GET `oms/orders/futureInventory`, then GET `oms/futureInventoryItems/lines?orderId=<page ids>&orderId_op=in` | the Pre-orders list: order headers (store, status, channel, order date, order name filters) and the page's waiting lines; the app derives `openLineCount`, `parkedLineCount`, `readyToReleaseLineCount`, `waitingFacilityIds` and the promise range from the lines. With a filter on FI type or shipping method (line fields) it reads the matching lines first (`oms/futureInventoryItems/lines` with every filter, up to 10 pages of 1,000), collects their orders in list order, pages those client-side and reads their headers with `orderId_op=in`; the total is the count of those orders |
+| GET `oms/orders/{orderId}` (`get#SalesOrder`: customer, item statuses) and GET `oms/futureInventoryItems/lines?orderId=` | the detail: the order and its open reservation lines; the app marks each `atParking` (its facility is a parking one), `reservationOpen` and `readyToRelease` (its batch is received). Closed reservations are not rows |
+| POST `oms/orders/{orderId}/moveItemToParking` | Release to brokering (`toFacilityId: _NA_`) |
+| POST `oms/orders/{orderId}/items/cancel` | Cancel pre-order items (only lines with an open reservation) |
+| POST `oms/orders/{orderId}/items/{orderItemSeqId}/reallocate` | Move a line's reservation to another batch; a line not at parking moves only to a batch at its own facility or a location-less one |
+| GET `oms/preorderDashboard` | all dashboard figures for a store, with `demandFacilityCount` |
+| GET `oms/futureInventoryItems` | the FI list (`FutureInventoryItemAndProduct`: product name, computed `reservedQuantity`) and the active batches a line can move to. An entity list: a bare array with the total in `X-Total-Count`, filters by field name (`field`, `field_op`, `field_from`/`field_thru`, `orderByField`). Batches have no store: the store scope is `facilityId in` the store's facilities (`oms/productStores/{id}/facilities`). Search is the product name |
+| GET `oms/futureInventoryItems/{id}` | one batch, with its product and PO; the app adds `reservedQuantity` (on order minus ATP) and `demandByFacility` from the batch's waiting lines |
+| PUT `oms/futureInventoryItems/{id}` | adjust quantity and/or change the promise date |
+| POST `oms/futureInventoryItems/{id}/cancel` | cancel a batch |
+| GET `oms/futureInventoryItems/{id}/details` | the ledger, rows with `quantityOnOrderDiff`, the composite `futureInventoryItemDetailSeqId` and `changedByUserId` |
+| GET `oms/futureInventoryItems/{id}/lines` | the lines waiting on the batch |
+| GET `oms/futureInventoryItems/purchaseOrderCounts?poId=<ids>&poId_op=in` | each listed PO's batch count (Solr does not carry it) |
 
-### 4.2 The pre-order REST contract: `oms` and poorti (OMS #1202, `/rest/s1/preorder` is gone)
+### 4.2 Purchase orders and inbound shipments (`oms`, `poorti`)
 
-preorder-maarg is retired into OMS, which exposes the future inventory (FI) model as entity resources and a few services.
-Entity lists answer a bare array with the unpaged total in `X-Total-Count`, and read filters from field names
-(`field`, `field_op` = equals/like/contains/begins/empty/in, `field_ic=Y`, `field_not=Y`, `field_from` / `field_thru`,
-`orderByField`, `pageIndex`, `pageSize`; see `src/utils/query.ts`). Services answer their out-parameters. Source of truth:
-`service/oms.rest.xml`, `entity/FutureInventoryViewEntities.xml`, `entity/FutureInventoryWaitingLine.xml` and poorti's
-`poorti.rest.xml`; the upgrade notes' REST table lags it (it still lists `oms/preorders`, `oms/purchaseOrders/{id}/shipments`).
+| Method + path | Use |
+|---|---|
+| Solr (`admin/search/query` on Moqui, `admin/runSolrQuery` otherwise) | the PO list (line docs grouped by order, scoped to the menu's store, optionally with the orders that name none) and the product search in Create PO |
+| GET `oms/purchaseOrders/{orderId}` | PO detail with items |
+| POST `oms/purchaseOrders` | create a PO |
+| POST `oms/purchaseOrders/{orderId}/status` | approve, cancel and complete |
+| PUT `oms/purchaseOrders/{orderId}/items/{orderItemSeqId}` | change a line's arrival date |
+| POST `oms/purchaseOrders/{orderId}/futureInventory` | Sell as pre-order: a batch per open line without one |
+| GET `oms/purchaseOrders/{orderId}/receipts` | PO receipts |
+| GET `oms/parties/roles/SUPPLIER` | the suppliers, paged until the last page |
+| GET `poorti/purchaseShipments` | the Inbound shipments list, and a PO's shipments |
+| GET `poorti/purchaseShipments/{shipmentId}` | shipment detail: items and receipts |
+| POST `poorti/purchaseShipments` | Create shipment, for open lines of an approved PO: `{orderId, externalId, arrivalDate, items: [{orderItemSeqId, quantity}]}`, `arrivalDate` a 'yyyy-MM-dd' and only lines with a quantity above 0; returns `{shipmentId}`. `externalId` is the retry key: the same reference, lines and date return the shipment already created |
+| POST `poorti/purchaseShipments/{shipmentId}/receive` | Receive, in part or in full: `{shipmentId, items: [{shipmentItemSeqId, quantityAccepted, quantityRejected}]}`, only items receiving more than 0; returns `{receiptIds, fullyReceived}` |
 
-| Screen | Request | Notes |
-|---|---|---|
-| Dashboard | GET `oms/preorderDashboard` | `get#PreorderDashboard`; supply is on-order, not on-hand; no demand trend or promise-date-change count |
-| Pre-orders list | GET `oms/orders/futureInventory` + GET `oms/futureInventoryItems/lines?orderId=<page ids>&orderId_op=in` | header filters (store, status, channel, order date, order name) go to the header view; counts, parking and promise range come from the lines. With a filter on FI type or shipping method (line fields) the list reads the matching lines first (`oms/futureInventoryItems/lines` with every filter, up to 10 pages of 1,000), collects their orders in list order, pages those client-side and reads their headers with `orderId_op=in`; the total is the count of those orders |
-| Pre-order detail | GET `oms/orders/{orderId}` (`get#SalesOrder`: customer, item statuses) + GET `oms/futureInventoryItems/lines?orderId=` | open reservations only; closed ones are not rows |
-| Reallocate | POST `oms/orders/{orderId}/items/{seq}/reallocate` | the move modal reads `oms/orders/{id}/futureInventoryDetails` for batches the item left |
-| Batch list | GET `oms/futureInventoryItems` | `FutureInventoryItemAndProduct`: product name, computed `reservedQuantity`. Batches have no store: the store scope is `facilityId in` its current `oms/productStores/{id}/facilities`. Search is the product name; has-reservations is `reservedQuantity_from`, overcommitted is `availableToPromiseTotal_thru` |
-| Batch detail | GET `oms/futureInventoryItems/{id}` (default master) + `/details` (ledger) + `/lines` (waiting lines) | ledger rows carry `quantityOnOrderDiff` and the composite `futureInventoryItemDetailSeqId` |
-| Batch change | PUT `oms/futureInventoryItems/{id}` (`quantityDiff` and/or `promiseDate`); POST `.../quantity`, `.../cancel` | one ledger row per change |
-| PO list | Solr, plus GET `oms/futureInventoryItems/purchaseOrderCounts?poId=<ids>&poId_op=in` | |
-| PO detail | GET `oms/purchaseOrders/{id}` + GET poorti `purchaseShipments?primaryOrderId=` + GET `oms/purchaseOrders/{id}/receipts` | |
-| PO create / arrival date / batches | POST `oms/purchaseOrders`; PUT `oms/purchaseOrders/{id}/items/{seq}` (`estimatedDeliveryDate`, per line); POST `oms/purchaseOrders/{id}/futureInventory` | creation no longer makes batches: the app calls `futureInventory` after it |
-| Suppliers | GET `oms/parties/roles/SUPPLIER` | |
-| Inbound shipments | GET / POST poorti `purchaseShipments`, GET `purchaseShipments/{id}`, POST `.../receive` | same shapes as the old resources |
-| Communications | GET `oms/communicationEvents?productStoreId=` (`{communicationEventList, communicationEventsCount}`), GET `oms/communicationEvents/counts`, GET `oms/emailGateways` | |
-| Email settings | GET `admin/enums?enumTypeId=PreorderAppEmail` (catalog) + GET/PUT `oms/productStoreEmailSettings/{store}/emailSettings[/{type}]` | `enabled` reads the setting's `disabled` flag, which exists only with the order email queue (oms#1195) |
-| Setup | GET/POST `oms/productStoreFacilityPurposes` | |
+### 4.3 Communications, imports and shared (`oms`, `admin`)
 
-### 4.3 New: oms (branch `feat/preorder-app-api`)
+| Method + path | Use |
+|---|---|
+| GET/PUT `oms/productStoreEmailSettings/{productStoreId}/emailSettings[/{emailType}]` | email settings per store and type |
+| GET `oms/emailGateways` | the gateways an email setting can use: `{gateways: [{systemMessageRemoteId, description}]}` |
+| GET `oms/communicationEvents`, `oms/communicationEvents/counts` | the email log, and sends since a date (7 and 30 day windows count today) |
+| GET `admin/enums` | email types, and the order item cancel reasons (`ODR_ITM_CH_REASON`) |
+| GET `admin/dataManager/details`, `admin/dataManager/downloadDataManagerFile`, `admin/dataManager/{configId}/downloadTemplate`, POST `admin/uploadDataManagerFile` | import tracking, downloads and uploads |
+| GET `admin/systemMessages` | received promise date changes not yet queued |
+| `admin/user/*`, `admin/productStores/{id}/settings`, `oms/dataDocumentView`, `oms/goodIdentificationTypes` | the user, permissions, product store settings and identifiers |
+
+### 4.4 Pre-order setup and sync monitoring (`sob`, `oms`, `admin`)
+
+The `/setup` and `/sync-events` pages read through the app database's on-demand snapshots
+(`src/workers/domains/operationsDomains.ts`); their saves refetch the snapshot.
+
+| Method + path | Use |
+|---|---|
+| GET `sob/shopify/inventoryChannels` | the shop's pre-order channels |
+| POST `sob/shopify/inventoryChannels`, PUT `sob/shopify/inventoryChannels/{inventoryChannelId}` | add a channel `{channelTypeEnumId, facilityGroupId, shopifyLocationId, shopId}`, or change one's `{facilityGroupId, shopifyLocationId}` |
+| GET `sob/shopify/shopSetting` | the pre-order metafield namespace and key (`SHPFY_PRORD_MF_NS`, `SHPFY_PRORD_MF_KEY`) |
+| POST `sob/shopify/shopSetting` | save one of them: `{shopId, settingTypeEnumId, settingValue}`, one request per setting |
+| GET `oms/productStoreFacilityPurposes` | the store's facility purposes (parking) |
+| POST `oms/productStoreFacilityPurposes` | set a parking facility: `{productStoreId, facilityPurposeEnumId, facilityId}` |
+| GET `admin/serviceJobs/{jobName}`, GET `admin/serviceJobs` (by `serviceName`), GET `admin/serviceJobs/{jobName}/runs` | the publishing jobs, their copies scoped to the shop, and each one's latest run |
+| PUT `admin/serviceJobs/{jobName}` | pause or resume a job: `{paused}` |
+| POST `admin/serviceJobs/{jobName}/clone` | copy a schedule: `{newJobName, copyParameters: true}`, then GET the copy to check its `parentJobName` |
+| GET `admin/dataFeeds/{dataFeedId}` | whether each pre-order data feed exists |
+| GET `sob/shopify/locationInventoryAdjustmentDetails`, `sob/shopify/preorderMetafieldDetails`, `sob/shopify/preorderMetafields`, `sob/shopify/productFacilityActivations` | the sync events pages: quantity events, metafield events, published metafields and activations |
+
+The seed tables in `src/db/preorderDb.ts` (stores and their facilities, statuses, enums, facilities,
+products, Shopify shops and locations, facility groups) are filled by common's seed domains, which send
+their own requests.
+
+### 4.5 Backend changes behind the app (oms)
 
 - `ProductStoreEmailSetting.disabled` (indicator). `send#EmailOnOrderEvents` skips a disabled
   setting, as it skips a missing one.

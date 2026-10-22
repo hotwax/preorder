@@ -1,15 +1,14 @@
 <template>
   <div
     class="date-filter-select"
-    :id="outlined ? triggerId : undefined"
-    :role="outlined ? 'button' : undefined"
-    :tabindex="outlined ? 0 : undefined"
-    :aria-label="outlined ? `${label}: ${selectedDateLabel || translate('Select date')}` : undefined"
-    @keydown.enter="activateOutlinedTrigger"
-    @keydown.space.prevent="activateOutlinedTrigger"
+    :id="triggerId"
+    role="button"
+    tabindex="0"
+    :aria-label="`${label}: ${selectedDateLabel || translate('Select date')}`"
+    @keydown.enter="activateTrigger"
+    @keydown.space.prevent="activateTrigger"
   >
     <ion-input
-      v-if="outlined"
       class="date-filter-trigger"
       :value="selectedDateLabel"
       :label="label"
@@ -20,12 +19,6 @@
     >
       <ion-icon slot="end" :icon="chevronDownOutline" color="medium" aria-hidden="true" />
     </ion-input>
-    <ion-item v-else :id="triggerId" button :detail="false" lines="none">
-      <ion-label>
-        <p>{{ label }}</p>
-        {{ selectedDateLabel }}
-      </ion-label>
-    </ion-item>
 
     <ion-popover class="date-filter-popover" :trigger="triggerId" trigger-action="click" :show-backdrop="false" @willPresent="refreshToday">
       <ion-datetime
@@ -49,10 +42,9 @@ let dateFilterSelectCounter = 0;
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { IonDatetime, IonIcon, IonInput, IonItem, IonLabel, IonPopover } from '@ionic/vue';
+import { IonDatetime, IonIcon, IonInput, IonPopover } from '@ionic/vue';
 import { chevronDownOutline } from 'ionicons/icons';
-import { DateTime } from 'luxon';
-import { locale as appLocale, formatDate } from '@/utils/format';
+import { locale as appLocale, dayBound, formatDate, todayValue } from '@/utils/format';
 import { translate } from '@common';
 
 const locale = computed(() => appLocale());
@@ -60,14 +52,12 @@ const locale = computed(() => appLocale());
 const props = withDefaults(defineProps<{
   modelValue: string;
   label: string;
-  outlined?: boolean;
   min?: string;
   max?: string;
   /** Arrival and promise dates lie ahead, so those filters may pick a day after today. */
   allowFuture?: boolean;
 }>(), {
   modelValue: '',
-  outlined: false,
   min: '',
   max: '',
   allowFuture: false,
@@ -79,11 +69,10 @@ const emit = defineEmits<{
 
 const triggerId = `date-filter-select-${(dateFilterSelectCounter += 1)}`;
 
-// A filter on something that already happened (an order date) cannot pick a day after today;
+// A filter on something that already happened (an order date) cannot pick a day after today in the user's time zone;
 // `allowFuture` lifts that for arrival and promise dates. Today is re-read when the calendar opens, so a page left open overnight moves on.
-const todayISO = () => DateTime.now().toISODate() as string;
-const today = ref(todayISO());
-const refreshToday = () => { today.value = todayISO(); };
+const today = ref(todayValue());
+const refreshToday = () => { today.value = todayValue(); };
 
 /** The caller's upper bound (e.g. the paired "through" date), but never later than today. */
 const latestSelectable = computed(() => {
@@ -92,19 +81,19 @@ const latestSelectable = computed(() => {
 });
 
 const selectedDateLabel = computed(() => {
-  if (!props.modelValue) return props.outlined ? '' : translate('Select date');
+  if (!props.modelValue) return '';
 
   return formatDate(props.modelValue) || props.modelValue;
 });
 
+/** The picked day as the 'yyyy-MM-dd' every date filter holds: the calendar's value carries no zone, so its date part is the day. */
 function normalizeDate(value: string | string[] | null | undefined): string {
   if (!value) return '';
   const selectedValue = Array.isArray(value) ? value[0] : value;
-  return selectedValue ? String(selectedValue).slice(0, 10) : '';
+  return selectedValue ? dayBound(String(selectedValue).slice(0, 10), 'start', 'date') : '';
 }
 
-function activateOutlinedTrigger(event: KeyboardEvent) {
-  if (!props.outlined) return;
+function activateTrigger(event: KeyboardEvent) {
   (event.currentTarget as HTMLElement)?.click();
 }
 </script>
@@ -118,8 +107,7 @@ function activateOutlinedTrigger(event: KeyboardEvent) {
   min-width: 11rem;
 }
 
-.date-filter-select .date-filter-trigger,
-.date-filter-select ion-item {
+.date-filter-select .date-filter-trigger {
   cursor: pointer;
   width: 100%;
 }

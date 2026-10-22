@@ -1,6 +1,6 @@
 import { api } from '@common';
 import { ensureOk } from '@/utils/response';
-import type { FutureInventoryBatch } from '@/types';
+import type { DemandByFacility, FutureInventoryBatch } from '@/types';
 
 export interface PreorderDashboard {
   openUnits: number;
@@ -13,9 +13,13 @@ export interface PreorderDashboard {
   pastDue: { count: number; batches: FutureInventoryBatch[] };
   exceptions: { count: number; batches: FutureInventoryBatch[] };
   overcommitted: { count: number; batches: FutureInventoryBatch[] };
+  /** Lines whose batch was received while they still wait on it. */
+  readyToRelease?: { lineCount: number; orderCount: number; quantity: number; lines: { orderId: string; orderItemSeqId: string; orderName?: string; productId: string; orderDate?: number | string; futureInventoryItemId?: string; openQuantity?: number }[] };
   noPromiseDate: { count: number; lines: { orderId: string; orderItemSeqId: string; orderName?: string; productId: string; orderDate?: number | string }[] };
-  /** Not served by `oms/preorderDashboard` (the page draws no demand trend without it). */
-  demandTrend?: { date: string; units: number }[];
+  /** Where the open reservations wait, by line facility: at most 10, most units first. */
+  demandByFacility: DemandByFacility[];
+  /** How many facilities have open reservations waiting: `demandByFacility` lists only the first 10. */
+  demandFacilityCount?: number;
   delayEmails: { count: number; trend: { date: string; count: number }[] };
   topProducts: { productId: string; productName?: string; openUnits: number }[];
   /** STORE_FACILITIES, NO_STORE_FACILITIES (supply covers every facility) or ALL_STORES. */

@@ -16,6 +16,9 @@
         </ion-card-header>
         <ion-card-content>
           {{ translate('Purchase order CSVs create or update purchase orders, one row per line. Future inventory CSVs create or update batches to sell before stock arrives. Each upload is queued, imported by the Data Manager, and tracked below.') }}
+          <p v-if="uploadConfigId === 'SYNC_PREORDER'" class="ion-padding-top">
+            {{ translate('For an external-only future inventory parent, shipment rows transfer quantity out of the parent. Later parent updates must use ordered quantity minus quantity allocated to shipments. For example, after allocating 2 of 4 units to a shipment, send parent quantity 2 and shipment quantity 2. Sending parent quantity 4 again increases the total supply to 6.') }}
+          </p>
         </ion-card-content>
         <div class="upload-row ion-padding-horizontal ion-padding-bottom">
           <ion-select v-model="uploadConfigId" :label="translate('Import type')" label-placement="stacked" fill="outline" interface="popover">
@@ -37,7 +40,7 @@
         </div>
       </ion-card>
 
-      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Exact log ID')" :show-clear="false">
+      <SearchFilterCard v-model="logIdQuery" :placeholder="translate('Exact log ID')">
         <UniformFilterLayout @clear="clearFilters">
           <ion-select v-model="filters.configId" :label="translate('Import type')" label-placement="stacked" fill="outline" interface="popover">
             <ion-select-option value="All">{{ translate('All imports') }}</ion-select-option>
@@ -47,32 +50,34 @@
             <ion-select-option value="All">{{ translate('All statuses') }}</ion-select-option>
             <ion-select-option v-for="status in importStatuses" :key="status.statusId" :value="status.statusId">{{ status.description || status.statusId }}</ion-select-option>
           </ion-select>
-          <DateFilterSelect v-model="filters.createdDateFrom" :label="translate('Created from')" :max="filters.createdDateThru" outlined />
-          <DateFilterSelect v-model="filters.createdDateThru" :label="translate('Created through')" :min="filters.createdDateFrom" outlined />
+          <DateFilterSelect v-model="filters.createdDateFrom" :label="translate('Created from')" :max="filters.createdDateThru" />
+          <DateFilterSelect v-model="filters.createdDateThru" :label="translate('Created through')" :min="filters.createdDateFrom" />
         </UniformFilterLayout>
       </SearchFilterCard>
 
       <ion-progress-bar v-if="loading" type="indeterminate" />
-      <ErrorState v-if="error" :title="translate('Could not load imports')" :message="error" retryable @retry="load" />
+      <ErrorState v-if="error" :title="translate('Could not load imports')" :message="error" @retry="load" />
 
       <ion-list v-else>
-        <ion-list-header v-if="visibleLogs.length">
-          <ion-label>{{ translate('{count} imports', { count: visibleLogs.length }) }}</ion-label>
+        <ion-list-header v-if="logs.length">
+          <ion-label>{{ countLabel }}</ion-label>
           <ion-button fill="clear" size="small" :aria-label="translate('Refresh')" @click="load">
             <ion-icon slot="icon-only" :icon="refreshOutline" />
           </ion-button>
         </ion-list-header>
-        <div v-for="log in visibleLogs" :key="log.logId" class="list-item import-row">
+        <div v-for="log in logs" :key="log.logId" class="list-item import-row">
           <ion-item lines="none">
             <ion-icon slot="start" :icon="documentTextOutline" />
             <ion-label>
               {{ log.fileName || log.logId }}
               <p>{{ [log.logId, configLabel(log.configId)].filter(Boolean).join(' - ') }}</p>
+              <!-- A log from before uploads were stamped with a store is listed in every store (preorder-maarg#86) -->
+              <p v-if="!log.productStoreId">{{ translate('No store') }}</p>
             </ion-label>
           </ion-item>
           <ion-label class="tablet">
             <ion-badge :color="statusColor(log.statusId)">{{ seed.statusDescription(log.statusId) }}</ion-badge>
-            <p v-if="log.totalRecordCount !== undefined && log.totalRecordCount !== null">{{ translate('{total} records, {failed} failed', { total: log.totalRecordCount, failed: log.failedRecordCount ?? 0 }) }}</p>
+            <p v-if="log.totalRecordCount !== undefined && log.totalRecordCount !== null">{{ translate('{total} records, {failed} failed', { ...countParams(log.totalRecordCount, 'total'), failed: formatNumber(log.failedRecordCount ?? 0) }) }}</p>
           </ion-label>
           <ion-label class="tablet">
             {{ formatDateTime(log.createdDate) }}
@@ -83,17 +88,17 @@
               {{ formatDateTime(log.finishDateTime) }}
               <p>{{ translate('Finished') }}</p>
             </template>
-            <template v-else>{{ log.startDateTime ? translate('Running') : translate('Not started') }}</template>
+            <template v-else>{{ importProgressLabel(log.statusId, log.startDateTime, seed.statusDescription(log.statusId)) }}</template>
           </ion-label>
           <div class="import-row-end">
             <ion-button fill="clear" size="small" :disabled="!log.logContentId" @click="downloadFile(log, false)">{{ translate('File') }}</ion-button>
-            <ion-button fill="clear" size="small" color="danger" :disabled="!log.errorLogContentId" @click="downloadFile(log, true)">{{ translate('Errors') }}</ion-button>
+            <ion-button fill="clear" size="small" :color="log.errorLogContentId ? 'danger' : undefined" :disabled="!log.errorLogContentId" @click="downloadFile(log, true)">{{ translate('Errors') }}</ion-button>
           </div>
         </div>
       </ion-list>
 
       <EmptyState
-        v-if="!loading && loaded && !error && !visibleLogs.length"
+        v-if="!loading && loaded && !error && !logs.length"
         :title="translate('No imports')"
         :message="translate('Purchase order and future inventory imports from CSV uploads and NetSuite show here.')"
       />
@@ -113,18 +118,19 @@ import {
 } from '@ionic/vue';
 import { cloudUploadOutline, documentAttachOutline, documentTextOutline, downloadOutline, refreshOutline } from 'ionicons/icons';
 import { computed, reactive, ref, watch } from 'vue';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { IMPORT_CONFIGS, useImports, type ImportLog } from '@/composables/useImports';
 import { useUserStore } from '@/store/user';
+import { useProductStore } from '@/store/productStore';
 import SearchFilterCard from '@/components/common/SearchFilterCard.vue';
 import UniformFilterLayout from '@/components/common/UniformFilterLayout.vue';
 import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
-import { showToast } from '@/utils';
 import { downloadText } from '@/utils/download';
-import { formatDateTime } from '@/utils/format';
+import { countParams, formatDateTime, formatNumber } from '@/utils/format';
+import { importProgressLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
 import { errorMessage } from '@/utils/response';
 import Actions from '@/authorization/actions';
@@ -133,27 +139,41 @@ const PAGE_SIZE = 20;
 
 const seed = useSeedData();
 const userStore = useUserStore();
+const productStore = useProductStore();
 const { fetchLogs, uploadFile, downloadLogFile, downloadTemplate } = useImports();
 
 const uploadableConfigs = IMPORT_CONFIGS.filter((config) => config.uploadable);
 const importStatuses = computed(() => seed.statusItemsByType('DataManagerLog'));
-const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 
 const filters = reactive({ configId: 'All', statusId: 'All', createdDateFrom: '', createdDateThru: '' });
 const logIdQuery = ref('');
 const logs = ref<ImportLog[]>([]);
 const pageIndex = ref(0);
 const hasMore = ref(false);
+/** The matching count, when the Data Manager sends one. */
+const logsTotal = ref<number>();
+
+/** Whether another page may follow: never after a short or empty page, nor once the count is loaded. */
+const morePages = (pageLength: number, total?: number) => pageLength === PAGE_SIZE && (total === undefined || logs.value.length < total);
+
+/** The loaded rows against the count; without a count, a list with more to load says it shows the latest. */
+const countLabel = computed(() => {
+  if (logsTotal.value !== undefined) return translate('{shown} of {count} imports', { shown: formatNumber(logs.value.length), ...countParams(logsTotal.value) });
+  return hasMore.value ? translate('Latest {count} imports', countParams(logs.value.length)) : translate('{count} imports', countParams(logs.value.length));
+});
 const loading = ref(false);
 const loaded = ref(false);
 const error = ref('');
 
 const uploadConfigId = ref(uploadableConfigs[0].configId);
+/** An upload needs its import type's permission: purchase orders the PO one, future inventory the FI one. */
+const canUpdate = computed(() => {
+  const action = uploadableConfigs.find((config) => config.configId === uploadConfigId.value)?.uploadAction;
+  return !!action && userStore.hasPermission(Actions[action]);
+});
 const fileInput = ref<HTMLInputElement>();
 const selectedFile = ref<File>();
 const uploading = ref(false);
-
-const visibleLogs = computed(() => logs.value);
 
 const configLabel = (configId: string) => translate(IMPORT_CONFIGS.find((config) => config.configId === configId)?.label || configId);
 
@@ -165,11 +185,12 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, 0, PAGE_SIZE);
+    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim(), productStoreId: productStore.getCurrentProductStoreId || undefined }, 0, PAGE_SIZE);
     if (request !== loadRequest) return;
     logs.value = rows;
+    logsTotal.value = total;
     pageIndex.value = 0;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
     loaded.value = true;
   } catch (err) {
     if (request !== loadRequest) return;
@@ -186,13 +207,14 @@ async function loadMore(event: CustomEvent) {
   const request = loadRequest;
   loadingMore.value = true;
   try {
-    const rows = await fetchLogs({ ...filters, logId: logIdQuery.value.trim() }, pageIndex.value + 1, PAGE_SIZE);
+    const { rows, total } = await fetchLogs({ ...filters, logId: logIdQuery.value.trim(), productStoreId: productStore.getCurrentProductStoreId || undefined }, pageIndex.value + 1, PAGE_SIZE);
     if (request !== loadRequest) return;
     logs.value = [...logs.value, ...rows];
+    logsTotal.value = total;
     pageIndex.value += 1;
-    hasMore.value = rows.length === PAGE_SIZE;
+    hasMore.value = morePages(rows.length, total);
   } catch (err) {
-    await showToast(errorMessage(err, translate('Could not load more imports. Scroll to try again.')));
+    await commonUtil.showToast(errorMessage(err, translate('Could not load more imports. Scroll to try again.')));
   } finally {
     loadingMore.value = false;
     (event.target as HTMLIonInfiniteScrollElement).complete();
@@ -200,6 +222,7 @@ async function loadMore(event: CustomEvent) {
 }
 
 watch(filters, load, { deep: true });
+watch(() => productStore.getCurrentProductStoreId, load);
 let logIdDebounce: ReturnType<typeof setTimeout> | undefined;
 watch(logIdQuery, () => {
   if (logIdDebounce) clearTimeout(logIdDebounce);
@@ -220,13 +243,13 @@ async function upload() {
   if (!selectedFile.value) return;
   uploading.value = true;
   try {
-    const logId = await uploadFile(uploadConfigId.value, selectedFile.value);
-    await showToast(translate('File uploaded as import {logId}.', { logId }));
+    const logId = await uploadFile(uploadConfigId.value, selectedFile.value, productStore.getCurrentProductStoreId || undefined);
+    await commonUtil.showToast(translate('File uploaded as import {logId}.', { logId }));
     selectedFile.value = undefined;
     if (fileInput.value) fileInput.value.value = '';
     await load();
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to upload the file.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to upload the file.')));
   } finally {
     uploading.value = false;
   }
@@ -236,7 +259,7 @@ async function downloadTemplateFile() {
   try {
     downloadText(`${uploadConfigId.value}-template.csv`, await downloadTemplate(uploadConfigId.value));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to download the template.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to download the template.')));
   }
 }
 
@@ -247,7 +270,7 @@ async function downloadFile(log: ImportLog, errors: boolean) {
     const name = (errors ? log.errorFileName : log.fileName) || `${log.logId}${errors ? '-errors' : ''}`;
     downloadText(name.endsWith('.csv') ? name : `${name}.csv`, await downloadLogFile(log.configId, logContentId));
   } catch (err) {
-    await showToast(errorMessage(err, translate('Failed to download the file.')));
+    await commonUtil.showToast(errorMessage(err, translate('Failed to download the file.')));
   }
 }
 </script>

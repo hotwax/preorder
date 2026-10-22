@@ -15,7 +15,9 @@ import { translate } from '@common';
 import { formatDateTime } from '@/utils/format';
 
 const appInfo = (import.meta.env.VITE_APP_VERSION_INFO ? JSON.parse(import.meta.env.VITE_APP_VERSION_INFO as string) : {}) as any;
-const appVersion = appInfo.branch ? (appInfo.branch + "-" + appInfo.revision) : appInfo.tag ? appInfo.tag : "";
+// A build from a detached commit has no branch or tag: show the package version and the revision (preorder-maarg#92)
+const appVersion = appInfo.branch ? (appInfo.branch + "-" + appInfo.revision) : appInfo.tag ? appInfo.tag
+  : [appInfo.version, appInfo.revision].filter(Boolean).join("-");
 // The app runs in the user's time zone, so the build time reads in it.
 const getDateTime = (time: any) => formatDateTime(time);
 </script>

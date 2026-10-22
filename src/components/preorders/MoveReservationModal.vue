@@ -53,13 +53,12 @@ import {
 } from '@ionic/vue';
 import { closeOutline } from 'ionicons/icons';
 import { computed, onMounted, ref } from 'vue';
-import { translate } from '@common';
+import { commonUtil, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { useFutureInventoryActions } from '@/composables/useFutureInventoryActions';
 import { usePreorderActions } from '@/composables/usePreorderActions';
-import { formatDate } from '@/utils/format';
-import { formatQuantity } from '@/utils/labels';
-import { showToast } from '@/utils';
+import { formatDate, formatQuantity } from '@/utils/format';
+import { moveTargets } from '@/utils/preorderLines';
 import { errorMessage } from '@/utils/response';
 import type { FutureInventoryBatch, PreorderLine } from '@/types';
 
@@ -67,21 +66,15 @@ const props = defineProps<{ orderId: string; productStoreId?: string; line: Preo
 // The modal mounts outside the page's tree, so it opens its own seed reads
 const seed = useSeedData();
 const { fetchActiveBatches } = useFutureInventoryActions();
-const { reallocateLine, fetchClosedBatchIds } = usePreorderActions();
+const { reallocateLine } = usePreorderActions();
 
 const batches = ref<FutureInventoryBatch[]>([]);
 const loading = ref(true);
 const saving = ref(false);
 const selectedId = ref('');
 
-// Batches the line was reallocated or cancelled from: a new reservation there would not read as open, so reallocate# refuses them
-const closedBatchIds = ref<Set<string>>(new Set());
-
-// The target must be another ACTIVE batch of the line's product and FI type, at the order's store, that the line never left (reallocate#'s rule).
-const candidates = computed(() => batches.value.filter((batch) =>
-  batch.futureInventoryItemId !== props.line.futureInventoryItemId
-  && !closedBatchIds.value.has(batch.futureInventoryItemId)
-  && (!props.line.futureInventoryItemTypeId || batch.futureInventoryItemTypeId === props.line.futureInventoryItemTypeId)));
+// reallocate#'s rule, read from the line's current reservation and the batches only (preorder-maarg#93)
+const candidates = computed(() => moveTargets(props.line, batches.value, (facilityId) => seed.facility(facilityId)?.facilityTypeId));
 
 const loadError = ref('');
 
@@ -89,10 +82,7 @@ async function loadBatches() {
   loading.value = true;
   loadError.value = '';
   try {
-    [batches.value, closedBatchIds.value] = await Promise.all([
-      fetchActiveBatches(props.line.productId, props.productStoreId),
-      fetchClosedBatchIds(props.orderId, props.line.orderItemSeqId),
-    ]);
+    batches.value = await fetchActiveBatches(props.line.productId, props.productStoreId);
   } catch (error) {
     loadError.value = errorMessage(error, translate('Failed to load batches.'));
   } finally {
@@ -111,10 +101,10 @@ async function save() {
   saving.value = true;
   try {
     await reallocateLine(props.orderId, props.line.orderItemSeqId, props.line.futureInventoryItemId, selectedId.value);
-    await showToast(translate('Reservation moved.'));
+    await commonUtil.showToast(translate('Reservation moved.'));
     dismiss('confirm');
   } catch (error) {
-    await showToast(errorMessage(error, translate('Failed to move the reservation.')));
+    await commonUtil.showToast(errorMessage(error, translate('Failed to move the reservation.')));
   } finally {
     saving.value = false;
   }
