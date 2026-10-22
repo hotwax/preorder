@@ -651,5 +651,10 @@
   "Process all incoming messages": "Process all incoming messages",
   "Product {id}": "Product {id}",
   "Inventory item {id}": "Inventory item {id}",
-  "Variant {id}": "Variant {id}"
+  "Variant {id}": "Variant {id}",
+  "Add or remove units from this batch: a negative number removes them. On order and available to promise change together.": "Add or remove units from this batch: a negative number removes them. On order and available to promise change together.",
+  "On order": "On order",
+  "Product name": "Product name",
+  "Promise date change emails in the last {days} days": "Promise date change emails in the last {days} days",
+  "{qoo} on order": "{qoo} on order"
 }

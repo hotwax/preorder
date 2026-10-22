@@ -88,7 +88,7 @@ import InboundShipmentRow from '@/components/shipments/InboundShipmentRow.vue';
 
 const seed = useSeedData();
 const store = useInboundShipmentSearchStore();
-const { refresh } = useFindSearch(store, { scopeByStore: false });
+const { refresh } = useFindSearch(store);
 const { query, filters, sort, results, total, loading, loaded, error, hasMore } = storeToRefs(store);
 
 const sortOptions = [
