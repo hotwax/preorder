@@ -59,10 +59,10 @@ export const preorderSyncPageDomain = defineSyncDomain({
     if (!shopId || !paths[kind] || !Number.isInteger(pageIndex) || pageIndex < 0) return 0;
     const params: Record<string, any> = { shopId, pageIndex, pageSize: 50 };
     if (kind === 'quantity') { params.eventTypeId = 'SIE_FUTURE_%'; params.eventTypeId_op = 'like'; params.orderByField = '-createdDate,eventTypeId,eventReferenceId'; }
-    if (kind === 'metafield') { params.metafieldPurposeEnumId = 'SMFP_PREORDER_BATCHES'; params.orderByField = '-createdDate,eventTypeId,eventReferenceId,shopifyOwnerId'; }
-    if (kind === 'published') { params.metafieldPurposeEnumId = 'SMFP_PREORDER_BATCHES'; params.orderByField = 'shopifyOwnerId'; }
+    if (kind === 'metafield') params.history = true;
     if (kind === 'activation') params.orderByField = 'productId,facilityId';
-    const rows = await workerGet(ctx, `sob/shopify/${paths[kind]}`, params);
+    const result = await workerGet(ctx, `sob/shopify/${paths[kind]}`, params);
+    const rows = Array.isArray(result) ? result : result?.rows || [];
     return preorderDb.entity(preorderDb.tables.preorderSyncPages).upsertMany([{ pageKey: `${shopId}:${kind}:${pageIndex}`, shopId, kind, rows: Array.isArray(rows) ? rows : [], pageIndex, hasMore: Array.isArray(rows) && rows.length === 50, fetchedAt: Date.now() }]);
   },
 });
