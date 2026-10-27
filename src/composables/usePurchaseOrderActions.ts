@@ -2,7 +2,7 @@ import { api, logger, translate, useSolrSearch } from '@common';
 import { ensureOk, errorMessage } from '@/utils/response';
 import { readList } from '@/utils/query';
 import { countParams, toDay } from '@/utils/format';
-import { linesToMove, toSupplierOptions, type SupplierOption } from '@/utils/purchaseOrders';
+import { isClosedLine, linesToMove, toSupplierOptions, type SupplierOption } from '@/utils/purchaseOrders';
 import type { InboundShipmentSummary, PurchaseOrderDetail, PurchaseOrderLine, PurchaseOrderReceipt } from '@/types';
 
 /** A stop for a backend that ignores the page index: 10,000 suppliers. */
@@ -36,7 +36,20 @@ export interface CreatedPurchaseOrder {
 export function usePurchaseOrderActions() {
   async function fetchPurchaseOrder(orderId: string): Promise<PurchaseOrderDetail> {
     const order = (await ensureOk(api({ url: orderUrl(orderId), method: 'get' }), 'Failed to load the purchase order.')).order;
-    return { ...order, items: order?.items || [] };
+    const [batches, receipts] = await Promise.all([
+      ensureOk(api({ url: 'oms/futureInventoryItems', method: 'get', params: { poId: orderId, pageSize: 1000 } }), 'Failed to load future inventory.'),
+      fetchPurchaseOrderReceipts(orderId),
+    ]);
+    return { ...order, facilityId: order.facilityId || order.originFacilityId, items: (order?.items || []).map((item: PurchaseOrderLine) => {
+      const supply = (Array.isArray(batches) ? batches : []).filter((batch: any) => batch.poItemSeqId === item.orderItemSeqId);
+      const receivedQuantity = receipts.filter((receipt) => receipt.orderItemSeqId === item.orderItemSeqId).reduce((sum, receipt) => sum + Number(receipt.quantityAccepted || 0), 0);
+      return { ...item, receivedQuantity, openQuantity: isClosedLine(item) ? 0 : Math.max(0, Number(item.quantity || 0) - receivedQuantity),
+        futureInventoryItemId: supply.length === 1 ? supply[0].futureInventoryItemId : undefined,
+        futureInventoryStatusId: supply.length === 1 ? supply[0].statusId : undefined,
+        futureInventoryAvailableToPromise: supply.reduce((sum: number, batch: any) => sum + Number(batch.availableToPromiseTotal || 0), 0),
+        futureInventoryReserved: supply.reduce((sum: number, batch: any) => sum + Number(batch.reservedQuantity || 0), 0) };
+    }) };
+
   }
 
   /** The order's inbound shipments, from poorti's purchase shipments. */

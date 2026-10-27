@@ -33,6 +33,7 @@ it('shows the committed date and refreshes affected lists when a later line fail
       return { data: {} };
     }
     if (url === 'oms/purchaseOrders/PO1') return { data: { order: { orderId: 'PO1', statusId: 'ORDER_APPROVED', items: structuredClone(lines) } } };
+    if (url === 'oms/futureInventoryItems') return { data: lines.map((line) => ({ poItemSeqId: line.orderItemSeqId, futureInventoryItemId: line.futureInventoryItemId, reservedQuantity: 1, availableToPromiseTotal: 4 })) };
     if (url === 'poorti/purchaseShipments') return { data: { shipments: [] } };
     if (url.endsWith('/receipts')) return { data: [] };
     throw new Error(`Unexpected request ${url}`);
