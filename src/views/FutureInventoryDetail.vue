@@ -129,7 +129,7 @@
                 <p>{{ translate('Reserved') }}</p>
               </ion-label>
               <ion-label class="ion-text-end">
-                {{ formatDate(line.promisedDatetime) || translate('No promise date') }}
+                {{ formatDate(line.promisedDatetime ?? line.batchPromiseDate) || translate('No promise date') }}
                 <p>{{ translate('Promise date') }}</p>
               </ion-label>
             </div>
@@ -176,8 +176,8 @@
                   {{ row.orderId }}
                   <p>{{ translate('Item {seq}', { seq: row.orderItemSeqId }) }}</p>
                 </template>
-                <template v-else-if="row.promiseDate">
-                  {{ formatDate(row.promiseDate) }}
+                <template v-else-if="row.resultPromiseDate ?? row.promiseDate">
+                  {{ formatDate(row.resultPromiseDate ?? row.promiseDate) }}
                   <p>{{ translate('Promise date') }}</p>
                 </template>
                 <template v-else-if="row.facilityId">

@@ -2,8 +2,8 @@ import { defineSyncDomain } from '@common/db/sync/defineSyncDomain';
 import { workerGet } from '@common/core/workerRemoteApi';
 import { preorderDb } from '@/db/preorderDb';
 
-const JOBS = ['publish_PendingShopifyLocationInventoryAdjustments', 'publish_PendingShopifyPreorderMetafields', 'recover_StaleShopifyPreorderMetafieldMessages', 'expire_FutureInventoryItems', 'reconcile_FutureInventoryPromiseDates', 'rebuild_ShopifyPreorderMetafields', 'send_AllProducedSystemMessages_frequent', 'consume_AllReceivedSystemMessages_frequent'];
-const FEEDS = ['ShopifyShopLocationInventoryEventFeed', 'ShopifyPreorderMetafieldFeed', 'FutureInventoryPromiseDateFeed'];
+const JOBS = ['catchUp_ShopifyInventoryTransactions', 'publish_PendingShopifyInventoryAdjustments', 'publish_PendingShopifyLocationInventoryAdjustments', 'ShopifyInventoryEffectiveDateEvents', 'reconcile_ShopifyFutureInventoryHolds', 'send_AllProducedSystemMessages_frequent', 'consume_AllReceivedSystemMessages_frequent'];
+const FEEDS = ['ShopifyShopLocationInventoryEventFeed', 'ShopifyInventoryChannelEventFeed'];
 export const preorderSetupDomain = defineSyncDomain({
   name: 'preorderSetup', table: 'preorderSetup', label: 'Pre-order setup', syncClass: 'C',
   async sync() { return 0; },
@@ -31,7 +31,7 @@ export const preorderSetupDomain = defineSyncDomain({
             if (pageIndex === 19) errors.push('admin/serviceJobs: job list exceeds 2000 results');
           }
         }));
-        const relevantTypes = ['ShopifyPreorderMetafieldSet', 'ShopifyLocationInventoryAdjustment', 'FutureInventoryPromiseDateChange', 'ShopifyLocationInventoryEvent', 'ShopifyPreorderMetafieldEvent'];
+        const relevantTypes = ['ShopifyInventoryAdjustment', 'ShopifyFulfillmentInventoryMove', 'ShopifyPreorderMetafieldSet', 'ShopifyLocationInventoryAdjustment', 'FutureInventoryPromiseDateChange', 'ShopifyLocationInventoryEvent', 'ShopifyPreorderMetafieldEvent'];
         const safeParameters = ['shopId', 'shopifyLocationId', 'inventoryChannelId', 'systemMessageTypeIds', 'systemMessageTypeId'];
         const scopedJobs = [...candidates.values()].filter(job => {
           const params = Object.fromEntries((job.serviceJobParameters || []).map((p: any) => [p.parameterName, p.parameterValue]));
@@ -50,7 +50,7 @@ export const preorderSetupDomain = defineSyncDomain({
     return preorderDb.entity(preorderDb.tables.preorderSetup).upsertMany([{ shopId, productStoreId, channels: channels || [], settings: settings || [], purposes: purposes || [], jobs, feeds, errors, fetchedAt: Date.now() }]);
   },
 });
-const paths: Record<string, string> = { quantity: 'locationInventoryAdjustmentDetails', metafield: 'preorderMetafieldDetails', published: 'preorderMetafields', activation: 'productFacilityActivations' };
+const paths: Record<string, string> = { quantity: 'inventoryAdjustmentDetails', metafield: 'preorderMetafieldDetails', published: 'preorderMetafields', activation: 'productFacilityActivations' };
 export const preorderSyncPageDomain = defineSyncDomain({
   name: 'preorderSyncPage', table: 'preorderSyncPages', label: 'Pre-order sync events', syncClass: 'C',
   async sync() { return 0; },

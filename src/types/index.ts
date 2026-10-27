@@ -42,6 +42,7 @@ export interface FutureInventoryLedgerRow {
   reasonEnumId?: string;
   quantityOnOrderDiff?: number;
   availableToPromiseDiff?: number;
+  resultPromiseDate?: number | string;
   lastQuantityOnOrder?: number;
   lastAvailableToPromise?: number;
   orderId?: string;
@@ -56,6 +57,7 @@ export interface FutureInventoryLedgerRow {
 
 /** One order line waiting on a batch (`oms/futureInventoryItems/{id}/lines`). */
 export interface FutureInventoryWaitingLine {
+  batchPromiseDate?: number | string;
   futureInventoryItemId: string;
   orderId: string;
   orderItemSeqId: string;

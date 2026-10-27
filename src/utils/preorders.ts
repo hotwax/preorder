@@ -69,7 +69,7 @@ export function inIdOrder<T extends { orderId: string }>(rows: T[], ids: string[
  * no open reservation, so the view never lists them. Whether a line is at parking is set when the page shapes the order.
  */
 export function toPreorderLine(line: PreorderLine): PreorderLine {
-  return { ...line, reservationOpen: true, readyToRelease: line.batchStatusId === 'FUTURE_INV_RECEIVED', committed: false };
+  return { ...line, promisedDatetime: line.promisedDatetime ?? line.batchPromiseDate, reservationOpen: true, readyToRelease: line.batchStatusId === 'FUTURE_INV_RECEIVED', committed: false };
 }
 
 /** An order whose lines are marked at parking or not, with the counts, promise range and types its lines add up to. */

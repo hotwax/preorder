@@ -104,3 +104,15 @@ describe('demandByFacility', () => {
     ]);
   });
 });
+
+// QA FutureInventoryWaitingLine returns the batch promise under batchPromiseDate.
+describe('native QA waiting-line promise binding', () => {
+  it('uses the batch promise when no item promise is returned', () => {
+    const row = toPreorderLine(line({ batchPromiseDate: 1797292800000 }));
+    expect(row.promisedDatetime).toBe(1797292800000);
+    expect(summarizePreorderLines([row], () => false).earliestPromiseDate).toBe(1797292800000);
+  });
+  it('preserves an explicit item promise', () => {
+    expect(toPreorderLine(line({ promisedDatetime: 1797379200000, batchPromiseDate: 1797292800000 })).promisedDatetime).toBe(1797379200000);
+  });
+});
