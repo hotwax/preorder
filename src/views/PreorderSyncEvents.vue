@@ -97,7 +97,7 @@
                 >
                 <ion-item v-if="row.eventReferenceId"
                   ><ion-label
-                    ><p>{{ translate('Future inventory event') }}</p>
+                    ><p>{{ translate('Inventory event reference') }}</p>
                     {{ row.eventReferenceId }}</ion-label
                   ></ion-item
                 >

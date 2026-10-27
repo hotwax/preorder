@@ -555,6 +555,7 @@
   "Could not load sync events": "Could not load sync events",
   "Page {page}": "Page {page}",
   "Future inventory event": "Future inventory event",
+  "Inventory event reference": "Inventory event reference",
   "Shopify inventory item": "Shopify inventory item",
   "Shopify variant": "Shopify variant",
   "Metafield ID": "Metafield ID",
