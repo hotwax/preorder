@@ -15,4 +15,4 @@ jobs:
       appDir: preorder
     secrets:
       envPAT: ${{ secrets.envPAT }}
-      HOTWAX_PUBLIC_SECRET: ${{ secrets.HOTWAX_PUBLIC_SECRET }}
+      DEV_FIREBASE_SERVICE_ACCOUNT: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT }}
