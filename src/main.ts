@@ -29,7 +29,7 @@ import "@common/css/theme.css"
 
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-import { commonUtil, cookieHelper, createDxpI18n, initialiseConfig, logger } from '@common';
+import { commonUtil, cookieHelper, createDxpI18n, faroUtil, initialiseConfig, logger } from '@common';
 import { preorderDb } from './db/preorderDb';
 import { useUserStore } from './store/user';
 import localeMessages from './locales';
@@ -45,13 +45,16 @@ const savedLocale = cookieHelper().get('locale');
 if(savedLocale && savedLocale in localeMessages) {i18n.global.locale.value = savedLocale;}
 watchEffect(() => { document.documentElement.lang = i18n.global.locale.value; });
 
+faroUtil.initialiseFaro()
+
 const app = createApp(App)
   .use(IonicVue, {
     mode: 'md',
     innerHTMLTemplatesEnabled: true
   })
   .use(logger, {
-    level: import.meta.env.VITE_DEFAULT_LOG_LEVEL
+    level: import.meta.env.VITE_DEFAULT_LOG_LEVEL,
+    afterHooks: [faroUtil.faroLoggerHook]
   })
   .use(i18n)
   .use(pinia)
