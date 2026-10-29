@@ -46,10 +46,10 @@
                   <p v-if="po?.statusId">{{ seed.statusDescription(po.statusId) }}</p>
                 </ion-label>
               </ion-item>
-              <ion-item v-if="batch.shipmentExternalId">
+              <ion-item v-if="batch.shipmentId">
                 <ion-label class="ion-text-wrap">
                   <p class="overline">{{ translate('Inbound shipment') }}</p>
-                  {{ batch.shipmentExternalId }}
+                  {{ batch.shipmentId }}
                 </ion-label>
               </ion-item>
               <ion-item v-if="batch.externalId">
@@ -129,7 +129,7 @@
                 <p>{{ translate('Reserved') }}</p>
               </ion-label>
               <ion-label class="ion-text-end">
-                {{ formatDate(line.promisedDatetime) || translate('No promise date') }}
+                {{ formatDate(line.promisedDatetime ?? line.batchPromiseDate) || translate('No promise date') }}
                 <p>{{ translate('Promise date') }}</p>
               </ion-label>
             </div>
@@ -150,7 +150,7 @@
             </ion-list-header>
             <div
               v-for="row in ledger"
-              :key="row.futureInventoryItemDetailId"
+              :key="row.futureInventoryItemDetailSeqId"
               class="list-item ledger-row"
               :role="row.orderId ? 'link' : undefined"
               :tabindex="row.orderId ? 0 : undefined"
@@ -176,8 +176,8 @@
                   {{ row.orderId }}
                   <p>{{ translate('Item {seq}', { seq: row.orderItemSeqId }) }}</p>
                 </template>
-                <template v-else-if="row.promiseDate">
-                  {{ formatDate(row.promiseDate) }}
+                <template v-else-if="row.resultPromiseDate ?? row.promiseDate">
+                  {{ formatDate(row.resultPromiseDate ?? row.promiseDate) }}
                   <p>{{ translate('Promise date') }}</p>
                 </template>
                 <template v-else-if="row.facilityId">

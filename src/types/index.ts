@@ -18,17 +18,62 @@ export interface FutureInventoryBatch {
   facilityName?: string;
   futureInventoryItemTypeId?: string;
   promiseDate?: number | string;
+  /** Supply still expected to arrive. */
   quantityOnOrderTotal?: number;
   availableToPromiseTotal?: number;
+  /** Units reserved by orders: on order minus ATP. The list view computes it; a single batch read gets it from the app. */
   reservedQuantity?: number;
   statusId?: string;
   poId?: string;
   poItemSeqId?: string;
   externalId?: string;
+  shipmentId?: string;
   shipmentExternalId?: string;
   waitingLineCount?: number;
   waitingQuantity?: number;
+  /** Dashboard rows only: why an expired or cancelled batch still holds reservations. */
   exceptionReason?: string;
+}
+
+/** One ledger row of a batch (`oms/futureInventoryItems/{id}/details`). Facts only: a row records what changed. */
+export interface FutureInventoryLedgerRow {
+  futureInventoryItemId: string;
+  futureInventoryItemDetailSeqId: string;
+  reasonEnumId?: string;
+  quantityOnOrderDiff?: number;
+  availableToPromiseDiff?: number;
+  resultPromiseDate?: number | string;
+  lastQuantityOnOrder?: number;
+  lastAvailableToPromise?: number;
+  orderId?: string;
+  orderItemSeqId?: string;
+  promiseDate?: number | string;
+  receiptId?: string;
+  description?: string;
+  changedByUserId?: string;
+  changedByUserName?: string;
+  createdDate?: number | string;
+}
+
+/** One order line waiting on a batch (`oms/futureInventoryItems/{id}/lines`). */
+export interface FutureInventoryWaitingLine {
+  batchPromiseDate?: number | string;
+  futureInventoryItemId: string;
+  orderId: string;
+  orderItemSeqId: string;
+  shipGroupSeqId?: string;
+  orderName?: string;
+  externalId?: string;
+  orderDate?: number | string;
+  statusId?: string;
+  productId?: string;
+  productStoreId?: string;
+  facilityId?: string;
+  salesChannelEnumId?: string;
+  shipmentMethodTypeId?: string;
+  openQuantity?: number;
+  reservedDatetime?: number | string;
+  promisedDatetime?: number | string;
 }
 
 /**
@@ -56,10 +101,13 @@ export interface PreorderLine {
   autoCancelDate?: number | string;
   futureInventoryItemId?: string;
   futureInventoryItemTypeId?: string;
+  batchFacilityId?: string;
   batchPromiseDate?: number | string;
   batchStatusId?: string;
+  reservedDatetime?: number | string;
   poId?: string;
   reservationOpen?: boolean;
+  /** Units still reserved on the batch. */
   openQuantity?: number;
   /** The batch was received while the line still holds it: the stock has landed and the line waits to be released. */
   readyToRelease?: boolean;

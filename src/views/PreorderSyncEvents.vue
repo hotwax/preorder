@@ -79,7 +79,7 @@
                         ? translate('Inventory item {id}', { id: row.shopifyInventoryItemId })
                         : row.shopifyOwnerId
                         ? translate('Variant {id}', { id: row.shopifyOwnerId })
-                        : row.shopifyMetafieldId
+                        : row.shopifyMetafieldId || row.metafieldId
                     }}
                   </p>
                   <p v-if="row.createdDate">{{ formatDateTime(row.createdDate) }}</p>
@@ -97,7 +97,7 @@
                 >
                 <ion-item v-if="row.eventReferenceId"
                   ><ion-label
-                    ><p>{{ translate('Future inventory event') }}</p>
+                    ><p>{{ translate('Inventory event reference') }}</p>
                     {{ row.eventReferenceId }}</ion-label
                   ></ion-item
                 >
@@ -259,6 +259,8 @@ watch(pageKey, () => {
   void load();
 });
 function deliveryLabel(row: any) {
+  if (row.confirmedDate) return translate('Confirmed');
+  if (row.failed === 'Y') return translate('Failed');
   if (row.systemMessageStatusId) return seed.statusDescription(row.systemMessageStatusId);
   if (row.systemMessageId) return translate('Message history unavailable');
   if (kind.value === 'quantity' && Number(row.computedInventoryChange) === 0) return translate('No quantity change');

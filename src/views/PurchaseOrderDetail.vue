@@ -189,7 +189,7 @@ const linesWithoutBatch = computed(() => openItems.value.filter((item) => !item.
 const linesWithBatch = computed(() => (order.value?.items || []).filter((item) => item.futureInventoryItemId).length);
 /** The ids the toolbar title does not already show. */
 const idsBesideTitle = computed(() => [order.value?.orderId, order.value?.externalId].filter((id) => id && id !== (order.value?.orderName || props.orderId)).join(' - '));
-const earliestArrival = computed(() => openItems.value.map((item) => toMillis(item.estimatedDeliveryDate)).filter((millis): millis is number => !!millis).sort((a, b) => a - b)[0]);
+const earliestArrival = computed(() => openItems.value.filter((item) => Number(item.openQuantity) > 0).map((item) => toMillis(item.estimatedDeliveryDate)).filter((millis): millis is number => !!millis).sort((a, b) => a - b)[0]);
 
 /** An open line whose arrival date has passed: its supply is late. */
 const lineOverdueDays = (item: PurchaseOrderLine) => (isClosedLine(item) ? 0 : daysOverdue(item.estimatedDeliveryDate));
