@@ -154,7 +154,7 @@ import type { PurchaseOrderSummary } from '@/types';
 
 const seed = useSeedData();
 const { confirmAction, promptForChoice, promptForDate } = usePrompts();
-const { typeOptions } = useFutureInventoryTypes();
+const { loadTypeOptions } = useFutureInventoryTypes();
 const { running, runBulk } = useBulkAction();
 const store = usePurchaseOrderSearchStore();
 const { refresh, refreshLater } = useFindSearch(store, { onStoreChange });
@@ -262,7 +262,7 @@ async function sellAsFutureInventoryBulk() {
     translate('Sell as future inventory'),
     translate('Creates a future inventory batch of the chosen type for each open line of {count} purchase orders that does not have one, at its arrival date and quantity.', { count: orderIds.length }),
     translate('Create batches'),
-    typeOptions.value,
+    await loadTypeOptions(),
     'FIT_PRE_ORDER',
   );
   if (!futureInventoryItemTypeId) return;

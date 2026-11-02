@@ -164,7 +164,7 @@ import Actions from '@/authorization/actions';
 const props = defineProps<{ orderId: string }>();
 const seed = useSeedData();
 const { confirmAction, promptForChoice, promptForDate } = usePrompts();
-const { typeOptions } = useFutureInventoryTypes();
+const { loadTypeOptions } = useFutureInventoryTypes();
 const userStore = useUserStore();
 const { fetchPurchaseOrder, fetchPurchaseOrderShipments, fetchPurchaseOrderReceipts, changeStatus, changeArrivalDate, sellAsPreorder } = usePurchaseOrderActions();
 
@@ -284,7 +284,7 @@ async function sellAsFutureInventory() {
     translate('Sell as future inventory'),
     translate('Creates a future inventory batch of the chosen type for each open line without one, at its arrival date and quantity.'),
     translate('Create batches'),
-    typeOptions.value,
+    await loadTypeOptions(),
     'FIT_PRE_ORDER',
   );
   if (futureInventoryItemTypeId) await run(() => sellAsPreorder(props.orderId, futureInventoryItemTypeId), translate('Future inventory created.'));

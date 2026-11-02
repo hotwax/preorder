@@ -9,7 +9,7 @@ vi.mock('@common', () => ({ api: mocks.api, logger: { error: vi.fn() }, translat
   key.replace(/\{(\w+)\}/g, (_match, field) => String(params?.[field] ?? `{${field}}`)), StatCard: { template: '<div />' },
   commonUtil: { hasError: () => false, showToast: mocks.toast, getStatusColor: () => "primary" } }));
 vi.mock('@common/db', () => ({ useSeedData: () => ({ facilityName: (id: string) => id, statusDescription: (id: string) => id, enumDescription: (id: string) => id,
-  enumsByType: () => [{ enumId: 'FIT_BACK_ORDER' }, { enumId: 'FIT_PRE_ORDER' }] }) }));
+  enumsByType: () => [], getEnumsByType: async () => [{ enumId: 'FIT_BACK_ORDER' }, { enumId: 'FIT_PRE_ORDER' }] }) }));
 vi.mock('@/store/user', () => ({ useUserStore: () => ({ hasPermission: () => true }) }));
 vi.mock('@/store/productStore', () => ({ useProductStore: () => ({ getCurrentProductStoreId: 'STORE' }) }));
 vi.mock('@/router', () => ({ default: { push: vi.fn() } }));
