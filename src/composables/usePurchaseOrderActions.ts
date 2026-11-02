@@ -80,7 +80,7 @@ export function usePurchaseOrderActions() {
 
   /**
    * Creates the purchase order, then, when asked, its future inventory. A failure of that second request does not
-   * undo the order: the result names the order and says why it has no batches, and Sell as pre-order on it adds them.
+   * undo the order: the result names the order and says why it has no batches, and Sell as future inventory on it adds them.
    */
   async function createPurchaseOrder(order: NewPurchaseOrder): Promise<CreatedPurchaseOrder> {
     const { createFutureInventory, futureInventoryItemTypeId, ...purchaseOrder } = order;
@@ -125,7 +125,7 @@ export function usePurchaseOrderActions() {
     }
   }
 
-  /** Creates an FI batch for each open line of the PO without one. */
+  /** Creates an FI batch of the type (pre-order unless given) for each open line of the PO without one. */
   async function sellAsPreorder(orderId: string, futureInventoryItemTypeId = 'FIT_PRE_ORDER') {
     return ensureOk(api({ url: `${orderUrl(orderId)}/futureInventory`, method: 'post', data: { futureInventoryItemTypeId } }), 'Failed to create future inventory.');
   }

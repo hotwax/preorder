@@ -200,7 +200,8 @@ Bulk actions:
 - **Complete** (`ORDER_COMPLETED`);
 - **Change arrival date**: sets the date on each open line and writes an `OrderItemChange`, so the
   PO's FI batch takes the new date;
-- **Sell as pre-order**: creates a future inventory batch for each open line without one;
+- **Sell as future inventory**: asks for the FI type (pre-order or back-order, pre-order preselected) and creates a
+  batch of it for each open line without one; the detail page's actions menu has the same action;
 - **Export CSV**.
 
 Detail:
@@ -336,7 +337,7 @@ retired `preorder/*` resources are not used. Every path below is one a request i
 | POST `oms/purchaseOrders` | create a PO |
 | POST `oms/purchaseOrders/{orderId}/status` | approve, cancel and complete |
 | PUT `oms/purchaseOrders/{orderId}/items/{orderItemSeqId}` | change a line's arrival date |
-| POST `oms/purchaseOrders/{orderId}/futureInventory` | Sell as pre-order: a batch per open line without one |
+| POST `oms/purchaseOrders/{orderId}/futureInventory` | Sell as future inventory: a batch of the chosen FI type per open line without one |
 | GET `oms/purchaseOrders/{orderId}/receipts` | PO receipts |
 | GET `oms/parties/roles/SUPPLIER` | the suppliers, paged until the last page |
 | GET `poorti/purchaseShipments` | the Inbound shipments list, and a PO's shipments |

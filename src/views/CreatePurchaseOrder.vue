@@ -239,9 +239,9 @@ async function save() {
       items: form.items.map((line) => ({ productId: line.productId, quantity: Number(line.quantity), unitPrice: line.unitPrice === undefined || line.unitPrice === null || (line.unitPrice as any) === '' ? undefined : Number(line.unitPrice), arrivalDate: line.arrivalDate })),
     });
     if (result.futureInventoryError) {
-      // The order exists without its batches: the toast stays until dismissed, and Sell as pre-order on the order adds them
+      // The order exists without its batches: the toast stays until dismissed, and Sell as future inventory on the order adds them
       const toast: any = await commonUtil.showToast(
-        translate('Purchase order {orderId} created, but its future inventory was not: {error} Use Sell as pre-order on the order to create it.', { orderId: result.orderId, error: result.futureInventoryError }),
+        translate('Purchase order {orderId} created, but its future inventory was not: {error} Use Sell as future inventory on the order to create it.', { orderId: result.orderId, error: result.futureInventoryError }),
         { manualDismiss: true, canDismiss: true },
       );
       await toast.present();

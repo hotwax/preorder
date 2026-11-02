@@ -105,7 +105,7 @@
         <ion-buttons slot="end" class="bulk-action-buttons">
           <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_CREATED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_APPROVED')">{{ translate('Approve') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedOpen.length || !canChangeArrival || running || loading" @click="changeArrivalDate">{{ translate('Change arrival date') }}</ion-button>
-          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdateFutureInventory || running || loading" @click="sellAsPreorderBulk">{{ translate('Sell as pre-order') }}</ion-button>
+          <ion-button fill="outline" :disabled="!selectedOpen.length || !canUpdateFutureInventory || running || loading" @click="sellAsFutureInventoryBulk">{{ translate('Sell as future inventory') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedWithStatus(['ORDER_APPROVED']).length || !canUpdate || running || loading" @click="bulkStatus('ORDER_COMPLETED')">{{ translate('Complete') }}</ion-button>
           <ion-button fill="outline" color="danger" :disabled="!selectedOpen.length || !canUpdate || running || loading" @click="bulkStatus('ORDER_CANCELLED')">{{ translate('Cancel') }}</ion-button>
           <ion-button fill="outline" :disabled="!selectedIds.length || loading" @click="exportSelected">{{ translate('Export CSV') }}</ion-button>
@@ -131,6 +131,7 @@ import { OPEN_PURCHASE_ORDER_STATUSES as OPEN_STATUSES, SOLR_SETTLE_MS, usePurch
 import { useUserStore } from '@/store/user';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { useFindSearch } from '@/composables/useFindSearch';
 import { useRowSelection } from '@/composables/useRowSelection';
 import { useStoreFacilities } from '@/composables/useStoreFacilities';
@@ -152,7 +153,8 @@ import Actions from '@/authorization/actions';
 import type { PurchaseOrderSummary } from '@/types';
 
 const seed = useSeedData();
-const { confirmAction, promptForDate } = usePrompts();
+const { confirmAction, promptForChoice, promptForDate } = usePrompts();
+const { typeOptions } = useFutureInventoryTypes();
 const { running, runBulk } = useBulkAction();
 const store = usePurchaseOrderSearchStore();
 const { refresh, refreshLater } = useFindSearch(store, { onStoreChange });
@@ -170,7 +172,7 @@ const orderStatusOptions = computed(() => seed.statusItemsByType('ORDER_STATUS')
 const { facilityOptions } = useStoreFacilities();
 const suppliers = ref<{ partyId: string; name: string }[]>([]);
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
-// Selling as pre-order creates future inventory: the FI permission
+// Selling as future inventory creates it: the FI permission
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 // Moving arrival dates updates the PO lines and moves their future inventory: both permissions
 const canChangeArrival = computed(() => canUpdate.value && canUpdateFutureInventory.value);
@@ -254,14 +256,17 @@ async function changeArrivalDate() {
     ({ ...order, earliestArrivalDate: arrivalMillis, latestArrivalDate: arrivalMillis }));
 }
 
-async function sellAsPreorderBulk() {
+async function sellAsFutureInventoryBulk() {
   const orderIds = [...selectedOpen.value];
-  if (!await confirmAction(
-    translate('Sell as pre-order'),
-    translate('Creates a pre-order future inventory batch for each open line of {count} purchase orders that does not have one, at its arrival date and quantity.', { count: orderIds.length }),
+  const futureInventoryItemTypeId = await promptForChoice(
+    translate('Sell as future inventory'),
+    translate('Creates a future inventory batch of the chosen type for each open line of {count} purchase orders that does not have one, at its arrival date and quantity.', { count: orderIds.length }),
     translate('Create batches'),
-  )) return;
-  const result = await runBulk(() => forEachOrder(orderIds, (orderId) => sellAsPreorder(orderId)));
+    typeOptions.value,
+    'FIT_PRE_ORDER',
+  );
+  if (!futureInventoryItemTypeId) return;
+  const result = await runBulk(() => forEachOrder(orderIds, (orderId) => sellAsPreorder(orderId, futureInventoryItemTypeId)));
   await report(result, translate('Future inventory created for {done} purchase orders.', { done: result.done, count: result.done }));
 }
 

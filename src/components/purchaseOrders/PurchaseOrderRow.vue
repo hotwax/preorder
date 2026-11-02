@@ -35,7 +35,7 @@
 
     <ion-label class="tablet">
       {{ translate('{count} units', countParams(order.quantityTotal)) }}
-      <p>{{ translate('{count} lines', { count: order.itemCount ?? 0 }) }}<template v-if="order.futureInventoryBatchCount">{{ ', ' + translate('{count} sold as pre-order', { count: order.futureInventoryBatchCount }) }}</template></p>
+      <p>{{ translate('{count} lines', { count: order.itemCount ?? 0 }) }}<template v-if="order.futureInventoryBatchCount">{{ ', ' + translate('{count} sold as future inventory', { count: order.futureInventoryBatchCount }) }}</template></p>
     </ion-label>
 
     <ion-label class="tablet">

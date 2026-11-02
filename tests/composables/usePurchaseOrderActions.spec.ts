@@ -120,6 +120,19 @@ describe('bulk purchase order actions (preorder-maarg#104)', () => {
     ]);
   });
 
+  it('creates the future inventory as the chosen type, pre-order when none is given', async () => {
+    apiMock.mockResolvedValue({ status: 200, data: { futureInventoryItemIds: ['M100312'] } });
+    const { forEachOrder, sellAsPreorder } = usePurchaseOrderActions();
+    await sellAsPreorder('M100972');
+    const result = await forEachOrder(['M100973'], (orderId) => sellAsPreorder(orderId, 'FIT_BACK_ORDER'));
+
+    expect(apiMock.mock.calls.map((call: any) => [call[0].url, call[0].data])).toEqual([
+      ['oms/purchaseOrders/M100972/futureInventory', { futureInventoryItemTypeId: 'FIT_PRE_ORDER' }],
+      ['oms/purchaseOrders/M100973/futureInventory', { futureInventoryItemTypeId: 'FIT_BACK_ORDER' }],
+    ]);
+    expect(result).toEqual({ done: 1, failed: 0, succeeded: ['M100973'], errors: [] });
+  });
+
   it('counts mixed successes and failures in order, and runs every order after a failure', async () => {
     const seen: string[] = [];
     const result = await usePurchaseOrderActions().forEachOrder(['M1', 'M2', 'M3', 'M4'], async (orderId) => {

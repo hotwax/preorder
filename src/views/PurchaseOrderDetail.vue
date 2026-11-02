@@ -16,7 +16,7 @@
       <ion-content><ion-list>
         <ion-item v-if="order?.statusId === 'ORDER_CREATED'" button :detail="false" @click="setStatus('ORDER_APPROVED')"><ion-label>{{ translate('Approve') }}</ion-label></ion-item>
         <ion-item v-if="canChangeArrival" button :detail="false" @click="changeArrival()"><ion-label>{{ translate('Change arrival date') }}</ion-label></ion-item>
-        <ion-item v-if="canUpdateFutureInventory" button :detail="false" :disabled="!linesWithoutBatch" @click="sellAsPreorderNow"><ion-label>{{ translate('Sell as pre-order') }}</ion-label></ion-item>
+        <ion-item v-if="canUpdateFutureInventory" button :detail="false" :disabled="!linesWithoutBatch" @click="sellAsFutureInventory"><ion-label>{{ translate('Sell as future inventory') }}</ion-label></ion-item>
         <ion-item v-if="order?.statusId === 'ORDER_APPROVED'" button :detail="false" @click="setStatus('ORDER_COMPLETED')"><ion-label>{{ translate('Complete') }}</ion-label></ion-item>
         <ion-item button :detail="false" @click="setStatus('ORDER_CANCELLED')"><ion-label color="danger">{{ translate('Cancel order') }}</ion-label></ion-item>
       </ion-list></ion-content>
@@ -60,7 +60,7 @@
             <StatCard :title="translate('Ordered')" :stat="formatQuantity(sum('quantity') - sum('cancelQuantity'))" :subtitle="translate('{count} lines', { count: order.items.length })" />
             <StatCard :title="translate('Received')" :stat="formatQuantity(sum('receivedQuantity'))" :subtitle="receiptsError ? translate('Receipts could not be loaded') : translate('{count} receipts', { count: receipts.length })" />
             <StatCard :title="translate('Still to arrive')" :stat="formatQuantity(sum('openQuantity'))" :subtitle="earliestArrival ? translate('Next arrival {date}', { date: formatDate(earliestArrival) }) : translate('No arrival date')" />
-            <StatCard :title="translate('Sold as pre-order')" :stat="formatQuantity(sumBatches('futureInventoryReserved'))" :subtitle="translate('{count} of {total} lines have a future inventory batch', { count: formatNumber(linesWithBatch), total: formatNumber(order.items.length), n: order.items.length })" />
+            <StatCard :title="translate('Sold as future inventory')" :stat="formatQuantity(sumBatches('futureInventoryReserved'))" :subtitle="translate('{count} of {total} lines have a future inventory batch', { count: formatNumber(linesWithBatch), total: formatNumber(order.items.length), n: order.items.length })" />
           </div>
         </section>
 
@@ -91,7 +91,7 @@
                 <ion-icon :icon="layersOutline" />
                 <ion-label>{{ translate('{atp} ATP, {reserved} reserved', { atp: formatQuantity(item.futureInventoryAvailableToPromise), reserved: formatQuantity(item.futureInventoryReserved) }) }}</ion-label>
               </ion-chip>
-              <ion-note v-else>{{ translate('Not sold as pre-order') }}</ion-note>
+              <ion-note v-else>{{ translate('Not sold as future inventory') }}</ion-note>
             </ion-label>
             <ion-label>
               <ion-badge :color="statusColor(item.statusId)">{{ seed.statusDescription(item.statusId || '') }}</ion-badge>
@@ -144,6 +144,7 @@ import { computed, ref } from 'vue';
 import { commonUtil, StatCard, translate } from '@common';
 import { useSeedData } from '@common/db';
 import { usePurchaseOrderActions } from '@/composables/usePurchaseOrderActions';
+import { useFutureInventoryTypes } from '@/composables/useFutureInventoryTypes';
 import { useUserStore } from '@/store/user';
 import { SOLR_SETTLE_MS, usePurchaseOrderSearchStore } from '@/store/purchaseOrderSearch';
 import { useFutureInventorySearchStore } from '@/store/futureInventorySearch';
@@ -162,7 +163,8 @@ import Actions from '@/authorization/actions';
 
 const props = defineProps<{ orderId: string }>();
 const seed = useSeedData();
-const { confirmAction, promptForDate } = usePrompts();
+const { confirmAction, promptForChoice, promptForDate } = usePrompts();
+const { typeOptions } = useFutureInventoryTypes();
 const userStore = useUserStore();
 const { fetchPurchaseOrder, fetchPurchaseOrderShipments, fetchPurchaseOrderReceipts, changeStatus, changeArrivalDate, sellAsPreorder } = usePurchaseOrderActions();
 
@@ -179,7 +181,7 @@ const isOpen = computed(() => ['ORDER_CREATED', 'ORDER_APPROVED'].includes(order
 const canUpdate = computed(() => userStore.hasPermission(Actions.APP_PO_UPDATE));
 /** A line with units no shipment carries yet: something a new inbound shipment can ship. */
 const hasUnshipped = computed(() => (order.value?.items || []).some((item: any) => Number(item.unshippedQuantity) > 0));
-// Selling as pre-order creates future inventory: the FI permission
+// Selling as future inventory creates it: the FI permission
 const canUpdateFutureInventory = computed(() => userStore.hasPermission(Actions.APP_FI_UPDATE));
 // Moving arrival dates updates the PO lines and moves their future inventory: both permissions
 const canChangeArrival = computed(() => canUpdate.value && canUpdateFutureInventory.value);
@@ -276,13 +278,16 @@ async function changeArrival() {
   if (arrivalDate) await run(() => changeArrivalDate(props.orderId, arrivalDate, order.value?.items), translate('Arrival date changed.'));
 }
 
-async function sellAsPreorderNow() {
-  const confirmed = await confirmAction(
-    translate('Sell as pre-order'),
-    translate('Creates a pre-order future inventory batch for each open line without one, at its arrival date and quantity.'),
+/** Asks for the type from the same options as Create purchase order, pre-order preselected. */
+async function sellAsFutureInventory() {
+  const futureInventoryItemTypeId = await promptForChoice(
+    translate('Sell as future inventory'),
+    translate('Creates a future inventory batch of the chosen type for each open line without one, at its arrival date and quantity.'),
     translate('Create batches'),
+    typeOptions.value,
+    'FIT_PRE_ORDER',
   );
-  if (confirmed) await run(() => sellAsPreorder(props.orderId), translate('Future inventory created.'));
+  if (futureInventoryItemTypeId) await run(() => sellAsPreorder(props.orderId, futureInventoryItemTypeId), translate('Future inventory created.'));
 }
 </script>
 
