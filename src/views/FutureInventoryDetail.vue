@@ -347,7 +347,7 @@ async function changeDate() {
     translate('Change date'),
     dayBound(batch.value?.promiseDate, 'start', 'date'),
   );
-  if (promiseDate) await run(() => updateBatch(props.futureInventoryItemId, { promiseDate, description: 'Promise date changed in the Pre-order app' }), translate('Promise date changed.'));
+  if (promiseDate) await run(() => updateBatch(props.futureInventoryItemId, { promiseDate }), translate('Promise date changed.'));
 }
 
 async function adjustQuantity() {
@@ -357,7 +357,7 @@ async function adjustQuantity() {
     translate('Adjust'),
     '-5',
   );
-  if (quantityDiff) await run(() => updateBatch(props.futureInventoryItemId, { quantityDiff, description: 'Quantity adjusted in the Pre-order app' }), translate('Quantity adjusted.'));
+  if (quantityDiff) await run(() => updateBatch(props.futureInventoryItemId, { quantityDiff }), translate('Quantity adjusted.'));
 }
 
 async function cancel() {
@@ -369,7 +369,7 @@ async function cancel() {
       : translate('This cannot be undone.'),
     translate('Cancel batch'),
   );
-  if (confirmed) await run(() => cancelBatch(props.futureInventoryItemId, 'Cancelled in the Pre-order app'), translate('Batch cancelled.'));
+  if (confirmed) await run(() => cancelBatch(props.futureInventoryItemId), translate('Batch cancelled.'));
 }
 </script>
 

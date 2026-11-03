@@ -152,7 +152,7 @@ const productStore = useProductStore();
 const store = useFutureInventorySearchStore();
 const { refresh } = useFindSearch(store, { onStoreChange });
 const userStore = useUserStore();
-const { updateBatch, cancelBatch, forEachBatch } = useFutureInventoryActions();
+const { updateBatches } = useFutureInventoryActions();
 const { query, filters, sort, results, total, loading, loaded, error, hasMore, extras } = storeToRefs(store);
 const storeName = computed(() => (productStore.getCurrentProductStoreId ? seed.productStoreName(productStore.getCurrentProductStoreId) : translate('This store')));
 
@@ -215,7 +215,7 @@ async function changePromiseDate() {
     translate('Change date'),
   );
   if (!promiseDate) return;
-  const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => updateBatch(id, { promiseDate, description: 'Promise date changed in the Pre-order app' })));
+  const { done, failed } = await runBulk(() => updateBatches(ids, { promiseDate }));
   await finish(failed ? translate('{done} batches moved, {failed} failed.', { done, failed, n: done }) : translate('{done} batches moved to {date}.', { done, count: done, date: formatDate(promiseDate) }));
 }
 
@@ -230,7 +230,7 @@ async function cancelBatches() {
     translate('Cancel batches'),
   );
   if (!confirmed) return;
-  const { done, failed } = await runBulk(() => forEachBatch(ids, (id) => cancelBatch(id, 'Cancelled in the Pre-order app')));
+  const { done, failed } = await runBulk(() => updateBatches(ids, { cancel: true }));
   await finish(failed ? translate('{done} batches cancelled, {failed} failed.', { done, failed, n: done }) : translate('{done} batches cancelled.', { done, count: done }));
 }
 

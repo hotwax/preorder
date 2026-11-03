@@ -3,6 +3,7 @@ import { ensureOk, ensureResponse } from '@/utils/response';
 import { readEntityList, whereEquals, whereIn, withPaging } from '@/utils/query';
 import { useStoreFacilitiesStore } from '@/store/storeFacilities';
 import { useParkingFacilities } from '@/composables/useParkingFacilities';
+import { useImports } from '@/composables/useImports';
 import { demandByFacility } from '@/utils/preorders';
 import type { FutureInventoryBatch, FutureInventoryBatchDetail, FutureInventoryLedgerRow, FutureInventoryWaitingLine } from '@/types';
 
@@ -53,13 +54,50 @@ export function useFutureInventoryActions() {
     return readEntityList<FutureInventoryBatch>(resp).rows;
   }
 
-  /** Updates a batch: one ledger row with a quantity change (`quantityDiff`), a new promise date ('yyyy-MM-dd'), or both. */
-  async function updateBatch(id: string, change: { quantityDiff?: number; promiseDate?: string; description?: string }) {
-    return ensureOk(api({ url: batchUrl(id), method: 'put', data: change }), 'Failed to update the batch.');
+  /**
+   * Changes batches through their purchase order lines: one IMPORT_PO file with a row per batch's line, which
+   * store#PurchaseOrder applies to the line and the line change moves to its batch. A quantity change (`quantityDiff`)
+   * sets the line's quantity, a promise date ('yyyy-MM-dd') its arrival date, `cancel` cancels the line. Waits for the
+   * import; a batch with no purchase order line, or whose row the import rejected, counts as failed.
+   */
+  async function updateBatches(ids: string[], change: { quantityDiff?: number; promiseDate?: string; cancel?: boolean }) {
+    const rows: Record<string, string | number>[] = [];
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        const batch = await ensureOk(api({ url: batchUrl(id), method: 'get' }), 'Failed to load the batch.') as FutureInventoryBatchDetail & { productId?: string };
+        const header = batch.purchaseOrderHeader as (FutureInventoryBatchDetail['purchaseOrderHeader'] & { externalId?: string }) | undefined;
+        const line = batch.purchaseOrderItem as (FutureInventoryBatchDetail['purchaseOrderItem'] & { externalId?: string; productId?: string }) | undefined;
+        if (!header?.externalId || !line) { failed++; continue; }
+        rows.push({
+          externalId: header.externalId,
+          productId: line.productId || batch.productId || '',
+          orderItemExternalId: line.externalId || '',
+          quantity: Number(line.quantity || 0) + Number(change.quantityDiff || 0),
+          arrivalDate: change.promiseDate || '',
+          statusId: change.cancel ? 'ITEM_CANCELLED' : '',
+        });
+      } catch { failed++; }
+    }
+    if (!rows.length) return { done: 0, failed };
+    const columns = Object.keys(rows[0]);
+    const csv = [columns.join(','), ...rows.map((row) => columns.map((column) => `"${String(row[column]).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const { uploadFile, waitForImport } = useImports();
+    const logId = await uploadFile('IMPORT_PO', new File([csv], `Batch_updates_${Date.now()}.csv`, { type: 'text/csv' }));
+    const log = await waitForImport(logId);
+    if (!log) throw new Error('The change is still being applied: check Purchase order imports.');
+    const rejected = log.statusId === 'DmlsFinished' ? Number(log.failedRecordCount || 0) : rows.length;
+    return { done: rows.length - rejected, failed: failed + rejected };
   }
 
-  async function cancelBatch(id: string, description?: string) {
-    return ensureOk(api({ url: `${batchUrl(id)}/cancel`, method: 'post', data: { description } }), 'Failed to cancel the batch.');
+  /** Changes one batch through its purchase order line; fails when the line could not be changed. */
+  async function updateBatch(id: string, change: { quantityDiff?: number; promiseDate?: string; cancel?: boolean }) {
+    const { failed } = await updateBatches([id], change);
+    if (failed) throw new Error('The batch has no purchase order line that could be changed: check Purchase order imports.');
+  }
+
+  async function cancelBatch(id: string) {
+    return updateBatch(id, { cancel: true });
   }
 
   /** Runs an action on each batch, counting what worked and what failed. */
@@ -71,6 +109,6 @@ export function useFutureInventoryActions() {
     return { done, failed };
   }
 
-  return { fetchBatch, fetchLedger, fetchWaitingLines, fetchActiveBatches, updateBatch, cancelBatch, forEachBatch };
+  return { fetchBatch, fetchLedger, fetchWaitingLines, fetchActiveBatches, updateBatch, updateBatches, cancelBatch, forEachBatch };
 }
 
