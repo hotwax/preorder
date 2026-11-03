@@ -82,11 +82,24 @@ export function useImports() {
     return typeof data === 'string' ? data : '';
   }
 
+  /**
+   * Waits for an upload's import to finish, polling its log. Resolves with the log once it has finished, or undefined if
+   * it is still running after `timeoutMs`.
+   */
+  async function waitForImport(logId: string, timeoutMs = 60000): Promise<ImportLog | undefined> {
+    for (const started = Date.now(); Date.now() - started < timeoutMs; await new Promise((resolve) => setTimeout(resolve, 1500))) {
+      const data = await ensureOk(api({ url: 'admin/dataManager/details', method: 'get', params: { logId } }), 'Failed to load the import.');
+      const log: ImportLog | undefined = (data.dataManagerLogs || [])[0];
+      if (log && ['DmlsFinished', 'DmlsFailed', 'DmlsCancelled'].includes(log.statusId)) return log;
+    }
+    return undefined;
+  }
+
   /** How many messages of a type are received and not yet consumed: changes still to be queued as a bulk update. */
   async function countWaitingMessages(systemMessageTypeId: string): Promise<number> {
     const data = await ensureOk(api({ url: 'admin/systemMessages', method: 'get', params: { systemMessageTypeId, statusId: 'SmsgReceived', isOutgoing: 'N', pageSize: 1 } }), 'Failed to load the waiting changes.');
     return Number(data.systemMessagesCount || 0);
   }
 
-  return { fetchLogs, uploadFile, downloadLogFile, downloadTemplate, countWaitingMessages };
+  return { fetchLogs, uploadFile, waitForImport, downloadLogFile, downloadTemplate, countWaitingMessages };
 }
