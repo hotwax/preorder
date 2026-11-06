@@ -4,7 +4,6 @@ import { commonUtil, Login, translate } from '@common';
 import { useAuth } from '@common/composables/useAuth';
 import { useUserStore } from '@/store/user';
 import Actions from '@/authorization/actions';
-import Dashboard from '@/views/Dashboard.vue';
 import Preorders from '@/views/Preorders.vue';
 import PreorderDetail from '@/views/PreorderDetail.vue';
 import FutureInventory from '@/views/FutureInventory.vue';
@@ -38,9 +37,10 @@ const page = (path: string, name: string, component: any, permissionId?: string)
 });
 
 const routes: RouteRecordRaw[] = [
-  { path: '/', redirect: '/dashboard' },
+  { path: '/', redirect: '/preorders' },
   { path: '/login', name: 'Login', component: Login },
-  page('/dashboard', 'Dashboard', Dashboard, Actions.APP_PREORDER_VIEW),
+  // Keep existing bookmarks usable while the dashboard API is under development.
+  { path: '/dashboard', redirect: '/preorders' },
   page('/preorders', 'Preorders', Preorders, Actions.APP_PREORDER_VIEW),
   page('/preorders/:orderId', 'PreorderDetail', PreorderDetail, Actions.APP_PREORDER_VIEW),
   page('/future-inventory', 'FutureInventory', FutureInventory, Actions.APP_PREORDER_VIEW),
@@ -57,7 +57,7 @@ const routes: RouteRecordRaw[] = [
   page('/setup', 'PreorderSetup', PreorderSetup, Actions.APP_PREORDER_VIEW),
   page('/sync-events', 'PreorderSyncEvents', PreorderSyncEvents, Actions.APP_PREORDER_VIEW),
   page('/settings', 'Settings', Settings),
-  { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
+  { path: '/:pathMatch(.*)*', redirect: '/preorders' }
 ];
 
 const router = createRouter({
