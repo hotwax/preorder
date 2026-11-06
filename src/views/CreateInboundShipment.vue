@@ -8,7 +8,7 @@
       <ion-progress-bar v-if="loading" type="indeterminate" />
     </ion-header>
     <ion-content>
-      <ErrorState v-if="error" :title="translate('Shipment could not be created')" :message="error" />
+      <ErrorState v-if="error" :title="translate('Shipment could not be created')" :message="error" @retry="load" />
       <main v-if="order" class="shipment-form">
         <aside>
           <ion-card>
@@ -161,6 +161,7 @@ import Actions from '@/authorization/actions';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { errorMessage } from '@/utils/response';
 import { countParams, todayValue } from '@/utils/format';
+import { isClosedLine } from '@/utils/purchaseOrders';
 const props = defineProps<{ orderId: string }>();
 const router = useRouter();
 const seed = useSeedData();
@@ -191,12 +192,20 @@ const valid = computed(
         Number(line.shipmentQuantity) <= line.unshippedQuantity
     )
 );
-onIonViewWillEnter(async () => {
+async function load() {
   loading.value = true;
   error.value = '';
+  order.value = undefined;
+  lines.value = [];
   try {
-    order.value = await fetchPurchaseOrder(props.orderId);
-    lines.value = order.value.items
+    const purchaseOrder = await fetchPurchaseOrder(props.orderId);
+    const openItems = purchaseOrder.items.filter((line: any) => !isClosedLine(line));
+    if (openItems.some((line: any) => line.unshippedQuantity == null || line.unshippedQuantity === ''
+      || !Number.isFinite(Number(line.unshippedQuantity)) || Number(line.unshippedQuantity) < 0)) {
+      throw new Error(translate('Shipment availability could not be loaded.'));
+    }
+    order.value = purchaseOrder;
+    lines.value = openItems
       .filter((line: any) => line.unshippedQuantity > 0)
       .map((line: any) => ({ ...line, shipmentQuantity: 0 }));
   } catch (err) {
@@ -204,7 +213,8 @@ onIonViewWillEnter(async () => {
   } finally {
     loading.value = false;
   }
-});
+}
+onIonViewWillEnter(load);
 async function save() {
   if (!valid.value || loading.value || !canUpdate.value) return;
   loading.value = true;
