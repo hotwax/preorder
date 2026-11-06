@@ -90,7 +90,7 @@ export function useImports() {
     for (const started = Date.now(); Date.now() - started < timeoutMs; await new Promise((resolve) => setTimeout(resolve, 1500))) {
       const data = await ensureOk(api({ url: 'admin/dataManager/details', method: 'get', params: { logId } }), 'Failed to load the import.');
       const log: ImportLog | undefined = (data.dataManagerLogs || [])[0];
-      if (log && ['DmlsFinished', 'DmlsFailed', 'DmlsCancelled'].includes(log.statusId)) return log;
+      if (log && ['DmlsFinished', 'DmlsFailed', 'DmlsCancelled', 'DmlsCrashed'].includes(log.statusId)) return log;
     }
     return undefined;
   }
