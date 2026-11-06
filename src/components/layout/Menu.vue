@@ -37,7 +37,6 @@ import {
   calendarOutline,
   cloudUploadOutline,
   documentTextOutline,
-  gridOutline,
   layersOutline,
   syncOutline,
   mailOutline,
@@ -73,7 +72,6 @@ interface MenuPage {
 }
 
 const pages: MenuPage[] = [
-  { title: "Dashboard", url: "/dashboard", icon: gridOutline, permissionId: Actions.APP_PREORDER_VIEW },
   { title: "Pre-orders", url: "/preorders", icon: calendarOutline, permissionId: Actions.APP_PREORDER_VIEW },
   { title: "Future inventory", url: "/future-inventory", icon: layersOutline, permissionId: Actions.APP_PREORDER_VIEW },
   { title: "Purchase orders", url: "/purchase-orders", icon: documentTextOutline, permissionId: Actions.APP_PO_VIEW, divider: "Supply" },
