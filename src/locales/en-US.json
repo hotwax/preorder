@@ -748,5 +748,9 @@
   "Received; the rest of the shipment stays open.": "Received; the rest of the shipment stays open.",
   "Partly received": "Partly received",
   "Failed to create the shipment.": "Failed to create the shipment.",
-  "Unit cost can't be negative": "Unit cost can't be negative"
+  "Unit cost can't be negative": "Unit cost can't be negative",
+  "Revision": "Revision",
+  "Metafield": "Metafield",
+  "Metafield mappings": "Metafield mappings",
+  "Metafield mapping": "Metafield mapping"
 }

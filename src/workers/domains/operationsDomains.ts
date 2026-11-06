@@ -58,8 +58,12 @@ export const preorderSyncPageDomain = defineSyncDomain({
     const shopId = String(pk?.shopId || ''); const kind = String(pk?.kind || 'quantity'); const pageIndex = Number(pk?.pageIndex || 0);
     if (!shopId || !paths[kind] || !Number.isInteger(pageIndex) || pageIndex < 0) return 0;
     const params: Record<string, any> = { shopId, pageIndex, pageSize: 50 };
-    if (kind === 'quantity') { params.eventTypeId = 'SIE_FUTURE_%'; params.eventTypeId_op = 'like'; params.orderByField = '-createdDate,eventTypeId,eventReferenceId'; }
-    if (kind === 'metafield') params.history = true;
+    if (kind === 'quantity' || kind === 'metafield') {
+      params.eventTypeId = 'SIE_FI_%';
+      params.eventTypeId_op = 'like';
+      params.orderByField = kind === 'quantity' ? '-createdDate,eventTypeId,eventReferenceId' : '-createdDate,metafieldId,-metafieldDetailSeqId';
+    }
+    if (kind === 'published') params.orderByField = 'metafieldId';
     if (kind === 'activation') params.orderByField = 'productId,facilityId';
     const result = await workerGet(ctx, `sob/shopify/${paths[kind]}`, params);
     const rows = Array.isArray(result) ? result : result?.rows || [];
