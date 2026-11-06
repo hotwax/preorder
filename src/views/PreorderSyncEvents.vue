@@ -85,10 +85,16 @@
                   <p v-if="row.createdDate">{{ formatDateTime(row.createdDate) }}</p>
                 </ion-label>
                 <ion-badge slot="end" :color="statusColor(row.systemMessageStatusId || '')">{{
-                  row.activationStatus || (kind === 'published' ? translate('Recorded') : deliveryLabel(row))
+                  row.activationStatus || (kind === 'published' && row.shopifyMetafieldId ? translate('Recorded') : deliveryLabel(row))
                 }}</ion-badge>
               </ion-item>
               <ion-list slot="content" lines="none" class="event-details">
+                <ion-item v-if="row.metafieldDetailSeqId !== undefined"
+                  ><ion-label><p>{{ translate('Revision') }}</p>{{ row.metafieldDetailSeqId }}</ion-label></ion-item
+                >
+                <ion-item v-if="row.namespace && row.metaKey"
+                  ><ion-label class="ion-text-wrap"><p>{{ translate('Metafield') }}</p>{{ row.namespace }}.{{ row.metaKey }}</ion-label></ion-item
+                >
                 <ion-item v-if="row.eventTypeId || row.metafieldPurposeEnumId"
                   ><ion-label class="ion-text-wrap"
                     ><p>{{ translate('Event type') }}</p>
@@ -214,6 +220,7 @@ import {
 import { useLiveEntity, useSeedData } from '@common/db';
 import { preorderDb } from '@/db/preorderDb';
 import { refreshAfterMutation } from '@/db/appDbSync';
+import { isCacheReconciliationError } from '@common/db/sync/reconciliation';
 import { useProductStore } from '@/store/productStore';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { errorMessage } from '@/utils/response';
@@ -229,13 +236,13 @@ const error = ref('');
 const kindLabels: Record<string, string> = {
   quantity: 'Quantity sync events',
   metafield: 'Metafield sync events',
-  published: 'Published metafield mappings',
+  published: 'Metafield mappings',
   activation: 'Product location activation',
 };
 const eventLabels: Record<string, string> = {
   quantity: 'Quantity adjustment',
   metafield: 'Metafield update',
-  published: 'Published metafield',
+  published: 'Metafield mapping',
   activation: 'Location activation',
 };
 const pageKey = computed(() => `${shopId.value}:${kind.value}:${pageIndex.value}`);
@@ -259,7 +266,7 @@ watch(pageKey, () => {
   void load();
 });
 function deliveryLabel(row: any) {
-  if (row.confirmedDate) return translate('Confirmed');
+  if (row.confirmedDate || row.confirmedDigest) return translate('Confirmed');
   if (row.failed === 'Y') return translate('Failed');
   if (row.systemMessageStatusId) return seed.statusDescription(row.systemMessageStatusId);
   if (row.systemMessageId) return translate('Message history unavailable');
@@ -277,7 +284,8 @@ async function load() {
       pageIndex: pageIndex.value,
     });
   } catch (err) {
-    error.value = errorMessage(err, translate('Could not load sync events'));
+    const cause = isCacheReconciliationError(err) ? err.cause : err;
+    error.value = errorMessage(cause, translate('Could not load sync events'));
   } finally {
     loading.value = false;
   }
