@@ -46,8 +46,7 @@ export function usePurchaseOrderActions() {
       return { ...item, receivedQuantity, openQuantity: isClosedLine(item) ? 0 : Math.max(0, Number(item.quantity || 0) - receivedQuantity),
         futureInventoryItemId: supply.length === 1 ? supply[0].futureInventoryItemId : undefined,
         futureInventoryStatusId: supply.length === 1 ? supply[0].statusId : undefined,
-        futureInventoryAvailableToPromise: supply.reduce((sum: number, batch: any) => sum + Number(batch.availableToPromiseTotal || 0), 0),
-        futureInventoryReserved: supply.reduce((sum: number, batch: any) => sum + Number(batch.reservedQuantity || 0), 0) };
+        futureInventoryAvailableToPromise: supply.reduce((sum: number, batch: any) => sum + Number(batch.availableToPromiseTotal || 0), 0) };
     }) };
 
   }
