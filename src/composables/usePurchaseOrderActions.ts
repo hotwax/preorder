@@ -43,7 +43,7 @@ export function usePurchaseOrderActions() {
     return { ...order, facilityId: order.facilityId || order.originFacilityId, items: (order?.items || []).map((item: PurchaseOrderLine) => {
       const supply = (Array.isArray(batches) ? batches : []).filter((batch: any) => batch.poItemSeqId === item.orderItemSeqId);
       const receivedQuantity = receipts.filter((receipt) => receipt.orderItemSeqId === item.orderItemSeqId).reduce((sum, receipt) => sum + Number(receipt.quantityAccepted || 0), 0);
-      return { ...item, receivedQuantity, openQuantity: isClosedLine(item) ? 0 : Math.max(0, Number(item.quantity || 0) - receivedQuantity),
+      return { ...item, receivedQuantity, openQuantity: isClosedLine(item) ? 0 : Number(item.openQuantity ?? Math.max(0, Number(item.quantity || 0) - Number(item.cancelQuantity || 0) - receivedQuantity)),
         futureInventoryItemId: supply.length === 1 ? supply[0].futureInventoryItemId : undefined,
         futureInventoryStatusId: supply.length === 1 ? supply[0].statusId : undefined,
         futureInventoryAvailableToPromise: supply.reduce((sum: number, batch: any) => sum + Number(batch.availableToPromiseTotal || 0), 0) };
