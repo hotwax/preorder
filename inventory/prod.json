@@ -1,0 +1,17 @@
+{
+  "available": true,
+  "target": {
+    "project": "digital-commerce-71eb8",
+    "site": "hotwax-preorder",
+    "environment": "prod",
+    "origin": "https://hotwax-preorder.web.app"
+  },
+  "versions": [],
+  "defaultVersion": null,
+  "configuredEnvironment": null,
+  "defaultSource": null,
+  "checkedAt": "2026-11-16T12:42:35.035Z",
+  "deployedAt": "2026-03-19T09:59:52.498Z",
+  "release": "sites/hotwax-preorder/channels/live/releases/1773914392498000",
+  "fileCount": 65
+}
