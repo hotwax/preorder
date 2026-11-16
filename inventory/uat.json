@@ -1,0 +1,17 @@
+{
+  "available": true,
+  "target": {
+    "project": "hotwax-digital-commerce",
+    "site": "preorder-uat",
+    "environment": "uat",
+    "origin": "https://preorder-uat.web.app"
+  },
+  "versions": [],
+  "defaultVersion": null,
+  "configuredEnvironment": null,
+  "defaultSource": null,
+  "checkedAt": "2026-11-16T13:22:40.194Z",
+  "deployedAt": "2026-03-16T10:31:47.068Z",
+  "release": "sites/preorder-uat/channels/live/releases/1773657107068000",
+  "fileCount": 65
+}
