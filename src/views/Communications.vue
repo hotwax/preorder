@@ -18,7 +18,7 @@
       <ion-progress-bar v-if="settingsLoading" type="indeterminate" />
       <ErrorState v-if="settingsError" :title="translate('Could not load email settings')" :message="settingsError" @retry="loadSettings" />
 
-      <section v-else class="email-settings">
+      <section v-else-if="settings.length" class="email-settings">
         <ion-card v-for="setting in settings" :key="setting.emailType">
           <ion-card-header>
             <ion-card-title>{{ emailTypeLabel(setting.emailType) }}</ion-card-title>
@@ -65,11 +65,14 @@
             </ion-item>
           </ion-list>
           <ion-card-content class="email-counts">
-            <StatCard :title="translate('Last 7 days')" :stat="sentCount(setting.emailType, 7)" />
-            <StatCard :title="translate('Last 30 days')" :stat="sentCount(setting.emailType, 30)" />
+            <StatCard :title="translate('Last 7 days')" :stat="sentCount(setting.emailType, 7)" :subtitle="counts7 === null ? translate('Email counts unavailable') : undefined" />
+            <StatCard :title="translate('Last 30 days')" :stat="sentCount(setting.emailType, 30)" :subtitle="counts30 === null ? translate('Email counts unavailable') : undefined" />
           </ion-card-content>
         </ion-card>
       </section>
+      <EmptyState v-else-if="!settingsLoading" data-testid="email-settings-empty"
+        :title="translate('No pre-order email settings')"
+        :message="translate('No pre-order email types are available for this store.')" />
 
       <hr />
 
@@ -197,8 +200,8 @@ const toggling = ref('');
 /** Re-keys the toggles after each save, so a failed one shows the server's state again. */
 const settingsRevision = ref(0);
 const gateways = ref<EmailGateway[]>([]);
-const counts7 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
-const counts30 = ref<{ emailType?: string; statusId?: string; count: number }[]>([]);
+const counts7 = ref<{ emailType?: string; statusId?: string; count: number }[] | null>(null);
+const counts30 = ref<{ emailType?: string; statusId?: string; count: number }[] | null>(null);
 
 const eventFilters = reactive({ emailType: 'All', statusId: 'All', fromDate: '', thruDate: '' });
 const orderQuery = ref('');
@@ -236,9 +239,11 @@ const emailTypeOptions = computed(() => [
   { value: UNKNOWN_EMAIL_TYPE, label: translate('Unknown type') },
 ]);
 
-const sentCount = (emailType: string, days: number) => (days === 7 ? counts7.value : counts30.value)
-  .filter((row) => row.emailType === emailType && row.statusId !== 'COM_BOUNCED')
-  .reduce((sum, row) => sum + Number(row.count || 0), 0);
+const sentCount = (emailType: string, days: number) => {
+  const rows = days === 7 ? counts7.value : counts30.value;
+  return rows === null ? '—' : rows.filter((row) => row.emailType === emailType && row.statusId !== 'COM_BOUNCED')
+    .reduce((sum, row) => sum + Number(row.count || 0), 0);
+};
 
 /**
  * Email statuses in a sender's words: a sent email's status is COM_COMPLETE, whose description is
@@ -265,8 +270,8 @@ async function loadSettings() {
   try {
     const [rows, week, month, gatewayRows] = await Promise.all([
       fetchEmailSettings(storeId),
-      fetchCounts(storeId, windowStartDay(7)),
-      fetchCounts(storeId, windowStartDay(30)),
+      fetchCounts(storeId, windowStartDay(7)).catch(() => null),
+      fetchCounts(storeId, windowStartDay(30)).catch(() => null),
       fetchEmailGateways().catch(() => [] as EmailGateway[]),
     ]);
     if (request !== loadSettingsRequest || storeId !== productStoreId.value) return;
@@ -286,8 +291,8 @@ async function loadSettings() {
 /** Another store's settings never show, or get saved, under this store: they clear at once and edits wait for the new ones. */
 function clearStoreData() {
   settings.value = [];
-  counts7.value = [];
-  counts30.value = [];
+  counts7.value = null;
+  counts30.value = null;
   settingsStoreId.value = '';
   settingsRevision.value += 1;
   events.value = [];
