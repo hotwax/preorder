@@ -129,6 +129,7 @@ import DateFilterSelect from '@/components/common/DateFilterSelect.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ErrorState from '@/components/common/ErrorState.vue';
 import { downloadText } from '@/utils/download';
+import { importDownload } from '@/utils/importDownloads';
 import { countParams, formatDateTime, formatNumber } from '@/utils/format';
 import { importProgressLabel } from '@/utils/labels';
 import { statusColor } from '@/utils/statusColors';
@@ -267,8 +268,8 @@ async function downloadFile(log: ImportLog, errors: boolean) {
   const logContentId = errors ? log.errorLogContentId : log.logContentId;
   if (!logContentId) return;
   try {
-    const name = (errors ? log.errorFileName : log.fileName) || `${log.logId}${errors ? '-errors' : ''}`;
-    downloadText(name.endsWith('.csv') ? name : `${name}.csv`, await downloadLogFile(log.configId, logContentId));
+    const { fileName, contentType } = importDownload(log, errors);
+    downloadText(fileName, await downloadLogFile(log.configId, logContentId), contentType);
   } catch (err) {
     await commonUtil.showToast(errorMessage(err, translate('Failed to download the file.')));
   }
